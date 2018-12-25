@@ -53,11 +53,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Computed checksum using CRC-8 from current page (from 0 to 8190)
+        /// Computed checksum using CRC-8 from current page (from 32 to 8190)
         /// </summary>
         public byte ComputeChecksum()
         {
-            return Crc8.ComputeChecksum(this.Array, this.Offset, PAGE_SIZE - 2);
+            return Crc8.ComputeChecksum(this.Array, this.Offset + PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE - 2);
         }
 
         /// <summary>

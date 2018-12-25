@@ -10,14 +10,16 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexNode
     {
-        private const int INDEX_NODE_FIXED_SIZE = 1 + // Levels [byte]
+        private const int INDEX_NODE_FIXED_SIZE = 1 + // Slot [byte]
+                                                  1 + // Levels [byte]
                                                   PageAddress.SIZE + // DataBlock
                                                   PageAddress.SIZE; // NextNode (5 bytes)
 
-        private const int P_LEVEL = 0; // 00-00 [byte]
-        private const int P_DATA_BLOCK = 1; // 01-05 [PageAddress]
-        private const int P_NEXT_NODE = 6; // 06-10 [PageAddress]
-        private const int P_PREV_NEXT = 11; // 11-(_level * 5 [PageAddress] * 2 [prev-next])
+        private const int P_SLOT = 0; // 00-00 [byte]
+        private const int P_LEVEL = 1; // 01-01 [byte]
+        private const int P_DATA_BLOCK = 2; // 02-06 [PageAddress]
+        private const int P_NEXT_NODE = 7; // 07-11 [PageAddress]
+        private const int P_PREV_NEXT = 12; // 12-(_level * 5 [PageAddress] * 2 [prev-next])
         private int P_KEY => P_PREV_NEXT + (this.Level * PageAddress.SIZE * 2); // just after NEXT
 
         private readonly IndexPage _page;
@@ -27,6 +29,11 @@ namespace LiteDB.Engine
         /// Position of this node inside a IndexPage (not persist)
         /// </summary>
         public PageAddress Position { get; }
+
+        /// <summary>
+        /// Index slot reference in CollectionIndex [1 byte]
+        /// </summary>
+        public byte Slot { get; }
 
         /// <summary>
         /// Skip-list level (0-31) - [1 byte]
@@ -95,6 +102,7 @@ namespace LiteDB.Engine
             _segment = segment;
 
             this.Position = new PageAddress(page.PageID, index);
+            this.Slot = segment[P_SLOT];
             this.Level = segment[P_LEVEL];
             this.DataBlock = segment.ReadPageAddress(P_DATA_BLOCK);
 
@@ -115,12 +123,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new index node and persist into page segment
         /// </summary>
-        public IndexNode(IndexPage page, byte index, BufferSlice segment, byte level, BsonValue key, PageAddress dataBlock)
+        public IndexNode(IndexPage page, byte index, BufferSlice segment, byte slot, byte level, BsonValue key, PageAddress dataBlock)
         {
             _page = page;
             _segment = segment;
 
             this.Position = new PageAddress(page.PageID, index);
+            this.Slot = slot;
             this.Level = level;
             this.Key = key;
             this.DataBlock = dataBlock;
@@ -154,6 +163,7 @@ namespace LiteDB.Engine
             _page = null;
             _segment = new BufferSlice(new byte[0], 0, 0);
 
+            this.Slot = 0;
             this.Position = new PageAddress(0, 0);
             this.Level = 0;
             this.DataBlock = PageAddress.Empty;

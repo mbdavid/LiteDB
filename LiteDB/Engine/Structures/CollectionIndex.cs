@@ -6,6 +6,11 @@ namespace LiteDB.Engine
     internal class CollectionIndex
     {
         /// <summary>
+        /// Slot index [0-255] used in all index nodes
+        /// </summary>
+        public byte Slot { get; }
+
+        /// <summary>
         /// Index name
         /// </summary>
         public string Name { get; }
@@ -28,12 +33,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Head page address for this index
         /// </summary>
-        public PageAddress Head { get; }
+        public PageAddress Head { get; set; }
 
         /// <summary>
         /// A link pointer to tail node
         /// </summary>
-        public PageAddress Tail { get; }
+        public PageAddress Tail { get; set; }
 
         /// <summary>
         /// Get/Set collection max level
@@ -78,13 +83,12 @@ namespace LiteDB.Engine
             get { return string.IsNullOrEmpty(this.Name); }
         }
 
-        public CollectionIndex(string name, string expr, bool unique, PageAddress head, PageAddress tail)
+        public CollectionIndex(byte slot, string name, string expr, bool unique)
         {
+            this.Slot = slot;
             this.Name = name;
             this.Expression = expr;
             this.Unique = unique;
-            this.Head = head;
-            this.Tail = tail;
 
             this.BsonExpr = BsonExpression.Create(expr);
         }

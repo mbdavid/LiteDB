@@ -98,6 +98,8 @@ http://minisqlquery.codeplex.com/license
         <Key word="UPDATE" />
         <Key word="REPLACE" />
         <Key word="VACCUM" />
+        <Key word="CHECK" />
+        <Key word="INTEGRITY" />
       </KeyWords>
       
       <KeyWords name="SqlMethods" bold="false" italic="false" color="Fuchsia">

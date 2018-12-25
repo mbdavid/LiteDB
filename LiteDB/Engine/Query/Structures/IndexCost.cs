@@ -11,7 +11,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexCost
     {
-        public long Cost { get; set; }
+        public uint Cost { get; set; }
 
         /// <summary>
         /// Get filtered expression: "$._id = 10"

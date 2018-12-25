@@ -51,12 +51,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Insert new IndexNode. After call this, "node" instance can't be changed
         /// </summary>
-        public IndexNode InsertNode(byte level, BsonValue key, PageAddress dataBlock, int bytesLength)
+        public IndexNode InsertNode(byte slot, byte level, BsonValue key, PageAddress dataBlock, int bytesLength)
         {
             var index = base.GetFreeIndex();
             var segment = base.Insert(index, bytesLength);
 
-            var node = new IndexNode(this, index, segment, level, key, dataBlock);
+            var node = new IndexNode(this, index, segment, slot, level, key, dataBlock);
 
             _cache.Add(index, node);
 

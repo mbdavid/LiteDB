@@ -93,12 +93,13 @@ namespace LiteDB.Engine
                 for(var i = 0; i < count; i++)
                 {
                     var index = new CollectionIndex(
+                        slot: r.ReadByte(),
                         name: r.ReadCString(),
                         expr: r.ReadCString(),
-                        unique: r.ReadBoolean(),
-                        head: r.ReadPageAddress(),
-                        tail: r.ReadPageAddress())
-                    {
+                        unique: r.ReadBoolean())
+                    { 
+                        Head = r.ReadPageAddress(), // 5
+                        Tail = r.ReadPageAddress(), // 5
                         MaxLevel = r.ReadByte(), // 1
                         KeyCount = r.ReadUInt32(), // 4
                         UniqueKeyCount = r.ReadUInt32() // 4
@@ -135,6 +136,7 @@ namespace LiteDB.Engine
 
                     foreach (var index in _indexes.Values)
                     {
+                        w.Write(index.Slot);
                         w.WriteCString(index.Name);
                         w.WriteCString(index.Expression);
                         w.Write(index.Unique);
@@ -181,11 +183,11 @@ namespace LiteDB.Engine
         /// <summary>
         /// Insert new index inside this collection page
         /// </summary>
-        public CollectionIndex InsertIndex(string name, string expr, bool unique, PageAddress head, PageAddress tail)
+        public CollectionIndex InsertIndex(string name, string expr, bool unique)
         {
-            //TODO: test page space for this new index
+            var slot = (byte)(_indexes.Count == 0 ? 0 : (_indexes.Max(x => x.Value.Slot) + 1));
 
-            var index = new CollectionIndex(name, expr, unique, head, tail);
+            var index = new CollectionIndex(slot, name, expr, unique);
             
             _indexes[name] = index;
 

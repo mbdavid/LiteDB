@@ -385,20 +385,25 @@ namespace LiteDB.Engine
         /// Must ensure that all pages are not in use
         /// Used for DEBUG only
         /// </summary>
-        public void Clear()
+        public int Clear()
         {
+            var counter = 0;
+
             if (this.PagesInUse > 0) throw new LiteException(0, "The cache may not be in use when cleaning");
 
-            foreach (var page in _readable.Values.Union(_readable.Values))
+            foreach (var page in _readable.Values.Union(_writable.Values))
             {
                 Array.Clear(page.Array, page.Offset, page.Count);
                 page.Position = long.MaxValue;
                 page.Origin = FileOrigin.None;
                 _free.Enqueue(page);
+                counter++;
             }
 
             _readable.Clear();
             _writable.Clear();
+
+            return counter;
         }
 
         #endregion

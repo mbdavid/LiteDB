@@ -30,16 +30,19 @@ namespace LiteDB.Engine
             // get a free index page for head note (x2 for head + tail)
             var indexPage = _snapshot.GetFreePage<IndexPage>(bytesLength * 2);
 
+            // create index ref
+            var index = _snapshot.CollectionPage.InsertIndex(name, expr, unique);
+
             // insert head/tail nodes
-            var head = indexPage.InsertNode(MAX_LEVEL_LENGTH, BsonValue.MinValue, PageAddress.Empty, bytesLength);
-            var tail = indexPage.InsertNode(MAX_LEVEL_LENGTH, BsonValue.MaxValue, PageAddress.Empty, bytesLength);
+            var head = indexPage.InsertNode(index.Slot, MAX_LEVEL_LENGTH, BsonValue.MinValue, PageAddress.Empty, bytesLength);
+            var tail = indexPage.InsertNode(index.Slot, MAX_LEVEL_LENGTH, BsonValue.MaxValue, PageAddress.Empty, bytesLength);
 
             // link head-to-tail with double link list in first level
             head.SetNext(0, tail.Position);
             tail.SetPrev(0, head.Position);
 
-            // create index ref
-            var index = _snapshot.CollectionPage.InsertIndex(name, expr, unique, head.Position, tail.Position);
+            index.Head = head.Position;
+            index.Tail = tail.Position;
 
             return index;
         }
@@ -84,7 +87,7 @@ namespace LiteDB.Engine
             var indexPage = _snapshot.GetFreePage<IndexPage>(bytesLength);
 
             // create node in buffer
-            var node = indexPage.InsertNode(level, key, dataBlock, bytesLength);
+            var node = indexPage.InsertNode(index.Slot, level, key, dataBlock, bytesLength);
 
             // now, let's link my index node on right place
             var cur = this.GetNode(index.Head);
@@ -230,42 +233,41 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Drop all indexes pages. Each index use a single page sequence
+        /// Delete all index nodes from a specific collection index. Scan over all PK nodes, read all nodes list and remove
         /// </summary>
         public void DropIndex(CollectionIndex index)
         {
-            // vai navegando a Head ate o Tail pelo Next[0] excluindo os nodos encontrados
+            var slot = index.Slot;
+            var pkIndex = _snapshot.CollectionPage.PK;
 
-            throw new NotImplementedException(); /*
-            var pages = new HashSet<uint>();
-            var nodes = this.FindAll(index, Query.Ascending);
-
-            // get reference for pageID from all index nodes
-            foreach (var node in nodes)
+            foreach(var pkNode in this.FindAll(pkIndex, Query.Ascending))
             {
-                pages.Add(node.Position.PageID);
+                var next = pkNode.NextNode;
+                var last = pkNode;
 
-                // for each node I need remove from node list datablock reference
-                var prevNode = this.GetNode(node.PrevNode);
-                var nextNode = this.GetNode(node.NextNode);
+                while (next != PageAddress.Empty)
+                {
+                    var node = this.GetNode(next);
 
-                if (prevNode != null)
-                {
-                    prevNode.NextNode = node.NextNode;
-                    _snapshot.SetDirty(prevNode.Page);
-                }
-                if (nextNode != null)
-                {
-                    nextNode.PrevNode = node.PrevNode;
-                    _snapshot.SetDirty(nextNode.Page);
+                    if (node.Slot == slot)
+                    {
+                        // delete node from page (mark as dirty)
+                        node.Page.DeleteNode(node.Position.Index);
+
+                        last.SetNextNode(node.NextNode);
+                    }
+                    else
+                    {
+                        last = node;
+                    }
+
+                    next = node.NextNode;
                 }
             }
 
-            // now delete all pages
-            foreach (var pageID in pages)
-            {
-                _snapshot.DeletePage(pageID);
-            }*/
+            // removing head/tail index nodes
+            this.GetNode(index.Head).Page.DeleteNode(index.Head.Index);
+            this.GetNode(index.Tail).Page.DeleteNode(index.Tail.Index);
         }
 
         #region Find

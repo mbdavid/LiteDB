@@ -46,29 +46,41 @@ namespace LiteDB.Engine
                 // create index head
                 var index = indexer.CreateIndex(name, expression.Source, unique);
 
-                /*
                 // read all objects (read from PK index)
                 foreach (var pkNode in new IndexAll("_id", LiteDB.Query.Ascending).Run(col, indexer))
                 {
-                    transaction.Safepoint();
-
-                    // read binary and deserialize document (select only used field)
-                    var buffer = data.Read(data.GetBlock(pkNode.DataBlock));
-                    var doc = _bsonReader.Deserialize(buffer, expression.Fields).AsDocument;
-
-                    // get values from expression in document
-                    var keys = expression.Execute(doc, true);
-
-                    // adding index node for each value
-                    foreach (var key in keys)
+                    using (var reader = new BufferReader(data.Read(pkNode.DataBlock)))
                     {
-                        // insert new index node
-                        var node = indexer.AddNode(index, key, pkNode);
+                        var doc = reader.ReadDocument(expression.Fields);
 
-                        // link index node to datablock
-                        node.DataBlock = pkNode.DataBlock;
+                        // first/last node in this document that will be added
+                        IndexNode last = null;
+                        IndexNode first = null;
+
+                        // get values from expression in document
+                        var keys = expression.Execute(doc, true);
+
+                        // adding index node for each value
+                        foreach (var key in keys)
+                        {
+                            // insert new index node
+                            var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
+
+                            if (first == null) first = node;
+
+                            last = node;
+                        }
+
+                        // fix single linked-list in pkNode
+                        if (first != null)
+                        {
+                            last.SetNextNode(pkNode.NextNode);
+                            pkNode.SetNextNode(first.Position);
+                        }
                     }
-                }*/
+
+                    transaction.Safepoint();
+                }
 
                 return true;
             });
@@ -79,7 +91,6 @@ namespace LiteDB.Engine
         /// </summary>
         public bool DropIndex(string collection, string name)
         {
-            throw new NotImplementedException(); /*
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
@@ -102,15 +113,12 @@ namespace LiteDB.Engine
 
                 // delete all data pages + indexes pages
                 indexer.DropIndex(index);
-            
-                // clear index reference
-                index.Clear();
-            
-                // mark collection page as dirty
-                snapshot.SetDirty(col);
+
+                // remove index entry in collection page
+                snapshot.CollectionPage.DeleteIndex(name);
             
                 return true;
-            });*/
+            });
         }
     }
 }

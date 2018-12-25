@@ -16,8 +16,8 @@ namespace LiteDB.Demo
     public class TestInsertEngine
     {
         static Random RND = new Random();
-        static string PATH = @"c:\temp\insert-vf.db";
-        static string PATH_LOG = @"c:\temp\insert-vf-log.db";
+        static string PATH = @"D:\insert-vf.db";
+        static string PATH_LOG = @"D:\insert-vf-log.db";
 
         public static void Run(Stopwatch sw)
         {
@@ -40,11 +40,11 @@ namespace LiteDB.Demo
             {
                 db.Insert("col1", GetDocs(1, 100000), BsonAutoId.Int32);
 
-                for(var i = 0; i < 30000; i++)
-                {
-                    expr.Parameters["p0"] = i;
-                    db.Query("col1", query).Dispose();
-                }
+                //for(var i = 0; i < 30000; i++)
+                //{
+                //    expr.Parameters["p0"] = i;
+                //    db.Query("col1", query).Dispose();
+                //}
             }
 
             sw.Stop();

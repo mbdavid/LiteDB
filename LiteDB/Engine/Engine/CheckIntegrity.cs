@@ -16,7 +16,6 @@ namespace LiteDB.Engine
             _locker.EnterReserved(true);
 
             _disk.Queue.Wait();
-            _disk.Cache.Clear();
 
             var time = Stopwatch.StartNew();
             var rpt = new DatabaseReport();
@@ -24,6 +23,7 @@ namespace LiteDB.Engine
             rpt.Run("Data file", "{0}", () => _disk.GetName(FileOrigin.Data) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Data)) + ")");
             rpt.Run("Log file", "{0}", () => _disk.GetName(FileOrigin.Log) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Log)) + ")");
             rpt.Run("Last checkpoint", "{0}", () => _header.LastCheckpoint);
+            rpt.Run("Clear cache memory", "OK ({0} pages)", () => _disk.Cache.Clear());
             rpt.Run("Verify CRC data file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Data));
             rpt.Run("Verify CRC log file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Log));
             rpt.Run("Verify free empty list", "OK ({0} pages)", () => this.VerifyFreeEmptyList());
@@ -52,8 +52,9 @@ namespace LiteDB.Engine
                 if (buffer.Position == 1 && _settings.Password != null && origin == FileOrigin.Data) continue;
 
                 var page = new BasePage(buffer);
+                var crc = buffer.ComputeChecksum();
 
-                if (page.CRC != buffer.ComputeChecksum())
+                if (page.CRC != crc)
                 {
                     throw new LiteException(0, $"Invalid CRC at page {page.PageID}");
                 }
@@ -147,9 +148,11 @@ namespace LiteDB.Engine
                 {
                     var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
 
-                    for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
+                    var indexSlots = new HashSet<byte>(snapshot.CollectionPage.GetCollectionIndexes().Select(x => x.Slot));
+
+                    for (var pageSlot = 0; pageSlot < CollectionPage.PAGE_FREE_LIST_SLOTS; pageSlot++)
                     {
-                        var next = snapshot.CollectionPage.FreeIndexPageID[slot];
+                        var next = snapshot.CollectionPage.FreeIndexPageID[pageSlot];
 
                         while (next != uint.MaxValue)
                         {
@@ -159,6 +162,11 @@ namespace LiteDB.Engine
 
                             foreach(var node in nodes)
                             {
+                                if (!indexSlots.Contains(node.Slot))
+                                {
+                                    throw new LiteException(0, $"Invalid index slot in this IndexNode: {node.Key} [{node.Position}]");
+                                }
+
                                 // head/tail
                                 if (node.Key.IsMaxValue || node.Key.IsMinValue)
                                 {
@@ -204,11 +212,11 @@ namespace LiteDB.Engine
 
                 if (compare == ">")
                 {
-                    if (!(node.Key > key)) throw new LiteException(0, $"Node {pageAddress} `{node.Key}` should be greater than `{key}`");
+                    if (!(node.Key >= key)) throw new LiteException(0, $"Node {pageAddress} `{node.Key}` should be greater than `{key}`");
                 }
                 else if (compare == "<")
                 {
-                    if (!(node.Key < key)) throw new LiteException(0, $"Node {pageAddress} `{node.Key}` should be less than `{key}`");
+                    if (!(node.Key <= key)) throw new LiteException(0, $"Node {pageAddress} `{node.Key}` should be less than `{key}`");
                 }
             }
         }

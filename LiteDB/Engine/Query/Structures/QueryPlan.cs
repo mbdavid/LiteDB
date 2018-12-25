@@ -35,7 +35,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get index cost (lower is best)
         /// </summary>
-        public long IndexCost { get; internal set; } = 0; // not calculated
+        public uint IndexCost { get; internal set; } = 0; // not calculated
 
         /// <summary>
         /// If true, gereate document result only with IndexNode.Key (avoid load all document)

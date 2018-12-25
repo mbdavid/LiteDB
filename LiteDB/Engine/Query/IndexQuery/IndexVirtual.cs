@@ -13,7 +13,7 @@ namespace LiteDB.Engine
         private readonly IEnumerable<BsonDocument> _source;
 
         public IndexVirtual(IEnumerable<BsonDocument> source)
-            : base("_id", Query.Ascending)
+            : base(null, 0)
         {
             _source = source;
         }
@@ -45,7 +45,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return string.Format("FULL COLLECTION SCAN()");
+            return string.Format("FULL COLLECTION SCAN");
         }
     }
 }

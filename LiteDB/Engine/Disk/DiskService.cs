@@ -98,16 +98,22 @@ namespace LiteDB.Engine
             var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
             var header = new HeaderPage(buffer, 0);
 
-            if (_aes == null)
+            // encryption will use 2 pages (#0 for header, #1 for SALT)
+            header.LastPageID = aes == null ? 0u : 1u;
+
+            // update buffer
+            header.GetBuffer(true);
+
+            // compute CRC
+            buffer[BasePage.P_CRC] = buffer.ComputeChecksum();
+
+            if (aes == null)
             {
-                stream.Write(header.GetBuffer(true).Array, 0, PAGE_SIZE);
+                stream.Write(buffer.Array, 0, PAGE_SIZE);
             }
             else
             {
-                // encryption will use 2 pages (#0 for header, #1 for SALT)
-                header.LastPageID = 1;
-
-                aes.Encrypt(header.GetBuffer(true), stream);
+                aes.Encrypt(buffer, stream);
 
                 stream.Write(aes.Salt, 0, ENCRYPTION_SALT_SIZE);
             }

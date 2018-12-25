@@ -9,6 +9,7 @@ namespace LiteDB.Engine
         int Checkpoint(CheckpointMode mode);
         long Shrink();
         int Vaccum();
+        DatabaseReport CheckIntegrity();
 
         bool BeginTrans();
         bool Commit();

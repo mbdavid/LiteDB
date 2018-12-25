@@ -233,7 +233,11 @@ namespace LiteDB.Engine
                 // return header page as last checkpoint page
                 header.LastCheckpoint = DateTime.UtcNow;
 
-                yield return header.GetBuffer(true);
+                var headerBuffer = header.GetBuffer(true);
+
+                headerBuffer[BasePage.P_CRC] = headerBuffer.ComputeChecksum();
+
+                yield return headerBuffer;
             }
 
             // write all log pages into data file (sync)

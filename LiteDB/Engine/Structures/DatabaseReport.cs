@@ -11,10 +11,10 @@ namespace LiteDB.Engine
     /// </summary>
     public class DatabaseReport
     {
-        private readonly StringBuilder _summary = new StringBuilder();
+        private readonly List<string> _summary = new List<string>();
         private readonly Stopwatch _time = new Stopwatch();
 
-        public string Summary => _summary.ToString();
+        public string[] Summary => _summary.ToArray();
 
         public bool Result { get; private set; }
 
@@ -22,30 +22,32 @@ namespace LiteDB.Engine
         {
             this.Result = true;
 
-            _summary.AppendLine("LiteDB Check Integrity Report");
-            _summary.AppendLine("=============================");
+            _summary.Add("LiteDB Check Integrity Report");
+            _summary.Add("=============================");
         }
 
         internal void Run(string title, string ok, Func<object> action)
         {
-            _summary.Append(title.PadRight(28, '.') + ": ");
+            var text = title.PadRight(28, '.') + ": ";
 
             try
             {
                 var result = action();
-                _summary.AppendLine(string.Format(ok, result));
+                text += string.Format(ok, result);
             }
             catch (Exception ex)
             {
                 this.Result = false;
 
-                _summary.AppendLine("ERR: " + ex.Message);
+                text += "ERR: " + ex.Message;
             }
+
+            _summary.Add(text);
         }
 
         public override string ToString()
         {
-            return _summary.ToString();
+            return string.Join(Environment.NewLine, _summary);
         }
     }
 }

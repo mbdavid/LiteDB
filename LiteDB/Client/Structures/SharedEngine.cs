@@ -318,5 +318,10 @@ namespace LiteDB
             _engine?.Dispose();
             _engine = null;
         }
+
+        public DatabaseReport CheckIntegrity()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

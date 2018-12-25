@@ -172,12 +172,10 @@ namespace LiteDB.Engine
                 }
                 else
                 {
-                    // if has no index to use, use full scan over _id
-                    var pk = _snapshot.CollectionPage.GetIndex("_id");
+                    // if no index found, use FULL COLLECTION SCAN (has no data order)
+                    var data = new DataService(_snapshot);
 
-                    _query.Index = new IndexAll("_id", Query.Ascending);
-                    _query.IndexCost = _query.Index.GetCost(pk);
-                    _query.IndexExpression = "$._id";
+                    _query.Index = new IndexVirtual(data.ReadAll(_query.Fields));
                 }
 
                 // get selected expression used as index
@@ -188,7 +186,6 @@ namespace LiteDB.Engine
                 ENSURE(_query.Index is IndexVirtual, "pre-defined index must be only for virtual collections");
 
                 _query.IndexCost = 0;
-                _query.IndexExpression = "<virtual>";
             }
 
             // if is only 1 field to deserialize and this field are same as index, use IndexKeyOnly = rue
