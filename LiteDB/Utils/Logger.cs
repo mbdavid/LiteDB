@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LiteDB
 {
@@ -60,33 +60,54 @@ namespace LiteDB
         /// <summary>
         /// Write log text to output using inside a component (statics const of Logger)
         /// </summary>
-        public void Write(byte level, string message, params object[] args)
+        public void Write(byte level, string message)
         {
-            if ((level & this.Level) == 0 || string.IsNullOrEmpty(message)) return;
+            if (Check(level))
+                _Write(level, message, null);
+        }
 
-            if (this.Logging != null)
-            {
-                var text = string.Format(message, args);
+        public void Write<T>(byte level, string message, T arg)
+        {
+            if (Check(level))
+                _Write(level, message, new object[] { arg });
+        }
 
-                var str =
-                    level == ERROR ? "ERROR" :
-                    level == RECOVERY ? "RECOVERY" :
-                    level == COMMAND ? "COMMAND" :
-                    level == JOURNAL ? "JOURNAL" :
-                    level == LOCK ? "LOCK" :
-                    level == QUERY ? "QUERY" :
-                    level == CACHE ? "CACHE" : 
-                    level == DISK ? "DISK" : "";
+        public void Write<T1, T2>(byte level, string message, T1 arg1, T2 arg2)
+        {
+            if (Check(level))
+                _Write(level, message, new object[] { arg1, arg2 });
+        }
 
-                var msg = DateTime.Now.ToString("HH:mm:ss.ffff") + " [" + str + "] " + text;
+        public void Write<T1, T2, T3>(byte level, string message, T1 arg1, T2 arg2, T3 arg3)
+        {
+            if (Check(level))
+                _Write(level, message, new object[] { arg1, arg2, arg3 });
+        }
 
-                try
-                {
-                    this.Logging(msg);
-                }
-                catch
-                {
-                }
+        private bool Check(byte level)
+        {
+            return (level & this.Level) != 0 && this.Logging != null;
+        }
+
+        private void _Write(byte level, string message, object[] args)
+        {
+            var text = string.Format(message, args);
+
+            var str =
+                level == ERROR ? "ERROR" :
+                level == RECOVERY ? "RECOVERY" :
+                level == COMMAND ? "COMMAND" :
+                level == JOURNAL ? "JOURNAL" :
+                level == LOCK ? "LOCK" :
+                level == QUERY ? "QUERY" :
+                level == CACHE ? "CACHE" :
+                level == DISK ? "DISK" : "";
+
+            var msg = DateTime.Now.ToString("HH:mm:ss.ffff") + " [" + str + "] " + text;
+
+            try {
+                this.Logging(msg);
+            } catch {
             }
         }
     }
