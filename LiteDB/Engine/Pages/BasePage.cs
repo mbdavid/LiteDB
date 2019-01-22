@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LiteDB
@@ -69,6 +69,8 @@ namespace LiteDB
         /// </summary>
         public byte[] DiskData { get; set; }
 
+        static readonly byte[] ZeroLengthByteArray = new byte[0];
+
         public BasePage(uint pageID)
         {
             this.PageID = pageID;
@@ -76,7 +78,7 @@ namespace LiteDB
             this.NextPageID = uint.MaxValue;
             this.ItemCount = 0;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
-            this.DiskData = new byte[0];
+            this.DiskData = ZeroLengthByteArray;
         }
 
         /// <summary>

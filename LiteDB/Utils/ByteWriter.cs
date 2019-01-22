@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Text;
 
 namespace LiteDB
 {
-    internal class ByteWriter
+    internal sealed class ByteWriter
     {
         private byte[] _buffer;
         private int _pos;

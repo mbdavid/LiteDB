@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 
 namespace LiteDB
@@ -58,7 +58,9 @@ namespace LiteDB
                 arr.Add(value);
             }
 
-            reader.ReadByte(); // zero
+            byte lastByte = reader.ReadByte();
+            if (lastByte != 0x00)
+                throw new Exception($"document last byte (0x{lastByte:x}) != 0x00");
 
             return arr;
         }
