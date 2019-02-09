@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LiteDB_V6
@@ -28,7 +28,7 @@ namespace LiteDB_V6
             this.CollectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
-        protected override void ReadContent(LiteDB.ByteReader reader)
+        protected override void ReadContent(ref LiteDB.ByteReader reader)
         {
             var info = reader.ReadString(HEADER_INFO.Length);
             var ver = reader.ReadByte();

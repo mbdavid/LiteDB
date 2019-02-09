@@ -6,9 +6,9 @@ namespace LiteDB
     /// <summary>
     /// Internal class to deserialize a byte[] into a BsonDocument using BSON data format
     /// </summary>
-    internal class BsonReader
+    internal struct BsonReader
     {
-        private bool _utcDate = false;
+        private bool _utcDate;
 
         public BsonReader(bool utcDate)
         {
@@ -20,13 +20,14 @@ namespace LiteDB
         /// </summary>
         public BsonDocument Deserialize(byte[] bson)
         {
-            return this.ReadDocument(new ByteReader(bson));
+            var reader = new ByteReader(bson);
+            return this.ReadDocument(ref reader);
         }
 
         /// <summary>
         /// Read a BsonDocument from reader
         /// </summary>
-        public BsonDocument ReadDocument(ByteReader reader)
+        public BsonDocument ReadDocument(ref ByteReader reader)
         {
             var length = reader.ReadInt32();
             var end = reader.Position + length - 5;
@@ -34,7 +35,7 @@ namespace LiteDB
 
             while (reader.Position < end)
             {
-                var value = this.ReadElement(reader, out string name);
+                var value = this.ReadElement(ref reader, out string name);
                 obj.RawValue[name] = value;
             }
 
@@ -46,7 +47,7 @@ namespace LiteDB
         /// <summary>
         /// Read an BsonArray from reader
         /// </summary>
-        public BsonArray ReadArray(ByteReader reader)
+        public BsonArray ReadArray(ref ByteReader reader)
         {
             var length = reader.ReadInt32();
             var end = reader.Position + length - 5;
@@ -54,7 +55,7 @@ namespace LiteDB
 
             while (reader.Position < end)
             {
-                var value = this.ReadElement(reader, out string name);
+                var value = this.ReadElement(ref reader, out string name);
                 arr.Add(value);
             }
 
@@ -68,7 +69,7 @@ namespace LiteDB
         /// <summary>
         /// Reads an element (key-value) from an reader
         /// </summary>
-        private BsonValue ReadElement(ByteReader reader, out string name)
+        private BsonValue ReadElement(ref ByteReader reader, out string name)
         {
             var type = reader.ReadByte();
             name = reader.ReadCString();
@@ -83,11 +84,11 @@ namespace LiteDB
             }
             else if (type == 0x03) // Document
             {
-                return this.ReadDocument(reader);
+                return this.ReadDocument(ref reader);
             }
             else if (type == 0x04) // Array
             {
-                return this.ReadArray(reader);
+                return this.ReadArray(ref reader);
             }
             else if (type == 0x05) // Binary
             {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LiteDB_V6
 {
@@ -17,7 +17,7 @@ namespace LiteDB_V6
             this.Data = new byte[0];
         }
 
-        protected override void ReadContent(LiteDB.ByteReader reader)
+        protected override void ReadContent(ref LiteDB.ByteReader reader)
         {
             this.Data = reader.ReadBytes(this.ItemCount);
         }

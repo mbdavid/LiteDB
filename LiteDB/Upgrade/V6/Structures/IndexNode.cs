@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LiteDB_V6
@@ -48,7 +48,7 @@ namespace LiteDB_V6
         /// </summary>
         public bool IsHeadTail(CollectionIndex index)
         {
-            return this.Position.Equals(index.HeadNode) || this.Position.Equals(index.TailNode);
+            return this.Position == index.HeadNode || this.Position == index.TailNode;
         }
 
         public IndexNode(byte level)

@@ -156,8 +156,8 @@ namespace LiteDB
 
             var page = CreateInstance(pageID, pageType);
 
-            page.ReadHeader(reader);
-            page.ReadContent(reader);
+            page.ReadHeader(ref reader);
+            page.ReadContent(ref reader);
 
             page.DiskData = buffer;
 
@@ -184,7 +184,7 @@ namespace LiteDB
             return writer.Buffer;
         }
 
-        private void ReadHeader(ByteReader reader)
+        private void ReadHeader(ref ByteReader reader)
         {
             // first 5 bytes (pageID + pageType) was readed before class create
             // this.PageID
@@ -209,7 +209,7 @@ namespace LiteDB
             writer.Skip(8); // reserved 8 bytes
         }
 
-        protected abstract void ReadContent(ByteReader reader);
+        protected abstract void ReadContent(ref ByteReader reader);
 
         protected abstract void WriteContent(ByteWriter writer);
 

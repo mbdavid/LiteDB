@@ -47,78 +47,53 @@ namespace LiteDB
 
         public void Write(UInt16 value)
         {
-            var pi = BitConverter.GetBytes(value);
-
-            _buffer[_pos + 0] = pi[0];
-            _buffer[_pos + 1] = pi[1];
+            _buffer[_pos + 0] = (byte)value;
+            _buffer[_pos + 1] = (byte)(value >> 8);
 
             _pos += 2;
         }
 
         public void Write(UInt32 value)
         {
-            var pi = BitConverter.GetBytes(value);
-
-            _buffer[_pos + 0] = pi[0];
-            _buffer[_pos + 1] = pi[1];
-            _buffer[_pos + 2] = pi[2];
-            _buffer[_pos + 3] = pi[3];
-
+            Write(value, _pos);
             _pos += 4;
+        }
+
+        public void Write(UInt32 value, int pos)
+        {
+            _buffer[pos + 0] = (byte)value;
+            _buffer[pos + 1] = (byte)(value >> 8);
+            _buffer[pos + 2] = (byte)(value >> 16);
+            _buffer[pos + 3] = (byte)(value >> 24);
         }
 
         public void Write(UInt64 value)
         {
-            var pi = BitConverter.GetBytes(value);
-
-            _buffer[_pos + 0] = pi[0];
-            _buffer[_pos + 1] = pi[1];
-            _buffer[_pos + 2] = pi[2];
-            _buffer[_pos + 3] = pi[3];
-            _buffer[_pos + 4] = pi[4];
-            _buffer[_pos + 5] = pi[5];
-            _buffer[_pos + 6] = pi[6];
-            _buffer[_pos + 7] = pi[7];
+            _buffer[_pos + 0] = (byte)value;
+            _buffer[_pos + 1] = (byte)(value >> 8);
+            _buffer[_pos + 2] = (byte)(value >> 16);
+            _buffer[_pos + 3] = (byte)(value >> 24);
+            _buffer[_pos + 4] = (byte)(value >> 32);
+            _buffer[_pos + 5] = (byte)(value >> 40);
+            _buffer[_pos + 6] = (byte)(value >> 48);
+            _buffer[_pos + 7] = (byte)(value >> 56);
 
             _pos += 8;
         }
 
         public void Write(Int16 value)
         {
-            var pi = BitConverter.GetBytes(value);
-
-            _buffer[_pos + 0] = pi[0];
-            _buffer[_pos + 1] = pi[1];
-
-            _pos += 2;
+            Write((UInt16)value);
         }
 
         public void Write(Int32 value)
         {
-            var pi = BitConverter.GetBytes(value);
-
-            _buffer[_pos + 0] = pi[0];
-            _buffer[_pos + 1] = pi[1];
-            _buffer[_pos + 2] = pi[2];
-            _buffer[_pos + 3] = pi[3];
-
-            _pos += 4;
+            Write((UInt32)value);
         }
 
         public void Write(Int64 value)
         {
-            var pi = BitConverter.GetBytes(value);
-
-            _buffer[_pos + 0] = pi[0];
-            _buffer[_pos + 1] = pi[1];
-            _buffer[_pos + 2] = pi[2];
-            _buffer[_pos + 3] = pi[3];
-            _buffer[_pos + 4] = pi[4];
-            _buffer[_pos + 5] = pi[5];
-            _buffer[_pos + 6] = pi[6];
-            _buffer[_pos + 7] = pi[7];
-
-            _pos += 8;
+            Write((UInt64)value);
         }
 
         public void Write(Single value)
@@ -170,18 +145,34 @@ namespace LiteDB
 
         #region Extended types
 
+        static UTF8Encoding UTF8noBOM = new UTF8Encoding(false);
+
         public void Write(string value)
         {
-            var bytes = Encoding.UTF8.GetBytes(value);
-            this.Write(bytes.Length);
-            this.Write(bytes);
+            var begin = _pos;
+            _pos += 4;
+            var len = WriteJustString(value);
+
+            Write((uint)len, begin);
         }
 
         public void Write(string value, int length)
         {
-            var bytes = Encoding.UTF8.GetBytes(value);
-            if (bytes.Length != length) throw new ArgumentException("Invalid string length");
-            this.Write(bytes);
+            var len = WriteJustString(value);
+            if (len != length) throw new ArgumentException("Invalid string length");
+        }
+
+        public void WriteCString(string value)
+        {
+            WriteJustString(value);
+            Write((byte)0);
+        }
+
+        public int WriteJustString(string value)
+        {
+            var len = UTF8noBOM.GetBytes(value, 0, value.Length, _buffer, _pos);
+            _pos += len;
+            return len;
         }
 
         public void Write(DateTime value)

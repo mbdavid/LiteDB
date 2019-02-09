@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -751,7 +751,7 @@ namespace LiteDB
                     this.Length = 5; // header + footer
                     for (var i = 0; i < array.Count; i++)
                     {
-                        this.Length += this.GetBytesCountElement(i.ToString(), array[i] ?? BsonValue.Null, recalc);
+                        this.Length += this.GetBytesCountElement(BsonWriter.IntToString(i), array[i] ?? BsonValue.Null, recalc);
                     }
                     break;
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -66,7 +66,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ByteReader reader)
+        protected override void ReadContent(ref ByteReader reader)
         {
             this.CollectionName = reader.ReadString();
             this.DocumentCount = reader.ReadInt64();

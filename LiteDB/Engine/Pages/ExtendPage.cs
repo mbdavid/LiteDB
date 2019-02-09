@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LiteDB
 {
@@ -46,7 +46,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ByteReader reader)
+        protected override void ReadContent(ref ByteReader reader)
         {
             _data = reader.ReadBytes(this.ItemCount);
         }

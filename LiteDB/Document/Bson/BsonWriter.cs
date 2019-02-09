@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -7,7 +7,7 @@ namespace LiteDB
     /// <summary>
     /// Internal class to serialize a BsonDocument to BSON data format (byte[])
     /// </summary>
-    internal class BsonWriter
+    internal struct BsonWriter
     {
         /// <summary>
         /// Main method - serialize document. Uses ByteWriter
@@ -43,7 +43,7 @@ namespace LiteDB
 
             for (var i = 0; i < array.Count; i++)
             {
-                this.WriteElement(writer, i.ToString(), array[i] ?? BsonValue.Null);
+                this.WriteElement(writer, IntToString(i), array[i] ?? BsonValue.Null);
             }
 
             writer.Write((byte)0x00);
@@ -155,17 +155,33 @@ namespace LiteDB
 
         private void WriteString(ByteWriter writer, string s)
         {
-            var bytes = Encoding.UTF8.GetBytes(s);
-            writer.Write(bytes.Length + 1);
-            writer.Write(bytes);
-            writer.Write((byte)0x00);
+            var begin = writer.Position;
+            writer.Position += 4;
+            var len = writer.WriteJustString(s);
+            writer.Write((byte)0x00); len += 1;
+
+            writer.Write((uint)len, begin);
         }
 
         private void WriteCString(ByteWriter writer, string s)
         {
-            var bytes = Encoding.UTF8.GetBytes(s);
-            writer.Write(bytes);
-            writer.Write((byte)0x00);
+            writer.WriteCString(s);
+        }
+
+        static string[] IntStringCache = new string[16];
+
+        static BsonWriter()
+        {
+            for (int i = 0; i < IntStringCache.Length; i++) {
+                IntStringCache[i] = i.ToString();
+            }
+        }
+
+        static internal string IntToString(int i)
+        {
+            if (i < IntStringCache.Length)
+                return IntStringCache[i];
+            return i.ToString();
         }
     }
 }

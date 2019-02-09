@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LiteDB
@@ -82,7 +82,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ByteReader reader)
+        protected override void ReadContent(ref ByteReader reader)
         {
             _dataBlocks = new Dictionary<ushort, DataBlock>(ItemCount);
 

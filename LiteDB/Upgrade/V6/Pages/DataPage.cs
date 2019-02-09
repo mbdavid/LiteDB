@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LiteDB_V6
@@ -17,7 +17,7 @@ namespace LiteDB_V6
             this.DataBlocks = new Dictionary<ushort, DataBlock>();
         }
 
-        protected override void ReadContent(LiteDB.ByteReader reader)
+        protected override void ReadContent(ref LiteDB.ByteReader reader)
         {
             this.DataBlocks = new Dictionary<ushort, DataBlock>(ItemCount);
 

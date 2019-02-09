@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LiteDB_V6
 {
@@ -49,8 +49,8 @@ namespace LiteDB_V6
             var pageType = (PageType)reader.ReadByte();
             var page = CreateInstance(pageID, pageType);
 
-            page.ReadHeader(reader);
-            page.ReadContent(reader);
+            page.ReadHeader(ref reader);
+            page.ReadContent(ref reader);
 
             return page;
         }
@@ -60,7 +60,7 @@ namespace LiteDB_V6
             return checked((long)pageCount * BasePage.PAGE_SIZE);
         }
 
-        private void ReadHeader(LiteDB.ByteReader reader)
+        private void ReadHeader(ref LiteDB.ByteReader reader)
         {
             // first 5 bytes (pageID + pageType) was readed before class create
             // this.PageID
@@ -73,6 +73,6 @@ namespace LiteDB_V6
             reader.Skip(8); // reserved 8 bytes
         }
 
-        protected abstract void ReadContent(LiteDB.ByteReader reader);
+        protected abstract void ReadContent(ref LiteDB.ByteReader reader);
     }
 }

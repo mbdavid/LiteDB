@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LiteDB
@@ -29,9 +29,25 @@ namespace LiteDB
 
         public override bool Equals(object obj)
         {
-            var other = (PageAddress)obj;
+            if (obj is PageAddress other)
+                return this == other;
+            return false;
+        }
 
-            return this.PageID == other.PageID && this.Index == other.Index;
+        // use this to avoid boxing
+        public bool Equals(PageAddress other)
+        {
+            return this == other;
+        }
+
+        public static bool operator ==(PageAddress a, PageAddress b)
+        {
+            return a.PageID == b.PageID && a.Index == b.Index;
+        }
+
+        public static bool operator !=(PageAddress a, PageAddress b)
+        {
+            return !(a == b);
         }
 
         public override int GetHashCode()

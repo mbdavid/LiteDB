@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,7 +15,7 @@ namespace LiteDB_V6
             this.Nodes = new Dictionary<ushort, IndexNode>();
         }
 		
-        protected override void ReadContent(LiteDB.ByteReader reader)
+        protected override void ReadContent(ref LiteDB.ByteReader reader)
         {
             this.Nodes = new Dictionary<ushort, IndexNode>(this.ItemCount);
 
@@ -29,7 +29,7 @@ namespace LiteDB_V6
                 node.Page = this;
                 node.Position = new LiteDB.PageAddress(this.PageID, index);
                 node.KeyLength = reader.ReadUInt16();
-                node.Key = ReadBsonValue(reader, node.KeyLength);
+                node.Key = ReadBsonValue(ref reader, node.KeyLength);
                 node.DataBlock = reader.ReadPageAddress();
 
                 for (var j = 0; j < node.Prev.Length; j++)
@@ -44,7 +44,7 @@ namespace LiteDB_V6
         /// <summary>
         /// Write a custom ReadBsonValue because BsonType changed from v6 to v7
         /// </summary>
-        private LiteDB.BsonValue ReadBsonValue(LiteDB.ByteReader reader, ushort length)
+        private LiteDB.BsonValue ReadBsonValue(ref LiteDB.ByteReader reader, ushort length)
         {
             var type = reader.ReadByte();
 
@@ -59,8 +59,8 @@ namespace LiteDB_V6
 
                 case 5: return reader.ReadString(length);
 
-                case 6: return new LiteDB.BsonReader(false).ReadDocument(reader);
-                case 7: return new LiteDB.BsonReader(false).ReadArray(reader);
+                case 6: return new LiteDB.BsonReader(false).ReadDocument(ref reader);
+                case 7: return new LiteDB.BsonReader(false).ReadArray(ref reader);
 
                 case 8: return reader.ReadBytes(length);
                 case 9: return reader.ReadObjectId();

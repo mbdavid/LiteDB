@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -30,7 +30,7 @@ namespace LiteDB_V6
             }
         }
 
-        protected override void ReadContent(LiteDB.ByteReader reader)
+        protected override void ReadContent(ref LiteDB.ByteReader reader)
         {
             this.CollectionName = reader.ReadString();
             this.FreeDataPageID = reader.ReadUInt32();
