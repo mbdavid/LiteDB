@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LiteDB
@@ -44,13 +44,29 @@ namespace LiteDB
         /// <summary>
         /// Link to prev value (used in skip lists - Prev.Length = Next.Length)
         /// </summary>
-        public PageAddress[] Prev { get; set; }
+        public PageAddress[] PrevNext { get; set; }
 
-        /// <summary>
-        /// Link to next value (used in skip lists - Prev.Length = Next.Length)
-        /// </summary>
-        public PageAddress[] Next { get; set; }
+        public int Levels { get; }
 
+        public PageAddress GetPrev(int i)
+        {
+            return PrevNext[i];
+        }
+
+        public PageAddress GetNext(int i)
+        {
+            return PrevNext[Levels + i];
+        }
+
+        public void SetPrev(int i, PageAddress pa)
+        {
+            PrevNext[i] = pa;
+        }
+
+        public void SetNext(int i, PageAddress pa)
+        {
+            PrevNext[Levels + i] = pa;
+        }
         /// <summary>
         /// Length of key - used for calculate Node size
         /// </summary>
@@ -76,7 +92,7 @@ namespace LiteDB
         /// </summary>
         public PageAddress NextPrev(int index, int order)
         {
-            return order == Query.Ascending ? this.Next[index] : this.Prev[index];
+            return order == Query.Ascending ? GetNext(index) : GetPrev(index);
         }
 
         /// <summary>
@@ -95,7 +111,7 @@ namespace LiteDB
             get
             {
                 return IndexNode.INDEX_NODE_FIXED_SIZE +
-                    (this.Prev.Length * PageAddress.SIZE * 2) + // Prev + Next
+                    (this.PrevNext.Length * PageAddress.SIZE) + // Prev + Next
                     this.KeyLength; // bytes count in BsonValue
             }
         }
@@ -107,17 +123,16 @@ namespace LiteDB
 
         public IndexNode(byte level)
         {
+            Levels = level;
             this.Position = PageAddress.Empty;
             this.PrevNode = PageAddress.Empty;
             this.NextNode = PageAddress.Empty;
             this.DataBlock = PageAddress.Empty;
-            this.Prev = new PageAddress[level];
-            this.Next = new PageAddress[level];
+            this.PrevNext = new PageAddress[level + level];
 
-            for (var i = 0; i < level; i++)
+            for (var i = 0; i < this.PrevNext.Length; i++)
             {
-                this.Prev[i] = PageAddress.Empty;
-                this.Next[i] = PageAddress.Empty;
+                this.PrevNext[i] = PageAddress.Empty;
             }
         }
     }

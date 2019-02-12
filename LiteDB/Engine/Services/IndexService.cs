@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LiteDB
@@ -119,14 +119,11 @@ namespace LiteDB
             // scan from top left
             for (var i = index.MaxLevel - 1; i >= 0; i--)
             {
-                // get cache for last node
-                cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
-
                 // for(; <while_not_this>; <do_this>) { ... }
-                for (; cur.Next[i].IsEmpty == false; cur = cache)
+                for (; cur.GetNext(i).IsEmpty == false; cur = cache)
                 {
                     // get cache for last node
-                    cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
+                    cache = cache != null && cache.Position.Equals(cur.GetNext(i)) ? cache : this.GetNode(cur.GetNext(i));
 
                     // read next node to compare
                     var diff = cache.Key.CompareTo(key);
@@ -144,15 +141,15 @@ namespace LiteDB
                     // next = next node (where cur is pointing)
                     _pager.SetDirty(cur.Page);
 
-                    node.Next[i] = cur.Next[i];
-                    node.Prev[i] = cur.Position;
-                    cur.Next[i] = node.Position;
+                    node.SetNext(i, cur.GetNext(i));
+                    node.SetPrev(i, cur.Position);
+                    cur.SetNext(i, node.Position);
 
-                    var next = this.GetNode(node.Next[i]);
+                    var next = this.GetNode(node.GetNext(i));
 
                     if (next != null)
                     {
-                        next.Prev[i] = node.Position;
+                        next.SetPrev(i, node.Position);
                         _pager.SetDirty(next.Page);
                     }
                 }
@@ -228,20 +225,20 @@ namespace LiteDB
             // mark page as dirty here because, if deleted, page type will change
             _pager.SetDirty(page);
 
-            for (int i = node.Prev.Length - 1; i >= 0; i--)
+            for (int i = node.Levels - 1; i >= 0; i--)
             {
                 // get previous and next nodes (between my deleted node)
-                var prev = this.GetNode(node.Prev[i]);
-                var next = this.GetNode(node.Next[i]);
+                var prev = this.GetNode(node.GetPrev(i));
+                var next = this.GetNode(node.GetNext(i));
 
                 if (prev != null)
                 {
-                    prev.Next[i] = node.Next[i];
+                    prev.SetNext(i, node.GetNext(i));
                     _pager.SetDirty(prev.Page);
                 }
                 if (next != null)
                 {
-                    next.Prev[i] = node.Prev[i];
+                    next.SetPrev(i, node.GetPrev(i));
                     _pager.SetDirty(next.Page);
                 }
             }

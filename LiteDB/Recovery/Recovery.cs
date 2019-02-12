@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -179,14 +179,10 @@ namespace LiteDB
                         indexPages.Add(node.NextNode.PageID, false);
                     }
 
-                    foreach (var pos in node.Prev.Where(x => !x.IsEmpty && x.PageID != uint.MaxValue))
+                    foreach (var pos in node.PrevNext)
                     {
-                        if (!indexPages.ContainsKey(pos.PageID)) indexPages.Add(pos.PageID, false);
-                    }
-
-                    foreach (var pos in node.Next.Where(x => !x.IsEmpty && x.PageID != uint.MaxValue))
-                    {
-                        if (!indexPages.ContainsKey(pos.PageID)) indexPages.Add(pos.PageID, false);
+                        if (!pos.IsEmpty && pos.PageID != uint.MaxValue)
+                            if (!indexPages.ContainsKey(pos.PageID)) indexPages.Add(pos.PageID, false);
                     }
                 }
             }

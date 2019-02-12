@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 namespace LiteDB
@@ -25,7 +25,7 @@ namespace LiteDB
                 if (index == null) return BsonValue.MinValue;
 
                 var head = _indexer.GetNode(index.HeadNode);
-                var next = _indexer.GetNode(head.Next[0]);
+                var next = _indexer.GetNode(head.GetNext(0));
 
                 if (next.IsHeadTail(index)) return BsonValue.MinValue;
 
@@ -53,7 +53,7 @@ namespace LiteDB
                 if (index == null) return BsonValue.MaxValue;
 
                 var tail = _indexer.GetNode(index.TailNode);
-                var prev = _indexer.GetNode(tail.Prev[0]);
+                var prev = _indexer.GetNode(tail.GetPrev(0));
 
                 if (prev.IsHeadTail(index)) return BsonValue.MaxValue;
 

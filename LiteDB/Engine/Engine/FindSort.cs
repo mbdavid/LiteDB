@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -80,11 +80,11 @@ namespace LiteDB
                             // exceeded limit
                             if (indexCounter > total)
                             {
-                                var exceeded = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
+                                var exceeded = (order == Query.Ascending) ? tail.GetPrev(0) : head.GetNext(0);
 
                                 engine._indexer.Delete(index, exceeded);
 
-                                var lnode = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
+                                var lnode = (order == Query.Ascending) ? tail.GetPrev(0) : head.GetNext(0);
 
                                 last = engine._indexer.GetNode(lnode).Key;
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -38,7 +38,7 @@ namespace LiteDB
                     break; // if no more starts with, stop scanning
                 }
 
-                node = indexer.GetNode(node.Next[0]);
+                node = indexer.GetNode(node.GetNext(0));
             }
         }
 
