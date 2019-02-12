@@ -3,7 +3,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal sealed class ByteWriter
+    internal struct ByteWriter
     {
         private byte[] _buffer;
         private int _pos;
@@ -214,8 +214,8 @@ namespace LiteDB
 
                 case BsonType.String: this.Write((String)value.RawValue, length); break;
 
-                case BsonType.Document: new BsonWriter().WriteDocument(this, value.AsDocument); break;
-                case BsonType.Array: new BsonWriter().WriteArray(this, value.AsArray); break;
+                case BsonType.Document: new BsonWriter().WriteDocument(ref this, value.AsDocument); break;
+                case BsonType.Array: new BsonWriter().WriteArray(ref this, value.AsArray); break;
 
                 case BsonType.Binary: this.Write((Byte[])value.RawValue); break;
                 case BsonType.ObjectId: this.Write((ObjectId)value.RawValue); break;

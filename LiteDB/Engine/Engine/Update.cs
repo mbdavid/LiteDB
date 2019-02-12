@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -74,7 +74,7 @@ namespace LiteDB
             var dataBlock = _data.Update(col, pkNode.DataBlock, bytes);
 
             // get all non-pk index nodes from this data block
-            var allNodes = _indexer.GetNodeList(pkNode, false).ToArray();
+            var allNodes = _indexer.GetNodeList(pkNode, false).ToList();
 
             // delete/insert indexes - do not touch on PK
             foreach (var index in col.GetIndexes(false))
@@ -84,15 +84,15 @@ namespace LiteDB
                 // getting all keys do check
                 var keys = expr.Execute(doc).ToArray();
 
-                // get a list of to delete nodes (using ToArray to resolve now)
+                // get a list of to delete nodes (using ToList to resolve now)
                 var toDelete = allNodes
                     .Where(x => x.Slot == index.Slot && !keys.Any(k => k == x.Key))
-                    .ToArray();
+                    .ToList();
 
-                // get a list of to insert nodes (using ToArray to resolve now)
+                // get a list of to insert nodes (using ToList to resolve now)
                 var toInsert = keys
                     .Where(x => !allNodes.Any(k => k.Slot == index.Slot && k.Key == x))
-                    .ToArray();
+                    .ToList();
 
                 // delete changed index nodes
                 foreach (var node in toDelete)

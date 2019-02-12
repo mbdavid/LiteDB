@@ -171,11 +171,11 @@ namespace LiteDB
         {
             var writer = new ByteWriter(BasePage.PAGE_SIZE);
 
-            this.WriteHeader(writer);
+            this.WriteHeader(ref writer);
 
             if (this.PageType != LiteDB.PageType.Empty)
             {
-                this.WriteContent(writer);
+                this.WriteContent(ref writer);
             }
 
             // update data bytes
@@ -197,7 +197,7 @@ namespace LiteDB
             reader.Skip(8); // reserved 8 bytes
         }
 
-        private void WriteHeader(ByteWriter writer)
+        private void WriteHeader(ref ByteWriter writer)
         {
             writer.Write(this.PageID);
             writer.Write((byte)this.PageType);
@@ -211,7 +211,7 @@ namespace LiteDB
 
         protected abstract void ReadContent(ref ByteReader reader);
 
-        protected abstract void WriteContent(ByteWriter writer);
+        protected abstract void WriteContent(ref ByteWriter writer);
 
         #endregion
     }

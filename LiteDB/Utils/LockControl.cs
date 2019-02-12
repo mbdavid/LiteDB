@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 
 namespace LiteDB
@@ -6,7 +6,7 @@ namespace LiteDB
     /// <summary>
     /// A class to control locking disposal. Can be a "new lock" - when a lock is not not coming from other lock state
     /// </summary>
-    public class LockControl : IDisposable
+    public struct LockControl : IDisposable
     {
         private Action _dispose;
 

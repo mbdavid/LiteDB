@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -100,7 +100,7 @@ namespace LiteDB
 
         private void WriteObject(BsonDocument obj)
         {
-            var length = obj.Keys.Count();
+            var length = obj.Keys.Count;
             var hasData = length > 0;
 
             this.WriteStartBlock("{", hasData);

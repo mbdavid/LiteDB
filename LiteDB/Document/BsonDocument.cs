@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -170,12 +170,12 @@ namespace LiteDB
             // if types are different, returns sort type order
             if (other.Type != BsonType.Document) return this.Type.CompareTo(other.Type);
 
-            var thisKeys = this.Keys.ToArray();
-            var thisLength = thisKeys.Length;
+            var thisKeys = this.Keys;
+            var thisLength = thisKeys.Count;
 
             var otherDoc = other.AsDocument;
-            var otherKeys = otherDoc.Keys.ToArray();
-            var otherLength = otherKeys.Length;
+            var otherKeys = otherDoc.Keys;
+            var otherLength = otherKeys.Count;
 
             var result = 0;
             var i = 0;
@@ -201,13 +201,25 @@ namespace LiteDB
 
         #region IDictionary
 
-        public ICollection<string> Keys
+        ICollection<string> IDictionary<string, BsonValue>.Keys => Keys;
+
+        public IList<string> Keys
         {
             get
             {
-                return this.RawValue.Keys
-                    .OrderBy(x => x == "_id" ? 1 : 2)
-                    .ToList();
+                var keys = this.RawValue.Keys.ToArray();
+
+                // make _id the first element
+                if (keys.Length > 1 && keys[0] != "_id") {
+                    for (int i = 1; i < keys.Length; i++) {
+                        if (keys[i] == "_id") {
+                            keys[i] = keys[0];
+                            keys[0] = "_id";
+                            break;
+                        }
+                    }
+                }
+                return keys;
             }
         }
 

@@ -51,7 +51,7 @@ namespace LiteDB
             _data = reader.ReadBytes(this.ItemCount);
         }
 
-        protected override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(ref ByteWriter writer)
         {
             writer.Write(_data);
         }

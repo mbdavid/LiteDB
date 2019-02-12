@@ -17,7 +17,7 @@ namespace LiteDB
             var count = doc.GetBytesCount(true);
             var writer = new ByteWriter(count);
 
-            this.WriteDocument(writer, doc);
+            this.WriteDocument(ref writer, doc);
 
             return writer.Buffer;
         }
@@ -25,62 +25,62 @@ namespace LiteDB
         /// <summary>
         /// Write a bson document
         /// </summary>
-        public void WriteDocument(ByteWriter writer, BsonDocument doc)
+        public void WriteDocument(ref ByteWriter writer, BsonDocument doc)
         {
             writer.Write(doc.GetBytesCount(false));
 
             foreach (var key in doc.Keys)
             {
-                this.WriteElement(writer, key, doc[key] ?? BsonValue.Null);
+                this.WriteElement(ref writer, key, doc[key] ?? BsonValue.Null);
             }
 
             writer.Write((byte)0x00);
         }
 
-        public void WriteArray(ByteWriter writer, BsonArray array)
+        public void WriteArray(ref ByteWriter writer, BsonArray array)
         {
             writer.Write(array.GetBytesCount(false));
 
             for (var i = 0; i < array.Count; i++)
             {
-                this.WriteElement(writer, IntToString(i), array[i] ?? BsonValue.Null);
+                this.WriteElement(ref writer, IntToString(i), array[i] ?? BsonValue.Null);
             }
 
             writer.Write((byte)0x00);
         }
 
-        private void WriteElement(ByteWriter writer, string key, BsonValue value)
+        private void WriteElement(ref ByteWriter writer, string key, BsonValue value)
         {
             // cast RawValue to avoid one if on As<Type>
             switch (value.Type)
             {
                 case BsonType.Double:
                     writer.Write((byte)0x01);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     writer.Write((Double)value.RawValue);
                     break;
 
                 case BsonType.String:
                     writer.Write((byte)0x02);
-                    this.WriteCString(writer, key);
-                    this.WriteString(writer, (String)value.RawValue);
+                    writer.WriteCString(key);
+                    this.WriteString(ref writer, (String)value.RawValue);
                     break;
 
                 case BsonType.Document:
                     writer.Write((byte)0x03);
-                    this.WriteCString(writer, key);
-                    this.WriteDocument(writer, new BsonDocument((Dictionary<string, BsonValue>)value.RawValue));
+                    writer.WriteCString(key);
+                    this.WriteDocument(ref writer, new BsonDocument((Dictionary<string, BsonValue>)value.RawValue));
                     break;
 
                 case BsonType.Array:
                     writer.Write((byte)0x04);
-                    this.WriteCString(writer, key);
-                    this.WriteArray(writer, new BsonArray((List<BsonValue>)value.RawValue));
+                    writer.WriteCString(key);
+                    this.WriteArray(ref writer, new BsonArray((List<BsonValue>)value.RawValue));
                     break;
 
                 case BsonType.Binary:
                     writer.Write((byte)0x05);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     var bytes = (byte[])value.RawValue;
                     writer.Write(bytes.Length);
                     writer.Write((byte)0x00); // subtype 00 - Generic binary subtype
@@ -89,7 +89,7 @@ namespace LiteDB
 
                 case BsonType.Guid:
                     writer.Write((byte)0x05);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     var guid = ((Guid)value.RawValue).ToByteArray();
                     writer.Write(guid.Length);
                     writer.Write((byte)0x04); // UUID
@@ -98,19 +98,19 @@ namespace LiteDB
 
                 case BsonType.ObjectId:
                     writer.Write((byte)0x07);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     writer.Write(((ObjectId)value.RawValue).ToByteArray());
                     break;
 
                 case BsonType.Boolean:
                     writer.Write((byte)0x08);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     writer.Write((byte)(((Boolean)value.RawValue) ? 0x01 : 0x00));
                     break;
 
                 case BsonType.DateTime:
                     writer.Write((byte)0x09);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     var date = (DateTime)value.RawValue;
                     // do not convert to UTC min/max date values - #19
                     var utc = (date == DateTime.MinValue || date == DateTime.MaxValue) ? date : date.ToUniversalTime();
@@ -120,40 +120,40 @@ namespace LiteDB
 
                 case BsonType.Null:
                     writer.Write((byte)0x0A);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     break;
 
                 case BsonType.Int32:
                     writer.Write((byte)0x10);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     writer.Write((Int32)value.RawValue);
                     break;
 
                 case BsonType.Int64:
                     writer.Write((byte)0x12);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     writer.Write((Int64)value.RawValue);
                     break;
 
                 case BsonType.Decimal:
                     writer.Write((byte)0x13);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     writer.Write((Decimal)value.RawValue);
                     break;
 
                 case BsonType.MinValue:
                     writer.Write((byte)0xFF);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     break;
 
                 case BsonType.MaxValue:
                     writer.Write((byte)0x7F);
-                    this.WriteCString(writer, key);
+                    writer.WriteCString(key);
                     break;
             }
         }
 
-        private void WriteString(ByteWriter writer, string s)
+        private void WriteString(ref ByteWriter writer, string s)
         {
             var begin = writer.Position;
             writer.Position += 4;
@@ -163,7 +163,7 @@ namespace LiteDB
             writer.Write((uint)len, begin);
         }
 
-        private void WriteCString(ByteWriter writer, string s)
+        private void WriteCString(ref ByteWriter writer, string s)
         {
             writer.WriteCString(s);
         }

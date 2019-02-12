@@ -114,19 +114,19 @@ namespace LiteDB
             var cur = this.GetNode(index.HeadNode);
 
             // using as cache last
-            IndexNode cache = null;
+            IndexNode nextNode = null;
 
             // scan from top left
             for (var i = index.MaxLevel - 1; i >= 0; i--)
             {
                 // for(; <while_not_this>; <do_this>) { ... }
-                for (; cur.GetNext(i).IsEmpty == false; cur = cache)
+                for (; cur.GetNext(i).IsEmpty == false; cur = nextNode)
                 {
                     // get cache for last node
-                    cache = cache != null && cache.Position.Equals(cur.GetNext(i)) ? cache : this.GetNode(cur.GetNext(i));
+                    nextNode = nextNode != null && nextNode.Position.Equals(cur.GetNext(i)) ? nextNode : this.GetNode(cur.GetNext(i));
 
                     // read next node to compare
-                    var diff = cache.Key.CompareTo(key);
+                    var diff = nextNode.Key.CompareTo(key);
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
                     if (diff == 0 && index.Unique) throw LiteException.IndexDuplicateKey(index.Field, key);

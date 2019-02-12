@@ -107,7 +107,7 @@ namespace LiteDB
             this.Sequence = reader.ReadInt64();
         }
 
-        protected override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(ref ByteWriter writer)
         {
             writer.Write(this.CollectionName);
             writer.Write(this.DocumentCount);

@@ -105,7 +105,7 @@ namespace LiteDB
             this.Recovery = reader.ReadBoolean();
         }
 
-        protected override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(ref ByteWriter writer)
         {
             writer.Write(HEADER_INFO, HEADER_INFO.Length);
             writer.Write(FILE_VERSION);

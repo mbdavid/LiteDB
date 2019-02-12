@@ -95,7 +95,7 @@ namespace LiteDB
             }
         }
 
-        protected override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(ref ByteWriter writer)
         {
             foreach (var node in _nodes.Values)
             {
