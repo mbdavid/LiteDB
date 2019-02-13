@@ -157,12 +157,8 @@ namespace LiteDB
             }
             else
             {
-                // test for array or dictionary (document)
-                var enumerable = value as System.Collections.IEnumerable;
-                var dictionary = value as System.Collections.IDictionary;
-
                 // test first for dictionary (because IDictionary implements IEnumerable)
-                if (dictionary != null)
+                if (value is System.Collections.IDictionary dictionary)
                 {
                     var dict = new Dictionary<string, BsonValue>();
 
@@ -174,12 +170,13 @@ namespace LiteDB
                     this.Type = BsonType.Document;
                     this.RawValue = dict;
                 }
-                else if (enumerable != null)
+                else if (value is System.Collections.IEnumerable enumerable)
                 {
                     var list = new List<BsonValue>();
+                    if (value is System.Collections.ICollection coll)
+                        list.Capacity = coll.Count;
 
-                    foreach (var x in enumerable)
-                    {
+                    foreach (var x in enumerable) {
                         list.Add(new BsonValue(x));
                     }
 

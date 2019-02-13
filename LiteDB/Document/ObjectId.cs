@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Security;
@@ -98,11 +98,21 @@ namespace LiteDB
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
             if (bytes.Length != 12) throw new ArgumentException(nameof(bytes), "Byte array must be 12 bytes long");
+            var reader = new ByteReader(bytes);
+            ReadFromReader(ref reader);
+        }
 
-            this.Timestamp = (bytes[0] << 24) + (bytes[1] << 16) + (bytes[2] << 8) + bytes[3];
-            this.Machine = (bytes[4] << 16) + (bytes[5] << 8) + bytes[6];
-            this.Pid = (short)((bytes[7] << 8) + bytes[8]);
-            this.Increment = (bytes[9] << 16) + (bytes[10] << 8) + bytes[11];
+        internal ObjectId(ref ByteReader reader)
+        {
+            ReadFromReader(ref reader);
+        }
+
+        private void ReadFromReader(ref ByteReader reader)
+        {
+            this.Timestamp = (reader.ReadByte() << 24) + (reader.ReadByte() << 16) + (reader.ReadByte() << 8) + reader.ReadByte();
+            this.Machine = (reader.ReadByte() << 16) + (reader.ReadByte() << 8) + reader.ReadByte();
+            this.Pid = (short)((reader.ReadByte() << 8) + reader.ReadByte());
+            this.Increment = (reader.ReadByte() << 16) + (reader.ReadByte() << 8) + reader.ReadByte();
         }
 
         /// <summary>
@@ -184,22 +194,27 @@ namespace LiteDB
         /// </summary>
         public byte[] ToByteArray()
         {
-            var bytes = new byte[12];
+            var writer = new ByteWriter(12);
 
-            bytes[0] = (byte)(this.Timestamp >> 24);
-            bytes[1] = (byte)(this.Timestamp >> 16);
-            bytes[2] = (byte)(this.Timestamp >> 8);
-            bytes[3] = (byte)(this.Timestamp);
-            bytes[4] = (byte)(this.Machine >> 16);
-            bytes[5] = (byte)(this.Machine >> 8);
-            bytes[6] = (byte)(this.Machine);
-            bytes[7] = (byte)(this.Pid >> 8);
-            bytes[8] = (byte)(this.Pid);
-            bytes[9] = (byte)(this.Increment >> 16);
-            bytes[10] = (byte)(this.Increment >> 8);
-            bytes[11] = (byte)(this.Increment);
+            WriteToWriter(ref writer);
 
-            return bytes;
+            return writer.Buffer;
+        }
+
+        internal void WriteToWriter(ref ByteWriter writer)
+        {
+           writer.Write((byte)(this.Timestamp >> 24));
+           writer.Write((byte)(this.Timestamp >> 16));
+           writer.Write((byte)(this.Timestamp >> 8));
+           writer.Write((byte)(this.Timestamp));
+           writer.Write((byte)(this.Machine >> 16));
+           writer.Write((byte)(this.Machine >> 8));
+           writer.Write((byte)(this.Machine));
+           writer.Write((byte)(this.Pid >> 8));
+           writer.Write((byte)(this.Pid));
+           writer.Write((byte)(this.Increment >> 16));
+           writer.Write((byte)(this.Increment >> 8));
+           writer.Write((byte)(this.Increment));
         }
 
         public override string ToString()

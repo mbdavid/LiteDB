@@ -39,7 +39,7 @@ namespace LiteDB
                 obj.RawValue[name] = value;
             }
 
-            reader.ReadByte(); // zero
+            reader.Read0x00();
 
             return obj;
         }
@@ -56,12 +56,13 @@ namespace LiteDB
             while (reader.Position < end)
             {
                 var value = this.ReadElement(ref reader, out string name);
+                if (StringToInt(name) != arr.Count) {
+                    throw new Exception($"wrong array element name. expected \"{arr.Count}\", got \"{name}\"");
+                }
                 arr.Add(value);
             }
 
-            byte lastByte = reader.ReadByte();
-            if (lastByte != 0x00)
-                throw new Exception($"document last byte (0x{lastByte:x}) != 0x00");
+            reader.Read0x00();
 
             return arr;
         }
@@ -104,7 +105,7 @@ namespace LiteDB
             }
             else if (type == 0x07) // ObjectId
             {
-                return new ObjectId(reader.ReadBytes(12));
+                return reader.ReadObjectId();
             }
             else if (type == 0x08) // Boolean
             {
@@ -148,6 +149,32 @@ namespace LiteDB
             }
 
             throw new NotSupportedException("BSON type not supported");
+        }
+
+        // Int32.Parse() does way too much than this simple implementation
+        // since the former supports many number sytles.
+        static int StringToInt(string str)
+        {
+            if (str == null)
+                throw new ArgumentNullException(nameof(str));
+            if (str.Length == 0)
+                throw new ArgumentOutOfRangeException(nameof(str));
+
+            int result = 0;
+            int digitSize = 1;
+            for (int i = str.Length - 1; i >= 0; i--) {
+                var ch = str[i];
+                var digit = ch - '0';
+                if (digit < 0 || digit > 9) {
+                    if (ch == '-' && i == str.Length - 1) {
+                        return -result;
+                    }
+                    throw new ArgumentException("unexpected char during parsing number string");
+                }
+                result += digitSize * digit;
+                digitSize *= 10;
+            }
+            return result;
         }
     }
 }

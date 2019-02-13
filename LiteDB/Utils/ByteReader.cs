@@ -140,7 +140,8 @@ namespace LiteDB
         {
             var length = this.ReadInt32();
             var str = Encoding.UTF8.GetString(_buffer, _pos, length - 1);
-            _pos += length;
+            _pos += length - 1;
+            Read0x00();
 
             return str;
         }
@@ -148,24 +149,32 @@ namespace LiteDB
         public string ReadCString()
         {
             var pos = _pos;
-            var length = 0;
 
             while (true)
             {
                 if (_buffer[pos] == 0x00)
                 {
-                    var str = Encoding.UTF8.GetString(_buffer, _pos, length);
-                    _pos += length + 1; // read last 0x00
+                    var str = Encoding.UTF8.GetString(_buffer, _pos, pos - _pos);
+                    _pos = pos; // read last 0x00
+                    Read0x00();
                     return str;
                 }
                 else if (pos > _length)
                 {
-                    return "_";
+                    throw new Exception();
                 }
 
                 pos++;
-                length++;
             }
+        }
+
+        /// <summary>
+        /// Read a byte, throw if it's not \0x00
+        /// </summary>
+        public void Read0x00()
+        {
+            if (_buffer[_pos++] != 0x00)
+                throw new Exception($"Expected byte 0x00, got 0x{_buffer[_pos - 1]:x2}");
         }
 
         public DateTime ReadDateTime()
@@ -180,12 +189,14 @@ namespace LiteDB
 
         public Guid ReadGuid()
         {
-            return new Guid(this.ReadBytes(16));
+            return new Guid(ReadInt32(), ReadInt16(), ReadInt16(),
+                ReadByte(), ReadByte(), ReadByte(), ReadByte(),
+                ReadByte(), ReadByte(), ReadByte(), ReadByte());
         }
 
         public ObjectId ReadObjectId()
         {
-            return new ObjectId(this.ReadBytes(12));
+            return new ObjectId(ref this);
         }
 
         public PageAddress ReadPageAddress()

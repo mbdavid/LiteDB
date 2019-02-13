@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LiteDB
 {
@@ -14,9 +14,10 @@ namespace LiteDB
                 return dt;
             }
 
-            return new DateTime(dt.Year, dt.Month, dt.Day,
-                dt.Hour, dt.Minute, dt.Second, dt.Millisecond, 
-                dt.Kind);
+            var ticks = dt.Ticks;
+            ticks -= ticks % 10000;
+
+            return new DateTime(ticks, dt.Kind);
         }
 
         public static int MonthDifference(this DateTime startDate, DateTime endDate)

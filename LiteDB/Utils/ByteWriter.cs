@@ -187,7 +187,7 @@ namespace LiteDB
 
         public void Write(ObjectId value)
         {
-            this.Write(value.ToByteArray());
+            value.WriteToWriter(ref this);
         }
 
         public void Write(PageAddress value)
