@@ -77,7 +77,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ref ByteReader reader)
+        internal override void ReadContent(ref ByteReader reader)
         {
             var info = reader.ReadString(HEADER_INFO.Length);
             var ver = reader.ReadByte();
@@ -105,7 +105,7 @@ namespace LiteDB
             this.Recovery = reader.ReadBoolean();
         }
 
-        protected override void WriteContent(ref ByteWriter writer)
+        internal override void WriteContent(ref ByteWriter writer)
         {
             writer.Write(HEADER_INFO, HEADER_INFO.Length);
             writer.Write(FILE_VERSION);
@@ -123,6 +123,13 @@ namespace LiteDB
                 writer.Write(this.CollectionPages[key]);
             }
 
+            writer.Position = BasePage.PAGE_SIZE - 1;
+            writer.Write(this.Recovery);
+        }
+
+        internal void UpdateRecoveryByte()
+        {
+            var writer = new ByteWriter(DiskData);
             writer.Position = BasePage.PAGE_SIZE - 1;
             writer.Write(this.Recovery);
         }

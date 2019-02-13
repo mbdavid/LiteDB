@@ -82,7 +82,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ref ByteReader reader)
+        internal override void ReadContent(ref ByteReader reader)
         {
             _dataBlocks = new Dictionary<ushort, DataBlock>(ItemCount);
 
@@ -100,7 +100,7 @@ namespace LiteDB
             }
         }
 
-        protected override void WriteContent(ref ByteWriter writer)
+        internal override void WriteContent(ref ByteWriter writer)
         {
             foreach (var block in _dataBlocks.Values)
             {

@@ -66,7 +66,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ref ByteReader reader)
+        internal override void ReadContent(ref ByteReader reader)
         {
             this.CollectionName = reader.ReadString();
             this.DocumentCount = reader.ReadInt64();
@@ -107,7 +107,7 @@ namespace LiteDB
             this.Sequence = reader.ReadInt64();
         }
 
-        protected override void WriteContent(ref ByteWriter writer)
+        internal override void WriteContent(ref ByteWriter writer)
         {
             writer.Write(this.CollectionName);
             writer.Write(this.DocumentCount);

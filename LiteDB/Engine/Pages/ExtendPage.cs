@@ -46,12 +46,12 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ref ByteReader reader)
+        internal override void ReadContent(ref ByteReader reader)
         {
             _data = reader.ReadBytes(this.ItemCount);
         }
 
-        protected override void WriteContent(ref ByteWriter writer)
+        internal override void WriteContent(ref ByteWriter writer)
         {
             writer.Write(_data);
         }

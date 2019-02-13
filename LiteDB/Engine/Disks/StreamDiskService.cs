@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -130,7 +130,7 @@ namespace LiteDB
         /// <summary>
         /// No journal implemented
         /// </summary>
-        public void WriteJournal(ICollection<byte[]> pages, uint lastPageID)
+        public void WriteJournal(ICollection<BasePage> pages, uint lastPageID)
         {
         }
 

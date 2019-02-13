@@ -5,7 +5,7 @@ namespace LiteDB
 {
     public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5 }
 
-    internal abstract class BasePage
+    public abstract class BasePage
     {
         #region Page Constants
 
@@ -165,11 +165,13 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Write a page to byte array
+        /// Update DiskData and return it
         /// </summary>
         public byte[] WritePage()
         {
-            var writer = new ByteWriter(BasePage.PAGE_SIZE);
+            if (DiskData.Length == 0)
+                DiskData = new byte[PAGE_SIZE];
+            var writer = new ByteWriter(DiskData);
 
             this.WriteHeader(ref writer);
 
@@ -177,9 +179,6 @@ namespace LiteDB
             {
                 this.WriteContent(ref writer);
             }
-
-            // update data bytes
-            this.DiskData = writer.Buffer;
 
             return writer.Buffer;
         }
@@ -209,9 +208,9 @@ namespace LiteDB
             writer.Skip(8); // reserved 8 bytes
         }
 
-        protected abstract void ReadContent(ref ByteReader reader);
+        internal abstract void ReadContent(ref ByteReader reader);
 
-        protected abstract void WriteContent(ref ByteWriter writer);
+        internal abstract void WriteContent(ref ByteWriter writer);
 
         #endregion
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -160,7 +160,7 @@ namespace LiteDB
         /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
-        public void WriteJournal(ICollection<byte[]> pages, uint lastPageID)
+        public void WriteJournal(ICollection<BasePage> pages, uint lastPageID)
         {
             // write journal only if enabled
             if (_options.Journal == false) return;
@@ -176,16 +176,12 @@ namespace LiteDB
             // go to initial file position (after lastPageID)
             _stream.Seek(BasePage.GetSizeOfPages(lastPageID + 1), SeekOrigin.Begin);
 
-            foreach(var buffer in pages)
+            foreach(var p in pages)
             {
-                // read pageID and pageType from buffer
-                var pageID = BitConverter.ToUInt32(buffer, 0);
-                var pageType = (PageType)buffer[PAGE_TYPE_POSITION];
-
-                _log.Write(Logger.JOURNAL, "write page #{0:0000} :: {1}", pageID, pageType);
+                _log.Write(Logger.JOURNAL, "write page #{0:0000} :: {1}", p.PageID, p.PageType);
 
                 // write page bytes
-                _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
+                _stream.Write(p.DiskData, 0, BasePage.PAGE_SIZE);
             }
 
             _log.Write(Logger.JOURNAL, "flush journal to disk");

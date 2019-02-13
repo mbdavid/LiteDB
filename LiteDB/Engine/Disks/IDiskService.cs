@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -49,7 +49,7 @@ namespace LiteDB
         /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
-        void WriteJournal(ICollection<byte[]> pages, uint lastPageID);
+        void WriteJournal(ICollection<BasePage> pages, uint lastPageID);
 
         /// <summary>
         /// Clear journal file
