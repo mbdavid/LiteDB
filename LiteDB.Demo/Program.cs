@@ -30,8 +30,10 @@ namespace LiteDB.Demo
                 //TestAesEncryption.CreateEncryptedFile(sw);
                 //TestAesEncryption.ReadEncryptedFile(sw);
                 //TestDataPage.Run(sw);
-                TestInsertEngine.Run(sw);
+                //TestInsertEngine.Run(sw);
                 //TestScript.Run(sw);
+
+                TestFullEngine.Run(sw);
 
                 Console.WriteLine($">>> ({i}) - Elapsed: [[[ {sw.ElapsedMilliseconds} ]]]");
 
@@ -39,7 +41,7 @@ namespace LiteDB.Demo
 
             Console.WriteLine("===========================================================");
             Console.WriteLine("End");
-            //Console.ReadKey();
+            Console.ReadKey();
 
         }
     }

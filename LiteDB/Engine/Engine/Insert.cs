@@ -47,7 +47,6 @@ namespace LiteDB.Engine
                 doc["_id"] = id =
                     autoId == BsonAutoId.ObjectId ? new BsonValue(ObjectId.NewObjectId()) :
                     autoId == BsonAutoId.Guid ? new BsonValue(Guid.NewGuid()) :
-                    autoId == BsonAutoId.DateTime ? new BsonValue(DateTime.Now) :
                     this.GetSequence(snapshot, autoId);
             }
             else if(id.IsNumber)
@@ -107,7 +106,7 @@ namespace LiteDB.Engine
                 // if lastId is not number, throw exception
                 if (!lastId.IsNumber)
                 {
-                    throw new LiteException(0, $"It's not possible use AutoId={autoId} because '{snapshot.CollectionName}' collection constains not only numbers in _id index ({lastId}).");
+                    throw new LiteException(0, $"It's not possible use AutoId={autoId} because '{snapshot.CollectionName}' collection contains not only numbers in _id index ({lastId}).");
                 }
 
                 // return nextId
