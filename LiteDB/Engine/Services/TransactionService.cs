@@ -106,7 +106,7 @@ namespace LiteDB.Engine
 
             if (_transPages.TransactionSize >= MAX_TRANSACTION_SIZE)
             {
-                LOG("safepoint flushing transaction pages", "TRANSACTION");
+                LOG($"safepoint flushing transaction pages: {_transPages.TransactionSize}", "TRANSACTION");
 
                 // if any snapshot are writable, persist pages
                 if (this.Mode == LockMode.Write)

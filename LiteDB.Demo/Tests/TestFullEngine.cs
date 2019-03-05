@@ -39,12 +39,20 @@ namespace LiteDB.Demo
             using (var db = new LiteEngine(settings))
             {
                 Console.WriteLine("Insert...");
-                db.Insert("col1", GetDocs(1, 100000), BsonAutoId.Int32);
-                db.Insert("col2", GetDocs(1, 10000), BsonAutoId.ObjectId);
 
+                var t0 = Task.Run(() => db.Insert("col1", GetDocs(1, 100000), BsonAutoId.Int32));
+                //var t1 = Task.Run(() => db.Insert("col2", GetDocs(1, 10000), BsonAutoId.ObjectId));
+                //var t2 = Task.Run(() => db.Insert("col3", GetDocs(1, 1000), BsonAutoId.Guid));
+
+                Task.WaitAll(t0/*, t1, t2*/);
             }
 
             sw.Stop();
+
+            //using (var db = new LiteEngine(settings))
+            //{
+            //    db.CheckIntegrity();
+            //}
         }
 
         static IEnumerable<BsonDocument> GetDocs(int start, int count)

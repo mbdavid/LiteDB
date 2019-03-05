@@ -179,6 +179,8 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
+            LOG($"disposing disk writer queue (in queue {_queue.Count} pages)", "DISK");
+
             // stop running async task in next while check
             _running = false;
 

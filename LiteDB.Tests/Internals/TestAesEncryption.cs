@@ -10,7 +10,7 @@
 //using System.Threading;
 //using System.Threading.Tasks;
 
-//namespace LiteDB.Demo
+//namespace LiteDB.Tests.Internals
 //{
 //    public class TestAesEncryption
 //    {

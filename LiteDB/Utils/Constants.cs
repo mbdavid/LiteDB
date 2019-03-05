@@ -3,7 +3,9 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("LiteDB.Demo")]
+#if DEBUG
+[assembly: InternalsVisibleTo("LiteDB.Tests")]
+#endif 
 
 namespace LiteDB
 {

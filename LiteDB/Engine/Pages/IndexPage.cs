@@ -34,16 +34,16 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode ReadNode(byte index)
         {
-            if (_cache.TryGetValue(index, out var node))
-            {
-                return node;
-            }
+            //if (_cache.TryGetValue(index, out var node))
+            //{
+            //    return node;
+            //}
 
             var segment = base.Get(index);
 
-            node = new IndexNode(this, index, segment);
+            var node = new IndexNode(this, index, segment);
 
-            _cache.Add(index, node);
+            //_cache.Add(index, node);
 
             return node;
         }
@@ -58,7 +58,7 @@ namespace LiteDB.Engine
 
             var node = new IndexNode(this, index, segment, slot, level, key, dataBlock);
 
-            _cache.Add(index, node);
+            //_cache.Add(index, node);
 
             return node;
         }
@@ -70,7 +70,7 @@ namespace LiteDB.Engine
         {
             base.Delete(index);
 
-            _cache.Remove(index);
+            //_cache.Remove(index);
         }
 
         /// <summary>

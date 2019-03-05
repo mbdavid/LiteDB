@@ -9,9 +9,15 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>1701;1702;1705;1591;0618</NoWarn>
-    <SignAssembly Condition="'$(OS)'=='Windows_NT'">true</SignAssembly>
-    <AssemblyOriginatorKeyFile>LiteDB.Tests.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <Compile Remove="Internals\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Engine\Index_Tests.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="Sql\Scripts\All_Sql.sql" />

@@ -10,7 +10,7 @@
 //using System.Threading;
 //using System.Threading.Tasks;
 
-//namespace LiteDB.Demo
+//namespace LiteDB.Tests.Internals
 //{
 //    public class TestMemoryFile
 //    {
@@ -31,31 +31,31 @@
 //        public static void Run(Stopwatch sw)
 //        {
 //            File.Delete(PATH);
-           
+
 //            var factory = new FileStreamFactory(PATH, DbFileMode.Logfile, false);
 //            var pool = new StreamPool(factory);
 //            var file = new MemoryFile(pool, null);
-            
+
 //            Console.WriteLine("Processing... " + (N0 * N1));
-            
+
 //            sw.Start();
-            
+
 //            // Write documents inside data file (append)
 //            WriteFile(file);
-            
+
 //            Console.WriteLine("Write: " + sw.ElapsedMilliseconds);
 
 //            // dispose - re-open test with no memory cache
 //            file.Dispose();
 //            file = new MemoryFile(pool, null);
-            
+
 //            Thread.Sleep(2000);
 //            sw.Restart();
-            
+
 //            ReadFile(file);
-            
+
 //            Console.WriteLine("Read: " + sw.ElapsedMilliseconds);
-            
+
 //            file.Dispose();
 //            pool.Dispose();
 

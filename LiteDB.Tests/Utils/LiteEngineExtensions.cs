@@ -11,23 +11,9 @@ namespace LiteDB.Tests
 {
     public static class LiteEngineExtensions
     {
-        public static T[] ExecuteValues<T>(this LiteEngine engine, string sql, BsonDocument args = null)
+        public static int Insert(this LiteEngine engine, string collection, BsonDocument doc, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
-            var values = new List<T>();
-            var mapper = new BsonMapper();
-
-            using (var r = engine.Execute(sql, args ?? new BsonDocument()))
-            {
-                while(r.Read())
-                {
-                    var doc = r.Current.AsDocument;
-                    var key = doc.Keys.First();
-
-                    values.Add(mapper.Deserialize<T>(doc[key]));
-                }
-            }
-
-            return values.ToArray();
+            return engine.Insert(collection, new BsonDocument[] { doc }, autoId);
         }
     }
 }
