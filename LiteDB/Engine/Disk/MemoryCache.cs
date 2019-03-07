@@ -186,8 +186,8 @@ namespace LiteDB.Engine
         /// </summary>
         public bool TryMoveToReadable(PageBuffer page)
         {
-            ENSURE(page.Position != long.MaxValue, "Page must have a position");
-            ENSURE(page.ShareCounter == BUFFER_WRITABLE, "Page must be writable");
+            ENSURE(page.Position != long.MaxValue, "page must have a position");
+            ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable");
             ENSURE(page.Origin != FileOrigin.None, "page must has defined origin");
 
             var key = this.GetReadableKey(page.Position, page.Origin);
@@ -379,6 +379,12 @@ namespace LiteDB.Engine
         public int PagesInUse =>
                 _readable.Values.Where(x => x.ShareCounter != 0).Count() +
                 _writable.Values.Where(x => x.ShareCounter != 0).Count();
+
+        /// <summary>
+        /// Return how many segments already loaded in memory (each segments contains 1 array with 8Mb size)
+        /// Used only for DEBUG propose
+        /// </summary>
+        public int ExtendSegments => _extends;
 
         /// <summary>
         /// Remove all pages from _readable and _writable to _free pages
