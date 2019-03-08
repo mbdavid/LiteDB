@@ -160,7 +160,7 @@ namespace LiteDB
                 var doc = value.AsDocument;
 
                 // test if value is object and has _type
-                if (doc.RawValue.TryGetValue("_type", out var typeField))
+                if (doc.DocValue.TryGetValue("_type", out var typeField))
                 {
                     type = Type.GetType(typeField.AsString);
 

@@ -25,14 +25,6 @@ namespace LiteDB
             if (dict == null) throw new ArgumentNullException(nameof(dict));
         }
 
-        public new Dictionary<string, BsonValue> RawValue
-        {
-            get
-            {
-                return (Dictionary<string, BsonValue>)base.RawValue;
-            }
-        }
-
         /// <summary>
         /// Get/Set position of this document inside database. It's filled when used in Find operation.
         /// </summary>
@@ -43,14 +35,8 @@ namespace LiteDB
         /// </summary>
         public override BsonValue this[string name]
         {
-            get
-            {
-                return this.RawValue.GetOrDefault(name, BsonValue.Null);
-            }
-            set
-            {
-                this.RawValue[name] = value ?? BsonValue.Null;
-            }
+            get => this.DocValue.GetOrDefault(name, BsonValue.Null);
+            set => this.DocValue[name] = value ?? BsonValue.Null;
         }
 
         #region Update support with expressions
@@ -70,12 +56,9 @@ namespace LiteDB
         /// </summary>
         public BsonDocument Extend(BsonDocument other)
         {
-            var myDict = this.RawValue;
-            var otherDict = other.RawValue;
-
-            foreach (var key in other.RawValue.Keys)
+            foreach (var key in other.DocValue.Keys)
             {
-                myDict[key] = otherDict[key];
+                this.DocValue[key] = other.DocValue[key];
             }
 
             return this;
@@ -88,13 +71,13 @@ namespace LiteDB
         public override int CompareTo(BsonValue other)
         {
             // if types are different, returns sort type order
-            if (other.Type != BsonType.Document) return this.Type.CompareTo(other.Type);
+            if (other.Type != BsonType.Document)
+                return this.Type.CompareTo(other.Type);
 
             var thisKeys = this.Keys.ToArray();
             var thisLength = thisKeys.Length;
 
-            var otherDoc = other.AsDocument;
-            var otherKeys = otherDoc.Keys.ToArray();
+            var otherKeys = other.DocValue.Keys.ToArray();
             var otherLength = otherKeys.Length;
 
             var result = 0;
@@ -102,7 +85,7 @@ namespace LiteDB
             var stop = Math.Min(thisLength, otherLength);
 
             for (; 0 == result && i < stop; i++)
-                result = this[thisKeys[i]].CompareTo(otherDoc[thisKeys[i]]);
+                result = this[thisKeys[i]].CompareTo(other.DocValue[thisKeys[i]]);
 
             // are different
             if (result != 0) return result;
@@ -112,114 +95,61 @@ namespace LiteDB
             return 1;
         }
 
-        public override string ToString()
-        {
-            return JsonSerializer.Serialize(this);
-        }
+        public override string ToString() => JsonSerializer.Serialize(this);
 
         #endregion
 
         #region IDictionary
 
-        public ICollection<string> Keys
-        {
-            get
-            {
-                return this.RawValue.Keys
-                    .OrderBy(x => x == "_id" ? 1 : 2)
-                    .ToList();
-            }
-        }
+        public ICollection<string> Keys => this.DocValue.Keys.OrderBy(x => x == "_id" ? 1 : 2).ToList();
 
-        public ICollection<BsonValue> Values
-        {
-            get
-            {
-                return this.RawValue.Values;
-            }
-        }
 
-        public int Count
-        {
-            get
-            {
-                return this.RawValue.Count;
-            }
-        }
+        public ICollection<BsonValue> Values => this.DocValue.Values;
 
-        public bool IsReadOnly
-        {
-            get
-            {
-                return false;
-            }
-        }
 
-        public bool ContainsKey(string key)
-        {
-            return this.RawValue.ContainsKey(key);
-        }
+        public int Count => this.DocValue.Count;
 
-        public void Add(string key, BsonValue value)
-        {
-            this[key] = value;
-        }
 
-        public bool Remove(string key)
-        {
-            return this.RawValue.Remove(key);
-        }
+        public bool IsReadOnly => false;
 
-        public bool TryGetValue(string key, out BsonValue value)
-        {
-            return this.RawValue.TryGetValue(key, out value);
-        }
 
-        public void Add(KeyValuePair<string, BsonValue> item)
-        {
-            this[item.Key] = item.Value;
-        }
+        public bool ContainsKey(string key) => this.DocValue.ContainsKey(key);
 
-        public void Clear()
-        {
-            this.RawValue.Clear();
-        }
 
-        public bool Contains(KeyValuePair<string, BsonValue> item)
-        {
-            return this.RawValue.Contains(item);
-        }
+        public void Add(string key, BsonValue value) => this[key] = value;
 
-        public void CopyTo(KeyValuePair<string, BsonValue>[] array, int arrayIndex)
-        {
-            ((ICollection<KeyValuePair<string, BsonValue>>)this.RawValue).CopyTo(array, arrayIndex);
-        }
+
+        public bool Remove(string key) => this.DocValue.Remove(key);
+
+
+        public bool TryGetValue(string key, out BsonValue value) => this.DocValue.TryGetValue(key, out value);
+
+
+        public void Add(KeyValuePair<string, BsonValue> item) => this[item.Key] = item.Value;
+
+
+        public void Clear() => this.DocValue.Clear();
+
+
+        public bool Contains(KeyValuePair<string, BsonValue> item) => this.DocValue.Contains(item);
+
+
+        public void CopyTo(KeyValuePair<string, BsonValue>[] array, int arrayIndex) => ((ICollection<KeyValuePair<string, BsonValue>>)this.DocValue).CopyTo(array, arrayIndex);
+
 
         public void CopyTo(BsonDocument doc)
         {
-            var myDict = this.RawValue;
-            var otherDict = doc.RawValue;
-
-            foreach(var key in myDict.Keys)
-            {
-                otherDict[key] = myDict[key];
-            }
+            foreach (var key in this.DocValue.Keys)
+                doc.DocValue[key] = this.DocValue[key];
         }
 
-        public bool Remove(KeyValuePair<string, BsonValue> item)
-        {
-            return this.RawValue.Remove(item.Key);
-        }
+        public bool Remove(KeyValuePair<string, BsonValue> item) => this.DocValue.Remove(item.Key);
 
-        public IEnumerator<KeyValuePair<string, BsonValue>> GetEnumerator()
-        {
-            return this.RawValue.GetEnumerator();
-        }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.RawValue.GetEnumerator();
-        }
+        public IEnumerator<KeyValuePair<string, BsonValue>> GetEnumerator() => this.DocValue.GetEnumerator();
+
+
+        IEnumerator IEnumerable.GetEnumerator() => this.DocValue.GetEnumerator();
 
         #endregion
     }

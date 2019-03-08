@@ -10,153 +10,102 @@ namespace LiteDB
         /// <summary>
         /// Convert an IEnumerable of BsonValues into a single BsonArray with all elements
         /// </summary>
-        public static BsonArray ToBsonArray(this IEnumerable<BsonValue> values)
-        {
-            return new BsonArray(values);
-        }
+        public static BsonArray ToBsonArray(this IEnumerable<BsonValue> values) => new BsonArray(values);
     }
 
     public class BsonArray : BsonValue, IList<BsonValue>
     {
-        public BsonArray()
-            : base(new List<BsonValue>())
+        public BsonArray() : base(new List<BsonValue>()) { }
+
+        public BsonArray(List<BsonValue> array) : base(array)
         {
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
         }
 
-        public BsonArray(List<BsonValue> array)
-            : base(array)
+        public BsonArray(BsonValue[] array) : base(new List<BsonValue>(array))
         {
-            if (array == null) throw new ArgumentNullException(nameof(array));
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
         }
 
-        public BsonArray(BsonValue[] array)
-            : base(new List<BsonValue>(array))
-        {
-            if (array == null) throw new ArgumentNullException(nameof(array));
-        }
-
-        public BsonArray(IEnumerable<BsonValue> items)
-            : this()
+        public BsonArray(IEnumerable<BsonValue> items) : this()
         {
             this.AddRange<BsonValue>(items);
         }
 
-        public BsonArray(IEnumerable<BsonArray> items)
-            : this()
+        public BsonArray(IEnumerable<BsonArray> items) : this()
         {
             this.AddRange<BsonArray>(items);
         }
 
-        public BsonArray(IEnumerable<BsonDocument> items)
-            : this()
+        public BsonArray(IEnumerable<BsonDocument> items) : this()
         {
             this.AddRange<BsonDocument>(items);
         }
 
-        public new List<BsonValue> RawValue
-        {
-            get
-            {
-                return (List<BsonValue>)base.RawValue;
-            }
-        }
 
         public override BsonValue this[int index]
         {
-            get
-            {
-                return this.RawValue.ElementAt(index);
-            }
-            set
-            {
-                this.RawValue[index] = value ?? BsonValue.Null;
-            }
+            get => ArrayValue[index];
+            set => ArrayValue[index] = value ?? BsonValue.Null;
         }
 
-        public int Count
-        {
-            get
-            {
-                return this.RawValue.Count;
-            }
-        }
+        public int Count => ArrayValue.Count;
 
-        public bool IsReadOnly
-        {
-            get
-            {
-                return false;
-            }
-        }
 
-        public void Add(BsonValue item)
-        {
-            this.RawValue.Add(item ?? BsonValue.Null);
-        }
+        public bool IsReadOnly => false;
+
+
+        public void Add(BsonValue item) => ArrayValue.Add(item ?? BsonValue.Null);
+
 
         public virtual void AddRange<T>(IEnumerable<T> array)
             where T : BsonValue
         {
-            if (array == null) throw new ArgumentNullException(nameof(array));
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
 
             foreach (var item in array)
-            {
                 this.Add(item ?? BsonValue.Null);
-            }
         }
 
-        public void Clear()
-        {
-            this.RawValue.Clear();
-        }
+        public void Clear() => ArrayValue.Clear();
 
-        public bool Contains(BsonValue item)
-        {
-            return this.RawValue.Contains(item);
-        }
 
-        public void CopyTo(BsonValue[] array, int arrayIndex)
-        {
-            this.RawValue.CopyTo(array, arrayIndex);
-        }
+        public bool Contains(BsonValue item) => ArrayValue.Contains(item);
 
-        public IEnumerator<BsonValue> GetEnumerator()
-        {
-            return this.RawValue.GetEnumerator();
-        }
 
-        public int IndexOf(BsonValue item)
-        {
-            return this.RawValue.IndexOf(item);
-        }
+        public void CopyTo(BsonValue[] array, int arrayIndex) => ArrayValue.CopyTo(array, arrayIndex);
 
-        public void Insert(int index, BsonValue item)
-        {
-            this.RawValue.Insert(index, item);
-        }
 
-        public bool Remove(BsonValue item)
-        {
-            return this.RawValue.Remove(item);
-        }
+        public IEnumerator<BsonValue> GetEnumerator() => ArrayValue.GetEnumerator();
 
-        public void RemoveAt(int index)
-        {
-            this.RawValue.RemoveAt(index);
-        }
+
+        public int IndexOf(BsonValue item) => ArrayValue.IndexOf(item);
+
+
+        public void Insert(int index, BsonValue item) => ArrayValue.Insert(index, item);
+
+
+        public bool Remove(BsonValue item) => ArrayValue.Remove(item);
+
+
+        public void RemoveAt(int index) => ArrayValue.RemoveAt(index);
+
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            foreach (var value in this.RawValue)
-            {
+            foreach (var value in ArrayValue)
                 yield return new BsonValue(value);
-            }
         }
+
 
         public override int CompareTo(BsonValue other)
         {
             // if types are different, returns sort type order
-            if (other.Type != BsonType.Array) return this.Type.CompareTo(other.Type);
+            if (other.Type != BsonType.Array)
+                return this.Type.CompareTo(other.Type);
 
             var otherArray = other.AsArray;
 
@@ -168,14 +117,15 @@ namespace LiteDB
             for (; 0 == result && i < stop; i++)
                 result = this[i].CompareTo(otherArray[i]);
 
-            if (result != 0) return result;
-            if (i == this.Count) return i == otherArray.Count ? 0 : -1;
+            if (result != 0)
+                return result;
+
+            if (i == this.Count)
+                return i == otherArray.Count ? 0 : -1;
+
             return 1;
         }
 
-        public override string ToString()
-        {
-            return JsonSerializer.Serialize(this);
-        }
+        public override string ToString() => JsonSerializer.Serialize(this);
     }
 }

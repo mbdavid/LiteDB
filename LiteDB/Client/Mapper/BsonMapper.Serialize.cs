@@ -152,7 +152,7 @@ namespace LiteDB
             {
                 var value = dict[key];
 
-                o.RawValue[key.ToString()] = this.Serialize(type, value, depth);
+                o.DocValue[key.ToString()] = this.Serialize(type, value, depth);
             }
 
             return o;
@@ -163,12 +163,11 @@ namespace LiteDB
             var o = new BsonDocument();
             var t = obj.GetType();
             var entity = this.GetEntityMapper(t);
-            var dict = o.RawValue;
 
             // adding _type only where property Type is not same as object instance type
             if (type != t)
             {
-                dict["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
+                o.DocValue["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
             }
 
             foreach (var member in entity.Members.Where(x => x.Getter != null))
@@ -181,11 +180,11 @@ namespace LiteDB
                 // if member has a custom serialization, use it
                 if (member.Serialize != null)
                 {
-                    dict[member.FieldName] = member.Serialize(value, this);
+                    o.DocValue[member.FieldName] = member.Serialize(value, this);
                 }
                 else
                 {
-                    dict[member.FieldName] = this.Serialize(member.DataType, value, depth);
+                    o.DocValue[member.FieldName] = this.Serialize(member.DataType, value, depth);
                 }
             }
 

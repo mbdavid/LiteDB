@@ -22,15 +22,15 @@ namespace LiteDB
                 // if any side are string, concat
                 if (value.First.IsString || value.Second.IsString)
                 {
-                    yield return value.First.RawValue?.ToString() + value.Second.RawValue?.ToString();
+                    yield return value.First.AsString + value.Second.AsString;
                 }
                 else if (value.First.IsDateTime && value.Second.IsNumber)
                 {
-                    yield return value.First.AsDateTime.AddDays(value.Second.AsDouble);
+                    yield return value.First.DateTimeValue.AddDays(value.Second.AsDouble);
                 }
                 else if (value.First.IsNumber && value.Second.IsDateTime)
                 {
-                    yield return value.Second.AsDateTime.AddDays(value.First.AsDouble);
+                    yield return value.Second.DateTimeValue.AddDays(value.First.AsDouble);
                 }
                 else if (value.First.IsNumber || value.Second.IsNumber)
                 {
