@@ -14,7 +14,6 @@ namespace LiteDB
         private static Dictionary<Type, ITypeResolver> _resolver = new Dictionary<Type, ITypeResolver>
         {
             [typeof(BsonValue)] = new BsonValueResolver(),
-            [typeof(BsonArray)] = new BsonValueResolver(),
             [typeof(BsonDocument)] = new BsonValueResolver(),
             [typeof(Convert)] = new ConvertResolver(),
             [typeof(DateTime)] = new DateTimeResolver(),

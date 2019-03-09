@@ -162,7 +162,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Returns all documents that are equals with any item in array (IN)
         /// </summary>
-        public static Index In(string name, BsonArray values, int order = Query.Ascending)
+        public static Index In(string name, BsonValue values, int order = Query.Ascending)
         {
             return new IndexIn(name, values, order);
         }

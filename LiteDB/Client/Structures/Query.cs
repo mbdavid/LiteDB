@@ -116,7 +116,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all documents that has value in values list (IN)
         /// </summary>
-        public static BsonExpression In(string field, BsonArray value)
+        public static BsonExpression In(string field, BsonValue value)
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
             if (value == null) throw new ArgumentNullException(nameof(value));
@@ -129,7 +129,7 @@ namespace LiteDB
         /// </summary>
         public static BsonExpression In(string field, params BsonValue[] values)
         {
-            return In(field, new BsonArray(values));
+            return In(field, values);
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace LiteDB
         /// </summary>
         public static BsonExpression In(string field, IEnumerable<BsonValue> values)
         {
-            return In(field, new BsonArray(values));
+            return In(field, values);
         }
 
         /// <summary>

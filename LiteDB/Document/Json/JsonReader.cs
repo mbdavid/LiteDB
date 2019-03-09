@@ -134,9 +134,9 @@ namespace LiteDB
             return obj;
         }
 
-        private BsonArray ReadArray()
+        private BsonValue ReadArray()
         {
-            var arr = new BsonArray();
+            var arr = new BsonValue();
 
             var token = _tokenizer.ReadToken();
 

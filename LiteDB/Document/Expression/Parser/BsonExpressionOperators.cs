@@ -145,12 +145,10 @@ namespace LiteDB
             {
                 if (!value.Second.IsArray) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
 
-                var arr = value.Second.AsArray;
+                if (value.Second.Count != 2) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
 
-                if (arr.Count != 2) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
-
-                var start = arr[0];
-                var end = arr[1];
+                var start = value.Second[0];
+                var end = value.Second[1];
 
                 yield return value.First >= start && value.First <= end;
             }
@@ -220,7 +218,7 @@ namespace LiteDB
             {
                 if (value.Second.IsArray)
                 {
-                    yield return value.Second.AsArray.Contains(value.First);
+                    yield return value.Second.Contains(value.First);
                 }
                 else
                 {
@@ -315,8 +313,6 @@ namespace LiteDB
             {
                 if (value.IsArray)
                 {
-                    var arr = value.AsArray;
-
                     // for expr.Type = parameter, just get value as index (fixed position)
                     if (expr.Type == BsonExpressionType.Parameter)
                     {
@@ -337,43 +333,29 @@ namespace LiteDB
                         // update parameters in expression
                         parameters.CopyTo(expr.Parameters);
 
-                        foreach (var item in arr)
+                        foreach (var item in value)
                         {
                             // execute for each child value and except a first bool value (returns if true)
                             var c = expr.Execute(root, new BsonValue[] { item }, true).First();
 
-                            if (c.IsBoolean && c.AsBoolean == true)
-                            {
-                                // fill destroy action to remove value from parent array
-                                item.Destroy = () => arr.Remove(item);
-
+                            if (c.IsBoolean && c.BoolValue)
                                 yield return item;
-                            }
                         }
                     }
                     // [*] - index are all values
                     else if (index == int.MaxValue)
                     {
-                        foreach (var item in arr)
-                        {
-                            // fill destroy action to remove value from parent array
-                            item.Destroy = () => arr.Remove(item);
-
+                        foreach (var item in value)
                             yield return item;
-                        }
                     }
                     // [n] - fixed index
                     else
                     {
-                        var idx = index < 0 ? arr.Count + index : index;
+                        var idx = index < 0 ? value.Count + index : index;
 
-                        if (arr.Count > idx)
+                        if (value.Count > idx)
                         {
-                            var item = arr[idx];
-
-                            // fill destroy action to remove value from parent array
-                            item.Destroy = () => arr.Remove(item);
-
+                            var item = value[idx];
                             yield return item;
                         }
                     }
@@ -425,7 +407,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> ARRAY_INIT(IEnumerable<IEnumerable<BsonValue>> values)
         {
-            yield return new BsonArray(values.SelectMany(x => x));
+            yield return new BsonValue(values.SelectMany(x => x));
         }
 
         #endregion

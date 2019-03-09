@@ -57,13 +57,9 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> ITEMS(IEnumerable<BsonValue> array)
         {
-            foreach (var arr in array.Where(x => x.IsArray).Select(x => x as BsonArray))
-            {
+            foreach (var arr in array.Where(x => x.IsArray))
                 foreach (var value in arr)
-                {
                     yield return value;
-                }
-            }
         }
 
         /// <summary>
@@ -84,7 +80,7 @@ namespace LiteDB
         {
             foreach (var value in values.Where(x => x.IsDocument).Select(x => x as BsonDocument))
             {
-                foreach(var key in value.Keys)
+                foreach (var key in value.Keys)
                 {
                     yield return key;
                 }
@@ -122,7 +118,7 @@ namespace LiteDB
             {
                 if (value.IsString) yield return value.AsString.Length;
                 else if (value.IsBinary) yield return value.AsBinary.Length;
-                else if (value.IsArray) yield return value.AsArray.Count;
+                else if (value.IsArray) yield return value.Count;
                 else if (value.IsDocument) yield return value.AsDocument.Keys.Count;
             }
         }

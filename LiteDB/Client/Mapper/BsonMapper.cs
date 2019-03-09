@@ -410,7 +410,7 @@ namespace LiteDB
                 // supports null values when "SerializeNullValues = true"
                 if (list == null) return BsonValue.Null;
 
-                var result = new BsonArray();
+                var result = new BsonValue();
                 var idField = entity.Id;
 
                 foreach (var item in (IEnumerable)list)
@@ -431,14 +431,12 @@ namespace LiteDB
 
             member.Deserialize = (bson, m) =>
             {
-                var array = bson.AsArray;
-
-                if (array.Count == 0) return m.Deserialize(member.DataType, array);
+                if (bson.Count == 0) return m.Deserialize(member.DataType, bson);
 
                 // copy array changing $id to _id
-                var result = new BsonArray();
+                var result = new BsonValue();
 
-                foreach (var item in array)
+                foreach (var item in bson)
                 {
                     var refId = item.AsDocument["$id"];
 

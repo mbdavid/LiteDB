@@ -50,7 +50,7 @@ namespace LiteDB
                     break;
 
                 case BsonType.Array:
-                    this.WriteArray(new BsonArray(value.ArrayValue));
+                    this.WriteArray(value);
                     break;
 
                 case BsonType.Document:
@@ -124,7 +124,7 @@ namespace LiteDB
             this.WriteEndBlock("}", hasData);
         }
 
-        private void WriteArray(BsonArray arr)
+        private void WriteArray(BsonValue arr)
         {
             var hasData = arr.Count > 0;
 
@@ -137,7 +137,7 @@ namespace LiteDB
                 // do not do this tests if is not pretty format - to better performance
                 if (this.Pretty)
                 {
-                    if (!((item.IsDocument && item.AsDocument.Keys.Any()) || (item.IsArray && item.AsArray.Count > 0)))
+                    if (!((item.IsDocument && item.AsDocument.Keys.Any()) || (item.IsArray && item.Count > 0)))
                     {
                         this.WriteIndent();
                     }
@@ -235,7 +235,7 @@ namespace LiteDB
             {
                 _writer.Write(' ');
 
-                if ((value.IsDocument && value.AsDocument.Keys.Any()) || (value.IsArray && value.AsArray.Count > 0))
+                if ((value.IsDocument && value.AsDocument.Keys.Any()) || (value.IsArray && value.Count > 0))
                 {
                     this.WriteNewLine();
                 }

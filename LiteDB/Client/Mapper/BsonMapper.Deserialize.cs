@@ -95,10 +95,6 @@ namespace LiteDB
             {
                 return value.AsDocument;
             }
-            else if (type == typeof(BsonArray))
-            {
-                return value.AsArray;
-            }
 
             // raw values to native bson values
             else if (_bsonTypes.Contains(type))
@@ -142,15 +138,15 @@ namespace LiteDB
                 // when array are from an object (like in Dictionary<string, object> { ["array"] = new string[] { "a", "b" } 
                 if (type == typeof(object))
                 {
-                    return this.DeserializeArray(typeof(object), value.AsArray);
+                    return this.DeserializeArray(typeof(object), value);
                 }
                 if (type.IsArray)
                 {
-                    return this.DeserializeArray(type.GetElementType(), value.AsArray);
+                    return this.DeserializeArray(type.GetElementType(), value);
                 }
                 else
                 {
-                    return this.DeserializeList(type, value.AsArray);
+                    return this.DeserializeList(type, value);
                 }
             }
 
@@ -194,7 +190,7 @@ namespace LiteDB
             return value.RawValue;
         }
 
-        private object DeserializeArray(Type type, BsonArray array)
+        private object DeserializeArray(Type type, BsonValue array)
         {
             var arr = Array.CreateInstance(type, array.Count);
             var idx = 0;
@@ -207,7 +203,7 @@ namespace LiteDB
             return arr;
         }
 
-        private object DeserializeList(Type type, BsonArray value)
+        private object DeserializeList(Type type, BsonValue value)
         {
             var itemType = Reflection.GetListItemType(type);
             var enumerable = (IEnumerable)Reflection.CreateInstance(type);

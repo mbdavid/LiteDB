@@ -56,7 +56,7 @@ namespace LiteDB.Tests.Document
             // ACT
             // copy all properties to destination array
 
-            var result = new KeyValuePair<string, BsonValue>[document.Count()];
+            var result = new KeyValuePair<string, BsonValue>[document.DocValue.Count];
             document.CopyTo(result, 0);
         }
 

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace LiteDB
@@ -9,7 +11,7 @@ namespace LiteDB
     /// <summary>
     /// Represent a Bson Value used in BsonDocument
     /// </summary>
-    public class BsonValue : IComparable<BsonValue>, IEquatable<BsonValue>
+    public class BsonValue : IComparable<BsonValue>, IEquatable<BsonValue>, IList<BsonValue>
     {
         public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -53,7 +55,7 @@ namespace LiteDB
                     case BsonType.Decimal: return DecimalValue;
                     case BsonType.String: return StringValue;
                     case BsonType.Document: return DocValue;
-                    case BsonType.Array: return ArrayValue;
+                    case BsonType.Array: return _arrayValue;
                     case BsonType.Binary: return BinaryValue;
                     case BsonType.ObjectId: return ObjectIdValue;
                     case BsonType.Guid: return GuidValue;
@@ -120,8 +122,13 @@ namespace LiteDB
         public BsonValue(List<BsonValue> value)
         {
             this.Type = value == null ? BsonType.Null : BsonType.Array;
-            this.ArrayValue = value;
+            this._arrayValue = value;
         }
+
+        public BsonValue(BsonValue[] array) : this(array.ToList()) { }
+
+        public BsonValue(IEnumerable<BsonValue> items) : this(items.ToList()) { }
+
 
         public BsonValue(Byte[] value)
         {
@@ -180,7 +187,7 @@ namespace LiteDB
                     this.DocValue = value.DocValue;
                     break;
                 case BsonType.Array:
-                    this.ArrayValue = value.ArrayValue;
+                    this._arrayValue = value._arrayValue;
                     break;
                 case BsonType.Binary:
                     this.BinaryValue = value.BinaryValue;
@@ -242,7 +249,7 @@ namespace LiteDB
             else if (value is List<BsonValue> valArray)
             {
                 this.Type = BsonType.Array;
-                this.ArrayValue = valArray;
+                this._arrayValue = valArray;
             }
             else if (value is Byte[] valBinary)
             {
@@ -296,7 +303,7 @@ namespace LiteDB
                         this.DocValue = valBson.DocValue;
                         break;
                     case BsonType.Array:
-                        this.ArrayValue = valBson.ArrayValue;
+                        this._arrayValue = valBson._arrayValue;
                         break;
                     case BsonType.Binary:
                         this.BinaryValue = valBson.BinaryValue;
@@ -349,7 +356,7 @@ namespace LiteDB
                     }
 
                     this.Type = BsonType.Array;
-                    this.ArrayValue = list;
+                    this._arrayValue = list;
                 }
                 else
                 {
@@ -371,35 +378,159 @@ namespace LiteDB
             set => throw new InvalidOperationException("Cannot access non-document type value on " + this.RawValue);
         }
 
+        #endregion
+
+        #region Array implementation
+
         /// <summary>
         /// Get/Set value in array position. Works only when value are array
         /// </summary>
         public virtual BsonValue this[int index]
         {
-            get => throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
-            set => throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+            get
+            {
+                if (!IsArray)
+                    throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+                return _arrayValue[index];
+            }
+            set
+            {
+                if (!IsArray)
+                    throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+                _arrayValue[index] = value;
+            }
         }
+
+        public int Count
+        {
+            get
+            {
+                if (!IsArray)
+                    throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+                return _arrayValue.Count;
+            }
+        }
+
+        public bool IsReadOnly => false;
+
+        public int IndexOf(BsonValue item)
+        {
+            if (!IsArray)
+                throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+            return _arrayValue.IndexOf(item);
+        }
+
+        public void Insert(int index, BsonValue item)
+        {
+            if (Type == BsonType.Null)
+            {
+                Type = BsonType.Array;
+                _arrayValue = new List<BsonValue>();
+            }
+
+            if (!IsArray)
+                throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+            _arrayValue.Insert(index, item);
+        }
+
+        public void RemoveAt(int index)
+        {
+            if (!IsArray)
+                throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+            _arrayValue.RemoveAt(index);
+        }
+
+        public void Add(BsonValue item)
+        {
+            if (Type == BsonType.Null)
+            {
+                Type = BsonType.Array;
+                _arrayValue = new List<BsonValue>();
+            }
+
+            if (!IsArray)
+                throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+            _arrayValue.Add(item);
+        }
+
+        public void AddRange<T>(IEnumerable<T> array) where T : BsonValue
+        {
+            if (Type == BsonType.Null)
+            {
+                Type = BsonType.Array;
+                _arrayValue = new List<BsonValue>();
+            }
+
+            if (!IsArray)
+                throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+
+            foreach (var item in array)
+                Add(item ?? BsonValue.Null);
+        }
+
+        public void Clear()
+        {
+            if (!IsArray)
+                throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+            _arrayValue.Clear();
+        }
+
+        public bool Contains(BsonValue item)
+        {
+            if (!IsArray)
+                throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+            return _arrayValue.Contains(item);
+        }
+
+        public void CopyTo(BsonValue[] array, int arrayIndex)
+        {
+            if (!IsArray)
+                throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+            _arrayValue.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(BsonValue item)
+        {
+            if (!IsArray)
+                throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+            return _arrayValue.Remove(item);
+        }
+
+        public IEnumerator<BsonValue> GetEnumerator()
+        {
+            if (!IsArray)
+                throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+            return _arrayValue.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            if (!IsArray)
+                throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+
+            foreach (var value in _arrayValue)
+                yield return new BsonValue(value);
+        }
+
 
         #endregion
 
         #region Convert types
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public BsonArray AsArray
-        {
-            get
-            {
-                if (this.IsArray)
-                    return new BsonArray(ArrayValue)
-                    {
-                        Length = this.Length,
-                        Destroy = this.Destroy
-                    };
-                else
-                    return default(BsonArray);
-            }
-        }
-
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public BsonDocument AsDocument
@@ -446,9 +577,9 @@ namespace LiteDB
                     case BsonType.String:
                         return StringValue;
                     case BsonType.Document:
-                        return DocValue.ToString();
+                        return JsonSerializer.Serialize(this);
                     case BsonType.Array:
-                        return ArrayValue.ToString();
+                        return JsonSerializer.Serialize(this);
                     case BsonType.Binary:
                         return BinaryValue.ToString();
                     case BsonType.ObjectId:
@@ -635,7 +766,7 @@ namespace LiteDB
         public UInt64 Uint64Value { get; private set; }
         public String StringValue { get; private set; }
         public Dictionary<string, BsonValue> DocValue { get; private set; }
-        public List<BsonValue> ArrayValue { get; private set; }
+        private List<BsonValue> _arrayValue { get; set; }
         public Byte[] BinaryValue { get; private set; }
         public ObjectId ObjectIdValue { get; private set; }
         public Guid GuidValue { get; private set; }
@@ -689,7 +820,7 @@ namespace LiteDB
         public static implicit operator BsonValue(Dictionary<string, BsonValue> value) => new BsonValue(value);
 
         // Array
-        public static implicit operator List<BsonValue>(BsonValue value) => value.ArrayValue;
+        public static implicit operator List<BsonValue>(BsonValue value) => value._arrayValue;
 
         // Array
         public static implicit operator BsonValue(List<BsonValue> value) => new BsonValue(value);
@@ -790,10 +921,7 @@ namespace LiteDB
             return left.AsDouble / right.AsDouble;
         }
 
-        public override string ToString()
-        {
-            return JsonSerializer.Serialize(this);
-        }
+        public override string ToString() => AsString;
 
         #endregion
 
@@ -829,7 +957,24 @@ namespace LiteDB
                 case BsonType.String: return string.Compare(StringValue, other.StringValue);
 
                 case BsonType.Document: return this.AsDocument.CompareTo(other);
-                case BsonType.Array: return this.AsArray.CompareTo(other);
+                case BsonType.Array:
+                    {
+                        var result = 0;
+                        var i = 0;
+                        var stop = Math.Min(_arrayValue.Count, other._arrayValue.Count);
+
+                        // compare each element
+                        for (; 0 == result && i < stop; i++)
+                            result = _arrayValue[i].CompareTo(other._arrayValue[i]);
+
+                        if (result != 0)
+                            return result;
+
+                        if (i == _arrayValue.Count)
+                            return i == other._arrayValue.Count ? 0 : -1;
+
+                        return 1;
+                    }
 
                 case BsonType.Binary: return BinaryValue.BinaryCompareTo(other.BinaryValue);
                 case BsonType.ObjectId: return ObjectIdValue.CompareTo(other.ObjectIdValue);
@@ -911,7 +1056,7 @@ namespace LiteDB
                     hash += this.DocValue.GetHashCode();
                     break;
                 case BsonType.Array:
-                    hash += this.ArrayValue.GetHashCode();
+                    hash += this._arrayValue.GetHashCode();
                     break;
                 case BsonType.Binary:
                     hash += this.BinaryValue.GetHashCode();
@@ -976,9 +1121,9 @@ namespace LiteDB
                 // for Array/Document calculate from elements
                 case BsonType.Array:
                     this.Length = 5; // header + footer
-                    for (var i = 0; i < ArrayValue.Count; i++)
+                    for (var i = 0; i < _arrayValue.Count; i++)
                     {
-                        this.Length += this.GetBytesCountElement(i.ToString(), ArrayValue[i] ?? BsonValue.Null, recalc);
+                        this.Length += this.GetBytesCountElement(i.ToString(), _arrayValue[i] ?? BsonValue.Null, recalc);
                     }
                     break;
 
