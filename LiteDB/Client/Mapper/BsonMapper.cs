@@ -330,7 +330,7 @@ namespace LiteDB
                 .Where(x => x.CanRead && x.GetIndexParameters().Length == 0)
                 .Select(x => x as MemberInfo));
 
-            if(this.IncludeFields)
+            if (this.IncludeFields)
             {
                 members.AddRange(type.GetFields(flags).Where(x => !x.Name.EndsWith("k__BackingField") && x.IsStatic == false).Select(x => x as MemberInfo));
             }
@@ -408,10 +408,12 @@ namespace LiteDB
             member.Serialize = (list, m) =>
             {
                 // supports null values when "SerializeNullValues = true"
-                if (list == null) return BsonValue.Null;
+                if (list == null)
+                    return BsonValue.Null;
 
                 var result = new BsonValue();
                 var idField = entity.Id;
+                var arr = result.AsArray;
 
                 foreach (var item in (IEnumerable)list)
                 {
@@ -419,7 +421,7 @@ namespace LiteDB
 
                     var id = idField.Getter(item);
 
-                    result.Add(new BsonDocument
+                    arr.Add(new BsonDocument
                     {
                         { "$id", m.Serialize(id.GetType(), id, 0) },
                         { "$ref", collection }
@@ -431,23 +433,27 @@ namespace LiteDB
 
             member.Deserialize = (bson, m) =>
             {
-                if (bson.Count == 0) return m.Deserialize(member.DataType, bson);
+                var source = bson.AsArray;
+
+                if (source.Count == 0)
+                    return m.Deserialize(member.DataType, bson);
 
                 // copy array changing $id to _id
                 var result = new BsonValue();
+                var arr = result.AsArray;
 
-                foreach (var item in bson)
+                foreach (var item in source)
                 {
                     var refId = item.AsDocument["$id"];
 
                     // if refId is null was included by "include" query, so "item" is full filled document
                     if (refId.IsNull)
                     {
-                        result.Add(item);
+                        arr.Add(item);
                     }
                     else
                     {
-                        result.Add(new BsonDocument { { "_id", refId } });
+                        arr.Add(new BsonDocument { { "_id", refId } });
                     }
 
                 }

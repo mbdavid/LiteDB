@@ -28,16 +28,16 @@ namespace LiteDB.Tests.Document
 
 
             doc["Items"] = new BsonValue();
-
-            doc["Items"].Add(new BsonDocument());
-            doc["Items"][0].AsDocument["Qtd"] = 3;
-            doc["Items"][0].AsDocument["Description"] = "Big beer package";
-            doc["Items"][0].AsDocument["Unit"] = (double)10 / (double)3;
-
-            doc["Items"].Add("string-one");
-            doc["Items"].Add(null);
-            doc["Items"].Add(true);
-            doc["Items"].Add(DateTime.Now);
+            var array = doc["Items"].AsArray;
+            array.Add(new BsonDocument());
+            array[0].AsDocument["Qtd"] = 3;
+            array[0].AsDocument["Description"] = "Big beer package";
+            array[0].AsDocument["Unit"] = (double)10 / (double)3;
+            
+            array.Add("string-one");
+            array.Add(null);
+            array.Add(true);
+            array.Add(DateTime.Now);
 
             doc["Last"] = 999;
 
@@ -66,9 +66,9 @@ namespace LiteDB.Tests.Document
             Assert.AreEqual(DateTime.MaxValue, doc["maxDate"].AsDateTime);
             Assert.AreEqual(DateTime.MinValue, doc["minDate"].AsDateTime);
 
-            Assert.AreEqual(o["Items"].Count, doc["Items"].Count);
-            Assert.AreEqual(o["Items"][0].AsDocument["Unit"].AsDouble, doc["Items"][0].AsDocument["Unit"].AsDouble);
-            Assert.AreEqual(o["Items"][4].AsDateTime.ToString(), doc["Items"][4].AsDateTime.ToString());
+            Assert.AreEqual(o["Items"].AsArray.Count, doc["Items"].AsArray.Count);
+            Assert.AreEqual(o["Items"].AsArray[0].AsDocument["Unit"].AsDouble, doc["Items"].AsArray[0].AsDocument["Unit"].AsDouble);
+            Assert.AreEqual(o["Items"].AsArray[4].AsDateTime.ToString(), doc["Items"].AsArray[4].AsDateTime.ToString());
         }
 
         [TestMethod]

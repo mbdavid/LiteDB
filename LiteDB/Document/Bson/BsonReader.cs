@@ -65,7 +65,8 @@ namespace LiteDB
         {
             var length = reader.ReadInt32();
             var end = reader.BaseStream.Position + length - 5;
-            var arr = new BsonValue();
+            var bson = new BsonValue();
+            var arr = bson.AsArray;
 
             while (reader.BaseStream.Position < end)
             {
@@ -75,7 +76,7 @@ namespace LiteDB
 
             reader.ReadByte(); // zero
 
-            return arr;
+            return bson;
         }
 
         /// <summary>

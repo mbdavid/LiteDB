@@ -61,14 +61,14 @@ namespace LiteDB.Engine
         {
             return
                 type == BsonExpressionType.Equal ? LiteDB.Engine.Index.EQ(name, value) :
-                type == BsonExpressionType.Between ? LiteDB.Engine.Index.Between(name, value[0], value[1]) :
+                type == BsonExpressionType.Between ? LiteDB.Engine.Index.Between(name, value.AsArray[0], value.AsArray[1]) :
                 type == BsonExpressionType.Like ? LiteDB.Engine.Index.Like(name, value.AsString) :
                 type == BsonExpressionType.GreaterThan ? LiteDB.Engine.Index.GT(name, value) :
                 type == BsonExpressionType.GreaterThanOrEqual ? LiteDB.Engine.Index.GTE(name, value) :
                 type == BsonExpressionType.LessThan ? LiteDB.Engine.Index.LT(name, value) :
                 type == BsonExpressionType.LessThanOrEqual ? LiteDB.Engine.Index.LTE(name, value) :
                 type == BsonExpressionType.NotEqual ? LiteDB.Engine.Index.Not(name, value) :
-                type == BsonExpressionType.In ? (value.IsArray ? LiteDB.Engine.Index.In(name, value) : LiteDB.Engine.Index.EQ(name, value)) : 
+                type == BsonExpressionType.In ? (value.IsArray ? LiteDB.Engine.Index.In(name, value.AsArray) : LiteDB.Engine.Index.EQ(name, value)) : 
                 null;
         }
     }

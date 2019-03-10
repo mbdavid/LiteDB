@@ -134,14 +134,14 @@ namespace LiteDB
 
         private BsonValue SerializeArray(Type type, IEnumerable array, int depth)
         {
-            var arr = new BsonValue();
-
+            var bson = new BsonValue();
+            var arr = bson.AsArray;
             foreach (var item in array)
             {
                 arr.Add(this.Serialize(type, item, depth));
             }
 
-            return arr;
+            return bson;
         }
 
         private BsonDocument SerializeDictionary(Type type, IDictionary dict, int depth)

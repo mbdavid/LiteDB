@@ -138,15 +138,15 @@ namespace LiteDB
                 // when array are from an object (like in Dictionary<string, object> { ["array"] = new string[] { "a", "b" } 
                 if (type == typeof(object))
                 {
-                    return this.DeserializeArray(typeof(object), value);
+                    return this.DeserializeArray(typeof(object), value.AsArray);
                 }
                 if (type.IsArray)
                 {
-                    return this.DeserializeArray(type.GetElementType(), value);
+                    return this.DeserializeArray(type.GetElementType(), value.AsArray);
                 }
                 else
                 {
-                    return this.DeserializeList(type, value);
+                    return this.DeserializeList(type, value.AsArray);
                 }
             }
 
@@ -190,7 +190,7 @@ namespace LiteDB
             return value.RawValue;
         }
 
-        private object DeserializeArray(Type type, BsonValue array)
+        private object DeserializeArray(Type type, BsonArray array)
         {
             var arr = Array.CreateInstance(type, array.Count);
             var idx = 0;
@@ -203,7 +203,7 @@ namespace LiteDB
             return arr;
         }
 
-        private object DeserializeList(Type type, BsonValue value)
+        private object DeserializeList(Type type, BsonArray value)
         {
             var itemType = Reflection.GetListItemType(type);
             var enumerable = (IEnumerable)Reflection.CreateInstance(type);

@@ -31,7 +31,7 @@ namespace LiteDB.Engine
 
             if (options.IsDocument && options.AsDocument["header"].IsArray)
             {
-                header.AddRange(options.AsDocument["header"].Select(x => x.AsString));
+                header.AddRange(options.AsDocument["header"].AsArray.Select(x => x.AsString));
             }
 
             using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))

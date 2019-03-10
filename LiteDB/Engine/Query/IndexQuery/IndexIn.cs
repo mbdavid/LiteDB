@@ -9,9 +9,9 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexIn : Index
     {
-        private BsonValue _values;
+        private BsonArray _values;
 
-        public IndexIn(string name, BsonValue values, int order)
+        public IndexIn(string name, BsonArray values, int order)
             : base(name, order)
         {
             _values = values;

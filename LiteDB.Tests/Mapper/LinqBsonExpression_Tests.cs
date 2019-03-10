@@ -338,8 +338,8 @@ namespace LiteDB.Tests.Mapper
         {
             TestExpr<BsonValue>(x => x["name"].AsString, "$.name");
             TestExpr<BsonValue>(x => x["first"]["name"], "$.first.name");
-            TestExpr<BsonValue>(x => x["arr"][0]["demo"], "$.arr[0].demo");
-            TestExpr<BsonValue>(x => x["phones"].Items(z => z["type"] == 1)["number"], "$.phones[(type = @p0)].number", 1);
+            TestExpr<BsonValue>(x => x["arr"].AsArray[0]["demo"], "$.arr[0].demo");
+            TestExpr<BsonValue>(x => x["phones"].AsArray.Items(z => z["type"] == 1)["number"], "$.phones[(type = @p0)].number", 1);
             TestExpr<BsonValue>(x => x["age"] == 1, "($.age = @p0)", 1);
         }
 

@@ -143,12 +143,16 @@ namespace LiteDB
         {
             foreach (var value in ZipValues(left, right))
             {
-                if (!value.Second.IsArray) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
+                if (!value.Second.IsArray)
+                    throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
 
-                if (value.Second.Count != 2) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
+                var arr = value.Second.AsArray;
 
-                var start = value.Second[0];
-                var end = value.Second[1];
+                if (arr.Count != 2)
+                    throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
+
+                var start = arr[0];
+                var end = arr[1];
 
                 yield return value.First >= start && value.First <= end;
             }
@@ -218,7 +222,7 @@ namespace LiteDB
             {
                 if (value.Second.IsArray)
                 {
-                    yield return value.Second.Contains(value.First);
+                    yield return value.Second.AsArray.Contains(value.First);
                 }
                 else
                 {
@@ -327,13 +331,15 @@ namespace LiteDB
                         index = idx.AsInt32;
                     }
 
+                    var arr = value.AsArray;
+
                     // [<expr>] - index are an expression
                     if (expr.Type != BsonExpressionType.Empty && expr.Type != BsonExpressionType.Parameter)
                     {
                         // update parameters in expression
                         parameters.CopyTo(expr.Parameters);
 
-                        foreach (var item in value)
+                        foreach (var item in arr)
                         {
                             // execute for each child value and except a first bool value (returns if true)
                             var c = expr.Execute(root, new BsonValue[] { item }, true).First();
@@ -345,17 +351,17 @@ namespace LiteDB
                     // [*] - index are all values
                     else if (index == int.MaxValue)
                     {
-                        foreach (var item in value)
+                        foreach (var item in arr)
                             yield return item;
                     }
                     // [n] - fixed index
                     else
                     {
-                        var idx = index < 0 ? value.Count + index : index;
+                        var idx = index < 0 ? arr.Count + index : index;
 
-                        if (value.Count > idx)
+                        if (arr.Count > idx)
                         {
-                            var item = value[idx];
+                            var item = arr[idx];
                             yield return item;
                         }
                     }

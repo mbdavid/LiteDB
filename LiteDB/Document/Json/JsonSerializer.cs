@@ -24,6 +24,16 @@ namespace LiteDB
             return sb.ToString();
         }
 
+        public static string Serialize(BsonArray array)
+        {
+            var sb = new StringBuilder();
+
+            Serialize(array, sb);
+
+            return sb.ToString();
+        }
+
+
         /// <summary>
         /// Json serialize a BsonValue into a TextWriter
         /// </summary>
@@ -32,6 +42,13 @@ namespace LiteDB
             var json = new JsonWriter(writer);
 
             json.Serialize(value ?? BsonValue.Null);
+        }
+
+        public static void Serialize(BsonArray array, TextWriter writer)
+        {
+            var json = new JsonWriter(writer);
+
+            json.Serialize(array);
         }
 
         /// <summary>
@@ -44,6 +61,16 @@ namespace LiteDB
                 var w = new JsonWriter(writer);
 
                 w.Serialize(value ?? BsonValue.Null);
+            }
+        }
+
+        public static void Serialize(BsonArray array, StringBuilder sb)
+        {
+            using (var writer = new StringWriter(sb))
+            {
+                var w = new JsonWriter(writer);
+
+                w.Serialize(array);
             }
         }
 

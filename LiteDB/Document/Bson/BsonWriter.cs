@@ -44,7 +44,7 @@ namespace LiteDB
             writer.Write((byte)0x00);
         }
 
-        internal void WriteArray(BinaryWriter writer, BsonValue array)
+        internal void WriteArray(BinaryWriter writer, BsonArray array)
         {
             writer.Write(array.GetBytesCount(false));
 
@@ -82,7 +82,7 @@ namespace LiteDB
                 case BsonType.Array:
                     writer.Write((byte)0x04);
                     this.WriteCString(writer, key);
-                    this.WriteArray(writer, value);
+                    this.WriteArray(writer, value.AsArray);
                     break;
 
                 case BsonType.Binary:

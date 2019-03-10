@@ -40,6 +40,14 @@ namespace LiteDB
             this.WriteValue(value ?? BsonValue.Null);
         }
 
+        public void Serialize(BsonArray array)
+        {
+            _indent = 0;
+            _spacer = this.Pretty ? " " : "";
+
+            this.WriteArray(array);
+        }
+
         private void WriteValue(BsonValue value)
         {
             // use direct cast to better performance
@@ -50,7 +58,7 @@ namespace LiteDB
                     break;
 
                 case BsonType.Array:
-                    this.WriteArray(value);
+                    this.WriteArray(value.AsArray);
                     break;
 
                 case BsonType.Document:
@@ -124,20 +132,20 @@ namespace LiteDB
             this.WriteEndBlock("}", hasData);
         }
 
-        private void WriteArray(BsonValue arr)
+        private void WriteArray(BsonArray array)
         {
-            var hasData = arr.Count > 0;
+            var hasData = array.Count > 0;
 
             this.WriteStartBlock("[", hasData);
 
-            for (var i = 0; i < arr.Count; i++)
+            for (var i = 0; i < array.Count; i++)
             {
-                var item = arr[i];
+                var item = array[i];
 
                 // do not do this tests if is not pretty format - to better performance
                 if (this.Pretty)
                 {
-                    if (!((item.IsDocument && item.AsDocument.Keys.Any()) || (item.IsArray && item.Count > 0)))
+                    if (!((item.IsDocument && item.AsDocument.Keys.Any()) || (item.IsArray && item.AsArray.Count > 0)))
                     {
                         this.WriteIndent();
                     }
@@ -145,7 +153,7 @@ namespace LiteDB
 
                 this.WriteValue(item ?? BsonValue.Null);
 
-                if (i < arr.Count - 1)
+                if (i < array.Count - 1)
                 {
                     _writer.Write(',');
                 }
@@ -235,7 +243,7 @@ namespace LiteDB
             {
                 _writer.Write(' ');
 
-                if ((value.IsDocument && value.AsDocument.Keys.Any()) || (value.IsArray && value.Count > 0))
+                if ((value.IsDocument && value.AsDocument.Keys.Any()) || (value.IsArray && value.AsArray.Count > 0))
                 {
                     this.WriteNewLine();
                 }
