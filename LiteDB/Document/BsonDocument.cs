@@ -4,25 +4,34 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace LiteDB
 {
-    public class BsonDocument : BsonValue, IDictionary<string, BsonValue>
+    public class BsonDocument : IDictionary<string, BsonValue>, IComparable<BsonValue>
     {
+        private Dictionary<string, BsonValue> _dictionary;
+
         public BsonDocument()
-            : base(new Dictionary<string, BsonValue>(StringComparer.OrdinalIgnoreCase))
         {
+            _dictionary = new Dictionary<string, BsonValue>(StringComparer.OrdinalIgnoreCase);
+            Length = 5;
         }
 
         public BsonDocument(ConcurrentDictionary<string, BsonValue> dict)
-            : this(new Dictionary<string, BsonValue>(dict))
-        {
-        }
+            : this(new Dictionary<string, BsonValue>(dict)) { }
 
         public BsonDocument(Dictionary<string, BsonValue> dict)
-            : base(dict)
         {
-            if (dict == null) throw new ArgumentNullException(nameof(dict));
+            if (dict == null)
+                throw new ArgumentNullException(nameof(dict));
+
+            Length = 5;
+
+            _dictionary = dict;
+
+            foreach (var item in _dictionary)
+                Length += GetBytesCountElement(item.Key, item.Value);
         }
 
         /// <summary>
@@ -33,11 +42,34 @@ namespace LiteDB
         /// <summary>
         /// Get/Set a field for document. Fields are case sensitive
         /// </summary>
-        public override BsonValue this[string name]
+        public BsonValue this[string name]
         {
-            get => this.DocValue.GetOrDefault(name, BsonValue.Null);
-            set => this.DocValue[name] = value ?? BsonValue.Null;
+            get => _dictionary.GetOrDefault(name, BsonValue.Null);
+            set
+            {
+                if (_dictionary.ContainsKey(name))
+                    Length -= GetBytesCountElement(name, _dictionary[name]);
+
+                _dictionary[name] = value ?? BsonValue.Null;
+                Length += GetBytesCountElement(name, value);
+            }
         }
+
+        #region Length
+
+        public int Length;
+
+        private int GetBytesCountElement(string key, BsonValue value)
+        {
+            return
+                1 + // element type
+                Encoding.UTF8.GetByteCount(key) + // CString
+                1 + // CString 0x00
+                value?.Length ?? 0 +
+                (value.Type == BsonType.String || value.Type == BsonType.Binary || value.Type == BsonType.Guid ? 5 : 0); // bytes.Length + 0x??
+        }
+
+        #endregion
 
         #region Update support with expressions
 
@@ -56,9 +88,14 @@ namespace LiteDB
         /// </summary>
         public BsonDocument Extend(BsonDocument other)
         {
-            foreach (var key in other.DocValue.Keys)
+            foreach (var key in other._dictionary.Keys)
             {
-                this.DocValue[key] = other.DocValue[key];
+                if (_dictionary.ContainsKey(key))
+                    Length -= GetBytesCountElement(key, _dictionary[key]);
+
+                _dictionary[key] = other._dictionary[key];
+
+                Length += GetBytesCountElement(key, _dictionary[key]);
             }
 
             return this;
@@ -68,11 +105,11 @@ namespace LiteDB
 
         #region CompareTo / ToString
 
-        public override int CompareTo(BsonValue other)
+        public int CompareTo(BsonValue other)
         {
             // if types are different, returns sort type order
             if (other.Type != BsonType.Document)
-                return this.Type.CompareTo(other.Type);
+                return BsonType.Document.CompareTo(other.Type);
 
             var thisKeys = this.Keys.ToArray();
             var thisLength = thisKeys.Length;
@@ -101,56 +138,85 @@ namespace LiteDB
 
         #region IDictionary
 
-        public ICollection<string> Keys => this.DocValue.Keys.OrderBy(x => x == "_id" ? 1 : 2).ToList();
+        public IEnumerable<string> KeysOrdered
+        {
+            get
+            {
+                if (_dictionary.ContainsKey("_id"))
+                    yield return "_id";
+
+                foreach (var key in _dictionary.Keys.Where(x => x != "_id"))
+                    yield return key;
+            }
+        }
+
+        public ICollection<string> Keys => _dictionary.Keys;
 
 
-        public ICollection<BsonValue> Values => this.DocValue.Values;
+        public ICollection<BsonValue> Values => _dictionary.Values;
 
 
-        public int Count => this.DocValue.Count;
+        public int Count => _dictionary.Count;
 
 
         public bool IsReadOnly => false;
 
 
-        public bool ContainsKey(string key) => this.DocValue.ContainsKey(key);
+        public bool ContainsKey(string key) => _dictionary.ContainsKey(key);
 
 
         public void Add(string key, BsonValue value) => this[key] = value;
 
 
-        public bool Remove(string key) => this.DocValue.Remove(key);
+        public bool Remove(string key)
+        {
+            if (_dictionary.ContainsKey(key))
+                Length -= GetBytesCountElement(key, _dictionary[key]);
+
+            return _dictionary.Remove(key);
+        }
 
 
-        public bool TryGetValue(string key, out BsonValue value) => this.DocValue.TryGetValue(key, out value);
+        public bool TryGetValue(string key, out BsonValue value) => _dictionary.TryGetValue(key, out value);
 
 
         public void Add(KeyValuePair<string, BsonValue> item) => this[item.Key] = item.Value;
 
 
-        public void Clear() => this.DocValue.Clear();
+        public void Clear()
+        {
+            Length = 5;
+            _dictionary.Clear();
+        }
 
 
-        public bool Contains(KeyValuePair<string, BsonValue> item) => this.DocValue.Contains(item);
+        public bool Contains(KeyValuePair<string, BsonValue> item) => _dictionary.Contains(item);
 
 
-        public void CopyTo(KeyValuePair<string, BsonValue>[] array, int arrayIndex) => ((ICollection<KeyValuePair<string, BsonValue>>)this.DocValue).CopyTo(array, arrayIndex);
+        public void CopyTo(KeyValuePair<string, BsonValue>[] array, int arrayIndex) => ((ICollection<KeyValuePair<string, BsonValue>>)_dictionary).CopyTo(array, arrayIndex);
 
 
         public void CopyTo(BsonDocument doc)
         {
-            foreach (var key in this.DocValue.Keys)
-                doc.DocValue[key] = this.DocValue[key];
+            foreach (var key in _dictionary.Keys)
+                doc[key] = _dictionary[key];
         }
 
-        public bool Remove(KeyValuePair<string, BsonValue> item) => this.DocValue.Remove(item.Key);
+        public bool Remove(KeyValuePair<string, BsonValue> item) => Remove(item.Key);
 
 
-        public IEnumerator<KeyValuePair<string, BsonValue>> GetEnumerator() => this.DocValue.GetEnumerator();
+        public IEnumerator<KeyValuePair<string, BsonValue>> GetEnumerator() => _dictionary.GetEnumerator();
 
 
-        IEnumerator IEnumerable.GetEnumerator() => this.DocValue.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         #endregion
+
+        public static implicit operator Dictionary<string, BsonValue>(BsonDocument value) => value._dictionary;
+
+
+        public override int GetHashCode() => _dictionary.GetHashCode();
+
+        public override bool Equals(object obj) => CompareTo(new BsonValue(obj)) == 0;
     }
 }

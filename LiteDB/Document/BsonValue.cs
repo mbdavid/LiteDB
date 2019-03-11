@@ -54,7 +54,7 @@ namespace LiteDB
                     case BsonType.Double: return DoubleValue;
                     case BsonType.Decimal: return DecimalValue;
                     case BsonType.String: return StringValue;
-                    case BsonType.Document: return DocValue;
+                    case BsonType.Document: return _docValue;
                     case BsonType.Array: return _arrayValue;
                     case BsonType.Binary: return BinaryValue;
                     case BsonType.ObjectId: return ObjectIdValue;
@@ -113,10 +113,27 @@ namespace LiteDB
             this.StringValue = value;
         }
 
+
+        public BsonValue(BsonDocument document) : this()
+        {
+            if (document == null)
+                Type = BsonType.Null;
+            else
+            {
+                Type = BsonType.Document;
+                _docValue = document;
+            }
+        }
+
         public BsonValue(Dictionary<string, BsonValue> value)
         {
-            this.Type = value == null ? BsonType.Null : BsonType.Document;
-            this.DocValue = value;
+            if (value == null)
+                Type = BsonType.Null;
+            else
+            {
+                Type = BsonType.Document;
+                _docValue = new BsonDocument(value);
+            }
         }
 
         public BsonValue(List<BsonValue> value)
@@ -189,7 +206,7 @@ namespace LiteDB
                     this.StringValue = value.StringValue;
                     break;
                 case BsonType.Document:
-                    this.DocValue = value.DocValue;
+                    this._docValue = value._docValue;
                     break;
                 case BsonType.Array:
                     this._arrayValue = value._arrayValue;
@@ -249,7 +266,7 @@ namespace LiteDB
             else if (value is Dictionary<string, BsonValue> valDoc)
             {
                 this.Type = BsonType.Document;
-                this.DocValue = valDoc;
+                this._docValue = new BsonDocument(valDoc);
             }
             else if (value is List<BsonValue> valArray)
             {
@@ -305,7 +322,7 @@ namespace LiteDB
                         this.StringValue = valBson.StringValue;
                         break;
                     case BsonType.Document:
-                        this.DocValue = valBson.DocValue;
+                        this._docValue = valBson._docValue;
                         break;
                     case BsonType.Array:
                         this._arrayValue = valBson._arrayValue;
@@ -344,12 +361,10 @@ namespace LiteDB
                     var dict = new Dictionary<string, BsonValue>(StringComparer.OrdinalIgnoreCase);
 
                     foreach (var key in dictionary.Keys)
-                    {
                         dict.Add(key.ToString(), new BsonValue(dictionary[key]));
-                    }
 
                     this.Type = BsonType.Document;
-                    this.DocValue = dict;
+                    this._docValue = new BsonDocument(dict);
                 }
                 else if (enumerable != null)
                 {
@@ -366,19 +381,6 @@ namespace LiteDB
                     throw new InvalidCastException("Value is not a valid BSON data type - Use Mapper.ToDocument for more complex types converts");
                 }
             }
-        }
-
-        #endregion
-
-        #region Index "this" property
-
-        /// <summary>
-        /// Get/Set a field for document. Fields are case sensitive - Works only when value are document
-        /// </summary>
-        public virtual BsonValue this[string name]
-        {
-            get => throw new InvalidOperationException("Cannot access non-document type value on " + this.RawValue);
-            set => throw new InvalidOperationException("Cannot access non-document type value on " + this.RawValue);
         }
 
         #endregion
@@ -407,14 +409,14 @@ namespace LiteDB
         {
             get
             {
-                if (this.IsDocument)
-                    return new BsonDocument(DocValue)
-                    {
-                        Length = this.Length,
-                        Destroy = this.Destroy
-                    };
+                if (Type == BsonType.Null)
+                {
+                    Type = BsonType.Document;
+                    _docValue = new BsonDocument();
+                    return _docValue;
+                }
                 else
-                    return default(BsonDocument);
+                    return Type == BsonType.Document ? _docValue : default(BsonDocument);
             }
         }
 
@@ -628,6 +630,9 @@ namespace LiteDB
 
         #region Values
 
+        private BsonDocument _docValue;
+        private BsonArray _arrayValue;
+
         public String Value { get; private set; }
         public Int32 Int32Value { get; private set; }
         public Int64 Int64Value { get; private set; }
@@ -635,8 +640,6 @@ namespace LiteDB
         public Decimal DecimalValue { get; private set; }
         public UInt64 Uint64Value { get; private set; }
         public String StringValue { get; private set; }
-        public Dictionary<string, BsonValue> DocValue { get; private set; }
-        private BsonArray _arrayValue;
         public Byte[] BinaryValue { get; private set; }
         public ObjectId ObjectIdValue { get; private set; }
         public Guid GuidValue { get; private set; }
@@ -684,13 +687,16 @@ namespace LiteDB
         public static implicit operator BsonValue(String value) => new BsonValue(value);
 
         // Document
-        public static implicit operator Dictionary<string, BsonValue>(BsonValue value) => value.DocValue;
+        public static implicit operator Dictionary<string, BsonValue>(BsonValue value) => value.AsDocument;
 
         // Document
         public static implicit operator BsonValue(Dictionary<string, BsonValue> value) => new BsonValue(value);
 
+        // Document
+        public static implicit operator BsonValue(BsonDocument value) => new BsonValue(value);
+
         // Array
-        public static implicit operator List<BsonValue>(BsonValue value) => value._arrayValue;
+        public static implicit operator List<BsonValue>(BsonValue value) => value.AsArray;
 
         // Array
         public static implicit operator BsonValue(List<BsonValue> value) => new BsonValue(value);
@@ -906,7 +912,7 @@ namespace LiteDB
                     hash += this.StringValue.GetHashCode();
                     break;
                 case BsonType.Document:
-                    hash += this.DocValue.GetHashCode();
+                    hash += this._docValue.GetHashCode();
                     break;
                 case BsonType.Array:
                     hash += this._arrayValue.GetHashCode();
@@ -939,69 +945,33 @@ namespace LiteDB
 
         #endregion
 
-        #region GetBytesCount
-
-        internal int? Length = null;
-
-        /// <summary>
-        /// Returns how many bytes this BsonValue will use to persist in index writes
-        /// </summary>
-        public int GetBytesCount(bool recalc)
+        internal int Length
         {
-            if (recalc == false && this.Length.HasValue) return this.Length.Value;
-
-            switch (this.Type)
+            get
             {
-                case BsonType.Null:
-                case BsonType.MinValue:
-                case BsonType.MaxValue:
-                    this.Length = 0; break;
+                switch (this.Type)
+                {
+                    default:
+                    case BsonType.Null:
+                    case BsonType.MinValue:
+                    case BsonType.MaxValue:
+                        return 0;
 
-                case BsonType.Int32: this.Length = 4; break;
-                case BsonType.Int64: this.Length = 8; break;
-                case BsonType.Double: this.Length = 8; break;
-                case BsonType.Decimal: this.Length = 16; break;
+                    case BsonType.Int32: return 4;
+                    case BsonType.Int64: return 8;
+                    case BsonType.Double: return 8;
+                    case BsonType.Decimal: return 16;
+                    case BsonType.ObjectId: return 12;
+                    case BsonType.Guid: return 16;
+                    case BsonType.Boolean: return 1;
+                    case BsonType.DateTime: return 8;
 
-                case BsonType.String: this.Length = Encoding.UTF8.GetByteCount(StringValue); break;
-
-                case BsonType.Binary: this.Length = BinaryValue.Length; break;
-                case BsonType.ObjectId: this.Length = 12; break;
-                case BsonType.Guid: this.Length = 16; break;
-
-                case BsonType.Boolean: this.Length = 1; break;
-                case BsonType.DateTime: this.Length = 8; break;
-
-                // for Array/Document calculate from elements
-                case BsonType.Array:
-                    this.Length = 5; // header + footer
-                    for (var i = 0; i < _arrayValue.Count; i++)
-                    {
-                        this.Length += this.GetBytesCountElement(i.ToString(), _arrayValue[i] ?? BsonValue.Null, recalc);
-                    }
-                    break;
-
-                case BsonType.Document:
-                    this.Length = 5; // header + footer
-                    foreach (var key in DocValue.Keys)
-                    {
-                        this.Length += this.GetBytesCountElement(key, DocValue[key] ?? BsonValue.Null, recalc);
-                    }
-                    break;
+                    case BsonType.String: return Encoding.UTF8.GetByteCount(StringValue);
+                    case BsonType.Binary: return BinaryValue.Length;
+                    case BsonType.Array: return _arrayValue.Length;
+                    case BsonType.Document: return _docValue.Length;
+                }
             }
-
-            return this.Length.Value;
         }
-
-        private int GetBytesCountElement(string key, BsonValue value, bool recalc)
-        {
-            return
-                1 + // element type
-                Encoding.UTF8.GetByteCount(key) + // CString
-                1 + // CString 0x00
-                value.GetBytesCount(recalc) +
-                (value.Type == BsonType.String || value.Type == BsonType.Binary || value.Type == BsonType.Guid ? 5 : 0); // bytes.Length + 0x??
-        }
-
-        #endregion
     }
 }
