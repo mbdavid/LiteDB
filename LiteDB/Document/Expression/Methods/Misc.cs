@@ -42,11 +42,11 @@ namespace LiteDB
         {
             foreach (var value in ZipValues(source, extend))
             {
-                if (value.First is BsonDocument first && value.Second is BsonDocument second)
+                if (value.First.Type == BsonType.Document && value.Second.Type == BsonType.Document)
                 {
-                    second.AsDocument.CopyTo(first);
+                    value.Second.AsDocument.CopyTo(value.First.AsDocument);
 
-                    yield return first;
+                    yield return value.First;
                 }
             }
         }
@@ -66,10 +66,8 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> RAW_ID(IEnumerable<BsonValue> documents)
         {
-            foreach (var doc in documents.Where(x => x.IsDocument).Select(x => x as BsonDocument))
-            {
+            foreach (var doc in documents.Where(x => x.IsDocument).Select(x => x.AsDocument))
                 yield return doc.RawId.IsEmpty ? null : doc.RawId.ToString();
-            }
         }
 
         /// <summary>
@@ -77,13 +75,9 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> KEYS(IEnumerable<BsonValue> values)
         {
-            foreach (var value in values.Where(x => x.IsDocument).Select(x => x as BsonDocument))
-            {
+            foreach (var value in values.Where(x => x.IsDocument).Select(x => x.AsDocument))
                 foreach (var key in value.Keys)
-                {
                     yield return key;
-                }
-            }
         }
 
         /// <summary>
