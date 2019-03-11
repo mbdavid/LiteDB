@@ -25,6 +25,7 @@ namespace LiteDB
         public BsonArray()
         {
             _items = new List<BsonValue>();
+            Length = 5;
         }
 
         public BsonArray(List<BsonValue> array) : this()
@@ -45,7 +46,12 @@ namespace LiteDB
         public BsonValue this[int index]
         {
             get => _items[index];
-            set => _items[index] = value ?? BsonValue.Null;
+            set
+            {
+                Length -= GetBytesCountElement(index.ToString(), _items[index]);
+                _items[index] = value ?? BsonValue.Null;
+                Length += GetBytesCountElement(index.ToString(), value);
+            }
         }
 
         public int Count => _items.Count;
@@ -56,6 +62,7 @@ namespace LiteDB
         public void Add(BsonValue item)
         {
             _items.Add(item ?? BsonValue.Null);
+            Length += GetBytesCountElement((_items.Count - 1).ToString(), item);
         }
 
         public virtual void AddRange<T>(IEnumerable<T> array) where T : BsonValue
@@ -70,6 +77,7 @@ namespace LiteDB
         public void Clear()
         {
             _items.Clear();
+            Length = 5;
         }
 
         public bool Contains(BsonValue item) => _items.Contains(item);
@@ -83,15 +91,18 @@ namespace LiteDB
         public void Insert(int index, BsonValue item)
         {
             _items.Insert(index, item);
+            Length += GetBytesCountElement((_items.Count - 1).ToString(), item);
         }
 
         public bool Remove(BsonValue item)
         {
+            //Length -= item.Length;
             return _items.Remove(item);
         }
 
         public void RemoveAt(int index)
         {
+            //Length -= _items[index].Length;
             _items.RemoveAt(index);
         }
 
@@ -124,29 +135,13 @@ namespace LiteDB
 
         public override int GetHashCode() => _items.GetHashCode();
 
-        public int? Length;
+        public int Length;
 
-        public int GetBytesCount(bool recalc)
-        {
-            if (recalc == false && this.Length.HasValue) return this.Length.Value;
-
-            this.Length = 5; // header + footer
-            for (var i = 0; i < Count; i++)
-            {
-                this.Length += this.GetBytesCountElement(i.ToString(), _items[i] ?? BsonValue.Null, recalc);
-            }
-
-
-            return this.Length.Value;
-        }
-
-        private int GetBytesCountElement(string key, BsonValue value, bool recalc)
+        private int GetBytesCountElement(string key, BsonValue value)
         {
             return
                 1 + // element type
-                Encoding.UTF8.GetByteCount(key) + // CString
-                1 + // CString 0x00
-                value.GetBytesCount(recalc) +
+                value?.Length ?? 0 +
                 (value.Type == BsonType.String || value.Type == BsonType.Binary || value.Type == BsonType.Guid ? 5 : 0); // bytes.Length + 0x??
         }
     }
