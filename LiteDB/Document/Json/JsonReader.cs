@@ -134,7 +134,7 @@ namespace LiteDB
             return obj;
         }
 
-        private BsonValue ReadArray()
+        private BsonArray ReadArray()
         {
             var arr = new BsonArray();
 

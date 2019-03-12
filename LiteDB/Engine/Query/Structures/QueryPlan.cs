@@ -120,20 +120,20 @@ namespace LiteDB.Engine
                 ["loader"] = this.Index is IndexVirtual ? "virtual" : (this.IsIndexKeyOnly ? "index" : "document"),
                 ["fields"] =
                     this.Fields.Count == 0 ? new BsonValue("$") :
-                    new BsonValue(this.Fields.Select(x => new BsonValue(x))),
+                    new BsonArray(this.Fields.Select(x => new BsonValue(x))),
             };
 
             doc["includeBefore"] = this.IncludeBefore.Count == 0 ?
                 BsonValue.Null :
-                new BsonValue(this.IncludeBefore.Select(x => new BsonValue(x.Source)));
+                new BsonArray(this.IncludeBefore.Select(x => new BsonValue(x.Source)));
 
             doc["filters"] = this.Filters.Count == 0 ?
                 BsonValue.Null :
-                new BsonValue(this.Filters.Select(x => new BsonValue(x.Source)));
+                new BsonArray(this.Filters.Select(x => new BsonValue(x.Source)));
 
             doc["includeAfter"] = this.IncludeAfter.Count == 0 ?
                 BsonValue.Null :
-                new BsonValue(this.IncludeAfter.Select(x => new BsonValue(x.Source)));
+                new BsonArray(this.IncludeAfter.Select(x => new BsonValue(x.Source)));
 
             if (this.GroupBy != null)
             {

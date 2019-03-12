@@ -317,6 +317,8 @@ namespace LiteDB
             {
                 if (value.IsArray)
                 {
+                    var arr = value.AsArray;
+
                     // for expr.Type = parameter, just get value as index (fixed position)
                     if (expr.Type == BsonExpressionType.Parameter)
                     {
@@ -330,8 +332,6 @@ namespace LiteDB
 
                         index = idx.AsInt32;
                     }
-
-                    var arr = value.AsArray;
 
                     // [<expr>] - index are an expression
                     if (expr.Type != BsonExpressionType.Empty && expr.Type != BsonExpressionType.Parameter)
@@ -413,7 +413,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> ARRAY_INIT(IEnumerable<IEnumerable<BsonValue>> values)
         {
-            yield return new BsonValue(values.SelectMany(x => x));
+            yield return new BsonArray(values.SelectMany(x => x));
         }
 
         #endregion

@@ -53,7 +53,7 @@ namespace LiteDB
             return bson.ReadDocument(reader, null);
         }
 
-        public static BsonValue ReadArray(this BinaryReader reader, bool utcDate)
+        public static BsonArray ReadArray(this BinaryReader reader, bool utcDate)
         {
             var bson = new BsonReader(utcDate);
             return bson.ReadArray(reader);

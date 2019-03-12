@@ -229,7 +229,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> ARRAY(IEnumerable<BsonValue> values)
         {
-            yield return new BsonValue(values);
+            yield return new BsonArray(values);
         }
 
         /// <summary>

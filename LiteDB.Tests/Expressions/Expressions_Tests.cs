@@ -120,8 +120,8 @@ namespace LiteDB.Tests.Expressions
                     }
                 }
 
-                var jsonResult = JsonSerializer.Serialize(new BsonValue(results));
-                var jsonExpect = JsonSerializer.Serialize(new BsonValue(test.Results));
+                var jsonResult = JsonSerializer.Serialize(new BsonArray(results));
+                var jsonExpect = JsonSerializer.Serialize(new BsonArray(test.Results));
 
                 if (jsonResult != jsonExpect)
                 {

@@ -61,7 +61,7 @@ namespace LiteDB
         /// <summary>
         /// Read an BsonArray from reader
         /// </summary>
-        public BsonValue ReadArray(BinaryReader reader)
+        public BsonArray ReadArray(BinaryReader reader)
         {
             var length = reader.ReadInt32();
             var end = reader.BaseStream.Position + length - 5;

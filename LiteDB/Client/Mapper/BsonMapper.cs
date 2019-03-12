@@ -408,8 +408,7 @@ namespace LiteDB
             member.Serialize = (list, m) =>
             {
                 // supports null values when "SerializeNullValues = true"
-                if (list == null)
-                    return BsonValue.Null;
+                if (list == null) return BsonValue.Null;
 
                 var result = new BsonArray();
                 var idField = entity.Id;
@@ -432,15 +431,14 @@ namespace LiteDB
 
             member.Deserialize = (bson, m) =>
             {
-                var source = bson.AsArray;
+                var array = bson.AsArray;
 
-                if (source.Count == 0)
-                    return m.Deserialize(member.DataType, bson);
+                if (array.Count == 0) return m.Deserialize(member.DataType, bson);
 
                 // copy array changing $id to _id
                 var result = new BsonArray();
 
-                foreach (var item in source)
+                foreach (var item in array)
                 {
                     var refId = item.AsDocument["$id"];
 

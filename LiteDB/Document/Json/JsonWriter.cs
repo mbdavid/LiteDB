@@ -40,14 +40,6 @@ namespace LiteDB
             this.WriteValue(value ?? BsonValue.Null);
         }
 
-        public void Serialize(BsonArray array)
-        {
-            _indent = 0;
-            _spacer = this.Pretty ? " " : "";
-
-            this.WriteArray(array);
-        }
-
         private void WriteValue(BsonValue value)
         {
             // use direct cast to better performance
@@ -132,15 +124,15 @@ namespace LiteDB
             this.WriteEndBlock("}", hasData);
         }
 
-        private void WriteArray(BsonArray array)
+        private void WriteArray(BsonArray arr)
         {
-            var hasData = array.Count > 0;
+            var hasData = arr.Count > 0;
 
             this.WriteStartBlock("[", hasData);
 
-            for (var i = 0; i < array.Count; i++)
+            for (var i = 0; i < arr.Count; i++)
             {
-                var item = array[i];
+                var item = arr[i];
 
                 // do not do this tests if is not pretty format - to better performance
                 if (this.Pretty)
@@ -153,7 +145,7 @@ namespace LiteDB
 
                 this.WriteValue(item ?? BsonValue.Null);
 
-                if (i < array.Count - 1)
+                if (i < arr.Count - 1)
                 {
                     _writer.Write(',');
                 }

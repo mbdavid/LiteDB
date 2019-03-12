@@ -95,7 +95,7 @@ namespace LiteDB.Engine
                 doc["lastCheckpoint"] = header.LastCheckpoint;
                 doc["userVersion"] = header.UserVersion;
 
-                doc["colections"] = new BsonValue(header.Collections.Select(x => new BsonDocument
+                doc["colections"] = new BsonArray(header.Collections.Select(x => new BsonDocument
                 {
                     ["name"] = x.Key,
                     ["pageID"] = (int)x.Value
@@ -109,7 +109,7 @@ namespace LiteDB.Engine
                 doc["freeDataPageID"] = dumpPageID(col.FreeDataPageID);
                 doc["creationTime"] = col.CreationTime;
                 doc["lastAnalyzed"] = col.LastAnalyzed;
-                doc["indexes"] = new BsonValue(col.GetIndexes(true).Select(x => new BsonDocument
+                doc["indexes"] = new BsonArray(col.GetIndexes(true).Select(x => new BsonDocument
                 {
                     ["slot"] = x.Slot,
                     ["name"] = x.Name,

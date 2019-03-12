@@ -132,7 +132,7 @@ namespace LiteDB
             }
         }
 
-        private BsonValue SerializeArray(Type type, IEnumerable array, int depth)
+        private BsonArray SerializeArray(Type type, IEnumerable array, int depth)
         {
             var arr = new BsonArray();
             foreach (var item in array)
