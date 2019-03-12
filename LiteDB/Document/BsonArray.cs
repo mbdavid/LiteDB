@@ -181,7 +181,7 @@ namespace LiteDB
         }
         private int _length;
 
-        private int GetBytesCountElement(BsonValue value) => 1 + value.Length;
+        private int GetBytesCountElement(BsonValue value) => 1 + value.ElementLength;
 
         private void OnLengthChanged(object sender, int e) => Length += e;
 

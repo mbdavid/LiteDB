@@ -65,7 +65,7 @@ namespace LiteDB
                     case BsonType.MaxValue:
                     case BsonType.Null:
                     default:
-                        return StringValue;
+                        return Value;
                 }
             }
         }
@@ -109,7 +109,14 @@ namespace LiteDB
 
         public BsonValue(String value)
         {
-            this.Type = value == null ? BsonType.Null : BsonType.String;
+            if (value == null)
+                Type = BsonType.Null;
+            else
+            {
+                Type = BsonType.String;
+                _stringLength = Encoding.UTF8.GetByteCount(value);
+            }
+
             this.StringValue = value;
         }
 
@@ -192,6 +199,7 @@ namespace LiteDB
                     break;
                 case BsonType.String:
                     this.StringValue = value.StringValue;
+                    _stringLength = value._stringLength;
                     break;
                 case BsonType.Document:
                     this._docValue = value._docValue;
@@ -250,6 +258,7 @@ namespace LiteDB
             {
                 this.Type = BsonType.String;
                 this.StringValue = valString;
+                _stringLength = Encoding.UTF8.GetByteCount(valString);
             }
             else if (value is Dictionary<string, BsonValue> valDoc)
             {
@@ -308,6 +317,7 @@ namespace LiteDB
                         break;
                     case BsonType.String:
                         this.StringValue = valBson.StringValue;
+                        _stringLength = valBson._stringLength;
                         break;
                     case BsonType.Document:
                         this._docValue = valBson._docValue;
@@ -594,17 +604,17 @@ namespace LiteDB
         protected BsonArray _arrayValue;
 
         public String Value { get; private set; }
-        public Int32 Int32Value { get; private set; }
-        public Int64 Int64Value { get; private set; }
-        public Double DoubleValue { get; private set; }
-        public Decimal DecimalValue { get; private set; }
-        public UInt64 Uint64Value { get; private set; }
-        public String StringValue { get; private set; }
-        public Byte[] BinaryValue { get; private set; }
-        public ObjectId ObjectIdValue { get; private set; }
-        public Guid GuidValue { get; private set; }
-        public bool BoolValue { get; private set; }
-        public DateTime DateTimeValue { get; private set; }
+        public Int32 Int32Value { get; }
+        public Int64 Int64Value { get; }
+        public Double DoubleValue { get; }
+        public Decimal DecimalValue { get; }
+        public UInt64 Uint64Value { get; }
+        public String StringValue { get; }
+        public Byte[] BinaryValue { get; }
+        public ObjectId ObjectIdValue { get; }
+        public Guid GuidValue { get; }
+        public bool BoolValue { get; }
+        public DateTime DateTimeValue { get; }
 
         #endregion
 
@@ -920,17 +930,35 @@ namespace LiteDB
                     case BsonType.Double: return 8;
                     case BsonType.Decimal: return 16;
                     case BsonType.ObjectId: return 12;
-                    case BsonType.Guid: return 16 + 5; // bytes.Length + 0x??
+                    case BsonType.Guid: return 16;
                     case BsonType.Boolean: return 1;
                     case BsonType.DateTime: return 8;
 
-                    case BsonType.String: return Encoding.UTF8.GetByteCount(StringValue) + 5; // bytes.Length + 0x??
-                    case BsonType.Binary: return BinaryValue.Length + 5; // bytes.Length + 0x??
+                    case BsonType.String: return _stringLength;
+                    case BsonType.Binary: return BinaryValue.Length;
                     case BsonType.Array: return _arrayValue.Length;
                     case BsonType.Document: return _docValue.Length;
                 }
             }
             set { }
+        }
+
+        private int _stringLength;
+
+        internal int ElementLength
+        {
+            get
+            {
+                switch (Type)
+                {
+                    case BsonType.String:
+                    case BsonType.Binary:
+                    case BsonType.Guid:
+                        return Length + 5;
+                    default:
+                        return Length;
+                }
+            }
         }
 
         public event EventHandler<int> LengthChanged;

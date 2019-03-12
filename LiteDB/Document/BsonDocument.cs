@@ -96,7 +96,7 @@ namespace LiteDB
                 1 + // element type
                 Encoding.UTF8.GetByteCount(key) + // CString
                 1 + // CString 0x00
-                value.Length;
+                value.ElementLength;
         }
 
         private void OnLengthChanged(object sender, int e) => Length += e;

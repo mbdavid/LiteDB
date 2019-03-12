@@ -433,7 +433,7 @@ namespace LiteDB
             {
                 var array = bson.AsArray;
 
-                if (array.Count == 0) return m.Deserialize(member.DataType, bson);
+                if (array.Count == 0) return m.Deserialize(member.DataType, array);
 
                 // copy array changing $id to _id
                 var result = new BsonArray();
