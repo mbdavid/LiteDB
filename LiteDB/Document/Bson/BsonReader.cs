@@ -69,7 +69,27 @@ namespace LiteDB
 
             while (reader.BaseStream.Position < end)
             {
-                var value = ReadArrayElement(reader);
+                var value = this.ReadDocumentElement(reader, null, out string name);
+                arr.Add(value);
+            }
+
+            reader.ReadByte(); // zero
+
+            return arr;
+        }
+
+        /// <summary>
+        /// Read an BsonArray from reader
+        /// </summary>
+        public BsonArray ReadList(BinaryReader reader)
+        {
+            var length = reader.ReadInt32();
+            var end = reader.BaseStream.Position + length - 5;
+            var arr = new BsonArray();
+
+            while (reader.BaseStream.Position < end)
+            {
+                var value = ReadListElement(reader);
                 arr.Add(value);
             }
 
@@ -81,7 +101,7 @@ namespace LiteDB
         /// <summary>
         /// Reads an array element from a reader. If remaining != null and name not are in 
         /// </summary>
-        private BsonValue ReadArrayElement(BinaryReader reader)
+        private BsonValue ReadListElement(BinaryReader reader)
         {
             var type = reader.ReadByte();
 
@@ -141,6 +161,9 @@ namespace LiteDB
             else if (type == 0x13) // Decimal
                 return reader.ReadDecimal();
 
+            else if (type == 0x14) // Array
+                return ReadList(reader);
+
             else if (type == 0xFF) // MinKey
                 return BsonValue.MinValue;
 
@@ -171,7 +194,7 @@ namespace LiteDB
                     (type == 0x13) ? 16 : // Decimal
                     (type == 0x02) ? reader.ReadInt32() : // String
                     (type == 0x05) ? reader.ReadInt32() + 1 : // Binary (+1 for subtype)
-                    (type == 0x03 || type == 0x04) ? reader.ReadInt32() - 4 : 0; // Document, Array (-4 to Length + zero)
+                    (type == 0x03 || type == 0x04 || type == 0x14) ? reader.ReadInt32() - 4 : 0; // Document, Array (-4 to Length + zero)
 
                 if (length > 0)
                 {
@@ -234,7 +257,10 @@ namespace LiteDB
             
             else if (type == 0x13) // Decimal
                 return reader.ReadDecimal();
-            
+
+            else if (type == 0x14) // Array
+                return ReadList(reader);
+
             else if (type == 0xFF) // MinKey
                 return BsonValue.MinValue;
             

@@ -25,7 +25,7 @@ namespace LiteDB
         public BsonArray()
         {
             _items = new List<BsonValue>();
-            Type = BsonType.Array;
+            Type = BsonType.List;
             Length = 5;
             _arrayValue = this;
         }
@@ -138,8 +138,8 @@ namespace LiteDB
         public override int CompareTo(BsonValue other)
         {
             // if types are different, returns sort type order
-            if (other.Type != BsonType.Array)
-                return BsonType.Array.CompareTo(other.Type);
+            if (other.Type != BsonType.List)
+                return BsonType.List.CompareTo(other.Type);
 
             var otherArray = other.AsArray;
 

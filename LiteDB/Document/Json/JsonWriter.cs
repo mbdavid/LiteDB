@@ -49,6 +49,7 @@ namespace LiteDB
                     _writer.Write("null");
                     break;
 
+                case BsonType.List:
                 case BsonType.Array:
                     this.WriteArray(value.AsArray);
                     break;

@@ -47,10 +47,10 @@ namespace LiteDB
             bson.WriteDocument(writer, doc);
         }
 
-        public static void WriteArray(this BinaryWriter writer, BsonArray array)
+        public static void WriteList(this BinaryWriter writer, BsonArray array)
         {
             var bson = new BsonWriter();
-            bson.WriteArray(writer, array);
+            bson.WriteList(writer, array);
         }
 
         public static void WriteBsonValue(this BinaryWriter writer, BsonValue value)
@@ -72,7 +72,9 @@ namespace LiteDB
                 case BsonType.String: writer.WriteFixedString(value.StringValue); break;
 
                 case BsonType.Document: writer.WriteDocument(value.AsDocument); break;
-                case BsonType.Array: writer.WriteArray(value.AsArray); break;
+
+                case BsonType.List: 
+                case BsonType.Array: writer.WriteList(value.AsArray); break;
 
                 case BsonType.Binary: writer.Write(value.BinaryValue); break;
                 case BsonType.ObjectId: writer.Write(value.ObjectIdValue); break;

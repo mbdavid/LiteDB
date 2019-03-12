@@ -55,7 +55,10 @@ namespace LiteDB
                     case BsonType.Decimal: return DecimalValue;
                     case BsonType.String: return StringValue;
                     case BsonType.Document: return _docValue;
-                    case BsonType.Array: return _arrayValue;
+
+                    case BsonType.Array:
+                    case BsonType.List: return _arrayValue;
+
                     case BsonType.Binary: return BinaryValue;
                     case BsonType.ObjectId: return ObjectIdValue;
                     case BsonType.Guid: return GuidValue;
@@ -137,7 +140,7 @@ namespace LiteDB
                 Type = BsonType.Null;
             else
             {
-                this.Type = BsonType.Array;
+                this.Type = BsonType.List;
                 this._arrayValue = new BsonArray(value);
             }
         }
@@ -204,6 +207,7 @@ namespace LiteDB
                 case BsonType.Document:
                     this._docValue = value._docValue;
                     break;
+                case BsonType.List:
                 case BsonType.Array:
                     this._arrayValue = value._arrayValue;
                     break;
@@ -267,7 +271,7 @@ namespace LiteDB
             }
             else if (value is List<BsonValue> valArray)
             {
-                this.Type = BsonType.Array;
+                this.Type = BsonType.List;
                 this._arrayValue = new BsonArray(valArray);
             }
             else if (value is Byte[] valBinary)
@@ -322,6 +326,7 @@ namespace LiteDB
                     case BsonType.Document:
                         this._docValue = valBson._docValue;
                         break;
+                    case BsonType.List:
                     case BsonType.Array:
                         this._arrayValue = valBson._arrayValue;
                         break;
@@ -371,7 +376,7 @@ namespace LiteDB
                     foreach (var x in enumerable)
                         list.Add(new BsonValue(x));
 
-                    this.Type = BsonType.Array;
+                    this.Type = BsonType.List;
                     this._arrayValue = new BsonArray(list);
                 }
                 else
@@ -386,7 +391,7 @@ namespace LiteDB
         #region Convert types
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public BsonArray AsArray => Type == BsonType.Array ? _arrayValue : default(BsonArray);
+        public BsonArray AsArray => Type == BsonType.List || Type == BsonType.Array ? _arrayValue : default(BsonArray);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public BsonDocument AsDocument => Type == BsonType.Document ? _docValue : default(BsonDocument);
@@ -420,6 +425,7 @@ namespace LiteDB
                         return StringValue;
                     case BsonType.Document:
                         return JsonSerializer.Serialize(this);
+                    case BsonType.List:
                     case BsonType.Array:
                         return JsonSerializer.Serialize(this);
                     case BsonType.Binary:
@@ -538,7 +544,7 @@ namespace LiteDB
 
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public bool IsArray => this.Type == BsonType.Array;
+        public bool IsArray => this.Type == BsonType.List;
 
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -800,6 +806,7 @@ namespace LiteDB
                 case BsonType.String: return string.Compare(StringValue, other.StringValue);
 
                 case BsonType.Document: return this.AsDocument.CompareTo(other);
+                case BsonType.List: 
                 case BsonType.Array: return _arrayValue.CompareTo(other);
 
                 case BsonType.Binary: return BinaryValue.BinaryCompareTo(other.BinaryValue);
@@ -881,6 +888,7 @@ namespace LiteDB
                 case BsonType.Document:
                     hash += this._docValue.GetHashCode();
                     break;
+                case BsonType.List:
                 case BsonType.Array:
                     hash += this._arrayValue.GetHashCode();
                     break;
@@ -936,6 +944,7 @@ namespace LiteDB
 
                     case BsonType.String: return _stringLength;
                     case BsonType.Binary: return BinaryValue.Length;
+                    case BsonType.List: 
                     case BsonType.Array: return _arrayValue.Length;
                     case BsonType.Document: return _docValue.Length;
                 }

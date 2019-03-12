@@ -42,17 +42,17 @@ namespace LiteDB
             writer.Write((byte)0x00);
         }
 
-        internal void WriteArray(BinaryWriter writer, BsonArray array)
+        internal void WriteList(BinaryWriter writer, BsonArray array)
         {
             writer.Write(array.Length);
 
             for (var i = 0; i < array.Count; i++)
-                WriteArrayElement(writer, array[i]);
+                WriteListElement(writer, array[i]);
 
             writer.Write((byte)0x00);
         }
 
-        private void WriteArrayElement(BinaryWriter writer, BsonValue value)
+        private void WriteListElement(BinaryWriter writer, BsonValue value)
         {
             // cast RawValue to avoid one if on As<Type>
             switch (value.Type)
@@ -72,9 +72,10 @@ namespace LiteDB
                     this.WriteDocument(writer, value.AsDocument);
                     break;
 
+                case BsonType.List:
                 case BsonType.Array:
-                    writer.Write((byte)0x04);
-                    this.WriteArray(writer, value.AsArray);
+                    writer.Write((byte)0x14);
+                    this.WriteList(writer, value.AsArray);
                     break;
 
                 case BsonType.Binary:
@@ -163,10 +164,11 @@ namespace LiteDB
                     this.WriteDocument(writer, value.AsDocument);
                     break;
 
+                case BsonType.List:
                 case BsonType.Array:
-                    writer.Write((byte)0x04);
+                    writer.Write((byte)0x14);
                     this.WriteCString(writer, key);
-                    this.WriteArray(writer, value.AsArray);
+                    this.WriteList(writer, value.AsArray);
                     break;
 
                 case BsonType.Binary:
