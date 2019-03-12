@@ -23,11 +23,13 @@ namespace LiteDB.Tests.Document
             obj["Qtd"] = 3;
             obj["Description"] = "Big beer package";
             obj["Unit"] = 1299.995;
-            doc["Items"].AsArray.Add(obj);
-            doc["Items"].AsArray.Add("string-one");
-            doc["Items"].AsArray.Add(null);
-            doc["Items"].AsArray.Add(true);
-            doc["Items"].AsArray.Add(DateTime.Now);
+
+            var array = doc["Items"].AsArray;
+            array.Add(obj);
+            array.Add("string-one");
+            array.Add(null);
+            array.Add(true);
+            array.Add(DateTime.Now);
 
 
             return doc;

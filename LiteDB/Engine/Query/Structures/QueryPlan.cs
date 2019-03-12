@@ -120,7 +120,7 @@ namespace LiteDB.Engine
                 ["loader"] = this.Index is IndexVirtual ? "virtual" : (this.IsIndexKeyOnly ? "index" : "document"),
                 ["fields"] =
                     this.Fields.Count == 0 ? new BsonValue("$") :
-                    (BsonValue)new BsonArray(this.Fields.Select(x => new BsonValue(x))),
+                    new BsonArray(this.Fields.Select(x => new BsonValue(x))),
             };
 
             doc["includeBefore"] = this.IncludeBefore.Count == 0 ?

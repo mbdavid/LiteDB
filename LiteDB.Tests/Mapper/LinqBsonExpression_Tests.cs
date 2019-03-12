@@ -336,11 +336,11 @@ namespace LiteDB.Tests.Mapper
         [TestMethod]
         public void Linq_BsonDocument_Navigation()
         {
-            TestExpr<BsonValue>(x => x["name"].AsString, "$.name");
-            TestExpr<BsonValue>(x => x["first"]["name"], "$.first.name");
-            TestExpr<BsonValue>(x => x["arr"][0]["demo"], "$.arr[0].demo");
-            TestExpr<BsonValue>(x => x["phones"].AsArray.Items(z => z["type"] == 1)["number"], "$.phones[(type = @p0)].number", 1);
-            TestExpr<BsonValue>(x => x["age"] == 1, "($.age = @p0)", 1);
+            TestExpr<BsonValue>(x => x.AsDocument["name"].AsString, "$.name");
+            TestExpr<BsonValue>(x => x.AsDocument["first"].AsDocument["name"], "$.first.name");
+            TestExpr<BsonValue>(x => x.AsDocument["arr"].AsArray[0].AsDocument["demo"], "$.arr[0].demo");
+            TestExpr<BsonValue>(x => x.AsDocument["phones"].AsArray.Items(z => z.AsDocument["type"] == 1).AsDocument["number"], "$.phones[(type = @p0)].number", 1);
+            TestExpr<BsonValue>(x => x.AsDocument["age"] == 1, "($.age = @p0)", 1);
         }
 
         [TestMethod]

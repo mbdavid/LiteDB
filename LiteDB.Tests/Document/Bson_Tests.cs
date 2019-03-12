@@ -26,19 +26,18 @@ namespace LiteDB.Tests.Document
             doc["minDate"] = DateTime.MinValue;
 
 
+            var array = new BsonArray();
+            array.Add(new BsonDocument());
+            array[0].AsDocument["Qtd"] = 3;
+            array[0].AsDocument["Description"] = "Big beer package";
+            array[0].AsDocument["Unit"] = (double)10 / (double)3;
+            
+            array.Add("string-one");
+            array.Add(null);
+            array.Add(true);
+            array.Add(DateTime.Now);
 
-            doc["Items"] = new BsonArray();
-
-            doc["Items"].AsArray.Add(new BsonDocument());
-            doc["Items"].AsArray[0].AsDocument["Qtd"] = 3;
-            doc["Items"].AsArray[0].AsDocument["Description"] = "Big beer package";
-            doc["Items"].AsArray[0].AsDocument["Unit"] = (double)10 / (double)3;
-
-            doc["Items"].AsArray.Add("string-one");
-            doc["Items"].AsArray.Add(null);
-            doc["Items"].AsArray.Add(true);
-            doc["Items"].AsArray.Add(DateTime.Now);
-
+            doc["Items"] = array;
             doc["Last"] = 999;
 
             return doc;

@@ -32,7 +32,7 @@ namespace LiteDB.Engine
             // create a empty node with full max level
             var head = new IndexNode(MAX_LEVEL_LENGTH)
             {
-                KeyLength = (ushort)BsonValue.MinValue.GetBytesCount(false),
+                KeyLength = (ushort)BsonValue.MinValue.Length,
                 Key = BsonValue.MinValue,
                 Slot = (byte)index.Slot,
                 Page = page
@@ -91,7 +91,7 @@ namespace LiteDB.Engine
         private IndexNode AddNode(CollectionIndex index, BsonValue key, byte level, IndexNode last)
         {
             // calc key size
-            var keyLength = key.GetBytesCount(false);
+            var keyLength = key.Length;
 
             // test for index key maxlength
             if (keyLength > MAX_INDEX_KEY_LENGTH) throw LiteException.InvalidIndexKey($"Index key must be less than {MAX_INDEX_KEY_LENGTH} bytes.");
@@ -338,13 +338,40 @@ namespace LiteDB.Engine
         /// </summary>
         public byte FlipCoin()
         {
-            byte level = 1;
-            for (int R = _rand.Next(); (R & 1) == 1; R >>= 1)
-            {
-                level++;
-                if (level == MAX_LEVEL_LENGTH) break;
-            }
-            return level;
+            int coin = _rand.Next();
+            if ((coin & 0b0000_0000_0000_0000_0000_0000_0000_0001) == 0) return 1;
+            if ((coin & 0b0000_0000_0000_0000_0000_0000_0000_0010) == 0) return 2;
+            if ((coin & 0b0000_0000_0000_0000_0000_0000_0000_0100) == 0) return 3;
+            if ((coin & 0b0000_0000_0000_0000_0000_0000_0000_1000) == 0) return 4;
+            if ((coin & 0b0000_0000_0000_0000_0000_0000_0001_0000) == 0) return 5;
+            if ((coin & 0b0000_0000_0000_0000_0000_0000_0010_0000) == 0) return 6;
+            if ((coin & 0b0000_0000_0000_0000_0000_0000_0100_0000) == 0) return 7;
+            if ((coin & 0b0000_0000_0000_0000_0000_0000_1000_0000) == 0) return 8;
+            if ((coin & 0b0000_0000_0000_0000_0000_0001_0000_0000) == 0) return 9;
+            if ((coin & 0b0000_0000_0000_0000_0000_0010_0000_0000) == 0) return 10;
+            if ((coin & 0b0000_0000_0000_0000_0000_0100_0000_0000) == 0) return 11;
+            if ((coin & 0b0000_0000_0000_0000_0000_1000_0000_0000) == 0) return 12;
+            if ((coin & 0b0000_0000_0000_0000_0001_0000_0000_0000) == 0) return 13;
+            if ((coin & 0b0000_0000_0000_0000_0010_0000_0000_0000) == 0) return 14;
+            if ((coin & 0b0000_0000_0000_0000_0100_0000_0000_0000) == 0) return 15;
+            if ((coin & 0b0000_0000_0000_0000_1000_0000_0000_0000) == 0) return 16;
+            if ((coin & 0b0000_0000_0000_0001_0000_0000_0000_0000) == 0) return 17;
+            if ((coin & 0b0000_0000_0000_0010_0000_0000_0000_0000) == 0) return 18;
+            if ((coin & 0b0000_0000_0000_0100_0000_0000_0000_0000) == 0) return 19;
+            if ((coin & 0b0000_0000_0000_1000_0000_0000_0000_0000) == 0) return 20;
+            if ((coin & 0b0000_0000_0001_0000_0000_0000_0000_0000) == 0) return 21;
+            if ((coin & 0b0000_0000_0010_0000_0000_0000_0000_0000) == 0) return 22;
+            if ((coin & 0b0000_0000_0100_0000_0000_0000_0000_0000) == 0) return 23;
+            if ((coin & 0b0000_0000_1000_0000_0000_0000_0000_0000) == 0) return 24;
+            if ((coin & 0b0000_0001_0000_0000_0000_0000_0000_0000) == 0) return 25;
+            if ((coin & 0b0000_0010_0000_0000_0000_0000_0000_0000) == 0) return 26;
+            if ((coin & 0b0000_0100_0000_0000_0000_0000_0000_0000) == 0) return 27;
+            if ((coin & 0b0000_1000_0000_0000_0000_0000_0000_0000) == 0) return 28;
+            if ((coin & 0b0001_0000_0000_0000_0000_0000_0000_0000) == 0) return 29;
+            if ((coin & 0b0010_0000_0000_0000_0000_0000_0000_0000) == 0) return 30;
+            if ((coin & 0b0100_0000_0000_0000_0000_0000_0000_0000) == 0) return 31;
+            if ((coin & 0b1000_0000_0000_0000_0000_0000_0000_0000) == 0) return 32;
+            return 32;
         }
 
         #region Find

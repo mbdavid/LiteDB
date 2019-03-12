@@ -26,6 +26,8 @@
         Boolean = 12,
         DateTime = 13,
 
-        MaxValue = 14
+        MaxValue = 14,
+
+        List = 15
     }
 }

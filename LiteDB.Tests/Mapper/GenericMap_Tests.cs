@@ -55,8 +55,8 @@ namespace LiteDB.Tests.Mapper
             Assert.AreEqual(today, d2["_id"].AsDateTime);
             Assert.AreEqual("Carlos", d2["Name"].AsString);
 
-            Assert.AreEqual("user1", d3["_id"]["f"].AsString);
-            Assert.AreEqual(4, d3["_id"]["n"].AsInt32);
+            Assert.AreEqual("user1", d3["_id"].AsDocument["f"].AsString);
+            Assert.AreEqual(4, d3["_id"].AsDocument["n"].AsInt32);
             Assert.AreEqual("Complex User", d3["Name"].AsString);
 
         }

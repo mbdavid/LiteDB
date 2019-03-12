@@ -92,20 +92,12 @@ namespace LiteDB.Engine
                     }
 
                     // if there is no ref collection
-                    if (index == null)
-                    {
-                        value.Destroy();
-                    }
-                    else
+                    if (index != null)
                     {
                         var node = indexer.Find(index, refId, false, Query.Ascending);
 
                         // if _id was not found in $ref collection, remove value
-                        if (node == null)
-                        {
-                            value.Destroy();
-                        }
-                        else
+                        if (node != null)
                         {
                             // load document based on dataBlock position
                             var refDoc = loader.Load(node.DataBlock);

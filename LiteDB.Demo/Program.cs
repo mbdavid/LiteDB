@@ -37,7 +37,7 @@ namespace LiteDB.Demo
             ["_id"] = 1,
             ["name"] = "NoSQL Database",
             ["birthday"] = new DateTime(1977, 10, 30),
-            ["phones"] = new BsonArray { "000000", "12345678" },
+            ["phones"] = new BsonValue(new string[] { "000000", "12345678" }),
             //["large"] = new byte[500],
             ["active"] = true
         }; // 109b (with no-large field)

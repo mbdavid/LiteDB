@@ -47,10 +47,10 @@ namespace LiteDB
             bson.WriteDocument(writer, doc);
         }
 
-        public static void WriteArray(this BinaryWriter writer, BsonArray array)
+        public static void WriteList(this BinaryWriter writer, BsonArray array)
         {
             var bson = new BsonWriter();
-            bson.WriteArray(writer, array);
+            bson.WriteList(writer, array);
         }
 
         public static void WriteBsonValue(this BinaryWriter writer, BsonValue value)
@@ -64,22 +64,24 @@ namespace LiteDB
                 case BsonType.MaxValue:
                     break;
 
-                case BsonType.Int32: writer.Write((Int32)value.RawValue); break;
-                case BsonType.Int64: writer.Write((Int64)value.RawValue); break;
-                case BsonType.Double: writer.Write((Double)value.RawValue); break;
-                case BsonType.Decimal: writer.Write((Decimal)value.RawValue); break;
+                case BsonType.Int32: writer.Write(value.Int32Value); break;
+                case BsonType.Int64: writer.Write(value.Int64Value); break;
+                case BsonType.Double: writer.Write(value.DoubleValue); break;
+                case BsonType.Decimal: writer.Write(value.DecimalValue); break;
 
-                case BsonType.String: writer.WriteFixedString((String)value.RawValue); break;
+                case BsonType.String: writer.WriteFixedString(value.StringValue); break;
 
                 case BsonType.Document: writer.WriteDocument(value.AsDocument); break;
-                case BsonType.Array: writer.WriteArray(value.AsArray); break;
 
-                case BsonType.Binary: writer.Write((Byte[])value.RawValue); break;
-                case BsonType.ObjectId: writer.Write((ObjectId)value.RawValue); break;
-                case BsonType.Guid: writer.Write((Guid)value.RawValue); break;
+                case BsonType.List: 
+                case BsonType.Array: writer.WriteList(value.AsArray); break;
 
-                case BsonType.Boolean: writer.Write((Boolean)value.RawValue); break;
-                case BsonType.DateTime: writer.Write((DateTime)value.RawValue); break;
+                case BsonType.Binary: writer.Write(value.BinaryValue); break;
+                case BsonType.ObjectId: writer.Write(value.ObjectIdValue); break;
+                case BsonType.Guid: writer.Write(value.GuidValue); break;
+
+                case BsonType.Boolean: writer.Write(value.BoolValue); break;
+                case BsonType.DateTime: writer.Write(value.DateTimeValue); break;
 
                 default: throw new NotImplementedException();
             }

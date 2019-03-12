@@ -22,15 +22,15 @@ namespace LiteDB
                 // if any side are string, concat
                 if (value.First.IsString || value.Second.IsString)
                 {
-                    yield return value.First.RawValue?.ToString() + value.Second.RawValue?.ToString();
+                    yield return value.First.AsString + value.Second.AsString;
                 }
                 else if (value.First.IsDateTime && value.Second.IsNumber)
                 {
-                    yield return value.First.AsDateTime.AddDays(value.Second.AsDouble);
+                    yield return value.First.DateTimeValue.AddDays(value.Second.AsDouble);
                 }
                 else if (value.First.IsNumber && value.Second.IsDateTime)
                 {
-                    yield return value.Second.AsDateTime.AddDays(value.First.AsDouble);
+                    yield return value.Second.DateTimeValue.AddDays(value.First.AsDouble);
                 }
                 else if (value.First.IsNumber || value.Second.IsNumber)
                 {
@@ -143,11 +143,13 @@ namespace LiteDB
         {
             foreach (var value in ZipValues(left, right))
             {
-                if (!value.Second.IsArray) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
+                if (!value.Second.IsArray)
+                    throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
 
                 var arr = value.Second.AsArray;
 
-                if (arr.Count != 2) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
+                if (arr.Count != 2)
+                    throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
 
                 var start = arr[0];
                 var end = arr[1];
@@ -342,25 +344,15 @@ namespace LiteDB
                             // execute for each child value and except a first bool value (returns if true)
                             var c = expr.Execute(root, new BsonValue[] { item }, true).First();
 
-                            if (c.IsBoolean && c.AsBoolean == true)
-                            {
-                                // fill destroy action to remove value from parent array
-                                item.Destroy = () => arr.Remove(item);
-
+                            if (c.IsBoolean && c.BoolValue)
                                 yield return item;
-                            }
                         }
                     }
                     // [*] - index are all values
                     else if (index == int.MaxValue)
                     {
                         foreach (var item in arr)
-                        {
-                            // fill destroy action to remove value from parent array
-                            item.Destroy = () => arr.Remove(item);
-
                             yield return item;
-                        }
                     }
                     // [n] - fixed index
                     else
@@ -370,10 +362,6 @@ namespace LiteDB
                         if (arr.Count > idx)
                         {
                             var item = arr[idx];
-
-                            // fill destroy action to remove value from parent array
-                            item.Destroy = () => arr.Remove(item);
-
                             yield return item;
                         }
                     }

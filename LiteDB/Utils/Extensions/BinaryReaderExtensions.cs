@@ -59,6 +59,12 @@ namespace LiteDB
             return bson.ReadArray(reader);
         }
 
+        public static BsonArray ReadList(this BinaryReader reader, bool utcDate)
+        {
+            var bson = new BsonReader(utcDate);
+            return bson.ReadList(reader);
+        }
+
         /// <summary>
         /// Read BSON value from reader
         /// </summary>
@@ -89,6 +95,7 @@ namespace LiteDB
 
                 case BsonType.MinValue: return BsonValue.MinValue;
                 case BsonType.MaxValue: return BsonValue.MaxValue;
+                case BsonType.List: return reader.ReadList(utcDate);
             }
 
             throw new NotImplementedException();

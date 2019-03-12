@@ -41,12 +41,12 @@ namespace LiteDB
 
             while (reader.BaseStream.Position < end && (remaining == null || remaining?.Count > 0))
             {
-                var value = this.ReadElement(reader, remaining, out string name);
+                var value = this.ReadDocumentElement(reader, remaining, out string name);
 
                 // null value means are not selected field
                 if (value != null)
                 {
-                    doc.RawValue[name] = value;
+                    doc[name] = value;
 
                     // remove from remaining fields
                     remaining?.Remove(name);
@@ -69,7 +69,7 @@ namespace LiteDB
 
             while (reader.BaseStream.Position < end)
             {
-                var value = this.ReadElement(reader, null, out string name);
+                var value = this.ReadDocumentElement(reader, null, out string name);
                 arr.Add(value);
             }
 
@@ -79,9 +79,104 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Read an BsonArray from reader
+        /// </summary>
+        public BsonArray ReadList(BinaryReader reader)
+        {
+            var length = reader.ReadInt32();
+            var end = reader.BaseStream.Position + length - 5;
+            var arr = new BsonArray();
+
+            while (reader.BaseStream.Position < end)
+            {
+                var value = ReadListElement(reader);
+                arr.Add(value);
+            }
+
+            reader.ReadByte(); // zero
+
+            return arr;
+        }
+
+        /// <summary>
+        /// Reads an array element from a reader. If remaining != null and name not are in 
+        /// </summary>
+        private BsonValue ReadListElement(BinaryReader reader)
+        {
+            var type = reader.ReadByte();
+
+            if (type == 0x01) // Double
+                return reader.ReadDouble();
+
+            else if (type == 0x02) // String
+                return ReadString(reader);
+
+            else if (type == 0x03) // Document
+                return ReadDocument(reader);
+
+            else if (type == 0x04) // Array
+                return ReadArray(reader);
+
+            else if (type == 0x05) // Binary
+            {
+                var length = reader.ReadInt32();
+                var subType = reader.ReadByte();
+                var bytes = reader.ReadBytes(length);
+
+                switch (subType)
+                {
+                    case 0x00: return bytes;
+                    case 0x04: return new Guid(bytes);
+                }
+            }
+
+            else if (type == 0x07) // ObjectId
+                return new ObjectId(reader.ReadBytes(12));
+
+            else if (type == 0x08) // Boolean
+                return reader.ReadBoolean();
+
+            else if (type == 0x09) // DateTime
+            {
+                var ts = reader.ReadInt64();
+
+                // catch specific values for MaxValue / MinValue #19
+                if (ts == 253402300800000) return DateTime.MaxValue;
+                if (ts == -62135596800000) return DateTime.MinValue;
+
+                var utc = BsonValue.UnixEpoch.AddMilliseconds(ts);
+
+                return _utcDate ? utc : utc.ToLocalTime();
+            }
+
+            else if (type == 0x0A) // Null
+                return BsonValue.Null;
+
+            else if (type == 0x10) // Int32
+                return reader.ReadInt32();
+
+            else if (type == 0x12) // Int64
+                return reader.ReadInt64();
+
+            else if (type == 0x13) // Decimal
+                return reader.ReadDecimal();
+
+            else if (type == 0x14) // Array
+                return ReadList(reader);
+
+            else if (type == 0xFF) // MinKey
+                return BsonValue.MinValue;
+
+            else if (type == 0x7F) // MaxKey
+                return BsonValue.MaxValue;
+
+            throw new NotSupportedException("BSON type not supported");
+        }
+
+        /// <summary>
         /// Reads an element (key-value) from an reader. If remaining != null and name not are in 
         /// </summary>
-        private BsonValue ReadElement(BinaryReader reader, HashSet<string> remaining, out string name)
+        private BsonValue ReadDocumentElement(BinaryReader reader, HashSet<string> remaining, out string name)
         {
             var type = reader.ReadByte();
             name = this.ReadCString(reader);
@@ -99,7 +194,7 @@ namespace LiteDB
                     (type == 0x13) ? 16 : // Decimal
                     (type == 0x02) ? reader.ReadInt32() : // String
                     (type == 0x05) ? reader.ReadInt32() + 1 : // Binary (+1 for subtype)
-                    (type == 0x03 || type == 0x04) ? reader.ReadInt32() - 4 : 0; // Document, Array (-4 to Length + zero)
+                    (type == 0x03 || type == 0x04 || type == 0x14) ? reader.ReadInt32() - 4 : 0; // Document, Array (-4 to Length + zero)
 
                 if (length > 0)
                 {
@@ -110,21 +205,17 @@ namespace LiteDB
             }
 
             if (type == 0x01) // Double
-            {
                 return reader.ReadDouble();
-            }
+            
             else if (type == 0x02) // String
-            {
                 return this.ReadString(reader);
-            }
+            
             else if (type == 0x03) // Document
-            {
                 return this.ReadDocument(reader);
-            }
+            
             else if (type == 0x04) // Array
-            {
                 return this.ReadArray(reader);
-            }
+            
             else if (type == 0x05) // Binary
             {
                 var length = reader.ReadInt32();
@@ -138,13 +229,11 @@ namespace LiteDB
                 }
             }
             else if (type == 0x07) // ObjectId
-            {
                 return new ObjectId(reader.ReadBytes(12));
-            }
+            
             else if (type == 0x08) // Boolean
-            {
                 return reader.ReadBoolean();
-            }
+            
             else if (type == 0x09) // DateTime
             {
                 var ts = reader.ReadInt64();
@@ -158,29 +247,25 @@ namespace LiteDB
                 return _utcDate ? utc : utc.ToLocalTime();
             }
             else if (type == 0x0A) // Null
-            {
                 return BsonValue.Null;
-            }
+            
             else if (type == 0x10) // Int32
-            {
                 return reader.ReadInt32();
-            }
+            
             else if (type == 0x12) // Int64
-            {
                 return reader.ReadInt64();
-            }
+            
             else if (type == 0x13) // Decimal
-            {
                 return reader.ReadDecimal();
-            }
+
+            else if (type == 0x14) // Array
+                return ReadList(reader);
+
             else if (type == 0xFF) // MinKey
-            {
                 return BsonValue.MinValue;
-            }
+            
             else if (type == 0x7F) // MaxKey
-            {
                 return BsonValue.MaxValue;
-            }
 
             throw new NotSupportedException("BSON type not supported");
         }
