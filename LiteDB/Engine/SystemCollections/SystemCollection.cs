@@ -57,7 +57,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                return (T)(options.DocValue[field].RawValue ?? defaultValue);
+                return (T)(options.AsDocument[field].RawValue ?? defaultValue);
             }
         }
     }

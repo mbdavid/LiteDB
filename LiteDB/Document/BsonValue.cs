@@ -38,7 +38,7 @@ namespace LiteDB
         /// <summary>
         /// Indicate BsonType of this BsonValue
         /// </summary>
-        public BsonType Type { get; private set; }
+        public BsonType Type { get; protected set; }
 
         /// <summary>
         /// Get internal .NET value object
@@ -111,18 +111,6 @@ namespace LiteDB
         {
             this.Type = value == null ? BsonType.Null : BsonType.String;
             this.StringValue = value;
-        }
-
-
-        public BsonValue(BsonDocument document) : this()
-        {
-            if (document == null)
-                Type = BsonType.Null;
-            else
-            {
-                Type = BsonType.Document;
-                _docValue = document;
-            }
         }
 
         public BsonValue(Dictionary<string, BsonValue> value)
@@ -388,38 +376,10 @@ namespace LiteDB
         #region Convert types
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public BsonArray AsArray
-        {
-            get
-            {
-                if (Type == BsonType.Null)
-                {
-                    Type = BsonType.Array;
-                    _arrayValue = new BsonArray();
-                    return _arrayValue;
-                }
-                else
-                    return Type == BsonType.Array ? _arrayValue : default(BsonArray);
-            }
-        }
-
+        public BsonArray AsArray => Type == BsonType.Array ? _arrayValue : default(BsonArray);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public BsonDocument AsDocument
-        {
-            get
-            {
-                if (Type == BsonType.Null)
-                {
-                    Type = BsonType.Document;
-                    _docValue = new BsonDocument();
-                    return _docValue;
-                }
-                else
-                    return Type == BsonType.Document ? _docValue : default(BsonDocument);
-            }
-        }
-
+        public BsonDocument AsDocument => Type == BsonType.Document ? _docValue : default(BsonDocument);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public Byte[] AsBinary => this.Type == BsonType.Binary ? BinaryValue : default(Byte[]);
@@ -630,8 +590,8 @@ namespace LiteDB
 
         #region Values
 
-        private BsonDocument _docValue;
-        private BsonArray _arrayValue;
+        protected BsonDocument _docValue;
+        protected BsonArray _arrayValue;
 
         public String Value { get; private set; }
         public Int32 Int32Value { get; private set; }
@@ -690,16 +650,13 @@ namespace LiteDB
         public static implicit operator Dictionary<string, BsonValue>(BsonValue value) => value.AsDocument;
 
         // Document
-        public static implicit operator BsonValue(Dictionary<string, BsonValue> value) => new BsonValue(value);
-
-        // Document
-        public static implicit operator BsonValue(BsonDocument value) => new BsonValue(value);
+        public static implicit operator BsonValue(Dictionary<string, BsonValue> value) => new BsonDocument(value);
 
         // Array
         public static implicit operator List<BsonValue>(BsonValue value) => value.AsArray;
 
         // Array
-        public static implicit operator BsonValue(List<BsonValue> value) => new BsonValue(value);
+        public static implicit operator BsonValue(List<BsonValue> value) => new BsonArray(value);
 
         // Binary
         public static implicit operator Byte[] (BsonValue value) => value.BinaryValue;
@@ -797,7 +754,7 @@ namespace LiteDB
             return left.AsDouble / right.AsDouble;
         }
 
-        public override string ToString() => AsString;
+        public override string ToString() => JsonSerializer.Serialize(this);
 
         #endregion
 
@@ -945,7 +902,8 @@ namespace LiteDB
 
         #endregion
 
-        internal int Length
+        #region Length
+        internal virtual int Length
         {
             get
             {
@@ -962,16 +920,22 @@ namespace LiteDB
                     case BsonType.Double: return 8;
                     case BsonType.Decimal: return 16;
                     case BsonType.ObjectId: return 12;
-                    case BsonType.Guid: return 16;
+                    case BsonType.Guid: return 16 + 5; // bytes.Length + 0x??
                     case BsonType.Boolean: return 1;
                     case BsonType.DateTime: return 8;
 
-                    case BsonType.String: return Encoding.UTF8.GetByteCount(StringValue);
-                    case BsonType.Binary: return BinaryValue.Length;
+                    case BsonType.String: return Encoding.UTF8.GetByteCount(StringValue) + 5; // bytes.Length + 0x??
+                    case BsonType.Binary: return BinaryValue.Length + 5; // bytes.Length + 0x??
                     case BsonType.Array: return _arrayValue.Length;
                     case BsonType.Document: return _docValue.Length;
                 }
             }
+            set { }
         }
+
+        public event EventHandler<int> LengthChanged;
+
+        protected void NotifyLengthChanged(int change) => LengthChanged?.Invoke(this, change);
+        #endregion
     }
 }

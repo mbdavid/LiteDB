@@ -32,7 +32,7 @@ namespace LiteDB.Engine
             // create a empty node with full max level
             var head = new IndexNode(MAX_LEVEL_LENGTH)
             {
-                KeyLength = (ushort)BsonValue.MinValue.GetBytesCount(false),
+                KeyLength = (ushort)BsonValue.MinValue.Length,
                 Key = BsonValue.MinValue,
                 Slot = (byte)index.Slot,
                 Page = page
@@ -91,7 +91,7 @@ namespace LiteDB.Engine
         private IndexNode AddNode(CollectionIndex index, BsonValue key, byte level, IndexNode last)
         {
             // calc key size
-            var keyLength = key.GetBytesCount(false);
+            var keyLength = key.Length;
 
             // test for index key maxlength
             if (keyLength > MAX_INDEX_KEY_LENGTH) throw LiteException.InvalidIndexKey($"Index key must be less than {MAX_INDEX_KEY_LENGTH} bytes.");

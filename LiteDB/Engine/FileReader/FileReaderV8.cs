@@ -44,12 +44,14 @@ namespace LiteDB.Engine
             {
                 while(reader.Read())
                 {
+                    var doc = reader.Current.AsDocument;
+
                     yield return new IndexInfo
                     {
-                        Collection = reader.Current["collection"].AsString,
-                        Name = reader.Current["name"].AsString,
-                        Expression = reader.Current["expression"].AsString,
-                        Unique = reader.Current["unique"].AsBoolean,
+                        Collection = doc["collection"].AsString,
+                        Name = doc["name"].AsString,
+                        Expression = doc["expression"].AsString,
+                        Unique = doc["unique"].AsBoolean,
                         HeadPageID = 0 // not used
                     };
                 }

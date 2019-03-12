@@ -18,14 +18,16 @@ namespace LiteDB
         }
     }
 
-    public class BsonArray : IList<BsonValue>, IComparable<BsonValue>
+    public class BsonArray : BsonValue, IList<BsonValue>, IComparable<BsonValue>
     {
         private List<BsonValue> _items;
 
         public BsonArray()
         {
             _items = new List<BsonValue>();
+            Type = BsonType.Array;
             Length = 5;
+            _arrayValue = this;
         }
 
         public BsonArray(List<BsonValue> array) : this()
@@ -48,9 +50,17 @@ namespace LiteDB
             get => _items[index];
             set
             {
-                Length -= GetBytesCountElement(index.ToString(), _items[index]);
-                _items[index] = value ?? BsonValue.Null;
-                Length += GetBytesCountElement(index.ToString(), value);
+                Length -= GetBytesCountElement(_items[index]);
+                _items[index].LengthChanged -= OnLengthChanged;
+
+                var item = value ?? BsonValue.Null;
+
+                _items[index] = item;
+
+                if (item.IsArray || item.IsDocument)
+                    item.LengthChanged += OnLengthChanged;
+
+                Length += GetBytesCountElement(item);
             }
         }
 
@@ -61,22 +71,31 @@ namespace LiteDB
 
         public void Add(BsonValue item)
         {
-            _items.Add(item ?? BsonValue.Null);
-            Length += GetBytesCountElement((_items.Count - 1).ToString(), item);
+            item = item ?? BsonValue.Null;
+            _items.Add(item);
+
+            if (item.IsArray || item.IsDocument)
+                item.LengthChanged += OnLengthChanged;
+
+            Length += GetBytesCountElement(item);
         }
 
-        public virtual void AddRange<T>(IEnumerable<T> array) where T : BsonValue
+        public void AddRange<T>(IEnumerable<T> array) where T : BsonValue
         {
             if (array == null)
                 throw new ArgumentNullException(nameof(array));
 
             foreach (var item in array)
-                Add(item ?? BsonValue.Null);
+                Add(item);
         }
 
         public void Clear()
         {
             _items.Clear();
+
+            foreach (var item in _items)
+                item.LengthChanged -= OnLengthChanged;
+
             Length = 5;
         }
 
@@ -90,25 +109,33 @@ namespace LiteDB
 
         public void Insert(int index, BsonValue item)
         {
+            item = item ?? BsonValue.Null;
             _items.Insert(index, item);
-            Length += GetBytesCountElement((_items.Count - 1).ToString(), item);
+
+            if (item.IsArray || item.IsDocument)
+                item.LengthChanged += OnLengthChanged;
+
+            Length += GetBytesCountElement(item);
         }
 
         public bool Remove(BsonValue item)
         {
-            //Length -= item.Length;
+            Length -= item.Length;
+            item.LengthChanged -= OnLengthChanged;
             return _items.Remove(item);
         }
 
         public void RemoveAt(int index)
         {
-            //Length -= _items[index].Length;
+            var item = _items[index];
+            item.LengthChanged -= OnLengthChanged;
+            Length -= item.Length;
             _items.RemoveAt(index);
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public int CompareTo(BsonValue other)
+        public override int CompareTo(BsonValue other)
         {
             // if types are different, returns sort type order
             if (other.Type != BsonType.Array)
@@ -131,18 +158,33 @@ namespace LiteDB
 
         public static implicit operator List<BsonValue>(BsonArray value) => value._items;
 
+        public override string ToString() => JsonSerializer.Serialize(this);
+
         public override bool Equals(object obj) => CompareTo(new BsonValue(obj)) == 0;
 
         public override int GetHashCode() => _items.GetHashCode();
 
-        public int Length;
+        #region Length
 
-        private int GetBytesCountElement(string key, BsonValue value)
+        internal override int Length
         {
-            return
-                1 + // element type
-                value?.Length ?? 0 +
-                (value.Type == BsonType.String || value.Type == BsonType.Binary || value.Type == BsonType.Guid ? 5 : 0); // bytes.Length + 0x??
+            get => _length;
+            set
+            {
+                if (_length != value)
+                {
+                    var difference = value - _length;
+                    _length = value;
+                    NotifyLengthChanged(difference);
+                }
+            }
         }
+        private int _length;
+
+        private int GetBytesCountElement(BsonValue value) => 1 + value.Length;
+
+        private void OnLengthChanged(object sender, int e) => Length += e;
+
+        #endregion
     }
 }

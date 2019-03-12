@@ -136,8 +136,7 @@ namespace LiteDB
 
         private BsonValue ReadArray()
         {
-            var bson = new BsonValue();
-            var arr = bson.AsArray;
+            var arr = new BsonArray();
 
             var token = _tokenizer.ReadToken();
 
@@ -155,7 +154,7 @@ namespace LiteDB
                 }
             }
 
-            return bson;
+            return arr;
         }
 
         private BsonValue ReadExtendedDataType(string key, string value)

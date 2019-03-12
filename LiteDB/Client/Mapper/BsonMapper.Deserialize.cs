@@ -95,7 +95,10 @@ namespace LiteDB
             {
                 return value.AsDocument;
             }
-
+            else if (type == typeof(BsonArray))
+            {
+                return value.AsArray;
+            }
             // raw values to native bson values
             else if (_bsonTypes.Contains(type))
             {
@@ -156,7 +159,7 @@ namespace LiteDB
                 var doc = value.AsDocument;
 
                 // test if value is object and has _type
-                if (doc.DocValue.TryGetValue("_type", out var typeField))
+                if (doc.TryGetValue("_type", out var typeField))
                 {
                     type = Type.GetType(typeField.AsString);
 

@@ -62,7 +62,7 @@ namespace LiteDB
                     break;
 
                 case BsonType.Document:
-                    this.WriteObject(new BsonDocument(value.DocValue));
+                    this.WriteObject(value.AsDocument);
                     break;
 
                 case BsonType.Boolean:

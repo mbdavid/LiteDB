@@ -411,9 +411,8 @@ namespace LiteDB
                 if (list == null)
                     return BsonValue.Null;
 
-                var result = new BsonValue();
+                var result = new BsonArray();
                 var idField = entity.Id;
-                var arr = result.AsArray;
 
                 foreach (var item in (IEnumerable)list)
                 {
@@ -421,7 +420,7 @@ namespace LiteDB
 
                     var id = idField.Getter(item);
 
-                    arr.Add(new BsonDocument
+                    result.Add(new BsonDocument
                     {
                         { "$id", m.Serialize(id.GetType(), id, 0) },
                         { "$ref", collection }
@@ -439,8 +438,7 @@ namespace LiteDB
                     return m.Deserialize(member.DataType, bson);
 
                 // copy array changing $id to _id
-                var result = new BsonValue();
-                var arr = result.AsArray;
+                var result = new BsonArray();
 
                 foreach (var item in source)
                 {
@@ -449,11 +447,11 @@ namespace LiteDB
                     // if refId is null was included by "include" query, so "item" is full filled document
                     if (refId.IsNull)
                     {
-                        arr.Add(item);
+                        result.Add(item);
                     }
                     else
                     {
-                        arr.Add(new BsonDocument { { "_id", refId } });
+                        result.Add(new BsonDocument { { "_id", refId } });
                     }
 
                 }

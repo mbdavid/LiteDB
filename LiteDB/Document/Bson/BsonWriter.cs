@@ -37,7 +37,7 @@ namespace LiteDB
             writer.Write(doc.Length);
 
             foreach (var key in doc.Keys)
-                WriteDocumentElement(writer, key, doc[key] ?? BsonValue.Null);
+                WriteDocumentElement(writer, key, doc[key]);
 
             writer.Write((byte)0x00);
         }
@@ -47,7 +47,7 @@ namespace LiteDB
             writer.Write(array.Length);
 
             for (var i = 0; i < array.Count; i++)
-                WriteArrayElement(writer, array[i] ?? BsonValue.Null);
+                WriteArrayElement(writer, array[i]);
 
             writer.Write((byte)0x00);
         }

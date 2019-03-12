@@ -26,9 +26,7 @@ namespace LiteDB.Tests.Document
             doc["minDate"] = DateTime.MinValue;
 
 
-
-            doc["Items"] = new BsonValue();
-            var array = doc["Items"].AsArray;
+            var array = new BsonArray();
             array.Add(new BsonDocument());
             array[0].AsDocument["Qtd"] = 3;
             array[0].AsDocument["Description"] = "Big beer package";
@@ -39,6 +37,7 @@ namespace LiteDB.Tests.Document
             array.Add(true);
             array.Add(DateTime.Now);
 
+            doc["Items"] = array;
             doc["Last"] = 999;
 
             return doc;

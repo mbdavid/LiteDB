@@ -56,7 +56,7 @@ namespace LiteDB.Tests.Document
             // ACT
             // copy all properties to destination array
 
-            var result = new KeyValuePair<string, BsonValue>[document.DocValue.Count];
+            var result = new KeyValuePair<string, BsonValue>[document.Count];
             document.CopyTo(result, 0);
         }
 
@@ -69,14 +69,14 @@ namespace LiteDB.Tests.Document
             Assert.AreEqual(0, arr.AsArray[0].RawValue);
             Assert.AreEqual(3, arr.AsArray[3].RawValue);
 
-            Assert.AreEqual(1, doc["a"].RawValue);
-            Assert.AreEqual(3, doc["c"].RawValue);
+            Assert.AreEqual(1, doc.AsDocument["a"].RawValue);
+            Assert.AreEqual(3, doc.AsDocument["c"].RawValue);
 
             arr.AsArray[1] = 111;
-            doc["b"] = 222;
+            doc.AsDocument["b"] = 222;
 
             Assert.AreEqual(111, arr.AsArray[1].RawValue);
-            Assert.AreEqual(222, doc["b"].RawValue);
+            Assert.AreEqual(222, doc.AsDocument["b"].RawValue);
         }
     }
 }

@@ -134,14 +134,11 @@ namespace LiteDB
 
         private BsonValue SerializeArray(Type type, IEnumerable array, int depth)
         {
-            var bson = new BsonValue();
-            var arr = bson.AsArray;
+            var arr = new BsonArray();
             foreach (var item in array)
-            {
                 arr.Add(this.Serialize(type, item, depth));
-            }
 
-            return bson;
+            return arr;
         }
 
         private BsonDocument SerializeDictionary(Type type, IDictionary dict, int depth)
@@ -152,7 +149,7 @@ namespace LiteDB
             {
                 var value = dict[key];
 
-                o.DocValue[key.ToString()] = this.Serialize(type, value, depth);
+                o[key.ToString()] = this.Serialize(type, value, depth);
             }
 
             return o;
@@ -167,7 +164,7 @@ namespace LiteDB
             // adding _type only where property Type is not same as object instance type
             if (type != t)
             {
-                o.DocValue["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
+                o["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
             }
 
             foreach (var member in entity.Members.Where(x => x.Getter != null))
@@ -180,11 +177,11 @@ namespace LiteDB
                 // if member has a custom serialization, use it
                 if (member.Serialize != null)
                 {
-                    o.DocValue[member.FieldName] = member.Serialize(value, this);
+                    o[member.FieldName] = member.Serialize(value, this);
                 }
                 else
                 {
-                    o.DocValue[member.FieldName] = this.Serialize(member.DataType, value, depth);
+                    o[member.FieldName] = this.Serialize(member.DataType, value, depth);
                 }
             }
 

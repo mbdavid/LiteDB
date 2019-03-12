@@ -33,7 +33,7 @@ namespace LiteDB.Engine
         public IEnumerable<string> GetCollections()
         {
             var header = this.ReadPage(0);
-            var names = header["collections"].AsArray.Select(x => x["name"].AsString).ToArray();
+            var names = header["collections"].AsArray.Select(x => x.AsDocument["name"].AsString).ToArray();
 
             return names;
         }
@@ -45,11 +45,11 @@ namespace LiteDB.Engine
         {
             var header = this.ReadPage(0);
 
-            foreach(var col in header["collections"].AsArray)
+            foreach(var col in header["collections"].AsArray.Select(x => x.AsDocument))
             {
                 var page = this.ReadPage((uint)col["pageID"].AsInt32);
 
-                foreach(var index in page["indexes"].AsArray)
+                foreach(var index in page["indexes"].AsArray.Select(x => x.AsDocument))
                 {
                     yield return new IndexInfo
                     {
@@ -73,15 +73,15 @@ namespace LiteDB.Engine
 
             while (true)
             {
-                var dataBlock = node["dataBlock"];
-                var next = node["next"];
+                var dataBlock = node["dataBlock"].AsDocument;
+                var next = node["next"].AsDocument;
 
                 // if datablock link to a data page
                 if (dataBlock["pageID"].AsInt32 != -1)
                 {
                     // read dataPage and data block
                     var dataPage = this.ReadPage((uint)dataBlock["pageID"].AsInt32);
-                    var block = dataPage["blocks"].AsArray.Single(x => x["index"] == dataBlock["index"]).AsDocument;
+                    var block = dataPage["blocks"].AsArray.Single(x => x.AsDocument["index"] == dataBlock["index"]).AsDocument;
 
                     // read byte[] from block or from extend pages
                     var data = block["extendPageID"] == -1 ?
@@ -99,7 +99,7 @@ namespace LiteDB.Engine
 
                 // read next indexNode
                 indexPage = this.ReadPage((uint)next["pageID"].AsInt32);
-                node = indexPage["nodes"].AsArray.Single(x => x["index"] == next["index"]).AsDocument;
+                node = indexPage["nodes"].AsArray.Single(x => x.AsDocument["index"] == next["index"]).AsDocument;
             }
         }
 
@@ -134,8 +134,9 @@ namespace LiteDB.Engine
                 page["userVersion"] = (int)_reader.ReadUInt16();
                 page["password"] = _reader.ReadBytes(20);
                 page["salt"] = _reader.ReadBytes(16);
-                page["collections"] = new BsonValue();
-                var array = page["collections"].AsArray;
+
+                var array = new BsonArray();
+                page["collections"] = array;
                 var cols = _reader.ReadByte();
 
                 for (var i = 0; i < cols; i++)
@@ -156,8 +157,8 @@ namespace LiteDB.Engine
             else if (page["pageType"] == 2)
             {
                 page["collectionName"] = _reader.ReadStringLegacy();
-                page["indexes"] = new BsonValue();
-                var array = page["indexes"].AsArray;
+                var array = new BsonArray();
+                page["indexes"] = array;
                 _reader.ReadBytes(12);
 
                 for(var i = 0; i < 16; i++)
@@ -197,8 +198,8 @@ namespace LiteDB.Engine
 
             else if (page["pageType"] == 3)
             {
-                page["nodes"] = new BsonValue();
-                var array = page["nodes"].AsArray;
+                var array = new BsonArray();
+                page["nodes"] = array;
 
                 for(var i = 0; i < page["itemCount"].AsInt32; i++)
                 {
@@ -246,8 +247,8 @@ namespace LiteDB.Engine
 
             else if (page["pageType"] == 4)
             {
-                page["blocks"] = new BsonValue();
-                var array = page["blocks"].AsArray;
+                var array = new BsonArray();
+                page["blocks"] = array;
 
                 for (var i = 0; i < page["itemCount"].AsInt32; i++)
                 {

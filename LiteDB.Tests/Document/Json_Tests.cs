@@ -16,7 +16,7 @@ namespace LiteDB.Tests.Document
             doc["CustomerId"] = Guid.NewGuid();
             doc["Date"] = new DateTime(2015, 1, 1);
             doc["MyNull"] = null;
-            doc["Items"] = new BsonValue();
+            doc["Items"] = new BsonArray();
             doc["MyObj"] = new BsonDocument();
             doc["EmptyString"] = "";
             var obj = new BsonDocument();

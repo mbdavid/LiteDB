@@ -54,15 +54,14 @@ namespace LiteDB.Engine
             {
                 if (isArray)
                 {
-                    var bson = new BsonValue();
-                    var array = bson.AsArray;
+                    var array = new BsonArray();
 
                     while (result.Read())
                     {
                         array.Add(result.Current);
                     }
 
-                    value = bson;
+                    value = array;
                 }
                 else
                 {
