@@ -59,8 +59,15 @@ namespace LiteDB.Engine
         /// </summary>
         private int _extends = 0;
 
-        public MemoryCache()
+        /// <summary>
+        /// Get memory segment size
+        /// </summary>
+        private readonly int _segmentSize;
+
+        public MemoryCache(int cacheSize)
         {
+            _segmentSize = cacheSize;
+
             this.Extend();
         }
 
@@ -290,14 +297,14 @@ namespace LiteDB.Engine
                     _writable.Values.Count(x => x.ShareCounter == 0);
 
                 // if this count are larger than MEMORY_SEGMENT_SIZE, re-use all this pages
-                if (emptyShareCounter > MINIMUM_CACHE_REUSE)
+                if (emptyShareCounter > _segmentSize)
                 {
                     // get all readable pages that can return to _free
                     var readables = _readable
                         .Where(x => x.Value.ShareCounter == 0)
                         .OrderBy(x => x.Value.Timestamp) // sort by timestamp to re-use oldest pages first
                         .Select(x => x.Key)
-                        .Take(MINIMUM_CACHE_REUSE)
+                        .Take(_segmentSize)
                         .ToArray();
 
                     foreach (var key in readables)
@@ -327,7 +334,7 @@ namespace LiteDB.Engine
                         .Where(x => x.Value.ShareCounter == 0)
                         .OrderBy(x => x.Value.Timestamp) // sort by timestamp to re-use oldest pages first
                         .Select(x => x.Key)
-                        .Take(MINIMUM_CACHE_REUSE)
+                        .Take(_segmentSize)
                         .ToArray();
 
                     foreach (var key in writables)
@@ -355,34 +362,45 @@ namespace LiteDB.Engine
                 else
                 {
                     // create big linear array in heap memory (G2 -> 85Kb)
-                    var buffer = new byte[PAGE_SIZE * MEMORY_SEGMENT_SIZE];
+                    var buffer = new byte[PAGE_SIZE * _segmentSize];
 
                     // slit linear array into many array slices
-                    for (var i = 0; i < MEMORY_SEGMENT_SIZE; i++)
+                    for (var i = 0; i < _segmentSize; i++)
                     {
-                        var uniqueID = (_extends * MEMORY_SEGMENT_SIZE) + i + 1;
+                        var uniqueID = (_extends * _segmentSize) + i + 1;
 
                         _free.Enqueue(new PageBuffer(buffer, i * PAGE_SIZE, uniqueID));
                     }
 
                     _extends++;
 
-                    LOG($"extending memory usage: (segments: {_extends} - used: {FileHelper.FormatFileSize(_extends * MEMORY_SEGMENT_SIZE * PAGE_SIZE)})", "CACHE");
+                    LOG($"extending memory usage: (segments: {_extends} - used: {FileHelper.FormatFileSize(_extends * _segmentSize * PAGE_SIZE)})", "CACHE");
                 }
             }
         }
 
         /// <summary>
         /// Return how many pages are in use when call this method (ShareCounter != 0).
-        /// Used only for DEBUG propose
         /// </summary>
         public int PagesInUse =>
                 _readable.Values.Where(x => x.ShareCounter != 0).Count() +
                 _writable.Values.Where(x => x.ShareCounter != 0).Count();
 
         /// <summary>
-        /// Return how many segments already loaded in memory (each segments contains 1 array with 8Mb size)
-        /// Used only for DEBUG propose
+        /// Return how many pages are available to be re-used (free pages + unused pages)
+        /// </summary>
+        public int UnusedPages =>
+            _free.Count +
+            _readable.Values.Where(x => x.ShareCounter == 0).Count() +
+            _writable.Values.Where(x => x.ShareCounter == 0).Count();
+
+        /// <summary>
+        /// Return how many pages are available completed free
+        /// </summary>
+        public int FreePages => _free.Count;
+
+        /// <summary>
+        /// Return how many segments already loaded in memory
         /// </summary>
         public int ExtendSegments => _extends;
 

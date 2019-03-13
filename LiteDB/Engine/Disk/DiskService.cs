@@ -34,7 +34,7 @@ namespace LiteDB.Engine
 
         public DiskService(EngineSettings settings)
         {
-            _cache = new MemoryCache();
+            _cache = new MemoryCache(MEMORY_SEGMENT_SIZE);
 
             // get new stream factory based on settings
             _dataFactory = settings.CreateDataFactory();

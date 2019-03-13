@@ -19,7 +19,7 @@ namespace LiteDB.Internals.Disk
         [TestMethod]
         public void Cache_Read_Write()
         {
-            var m = new MemoryCache(1000, 1000);
+            var m = new MemoryCache(10);
 
             Assert.AreEqual(0, m.PagesInUse);
 
@@ -73,27 +73,74 @@ namespace LiteDB.Internals.Disk
         [TestMethod]
         public void Cache_Segments()
         {
-            var m = new MemoryCache();
+            var m = new MemoryCache(10);
+            var pos = 0;
 
             // in ctor, memory cache create only 1 memory segment
             Assert.AreEqual(1, m.ExtendSegments);
 
             var pages = new List<PageBuffer>();
 
-            // now, let's request for 2001 pages to create more 2 segments
-            for(var i = 0; i < (Constants.MEMORY_SEGMENT_SIZE * 2) + 1; i++)
+            // request 17 pages to write in disk
+            for(var i = 0; i < 17 ; i++)
             {
                 pages.Add(m.NewPage());
             }
 
+            Assert.AreEqual(2, m.ExtendSegments);
+
+            // release 5 pages (this pages will be in readable-list)
+            foreach(var p in pages.Take(5))
+            {
+                // simulate write
+                p.Origin = FileOrigin.Log;
+                p.Position = ++pos;
+
+                m.TryMoveToReadable(p);
+                p.Release();
+            }
+
+            // checks if still 2 segments in memory (segments never decrease)
+            Assert.AreEqual(2, m.ExtendSegments);
+
+            // now, I must have 8 unused pages
+            Assert.AreEqual(8, m.UnusedPages);
+
+            // but only 3 free pages
+            Assert.AreEqual(3, m.FreePages);
+
+            // now, request new 5 pages to write
+            for(var i = 0; i < 5; i++)
+            {
+                pages.Add(m.NewPage());
+            }
+
+            // extends must be increase
             Assert.AreEqual(3, m.ExtendSegments);
 
-            // now, release 50% from at minimum cache reuse
-            foreach(var page in pages.Take(Constants.MINIMUM_CACHE_REUSE / 2))
+            // but if I release more than 10 pages, now I will re-use old pages
+            foreach (var p in pages.Where(x => x.ShareCounter == -1).Take(10))
             {
-                m.TryMoveToReadable(page);
-                page.Release();
+                // simulate write
+                p.Origin = FileOrigin.Log;
+                p.Position = ++pos;
+
+                m.TryMoveToReadable(p);
+                p.Release();
             }
+
+            Assert.AreEqual(7, m.PagesInUse);
+            Assert.AreEqual(23, m.UnusedPages);
+            Assert.AreEqual(8, m.FreePages);
+
+            // now, if I request for 10 pages, all pages will be reused (no segment extend)
+            for (var i = 0; i < 10; i++)
+            {
+                pages.Add(m.NewPage());
+            }
+
+            // keep same extends
+            Assert.AreEqual(3, m.ExtendSegments);
 
         }
     }
