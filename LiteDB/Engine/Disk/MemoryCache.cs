@@ -52,7 +52,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Locker for multi extend()
         /// </summary>
-        private readonly object _locker = new object();
+        private readonly ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
 
         /// <summary>
         /// Get how many extends was made in this store
@@ -81,6 +81,9 @@ namespace LiteDB.Engine
             // get dict key based on position/origin
             var key = this.GetReadableKey(position, origin);
 
+            // enter extend-locker in read mode
+            _locker.TryEnterReadLock(-1);
+
             // try get from _readble dict or create new
             var page = _readable.GetOrAdd(key, (k) =>
             {
@@ -101,6 +104,9 @@ namespace LiteDB.Engine
 
             // increment share counter
             Interlocked.Increment(ref page.ShareCounter);
+
+            // release extend-locker only after increment share counter
+            _locker.ExitReadLock();
 
             return page;
         }
@@ -135,9 +141,14 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer GetWritablePage(long position, FileOrigin origin, Action<long, BufferSlice> factory)
         {
+            // enter extend-locker in read mode
+            _locker.TryEnterReadLock(-1);
+
             // write pages always contains a new buffer array
             var writable = this.NewPage(position, origin, false);
             var key = this.GetReadableKey(position, origin);
+
+            ENSURE(_writable.Values.Any(x => x.Position == key) == false, "only 1 page position can be request as writable at time");
 
             // if requested page already in cache, just copy buffer and avoid load from stream
             if (_readable.TryGetValue(key, out var clean))
@@ -149,6 +160,8 @@ namespace LiteDB.Engine
                 factory(position, writable);
             }
 
+            _locker.ExitReadLock();
+
             return writable;
         }
 
@@ -157,11 +170,18 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer NewPage()
         {
-            return this.NewPage(long.MaxValue, FileOrigin.None, true);
+            // enter extend-locker in read mode
+            _locker.TryEnterReadLock(-1);
+
+            var page = this.NewPage(long.MaxValue, FileOrigin.None, true);
+
+            _locker.ExitReadLock();
+
+            return page;
         }
 
         /// <summary>
-        /// Create new page using an empty buffer block. Mark this page as writable. Add into _writable dict
+        /// Create new page using an empty buffer block. Mark this page as writable. Add into _writable list
         /// </summary>
         private PageBuffer NewPage(long position, FileOrigin origin, bool clear)
         {
@@ -183,13 +203,17 @@ namespace LiteDB.Engine
             page.Timestamp = DateTime.UtcNow.Ticks;
 
             // add into writable dict
-            _writable.TryAdd(page.UniqueID, page);
+            var add = _writable.TryAdd(page.UniqueID, page);
+
+            ENSURE(add, "new page must be added into writable list");
 
             return page;
         }
 
         /// <summary>
         /// Try move page from Writable list to readable list. If page already in _readable, keeps page in _writable
+        /// Used after a write operation that read pages from disk but not changed this pages
+        /// Returns true if page was moved to readable list
         /// </summary>
         public bool TryMoveToReadable(PageBuffer page)
         {
@@ -198,6 +222,9 @@ namespace LiteDB.Engine
             ENSURE(page.Origin != FileOrigin.None, "page must has defined origin");
 
             var key = this.GetReadableKey(page.Position, page.Origin);
+            var added = false;
+
+            _locker.TryEnterReadLock(-1);
 
             // set shareCounter to 1 (is in use) - there is no concurrency in write
             page.ShareCounter = 1;
@@ -210,19 +237,25 @@ namespace LiteDB.Engine
 
                 ENSURE(removed, "page must be removed from _writable list");
 
-                return true;
+                added = true;
             }
             else
             {
                 // if page already in _readable, ok, keeps in _writable
                 page.Timestamp = 1; // be first page to be re-used on next Extend()
 
-                return false;
+                added = false;
             }
+
+            _locker.ExitReadLock();
+
+            return added;
         }
 
         /// <summary>
         /// Move page from Writable dict to Readable dict - if already exisits, override content
+        /// Used after write operation that must mark page as readable becase page content was changed
+        /// This method runs BEFORE send to write disk queue - but new page request must read this new content
         /// Returns readable page
         /// </summary>
         public PageBuffer MoveToReadable(PageBuffer page)
@@ -232,14 +265,17 @@ namespace LiteDB.Engine
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable before from to readable dict");
 
             var key = this.GetReadableKey(page.Position, page.Origin);
+            var added = true;
 
             // no concurrency in writable page
-            // share counter must set in 2 because will be released twice (on write/on page release) 
+            // share counter must set in 2 because will be released twice (on write AND on page release) 
             page.ShareCounter = 2;
 
             var readable = _readable.AddOrUpdate(key, page, (newKey, current) =>
             {
                 ENSURE(current.ShareCounter == 0, "user must ensure this page are not in use when mark as read only");
+
+                added = false;
 
                 current.ShareCounter = 2;
 
@@ -250,10 +286,15 @@ namespace LiteDB.Engine
                 return current;
             });
 
-            var removed = _writable.TryRemove(page.UniqueID, out var dummy);
+            // remove page from _writable only if was copied to _readable
+            if (added)
+            {
+                var removed = _writable.TryRemove(page.UniqueID, out var dummy);
 
-            ENSURE(removed, "page must be removed from _writable list");
+                ENSURE(removed, "page must be removed from _writable list");
+            }
 
+            // return page that are in _readble list
             return readable;
         }
 
@@ -277,7 +318,17 @@ namespace LiteDB.Engine
             // if no more page inside memory store - extend store/reuse non-shared pages
             else
             {
-                this.Extend();
+                lock(this)
+                {
+                    if (_free.Count > 0) return this.GetFreePage();
+
+                    _locker.ExitReadLock();
+
+                    this.Extend();
+
+                    _locker.EnterReadLock();
+                }
+
 
                 return this.GetFreePage();
             }
@@ -289,94 +340,93 @@ namespace LiteDB.Engine
         /// </summary>
         private void Extend()
         {
-            lock(_locker)
+            // count how many pages in cache (read/write) are avaiable to be re-used
+            var emptyShareCounter =
+                _readable.Values.Count(x => x.ShareCounter == 0) +
+                _writable.Values.Count(x => x.ShareCounter == 0);
+
+            // if this count are larger than MEMORY_SEGMENT_SIZE, re-use all this pages
+            if (emptyShareCounter > _segmentSize)
             {
-                // count how many pages in cache (read/write) are avaiable to be re-used
-                var emptyShareCounter =
-                    _readable.Values.Count(x => x.ShareCounter == 0) +
-                    _writable.Values.Count(x => x.ShareCounter == 0);
+                // now, this thread needs enter in write lock
+                // after now, there is not INCREASE ShareCount in any page
+                // and no list-move with ShareCounter = 0
+                _locker.TryEnterWriteLock(-1);
 
-                // if this count are larger than MEMORY_SEGMENT_SIZE, re-use all this pages
-                if (emptyShareCounter > _segmentSize)
+                // get all readable pages that can return to _free (slow way)
+                var readables = _readable
+                    .Where(x => x.Value.ShareCounter == 0)
+                    .OrderBy(x => x.Value.Timestamp) // sort by timestamp to re-use oldest pages first
+                    .Select(x => x.Key)
+                    .Take(_segmentSize)
+                    .ToArray();
+
+                // move pages from readable list to free list
+                foreach (var key in readables)
                 {
-                    // get all readable pages that can return to _free
-                    var readables = _readable
-                        .Where(x => x.Value.ShareCounter == 0)
-                        .OrderBy(x => x.Value.Timestamp) // sort by timestamp to re-use oldest pages first
-                        .Select(x => x.Key)
-                        .Take(_segmentSize)
-                        .ToArray();
-
-                    foreach (var key in readables)
+                    if (_readable.TryRemove(key, out var page))
                     {
-                        if (_readable.TryRemove(key, out var page))
-                        {
-                            if (page.ShareCounter != 0)
-                            {
-                                // if have any change, return page into _readable list
-                                if (_readable.TryAdd(key, page)) continue;
+                        ENSURE(page.ShareCounter == 0, "page should be not in use by anyone");
 
-                                ENSURE(true, "is possible not re-insert page into _readable list?");
-                            }
-                            else
-                            {
-                                // otherwise, make as free buffer
-                                page.Position = long.MaxValue;
-                                page.Origin = FileOrigin.None;
+                        // otherwise, make as free buffer
+                        page.Position = long.MaxValue;
+                        page.Origin = FileOrigin.None;
 
-                                _free.Enqueue(page);
-                            }
-                        }
+                        _free.Enqueue(page);
                     }
-
-                    // now, do the same with writables pages
-                    var writables = _writable
-                        .Where(x => x.Value.ShareCounter == 0)
-                        .OrderBy(x => x.Value.Timestamp) // sort by timestamp to re-use oldest pages first
-                        .Select(x => x.Key)
-                        .Take(_segmentSize)
-                        .ToArray();
-
-                    foreach (var key in writables)
+                    else
                     {
-                        if (_writable.TryRemove(key, out var page))
-                        {
-                            if (page.ShareCounter != 0)
-                            {
-                                // if have any change, return page into _writable list
-                                if (_writable.TryAdd(key, page)) continue;
-
-                                ENSURE(true, "is possible not re-insert page into _writable list?");
-                            }
-
-                            // otherwise, make as free buffer
-                            page.Position = long.MaxValue;
-                            page.Origin = FileOrigin.None;
-
-                            _free.Enqueue(page);
-                        }
+                        ENSURE(true, "page should be in readable list before move to free list");
                     }
-
-                    LOG($"re-using cache pages (flushing {_free.Count} pages)", "CACHE");
                 }
-                else
+
+                // now, do the same with writables pages (slow way)
+                var writables = _writable
+                    .Where(x => x.Value.ShareCounter == 0)
+                    .OrderBy(x => x.Value.Timestamp) // sort by timestamp to re-use oldest pages first
+                    .Select(x => x.Key)
+                    .Take(_segmentSize)
+                    .ToArray();
+
+                foreach (var key in writables)
                 {
-                    // create big linear array in heap memory (G2 -> 85Kb)
-                    var buffer = new byte[PAGE_SIZE * _segmentSize];
-
-                    // slit linear array into many array slices
-                    for (var i = 0; i < _segmentSize; i++)
+                    if (_writable.TryRemove(key, out var page))
                     {
-                        var uniqueID = (_extends * _segmentSize) + i + 1;
+                        ENSURE(page.ShareCounter == 0, "page should be not in use by anyone");
 
-                        _free.Enqueue(new PageBuffer(buffer, i * PAGE_SIZE, uniqueID));
+                        // otherwise, make as free buffer
+                        page.Position = long.MaxValue;
+                        page.Origin = FileOrigin.None;
+
+                        _free.Enqueue(page);
                     }
-
-                    _extends++;
-
-                    LOG($"extending memory usage: (segments: {_extends} - used: {FileHelper.FormatFileSize(_extends * _segmentSize * PAGE_SIZE)})", "CACHE");
+                    else
+                    {
+                        ENSURE(true, "page should be in writeble list before move to free list");
+                    }
                 }
+
+                LOG($"re-using cache pages (flushing {_free.Count} pages)", "CACHE");
             }
+            else
+            {
+                // create big linear array in heap memory (G2 -> 85Kb)
+                var buffer = new byte[PAGE_SIZE * _segmentSize];
+
+                // slit linear array into many array slices
+                for (var i = 0; i < _segmentSize; i++)
+                {
+                    var uniqueID = (_extends * _segmentSize) + i + 1;
+
+                    _free.Enqueue(new PageBuffer(buffer, i * PAGE_SIZE, uniqueID));
+                }
+
+                _extends++;
+
+                LOG($"extending memory usage: (segments: {_extends} - used: {FileHelper.FormatFileSize(_extends * _segmentSize * PAGE_SIZE)})", "CACHE");
+            }
+
+            _locker.ExitWriteLock();
         }
 
         /// <summary>

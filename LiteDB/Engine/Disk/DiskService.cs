@@ -199,7 +199,7 @@ namespace LiteDB.Engine
                 // must add into cache to be sure that new readers can see this page
                 page.Position = Interlocked.Add(ref _logLength, PAGE_SIZE);
 
-                // shloud mark page origin to log because async queue works only for log file
+                // should mark page origin to log because async queue works only for log file
                 // if this page came from data file, must be changed before MoveToReadable
                 page.Origin = FileOrigin.Log;
 
