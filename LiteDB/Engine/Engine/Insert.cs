@@ -161,7 +161,7 @@ namespace LiteDB.Engine
 
             // get tail page and previous page
             var tailPage = snapshot.GetPage<IndexPage>(pk.Tail.PageID);
-            var node = tailPage.ReadNode(pk.Tail.Index);
+            var node = tailPage.GetIndexNode(pk.Tail.Index);
             var prevNode = node.Prev[0];
 
             if (prevNode == pk.Head)
@@ -171,7 +171,7 @@ namespace LiteDB.Engine
             else
             {
                 var lastPage = prevNode.PageID == tailPage.PageID ? tailPage : snapshot.GetPage<IndexPage>(prevNode.PageID);
-                var lastNode = lastPage.ReadNode(prevNode.Index);
+                var lastNode = lastPage.GetIndexNode(prevNode.Index);
 
                 var lastKey = lastNode.Key;
 

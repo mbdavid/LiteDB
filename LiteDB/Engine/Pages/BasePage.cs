@@ -75,7 +75,7 @@ namespace LiteDB.Engine
         public int NextFreePosition { get; private set; }
 
         /// <summary>
-        /// Get last (highest) used index slot [1 bytes]
+        /// Get last (highest) used index slot [1 byte]
         /// </summary>
         public byte HighestIndex { get; private set; }
 
@@ -217,7 +217,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get a page segment item based on index slot
         /// </summary>
-        protected BufferSlice Get(byte index)
+        public BufferSlice Get(byte index)
         {
             // read slot address
             var positionAddr = CalcPositionAddr(index);
@@ -282,7 +282,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Remove index slot about this page segment
         /// </summary>
-        protected void Delete(byte index)
+        public void Delete(byte index)
         {
             // read block position on index slot
             var positionAddr = CalcPositionAddr(index);
@@ -323,7 +323,7 @@ namespace LiteDB.Engine
         /// Update segment bytes with new data. Current page must have bytes enougth for this new size. Index will not be changed
         /// Update will try use same segment to store. If not possible, write on end of page (with possible Defrag operation)
         /// </summary>
-        protected BufferSlice Update(byte index, int bytesLength)
+        public BufferSlice Update(byte index, int bytesLength)
         {
             throw new NotImplementedException();
             /*
@@ -403,7 +403,7 @@ namespace LiteDB.Engine
         /// Defrag method re-organize all byte data content removing all fragmented data. This will move all page segments
         /// to create a single continuous content area (just after header area)
         /// </summary>
-        protected void Defrag()
+        public void Defrag()
         {
             ENSURE(this.FragmentedBytes > 0, "do not call this when page has no fragmentation");
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
@@ -490,7 +490,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get all used indexes in this page
         /// </summary>
-        protected IEnumerable<byte> GetIndexes()
+        public IEnumerable<byte> GetIndexes()
         {
             for (var index = 0; index <= this.HighestIndex; index++)
             {

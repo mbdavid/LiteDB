@@ -28,9 +28,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read single DataBlock
+        /// Get single DataBlock
         /// </summary>
-        public DataBlock ReadBlock(byte index)
+        public DataBlock GetBlock(byte index)
         {
             var segment = base.Get(index);
 

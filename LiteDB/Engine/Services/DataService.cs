@@ -140,7 +140,7 @@ namespace LiteDB.Engine
             {
                 var dataPage = _snapshot.GetPage<DataPage>(address.PageID);
 
-                var block = dataPage.ReadBlock(address.Index);
+                var block = dataPage.GetBlock(address.Index);
 
                 yield return block.Buffer;
 
@@ -159,7 +159,7 @@ namespace LiteDB.Engine
             while(blockAddress != PageAddress.Empty)
             {
                 var page = _snapshot.GetPage<DataPage>(blockAddress.PageID);
-                var block = page.ReadBlock(blockAddress.Index);
+                var block = page.GetBlock(blockAddress.Index);
                 var slot = BasePage.FreeIndexSlot(page.FreeBytes);
 
                 ENSURE(block.DataIndex == index++, "blocks must be in order");

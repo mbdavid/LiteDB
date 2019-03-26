@@ -162,7 +162,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get index from index name (index name is case sensitive) - returns null if not found
         /// </summary>
-        public CollectionIndex GetIndex(string name)
+        public CollectionIndex GetCollectionIndex(string name)
         {
             if (_indexes.TryGetValue(name, out var index))
             {
@@ -183,7 +183,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Insert new index inside this collection page
         /// </summary>
-        public CollectionIndex InsertIndex(string name, string expr, bool unique)
+        public CollectionIndex InsertCollectionIndex(string name, string expr, bool unique)
         {
             var slot = (byte)(_indexes.Count == 0 ? 0 : (_indexes.Max(x => x.Value.Slot) + 1));
 
@@ -201,7 +201,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Return index instance and mark as updatable
         /// </summary>
-        public CollectionIndex UpdateIndex(string name)
+        public CollectionIndex UpdateCollectionIndex(string name)
         {
             _isIndexesChanged = true;
 
@@ -213,7 +213,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Remove index reference in this page
         /// </summary>
-        public void DeleteIndex(string name)
+        public void DeleteCollectionIndex(string name)
         {
             _indexes.Remove(name);
 

@@ -4,6 +4,10 @@ using System.Diagnostics;
 
 namespace LiteDB.Engine
 {
+    /// <summary>
+    /// Struct to represent a internal page data position - contains page byte position and data length size
+    /// All variables are Int32 but are stored as UInt16 (2 bytes)
+    /// </summary>
     [DebuggerStepThrough]
     internal struct PageSlot
     {

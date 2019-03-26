@@ -8,6 +8,10 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
+    /// <summary>
+    /// Header page represent first page on datafile. Engine contains a single instance of HeaderPage and all changes
+    /// must be syncornized (using lock).
+    /// </summary>
     internal class HeaderPage : BasePage
     {
         /// <summary>

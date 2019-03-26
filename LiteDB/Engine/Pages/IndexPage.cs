@@ -30,7 +30,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read single IndexNode
         /// </summary>
-        public IndexNode ReadNode(byte index)
+        public IndexNode GetIndexNode(byte index)
         {
             var segment = base.Get(index);
 
@@ -42,7 +42,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Insert new IndexNode. After call this, "node" instance can't be changed
         /// </summary>
-        public IndexNode InsertNode(byte slot, byte level, BsonValue key, PageAddress dataBlock, int bytesLength)
+        public IndexNode InsertIndexNode(byte slot, byte level, BsonValue key, PageAddress dataBlock, int bytesLength)
         {
             var index = base.GetFreeIndex();
             var segment = base.Insert(index, bytesLength);
@@ -55,7 +55,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Delete index node based on page index
         /// </summary>
-        public void DeleteNode(byte index)
+        public void DeleteIndexNode(byte index)
         {
             base.Delete(index);
         }
@@ -63,11 +63,11 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get all index nodes inside this page
         /// </summary>
-        public IEnumerable<IndexNode> GetNodes()
+        public IEnumerable<IndexNode> GetIndexNodes()
         {
             foreach (var index in base.GetIndexes())
             {
-                yield return this.ReadNode(index);
+                yield return this.GetIndexNode(index);
             }
         }
     }

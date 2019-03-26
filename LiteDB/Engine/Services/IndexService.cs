@@ -31,11 +31,11 @@ namespace LiteDB.Engine
             var indexPage = _snapshot.GetFreePage<IndexPage>(bytesLength * 2);
 
             // create index ref
-            var index = _snapshot.CollectionPage.InsertIndex(name, expr, unique);
+            var index = _snapshot.CollectionPage.InsertCollectionIndex(name, expr, unique);
 
             // insert head/tail nodes
-            var head = indexPage.InsertNode(index.Slot, MAX_LEVEL_LENGTH, BsonValue.MinValue, PageAddress.Empty, bytesLength);
-            var tail = indexPage.InsertNode(index.Slot, MAX_LEVEL_LENGTH, BsonValue.MaxValue, PageAddress.Empty, bytesLength);
+            var head = indexPage.InsertIndexNode(index.Slot, MAX_LEVEL_LENGTH, BsonValue.MinValue, PageAddress.Empty, bytesLength);
+            var tail = indexPage.InsertIndexNode(index.Slot, MAX_LEVEL_LENGTH, BsonValue.MaxValue, PageAddress.Empty, bytesLength);
 
             // link head-to-tail with double link list in first level
             head.SetNext(0, tail.Position);
@@ -65,7 +65,7 @@ namespace LiteDB.Engine
             if (level > index.MaxLevel)
             {
                 // update max level
-                _snapshot.CollectionPage.UpdateIndex(index.Name).MaxLevel = level;
+                _snapshot.CollectionPage.UpdateCollectionIndex(index.Name).MaxLevel = level;
             }
 
             // call AddNode with key value
@@ -87,7 +87,7 @@ namespace LiteDB.Engine
             var indexPage = _snapshot.GetFreePage<IndexPage>(bytesLength);
 
             // create node in buffer
-            var node = indexPage.InsertNode(index.Slot, level, key, dataBlock, bytesLength);
+            var node = indexPage.InsertIndexNode(index.Slot, level, key, dataBlock, bytesLength);
 
             // now, let's link my index node on right place
             var cur = this.GetNode(index.Head);
@@ -155,7 +155,7 @@ namespace LiteDB.Engine
 
             var indexPage = _snapshot.GetPage<IndexPage>(address.PageID);
 
-            return indexPage.ReadNode(address.Index);
+            return indexPage.GetIndexNode(address.Index);
         }
 
         /// <summary>
@@ -222,7 +222,7 @@ namespace LiteDB.Engine
                 // get current slot position in free list
                 var slot = BasePage.FreeIndexSlot(node.Page.FreeBytes);
 
-                node.Page.DeleteNode(node.Position.Index);
+                node.Page.DeleteIndexNode(node.Position.Index);
 
                 // update (if needed) slot position
                 _snapshot.AddOrRemoveFreeList(node.Page, slot);
@@ -252,7 +252,7 @@ namespace LiteDB.Engine
                     if (node.Slot == slot)
                     {
                         // delete node from page (mark as dirty)
-                        node.Page.DeleteNode(node.Position.Index);
+                        node.Page.DeleteIndexNode(node.Position.Index);
 
                         last.SetNextNode(node.NextNode);
                     }
@@ -266,8 +266,8 @@ namespace LiteDB.Engine
             }
 
             // removing head/tail index nodes
-            this.GetNode(index.Head).Page.DeleteNode(index.Head.Index);
-            this.GetNode(index.Tail).Page.DeleteNode(index.Tail.Index);
+            this.GetNode(index.Head).Page.DeleteIndexNode(index.Head.Index);
+            this.GetNode(index.Tail).Page.DeleteIndexNode(index.Tail.Index);
         }
 
         #region Find

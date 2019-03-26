@@ -158,7 +158,7 @@ namespace LiteDB.Engine
                         {
                             var page = snapshot.GetPage<IndexPage>(next);
 
-                            var nodes = page.GetNodes().ToArray();
+                            var nodes = page.GetIndexNodes().ToArray();
 
                             foreach(var node in nodes)
                             {
@@ -206,7 +206,7 @@ namespace LiteDB.Engine
                 if (pageAddress.IsEmpty) return;
 
                 var page = snapshot.GetPage<IndexPage>(pageAddress.PageID);
-                var node = page.ReadNode(pageAddress.Index);
+                var node = page.GetIndexNode(pageAddress.Index);
 
                 if (key == null) return;
 
@@ -245,7 +245,7 @@ namespace LiteDB.Engine
 
                             foreach (var address in page.GetBlocks(false))
                             {
-                                var block = page.ReadBlock(address.Index);
+                                var block = page.GetBlock(address.Index);
 
                                 counter++;
                             }

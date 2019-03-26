@@ -32,7 +32,7 @@ namespace LiteDB.Engine
                 var data = new DataService(snapshot);
 
                 // check if index already exists
-                var current = col.GetIndex(name);
+                var current = col.GetCollectionIndex(name);
 
                 // if already exists, just exit
                 if (current != null)
@@ -106,7 +106,7 @@ namespace LiteDB.Engine
                 if (col == null) return false;
             
                 // search for index reference
-                var index = col.GetIndex(name);
+                var index = col.GetCollectionIndex(name);
             
                 // no index, no drop
                 if (index == null) return false;
@@ -115,7 +115,7 @@ namespace LiteDB.Engine
                 indexer.DropIndex(index);
 
                 // remove index entry in collection page
-                snapshot.CollectionPage.DeleteIndex(name);
+                snapshot.CollectionPage.DeleteCollectionIndex(name);
             
                 return true;
             });
