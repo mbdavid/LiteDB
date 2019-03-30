@@ -115,7 +115,7 @@ namespace LiteDB.Internals
             // let's test defrag
             page.Defrag();
 
-            Assert.AreEqual(32 + 100, page.NextFreePosition);
+            Assert.AreEqual(32 + 200, page.NextFreePosition);
             Assert.AreEqual(1, page.HighestIndex);
 
             // ensure index0 will be reused
