@@ -199,7 +199,7 @@ namespace LiteDB.Engine
                 Array.Clear(page.Array, page.Offset, page.Count);
             }
 
-            ENSURE(page.CheckEmpty() == false, "new page must be full zero empty before return");
+            ENSURE(page.IsEmpty(), "new page must be full zero empty before return");
 
             page.Origin = origin;
             page.Timestamp = DateTime.UtcNow.Ticks;
@@ -320,14 +320,17 @@ namespace LiteDB.Engine
             // if no more page inside memory store - extend store/reuse non-shared pages
             else
             {
-                lock(this)
+                // ensure only 1 single thread call extend method
+                lock(_locker)
                 {
                     if (_free.Count > 0) return this.GetFreePage();
 
+                    // current thread already in read mode - should exit before enter in write mode
                     _locker.ExitReadLock();
 
                     this.Extend();
 
+                    // back to read mode
                     _locker.EnterReadLock();
                 }
 
@@ -408,6 +411,8 @@ namespace LiteDB.Engine
                     }
                 }
 
+                _locker.ExitWriteLock();
+
                 LOG($"re-using cache pages (flushing {_free.Count} pages)", "CACHE");
             }
             else
@@ -427,8 +432,6 @@ namespace LiteDB.Engine
 
                 LOG($"extending memory usage: (segments: {_extends} - used: {FileHelper.FormatFileSize(_extends * _segmentSize * PAGE_SIZE)})", "CACHE");
             }
-
-            _locker.ExitWriteLock();
         }
 
         /// <summary>

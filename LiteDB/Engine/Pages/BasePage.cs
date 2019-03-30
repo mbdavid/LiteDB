@@ -132,7 +132,7 @@ namespace LiteDB.Engine
         {
             _buffer = buffer;
 
-            ENSURE(buffer.CheckEmpty() == false, "new page buffer must be empty before use in a new page");
+            ENSURE(buffer.IsEmpty(), "new page buffer must be empty before use in a new page");
 
             // page information
             this.PageID = pageID;

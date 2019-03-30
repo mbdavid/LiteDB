@@ -73,7 +73,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Checks if this page are completly empty (for DEBUG propose only)
         /// </summary>
-        public bool CheckEmpty()
+        public bool IsEmpty()
         {
             for (var i = 0; i < PAGE_SIZE; i++)
             {
