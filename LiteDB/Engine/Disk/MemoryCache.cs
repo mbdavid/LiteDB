@@ -199,6 +199,8 @@ namespace LiteDB.Engine
                 Array.Clear(page.Array, page.Offset, page.Count);
             }
 
+            ENSURE(page.CheckEmpty() == false, "new page must be full zero empty before return");
+
             page.Origin = origin;
             page.Timestamp = DateTime.UtcNow.Ticks;
 

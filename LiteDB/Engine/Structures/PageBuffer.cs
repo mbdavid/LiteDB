@@ -53,11 +53,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Computed checksum using CRC-8 from current page (from 32 to 8190)
+        /// Computed checksum using CRC-8 from current page (from 0 to 8190)
         /// </summary>
         public byte ComputeChecksum()
         {
-            return Crc8.ComputeChecksum(this.Array, this.Offset + PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE - 2);
+            return Crc8.ComputeChecksum(this.Array, this.Offset, PAGE_SIZE - 1);
         }
 
         /// <summary>
@@ -68,6 +68,19 @@ namespace LiteDB.Engine
             ENSURE(this.ShareCounter > 0, "share counter must be > 0 in Release()");
 
             Interlocked.Decrement(ref this.ShareCounter);
+        }
+
+        /// <summary>
+        /// Checks if this page are completly empty (for DEBUG propose only)
+        /// </summary>
+        public bool CheckEmpty()
+        {
+            for (var i = 0; i < PAGE_SIZE; i++)
+            {
+                if (this.Array[i + this.Offset] != 0) return false;
+            }
+
+            return true;
         }
 
         ~PageBuffer()

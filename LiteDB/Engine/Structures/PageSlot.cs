@@ -19,19 +19,19 @@ namespace LiteDB.Engine
         /// <summary>
         /// Index slot in page
         /// </summary>
-        public readonly int Index;
+        public readonly byte Index;
 
         /// <summary>
         /// Start buffer position
         /// </summary>
-        public readonly int Position;
+        public readonly ushort Position;
 
         /// <summary>
         /// Buffer length for this segment
         /// </summary>
-        public readonly int Length;
+        public readonly ushort Length;
 
-        public PageSlot(int index, int position, int length)
+        public PageSlot(byte index, ushort position, ushort length)
         {
             this.Index = index;
             this.Position = position;

@@ -31,11 +31,11 @@ namespace LiteDB.Engine
                 doc["transactionID"] = (int)page.TransactionID;
                 doc["isConfirmed"] = page.IsConfirmed;
 
-                doc["itemsCount"] = page.ItemsCount;
+                doc["itemsCount"] = (int)page.ItemsCount;
                 doc["freeBytes"] = page.FreeBytes;
-                doc["usedBytes"] = page.UsedBytes;
-                doc["fragmentedBytes"] = page.FragmentedBytes;
-                doc["nextFreePosition"] = page.NextFreePosition;
+                doc["usedBytes"] = (int)page.UsedBytes;
+                doc["fragmentedBytes"] = (int)page.FragmentedBytes;
+                doc["nextFreePosition"] = (int)page.NextFreePosition;
                 doc["highestIndex"] = (int)page.HighestIndex;
 
                 if (page.PageType == PageType.Header)

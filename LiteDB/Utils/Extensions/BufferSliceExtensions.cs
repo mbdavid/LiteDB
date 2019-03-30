@@ -11,6 +11,16 @@ namespace LiteDB
     {
         #region Read Extensions
 
+        public static bool ReadBool(this BufferSlice buffer, int offset)
+        {
+            return buffer.Array[buffer.Offset + offset] == 1;
+        }
+
+        public static byte ReadByte(this BufferSlice buffer, int offset)
+        {
+            return buffer.Array[buffer.Offset + offset];
+        }
+
         public static Int16 ReadInt16(this BufferSlice buffer, int offset)
         {
             return BitConverter.ToInt16(buffer.Array, buffer.Offset + offset);
@@ -137,6 +147,16 @@ namespace LiteDB
         #endregion
 
         #region Write Extensions
+
+        public static void Write(this BufferSlice buffer, bool value, int offset)
+        {
+            buffer.Array[buffer.Offset + offset] = value ? (byte)1 : (byte)0;
+        }
+
+        public static void Write(this BufferSlice buffer, byte value, int offset)
+        {
+            buffer.Array[buffer.Offset + offset] = value;
+        }
 
         public static void Write(this BufferSlice buffer, Int16 value, int offset)
         {

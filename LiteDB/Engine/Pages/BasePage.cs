@@ -24,11 +24,11 @@ namespace LiteDB.Engine
         public const int P_IS_CONFIRMED = 17; // 17-17 [byte]
         public const int P_COL_ID = 18; // 18-21 [uint]
 
-        public const int P_ITEMS_COUNT = 22; // 22-23 [ushort]
-        public const int P_USED_BYTES = 24; // 24-25 [ushort]
-        public const int P_FRAGMENTED_BYTES = 26; // 26-27 [ushort]
-        public const int P_NEXT_FREE_POSITION = 28; // 28-29 [ushort]
-        public const int P_HIGHEST_INDEX = 30; // 30-30 [byte]
+        public const int P_ITEMS_COUNT = 22; // 22-22 [byte]
+        public const int P_USED_BYTES = 23; // 23-24 [ushort]
+        public const int P_FRAGMENTED_BYTES = 25; // 25-26 [ushort]
+        public const int P_NEXT_FREE_POSITION = 27; // 27-28 [ushort]
+        public const int P_HIGHEST_INDEX = 29; // 29-29 [byte]
 
         public const int P_CRC = PAGE_SIZE - 1; // 8191-8191 [byte]
 
@@ -55,40 +55,43 @@ namespace LiteDB.Engine
         public uint NextPageID { get; set; }
 
         /// <summary>
-        /// Indicate how many items are used inside this page [2 byte]
+        /// Indicate how many items are used inside this page [1 byte]
         /// </summary>
-        public int ItemsCount { get; private set; }
+        public byte ItemsCount { get; private set; }
 
         /// <summary>
         /// Get how many bytes are used on content area (exclude header and footer blocks) [2 bytes]
         /// </summary>
-        public int UsedBytes { get; private set; }
+        public ushort UsedBytes { get; private set; }
 
         /// <summary>
         /// Get how many bytes are fragmented inside this page (free blocks inside used blocks) [2 bytes]
         /// </summary>
-        public int FragmentedBytes { get; private set; }
+        public ushort FragmentedBytes { get; private set; }
 
         /// <summary>
         /// Get next free position. Starts with 32 (first byte after header) - There is no fragmentation after this [2 bytes]
         /// </summary>
-        public int NextFreePosition { get; private set; }
+        public ushort NextFreePosition { get; private set; }
 
         /// <summary>
-        /// Get last (highest) used index slot [1 byte]
+        /// Get last (highest) used index slot - use byte.MaxValue for empty [1 byte]
         /// </summary>
         public byte HighestIndex { get; private set; }
 
         /// <summary>
-        /// Get how many free bytes (including fragmented bytes) in this page
+        /// Get how many free bytes (including fragmented bytes) are in this page (content space)
         /// </summary>
         public int FreeBytes => PAGE_SIZE - PAGE_HEADER_SIZE - this.UsedBytes - this.FooterSize;
 
         /// <summary>
-        /// Get how many bytes are used in footer page
-        /// CRC [1 byte] + (HighestIndex * 4 bytes per slot: [2 for position, 2 for length])
+        /// Get how many bytes are used in footer page at this moment
+        /// CRC [1 byte] + ((HighestIndex + 1) * 4 bytes per slot: [2 for position, 2 for length])
         /// </summary>
-        public int FooterSize => 1 + (this.HighestIndex * PageSlot.SIZE);
+        public int FooterSize => 1 + // CRC
+            (this.HighestIndex == byte.MaxValue ? 
+            0 :  // no items in page
+            ((this.HighestIndex + 1) * PageSlot.SIZE)); // 4 bytes PER item - need consider HighestIndex used
 
         /// <summary>
         /// Set in all datafile pages the page id about data/index collection. Useful if want re-build database without any index [4 bytes]
@@ -124,25 +127,28 @@ namespace LiteDB.Engine
         {
             _buffer = buffer;
 
+            ENSURE(buffer.CheckEmpty() == false, "new page buffer must be empty before use in a new page");
+
             // page information
             this.PageID = pageID;
             this.PageType = pageType;
             this.PrevPageID = uint.MaxValue;
             this.NextPageID = uint.MaxValue;
 
+            // transaction information
+            this.ColID = uint.MaxValue;
+            this.TransactionID = uint.MaxValue;
+            this.IsConfirmed = false;
+
             // block information
             this.ItemsCount = 0;
             this.UsedBytes = 0;
             this.FragmentedBytes = 0;
             this.NextFreePosition = PAGE_HEADER_SIZE; // 32
-            this.HighestIndex = 0;
+            this.HighestIndex = byte.MaxValue; // empty - not used yet
 
-            // default data
-            this.ColID = uint.MaxValue;
-            this.TransactionID = uint.MaxValue;
-            this.IsConfirmed = false;
+            // default values
             this.CRC = 0;
-
             this.IsDirty = false;
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
@@ -159,24 +165,24 @@ namespace LiteDB.Engine
 
             // page information
             this.PageID = _buffer.ReadUInt32(P_PAGE_ID);
-            this.PageType = (PageType)_buffer[P_PAGE_TYPE];
+            this.PageType = (PageType)_buffer.ReadByte(P_PAGE_TYPE);
             this.PrevPageID = _buffer.ReadUInt32(P_PREV_PAGE_ID);
             this.NextPageID = _buffer.ReadUInt32(P_NEXT_PAGE_ID);
 
             // transaction information
             this.TransactionID = _buffer.ReadUInt32(P_TRANSACTION_ID);
-            this.IsConfirmed = _buffer[P_IS_CONFIRMED] != 0;
+            this.IsConfirmed = _buffer.ReadBool(P_IS_CONFIRMED);
             this.ColID = _buffer.ReadUInt32(P_COL_ID);
 
             // blocks information
-            this.ItemsCount = _buffer.ReadUInt16(P_ITEMS_COUNT);
+            this.ItemsCount = _buffer.ReadByte(P_ITEMS_COUNT);
             this.UsedBytes = _buffer.ReadUInt16(P_USED_BYTES);
             this.FragmentedBytes = _buffer.ReadUInt16(P_FRAGMENTED_BYTES);
             this.NextFreePosition = _buffer.ReadUInt16(P_NEXT_FREE_POSITION);
-            this.HighestIndex = _buffer[P_HIGHEST_INDEX];
+            this.HighestIndex = _buffer.ReadByte(P_HIGHEST_INDEX);
 
             // last CRC byte
-            this.CRC = _buffer[P_CRC];
+            this.CRC = _buffer.ReadByte(P_CRC);
         }
 
         /// <summary>
@@ -191,21 +197,26 @@ namespace LiteDB.Engine
 
             // page information
             // PageID   - never change!
-            _buffer[P_PAGE_TYPE] = (byte)this.PageType;
+            _buffer.Write((byte)this.PageType, P_PAGE_TYPE);
             _buffer.Write(this.PrevPageID, P_PREV_PAGE_ID);
             _buffer.Write(this.NextPageID, P_NEXT_PAGE_ID);
 
             // transaction information
             _buffer.Write(this.TransactionID, P_TRANSACTION_ID);
-            _buffer[P_IS_CONFIRMED] = this.IsConfirmed ? (byte)1 : (byte)0;
+            _buffer.Write(this.IsConfirmed, P_IS_CONFIRMED);
             _buffer.Write(this.ColID, P_COL_ID);
 
             // segments information
-            _buffer.Write((ushort)this.ItemsCount, P_ITEMS_COUNT);
-            _buffer.Write((ushort)this.UsedBytes, P_USED_BYTES);
-            _buffer.Write((ushort)this.FragmentedBytes, P_FRAGMENTED_BYTES);
-            _buffer.Write((ushort)this.NextFreePosition, P_NEXT_FREE_POSITION);
-            _buffer[P_HIGHEST_INDEX] = this.HighestIndex;
+            _buffer.Write(this.ItemsCount, P_ITEMS_COUNT);
+            _buffer.Write(this.UsedBytes, P_USED_BYTES);
+            _buffer.Write(this.FragmentedBytes, P_FRAGMENTED_BYTES);
+            _buffer.Write(this.NextFreePosition, P_NEXT_FREE_POSITION);
+            _buffer.Write(this.HighestIndex, P_HIGHEST_INDEX);
+
+            // compute CRC byte
+            this.CRC = _buffer.ComputeChecksum();
+
+            _buffer.Write(this.CRC, P_CRC);
 
             return _buffer;
         }
@@ -219,6 +230,8 @@ namespace LiteDB.Engine
         /// </summary>
         public BufferSlice Get(byte index)
         {
+            ENSURE(index < byte.MaxValue, "slot index must be between 0-254");
+
             // read slot address
             var positionAddr = CalcPositionAddr(index);
             var lengthAddr = CalcLengthAddr(index);
@@ -227,6 +240,8 @@ namespace LiteDB.Engine
             var position = _buffer.ReadUInt16(positionAddr);
             var length = _buffer.ReadUInt16(lengthAddr);
 
+            ENSURE(position > 0 && length > 0, "this page index are not in use (empty position/length)");
+
             // retrn buffer slice with content only data
             return _buffer.Slice(position, length);
         }
@@ -234,11 +249,21 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get a new page segment for this length content
         /// </summary>
-        public BufferSlice Insert(byte index, int bytesLength)
+        public BufferSlice Insert(ushort bytesLength, out byte index)
         {
-            ENSURE(this.ItemsCount <= 254, "there is no more space (in items count) in this page");
-            ENSURE(this.FreeBytes >= bytesLength + 4, "length must be always lower than current free space");
+            index = this.GetFreeIndex();
+
+            return this.Insert(bytesLength, index);
+        }
+
+        /// <summary>
+        /// Get a new page segment for this length content using fixed index
+        /// </summary>
+        private BufferSlice Insert(ushort bytesLength, byte index)
+        {
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
+            ENSURE(this.FreeBytes >= bytesLength + PageSlot.SIZE, "length must be always lower than current free space");
+            ENSURE(index != byte.MaxValue, "index shloud be a valid number (0-254)");
 
             // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
             if (index > this.HighestIndex) this.HighestIndex = index;
@@ -263,10 +288,10 @@ namespace LiteDB.Engine
             var position = this.NextFreePosition;
 
             // write this page position in my position address
-            _buffer.Write((ushort)position, positionAddr);
+            _buffer.Write(position, positionAddr);
 
             // write page segment length in my length address
-            _buffer.Write((ushort)bytesLength, lengthAddr);
+            _buffer.Write(bytesLength, lengthAddr);
 
             // update next free position and counters
             this.NextFreePosition += bytesLength;
@@ -411,7 +436,7 @@ namespace LiteDB.Engine
             // first get all segments inside this page
             var slots = new List<PageSlot>();
 
-            for (var index = 0; index <= this.HighestIndex; index++)
+            for (byte index = 0; index <= this.HighestIndex; index++)
             {
                 var positionAddr = CalcPositionAddr(index);
                 var lengthAddr = CalcLengthAddr(index);
@@ -421,7 +446,7 @@ namespace LiteDB.Engine
                 if (position != 0)
                 {
                     var length = _buffer.ReadUInt16(lengthAddr);
-                    var slot = new PageSlot(index, position, length);
+                    var slot = new PageSlot((byte)index, position, length);
 
                     slots.Add(slot);
                 }
@@ -460,46 +485,50 @@ namespace LiteDB.Engine
 
             // clear fragment blocks (page are in a continuous segment)
             this.FragmentedBytes = 0;
-            this.NextFreePosition = next;
+            this.NextFreePosition = (ushort)next;
 
             // there is no change in any index slot related
         }
 
         /// <summary>
-        /// Get a free slot in this page
+        /// Get a free index slot in this page
         /// </summary>
-        public byte GetFreeIndex()
+        private byte GetFreeIndex()
         {
-            // if no fragment data, there is no fragment index too (use HighestIndex)
-            if (this.FragmentedBytes == 0)
-            {
-                return this.ItemsCount == 0 ? (byte)0 : (byte)(this.HighestIndex + 1);
-            }
+            //TODO** Aqui dá pra otimizar: manter uma MEMORIA de qual foi o ultimo espaço em branco achado
+            // com isso, a proxima busca é feita a partir deste valor....
 
-            for (var index = 0; index <= 255; index++)
+            // check for all slot area to get first empty slot
+            for (byte index = 0; index < byte.MaxValue; index++)
             {
-                var slot = CalcPositionAddr((byte)index);
-                var position = _buffer.ReadUInt16(slot);
+                var positionAddr = CalcPositionAddr(index);
+                var position = _buffer.ReadUInt16(positionAddr);
 
-                if (position == 0) return (byte)index;
+                // if position contains 0x00 means this slot are not used
+                if (position == 0) return index;
             }
 
             throw new InvalidOperationException("This page has no more free space to insert new data");
         }
 
         /// <summary>
-        /// Get all used indexes in this page
+        /// Get all used slots indexes in this page
         /// </summary>
-        public IEnumerable<byte> GetIndexes()
+        public IEnumerable<byte> GetUsedIndexs()
         {
-            for (var index = 0; index <= this.HighestIndex; index++)
+            // check for empty before loop
+            if (this.ItemsCount == 0) yield break;
+
+            ENSURE(this.HighestIndex != byte.MaxValue, "if has items count Heighest index should be not emtpy");
+
+            for (byte index = 0; index <= this.HighestIndex; index++)
             {
-                var slot = CalcPositionAddr((byte)index);
-                var position = _buffer.ReadUInt16(slot);
+                var positionAddr = CalcPositionAddr(index);
+                var position = _buffer.ReadUInt16(positionAddr);
 
                 if (position != 0)
                 {
-                    yield return (byte)index;
+                    yield return index;
                 }
             }
         }
@@ -509,19 +538,20 @@ namespace LiteDB.Engine
         /// </summary>
         private void UpdateHighestIndex()
         {
-            for (var index = this.HighestIndex - 1; index > 0; index--)
+            for (byte index = (byte)(this.HighestIndex - 1); index > 0; index--)
             {
                 var positionAddr = CalcPositionAddr(index);
                 var position = _buffer.ReadUInt16(positionAddr);
 
                 if (position != 0)
                 {
-                    this.HighestIndex = (byte)index;
+                    this.HighestIndex = index;
                     return;
                 }
             }
 
-            this.HighestIndex = 0;
+            // empty value
+            this.HighestIndex = byte.MaxValue;
         }
 
         #endregion
@@ -531,12 +561,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get buffer offset position where one page segment length are located (based on index slot)
         /// </summary>
-        public static int CalcPositionAddr(int index) => P_CRC - ((index + 1) * PageSlot.SIZE) + 2;
+        public static int CalcPositionAddr(byte index) => P_CRC - ((index + 1) * PageSlot.SIZE) + 2;
 
         /// <summary>
         /// Get buffer offset position where one page segment length are located (based on index slot)
         /// </summary>
-        public static int CalcLengthAddr(int index) => P_CRC - ((index + 1) * 4);
+        public static int CalcLengthAddr(byte index) => P_CRC - ((index + 1) * 4);
 
         /// <summary>
         /// Returns a size of specified number of pages
@@ -586,14 +616,14 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// FreeBytes ranges on slot for free list page
+        /// FreeBytes ranges on page slot for free list page
         /// 90% - 100% = 0
         /// 75% -  90% = 1
         /// 60% -  75% = 2
         /// 30% -  60% = 3
         ///  0% -  30% = 4
         /// </summary>
-        private static int[] _freeSlots = new[] 
+        private static int[] _freePageSlots = new[] 
         {
             (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .90), // 0
             (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .75), // 1
@@ -602,13 +632,13 @@ namespace LiteDB.Engine
         };
 
         /// <summary>
-        /// Get index slot on FreeDataPageID/FreeIndexPageID 
+        /// Get page index slot on FreeDataPageID/FreeIndexPageID 
         /// </summary>
         public static int FreeIndexSlot(int freeBytes)
         {
-            for(var i = 0; i < _freeSlots.Length; i++)
+            for(var i = 0; i < _freePageSlots.Length; i++)
             {
-                if (freeBytes >= _freeSlots[i]) return i;
+                if (freeBytes >= _freePageSlots[i]) return i;
             }
 
             return CollectionPage.PAGE_FREE_LIST_SLOTS - 1; // 4

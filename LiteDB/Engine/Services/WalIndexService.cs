@@ -118,11 +118,10 @@ namespace LiteDB.Engine
             // read all pages to get confirmed transactions (do not read page content, only page header)
             foreach (var buffer in _disk.ReadFull(FileOrigin.Log))
             {
-                var page = new BasePage(buffer);
-
                 // check if page is ok
+                var page = new BasePage(buffer);
                 var crc = buffer.ComputeChecksum();
-
+                
                 if (page.CRC != crc)
                 {
                     throw new LiteException(0, $"Invalid checksum (CRC) in log file on position {current}");
@@ -219,7 +218,8 @@ namespace LiteDB.Engine
                         page.IsConfirmed = false;
                         page.TransactionID = uint.MaxValue;
 
-                        yield return buffer;
+                        // get updated buffer with new CRC computed
+                        yield return page.GetBuffer(true);
 
                         // can remove from list when store in disk
                         if (isConfirmed)
@@ -234,8 +234,6 @@ namespace LiteDB.Engine
                 header.LastCheckpoint = DateTime.UtcNow;
 
                 var headerBuffer = header.GetBuffer(true);
-
-                headerBuffer[BasePage.P_CRC] = headerBuffer.ComputeChecksum();
 
                 yield return headerBuffer;
             }

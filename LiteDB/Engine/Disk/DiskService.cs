@@ -104,9 +104,6 @@ namespace LiteDB.Engine
             // update buffer
             header.GetBuffer(true);
 
-            // compute CRC
-            buffer[BasePage.P_CRC] = buffer.ComputeChecksum();
-
             if (aes == null)
             {
                 stream.Write(buffer.Array, 0, PAGE_SIZE);
@@ -115,6 +112,7 @@ namespace LiteDB.Engine
             {
                 aes.Encrypt(buffer, stream);
 
+                // writing a fake-page that contains only SALT in #0001
                 stream.Write(aes.Salt, 0, ENCRYPTION_SALT_SIZE);
             }
 

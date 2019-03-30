@@ -29,11 +29,10 @@ namespace LiteDB.Internals
             // create new base page
             var page = new BasePage(buffer, 99, PageType.Collection);
 
-            var index0 = page.GetFreeIndex();
-            var slice0 = page.Insert(index0, 4);
+            var slice0 = page.Insert(4, out var index0);
 
             // first data slice must be just after header area
-            Assert.AreEqual(Constants.PAGE_HEADER_SIZE + 10, slice0.Offset);
+            Assert.AreEqual(Constants.  PAGE_HEADER_SIZE + 10, slice0.Offset);
 
             // write (int)123 in this data slice
             slice0.Write(123, 0);
@@ -41,8 +40,7 @@ namespace LiteDB.Internals
             Assert.AreEqual(123, slice0.ReadInt32(0));
 
             // adding slice1
-            var index1 = page.GetFreeIndex();
-            var slice1 = page.Insert(index1, 16);
+            var slice1 = page.Insert(16, out var index1);
             var guid = Guid.NewGuid();
 
             // second data slice must be just after header area + after first block (first slice use 6 bytes)

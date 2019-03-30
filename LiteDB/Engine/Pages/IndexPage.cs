@@ -44,8 +44,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode InsertIndexNode(byte slot, byte level, BsonValue key, PageAddress dataBlock, int bytesLength)
         {
-            var index = base.GetFreeIndex();
-            var segment = base.Insert(index, bytesLength);
+            var segment = base.Insert((ushort)bytesLength, out var index);
 
             var node = new IndexNode(this, index, segment, slot, level, key, dataBlock);
 
@@ -65,7 +64,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<IndexNode> GetIndexNodes()
         {
-            foreach (var index in base.GetIndexes())
+            foreach (var index in base.GetUsedIndexs())
             {
                 yield return this.GetIndexNode(index);
             }
