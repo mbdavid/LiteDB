@@ -245,7 +245,8 @@ namespace LiteDB.Engine
             var position = _buffer.ReadUInt16(positionAddr);
             var length = _buffer.ReadUInt16(lengthAddr);
 
-            ENSURE(position > 0 && length > 0, "this page index are not in use (empty position/length)");
+            ENSURE(this.IsValidPos(position), "invalid segment position");
+            ENSURE(this.IsValidPos(length), "invalid segment length");
 
             // retrn buffer slice with content only data
             return _buffer.Slice(position, length);
@@ -271,7 +272,7 @@ namespace LiteDB.Engine
             ENSURE(index != byte.MaxValue, "index shloud be a valid number (0-254)");
 
             // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
-            if (index > this.HighestIndex) this.HighestIndex = index;
+            if (index > this.HighestIndex || this.HighestIndex == byte.MaxValue) this.HighestIndex = index;
 
             // calculate how many continuous bytes are avaiable in this page (must consider new footer slot [4 bytes])
             var continuosBlocks = this.FreeBytes - this.FragmentedBytes - SLOT_SIZE;
@@ -314,6 +315,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void Delete(byte index)
         {
+            ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
+            ENSURE(index < byte.MaxValue, "deleted index segment must be less than 254");
+
             // read block position on index slot
             var positionAddr = CalcPositionAddr(index);
             var lengthAddr = CalcLengthAddr(index);
@@ -321,9 +325,8 @@ namespace LiteDB.Engine
             var position = _buffer.ReadUInt16(positionAddr);
             var length = _buffer.ReadUInt16(lengthAddr);
 
-            ENSURE(position >= PAGE_HEADER_SIZE, "deleted position must be after page header");
-            ENSURE(length >= 0, "deleted item must has length > 0");
-            ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
+            ENSURE(this.IsValidPos(position), "invalid segment position");
+            ENSURE(this.IsValidLen(length), "invalid segment length");
 
             // clear both position/length
             _buffer.Write((ushort)0, positionAddr);
@@ -333,15 +336,23 @@ namespace LiteDB.Engine
             this.ItemsCount--;
             this.UsedBytes -= length;
 
-            if (this.HighestIndex != index)
+            // check if deleted segment are at end of page
+            var isLastSegment = (position + length == this.NextFreePosition);
+
+            if (isLastSegment)
             {
+                // update next free position with this deleted position
+                this.NextFreePosition = position;
+            }
+            else
+            { 
                 // if segment is in middle of the page, add this blocks as fragment block
                 this.FragmentedBytes += length;
             }
-            else
+
+            // if deleted if are HighestIndex, update HighestIndex
+            if (this.HighestIndex == index)
             {
-                // if is last segment, must update next free block and discover new highst new index
-                this.NextFreePosition = position;
                 this.UpdateHighestIndex();
             }
 
@@ -353,7 +364,7 @@ namespace LiteDB.Engine
         /// Update segment bytes with new data. Current page must have bytes enougth for this new size. Index will not be changed
         /// Update will try use same segment to store. If not possible, write on end of page (with possible Defrag operation)
         /// </summary>
-        public BufferSlice Update(byte index, int bytesLength)
+        public BufferSlice Update(byte index, ushort bytesLength)
         {
             throw new NotImplementedException();
             /*
@@ -449,6 +460,8 @@ namespace LiteDB.Engine
                 // get only used index
                 if (position != 0)
                 {
+                    ENSURE(this.IsValidPos(position), "invalid segment position");
+
                     // sort by position
                     segments.Add(position, index);
                 }
@@ -467,6 +480,8 @@ namespace LiteDB.Engine
                 var lengthAddr = CalcLengthAddr(index);
                 var length = _buffer.ReadUInt16(lengthAddr);
 
+                ENSURE(this.IsValidLen(length), "invalid segment length");
+
                 // if current segment are not as excpect, copy buffer to right position (excluding empty space)
                 if (position != next)
                 {
@@ -482,7 +497,7 @@ namespace LiteDB.Engine
                     // update index slot with this new block position
                     var positionAddr = CalcPositionAddr(index);
 
-                    _buffer.Write((ushort)next, positionAddr);
+                    _buffer.Write(next, positionAddr);
                 }
 
                 next += length;
@@ -490,7 +505,8 @@ namespace LiteDB.Engine
 
             // fill all non-used content area with 0
             var emptyLength = PAGE_SIZE - next - this.FooterSize;
-            _buffer.Array.Fill((byte)0, next, emptyLength);
+
+            _buffer.Array.Fill(0, next, emptyLength);
 
             // clear fragment blocks (page are in a continuous segment)
             this.FragmentedBytes = 0;
@@ -541,25 +557,45 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Update highest used index slot
+        /// Update HighestIndex based on current HighestIndex (step back looking for next used slot)
+        /// Used only in Delete() operation
         /// </summary>
         private void UpdateHighestIndex()
         {
-            for (byte index = (byte)(this.HighestIndex - 1); index > 0; index--)
+            // if first index, so there is no more HighestIndex
+            if (this.HighestIndex == 0)
+            {
+                this.HighestIndex = byte.MaxValue;
+                return;
+            }
+
+            for (byte index = (byte)(this.HighestIndex - 1); index >= 0; index--)
             {
                 var positionAddr = CalcPositionAddr(index);
                 var position = _buffer.ReadUInt16(positionAddr);
 
                 if (position != 0)
                 {
+                    ENSURE(this.IsValidPos(position), "invalid segment position");
+
                     this.HighestIndex = index;
                     return;
                 }
             }
 
-            // empty value
+            // there is no more slots used
             this.HighestIndex = byte.MaxValue;
         }
+
+        /// <summary>
+        /// Checks if segment position has a valid value (used for DEBUG)
+        /// </summary>
+        private bool IsValidPos(ushort position) => position >= PAGE_HEADER_SIZE && position < (PAGE_SIZE - this.FooterSize);
+
+        /// <summary>
+        /// Checks if segment length has a valid value (used for DEBUG)
+        /// </summary>
+        private bool IsValidLen(ushort length) => length > 0 && length < (PAGE_SIZE - PAGE_HEADER_SIZE - this.FooterSize);
 
         #endregion
 

@@ -52,7 +52,7 @@ namespace LiteDB.Engine
         /// </summary>
         public DataBlock UpdateBlock(DataBlock currentBlock, int bytesLength)
         {
-            var segment = base.Update(currentBlock.Position.Index, bytesLength + DataBlock.DATA_BLOCK_FIXED_SIZE);
+            var segment = base.Update(currentBlock.Position.Index, (ushort)(bytesLength + DataBlock.DATA_BLOCK_FIXED_SIZE));
 
             return new DataBlock(this, currentBlock.Position.Index, segment, currentBlock.DataIndex, currentBlock.NextBlock);
         }
