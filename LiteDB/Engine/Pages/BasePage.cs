@@ -13,6 +13,11 @@ namespace LiteDB.Engine
     {
         protected readonly PageBuffer _buffer;
 
+        /// <summary>
+        /// Bytes used in each offset slot (to store segment position (2) + length (2))
+        /// </summary>
+        public const int SLOT_SIZE = 4;
+
         #region Buffer Field Positions
 
         public const int P_PAGE_ID = 0;  // 00-03 [uint]
@@ -91,7 +96,7 @@ namespace LiteDB.Engine
         public int FooterSize => 1 + // CRC
             (this.HighestIndex == byte.MaxValue ? 
             0 :  // no items in page
-            ((this.HighestIndex + 1) * PageSlot.SIZE)); // 4 bytes PER item - need consider HighestIndex used
+            ((this.HighestIndex + 1) * SLOT_SIZE)); // 4 bytes PER item (2 to position + 2 to length) - need consider HighestIndex used
 
         /// <summary>
         /// Set in all datafile pages the page id about data/index collection. Useful if want re-build database without any index [4 bytes]
@@ -262,14 +267,14 @@ namespace LiteDB.Engine
         private BufferSlice Insert(ushort bytesLength, byte index)
         {
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
-            ENSURE(this.FreeBytes >= bytesLength + PageSlot.SIZE, "length must be always lower than current free space");
+            ENSURE(this.FreeBytes >= bytesLength + SLOT_SIZE, "length must be always lower than current free space");
             ENSURE(index != byte.MaxValue, "index shloud be a valid number (0-254)");
 
             // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
             if (index > this.HighestIndex) this.HighestIndex = index;
 
             // calculate how many continuous bytes are avaiable in this page (must consider new footer slot [4 bytes])
-            var continuosBlocks = this.FreeBytes - this.FragmentedBytes - PageSlot.SIZE;
+            var continuosBlocks = this.FreeBytes - this.FragmentedBytes - SLOT_SIZE;
 
             // if continuous blocks are not big enouth for this data, must run page defrag
             if (bytesLength > continuosBlocks)
@@ -426,68 +431,70 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Defrag method re-organize all byte data content removing all fragmented data. This will move all page segments
-        /// to create a single continuous content area (just after header area)
+        /// to create a single continuous content area (just after header area). No index segment will be changed (only positions)
         /// </summary>
         public void Defrag()
         {
             ENSURE(this.FragmentedBytes > 0, "do not call this when page has no fragmentation");
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
 
-            // first get all segments inside this page
-            var slots = new List<PageSlot>();
+            // first get all segments inside this page sorted by position (position, index)
+            var segments = new SortedList<ushort, byte>();
 
             for (byte index = 0; index <= this.HighestIndex; index++)
             {
                 var positionAddr = CalcPositionAddr(index);
-                var lengthAddr = CalcLengthAddr(index);
-
                 var position = _buffer.ReadUInt16(positionAddr);
 
+                // get only used index
                 if (position != 0)
                 {
-                    var length = _buffer.ReadUInt16(lengthAddr);
-                    var slot = new PageSlot((byte)index, position, length);
-
-                    slots.Add(slot);
+                    // sort by position
+                    segments.Add(position, index);
                 }
             }
 
             // here first block position
-            var next = PAGE_HEADER_SIZE;
+            var next = (ushort)PAGE_HEADER_SIZE;
 
-            // now, list all segment in block position order
-            foreach (var slot in slots.OrderBy(x => x.Position))
+            // now, list all segments order by Position
+            foreach (var slot in segments)
             {
+                var index = slot.Value;
+                var position = slot.Key;
+
+                // get segment length
+                var lengthAddr = CalcLengthAddr(index);
+                var length = _buffer.ReadUInt16(lengthAddr);
+
                 // if current segment are not as excpect, copy buffer to right position (excluding empty space)
-                if (slot.Position != next)
+                if (position != next)
                 {
+                    ENSURE(position > next, "current segment position must be greater than current empty space");
+
                     // copy from original position into new (correct) position
                     System.Buffer.BlockCopy(_buffer.Array,
-                        _buffer.Offset + slot.Position,
+                        _buffer.Offset + position,
                         _buffer.Array,
                         _buffer.Offset + next,
-                        slot.Length);
+                        length);
 
                     // update index slot with this new block position
-                    var positionAddr = CalcPositionAddr(slot.Index);
+                    var positionAddr = CalcPositionAddr(index);
 
                     _buffer.Write((ushort)next, positionAddr);
                 }
 
-                next += slot.Length;
+                next += length;
             }
 
-#if DEBUG
-            // fill all non-used content area with 77 (for debug propose only) - there is no need on release
-            var len = PAGE_SIZE - next - this.FooterSize;
-            _buffer.Array.Fill((byte)77, next, len);
-#endif
+            // fill all non-used content area with 0
+            var emptyLength = PAGE_SIZE - next - this.FooterSize;
+            _buffer.Array.Fill((byte)0, next, emptyLength);
 
             // clear fragment blocks (page are in a continuous segment)
             this.FragmentedBytes = 0;
             this.NextFreePosition = (ushort)next;
-
-            // there is no change in any index slot related
         }
 
         /// <summary>
@@ -561,7 +568,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get buffer offset position where one page segment length are located (based on index slot)
         /// </summary>
-        public static int CalcPositionAddr(byte index) => P_CRC - ((index + 1) * PageSlot.SIZE) + 2;
+        public static int CalcPositionAddr(byte index) => P_CRC - ((index + 1) * SLOT_SIZE) + 2;
 
         /// <summary>
         /// Get buffer offset position where one page segment length are located (based on index slot)

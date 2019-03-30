@@ -346,7 +346,7 @@ namespace LiteDB.Engine
         public T GetFreePage<T>(int bytesLength)
             where T : BasePage
         {
-            var length = bytesLength + PageSlot.SIZE; // add +4 bytes for footer slot
+            var length = bytesLength + BasePage.SLOT_SIZE; // add +4 bytes for footer slot
 
             // select if I will get from free index list or data list
             var freeLists = typeof(T) == typeof(IndexPage) ?
@@ -387,7 +387,7 @@ namespace LiteDB.Engine
             var newPage = this.NewPage<T>();
 
             // get slot based on how many blocks page will have after use
-            var slot = BasePage.FreeIndexSlot(newPage.FreeBytes - length - PageSlot.SIZE);
+            var slot = BasePage.FreeIndexSlot(newPage.FreeBytes - length - BasePage.SLOT_SIZE);
 
             // and add into free-list
             this.AddFreeList<T>(newPage, ref freeLists[slot]);

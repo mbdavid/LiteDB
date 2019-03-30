@@ -14,7 +14,7 @@ namespace LiteDB.Engine
             PAGE_SIZE - // 8192
             PAGE_HEADER_SIZE - // [32 bytes]
             1 - // CRC [1 byte]
-            PageSlot.SIZE - // [4 bytes]
+            BasePage.SLOT_SIZE - // [4 bytes]
             DataBlock.DATA_BLOCK_FIXED_SIZE; // [6 bytes];
 
         private Snapshot _snapshot;
