@@ -157,6 +157,18 @@ namespace LiteDB.Internals
             Assert.AreEqual(8192 - 32 - 9 - 200, page.FreeBytes);
             Assert.AreEqual(100, page.FragmentedBytes);
 
+            // delete 200b - last item
+            page.Delete(index1);
+
+            // after delete last item page will be defrag
+
+            Assert.AreEqual(byte.MaxValue, page.HighestIndex);
+            Assert.AreEqual(0, page.ItemsCount);
+            Assert.AreEqual(0, page.UsedBytes);
+            Assert.AreEqual(32, page.NextFreePosition);
+            Assert.AreEqual(8192 - 32 - 1, page.FreeBytes);
+            Assert.AreEqual(0, page.FragmentedBytes);
+
             buffer.ShareCounter = 0;
         }
 

@@ -275,6 +275,7 @@ namespace LiteDB.Engine
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
             ENSURE(this.FreeBytes >= bytesLength + SLOT_SIZE, "length must be always lower than current free space");
             ENSURE(index != byte.MaxValue, "index shloud be a valid number (0-254)");
+            ENSURE(this.ItemsCount < byte.MaxValue, "page full");
 
             // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
             if (index > this.HighestIndex || this.HighestIndex == byte.MaxValue) this.HighestIndex = index;
@@ -321,7 +322,7 @@ namespace LiteDB.Engine
         public void Delete(byte index)
         {
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
-            ENSURE(index < byte.MaxValue, "deleted index segment must be less than 254");
+            ENSURE(index < byte.MaxValue, "deleted index segment must be 0-254");
 
             // read block position on index slot
             var positionAddr = CalcPositionAddr(index);
@@ -364,6 +365,16 @@ namespace LiteDB.Engine
             // reset start index (used in GetFreeIndex)
             _startIndex = 0;
 
+            // if there is no more items in page, fix fragmentation
+            if (this.ItemsCount == 0)
+            {
+                ENSURE(this.HighestIndex == byte.MaxValue, "if there is no items, HighestIndex must be clear");
+                ENSURE(_buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE - 1).All(0), "all content area must be 0");
+
+                this.NextFreePosition = PAGE_HEADER_SIZE;
+                this.FragmentedBytes = 0;
+            }
+
             // set page as dirty
             this.IsDirty = true;
         }
@@ -401,7 +412,7 @@ namespace LiteDB.Engine
             // when new length are less than original length (will fit in current segment)
             else if (bytesLength < length)
             {
-                var diff = (ushort)(length - bytesLength); // bytes removed
+                var diff = (ushort)(length - bytesLength); // bytes removed (should > 0)
 
                 if (isLastSegment)
                 {
@@ -425,10 +436,10 @@ namespace LiteDB.Engine
 
                 return _buffer.Slice(position, bytesLength);
             }
-            // when new length are large than current segment
+            // when new length are large than current segment must remove current item no add again
             else
             {
-                // remove current segment
+                // clear current segment
                 _buffer.Slice(position, length).Fill(0);
 
                 this.ItemsCount--;
@@ -462,13 +473,15 @@ namespace LiteDB.Engine
         {
             ENSURE(this.FragmentedBytes > 0, "do not call this when page has no fragmentation");
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
+            ENSURE(this.HighestIndex < byte.MaxValue, "there is no items in this page to run defrag");
 
             // first get all segments inside this page sorted by position (position, index)
             var segments = new SortedList<ushort, byte>();
 
-            for (byte index = 0; index <= this.HighestIndex; index++)
+            // use int to avoid byte overflow
+            for (int index = 0; index <= this.HighestIndex; index++)
             {
-                var positionAddr = CalcPositionAddr(index);
+                var positionAddr = CalcPositionAddr((byte)index);
                 var position = _buffer.ReadUInt16(positionAddr);
 
                 // get only used index
@@ -477,7 +490,7 @@ namespace LiteDB.Engine
                     ENSURE(this.IsValidPos(position), "invalid segment position");
 
                     // sort by position
-                    segments.Add(position, index);
+                    segments.Add(position, (byte)index);
                 }
             }
 
@@ -537,13 +550,13 @@ namespace LiteDB.Engine
         /// </summary>
         private byte GetFreeIndex()
         {
-            // check for all slot area to get first empty slot
+            // check for all slot area to get first empty slot [safe for byte loop]
             for (byte index = _startIndex; index < byte.MaxValue; index++)
             {
                 var positionAddr = CalcPositionAddr(index);
                 var position = _buffer.ReadUInt16(positionAddr);
 
-                // if position contains 0x00 means this slot are not used
+                // if position = 0 means this slot are not used
                 if (position == 0)
                 {
                     _startIndex = (byte)(index + 1);
@@ -564,6 +577,7 @@ namespace LiteDB.Engine
 
             ENSURE(this.HighestIndex != byte.MaxValue, "if has items count Heighest index should be not emtpy");
 
+            // [safe for byte loop] - because this.HighestIndex can't be 255
             for (byte index = 0; index <= this.HighestIndex; index++)
             {
                 var positionAddr = CalcPositionAddr(index);
@@ -582,23 +596,26 @@ namespace LiteDB.Engine
         /// </summary>
         private void UpdateHighestIndex()
         {
-            // if first index, so there is no more HighestIndex
+            ENSURE(this.HighestIndex < byte.MaxValue, "can run only if contains a valid HighestIndex");
+
+            // if current index is 0, clear index
             if (this.HighestIndex == 0)
             {
                 this.HighestIndex = byte.MaxValue;
                 return;
             }
 
-            for (byte index = (byte)(this.HighestIndex - 1); index >= 0; index--)
+            // start from current - 1 to 0 (should use "int" becase for use ">= 0")
+            for (int index = this.HighestIndex - 1; index >= 0; index--)
             {
-                var positionAddr = CalcPositionAddr(index);
+                var positionAddr = CalcPositionAddr((byte)index);
                 var position = _buffer.ReadUInt16(positionAddr);
 
                 if (position != 0)
                 {
                     ENSURE(this.IsValidPos(position), "invalid segment position");
 
-                    this.HighestIndex = index;
+                    this.HighestIndex = (byte)index;
                     return;
                 }
             }
