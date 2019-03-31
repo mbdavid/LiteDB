@@ -70,19 +70,6 @@ namespace LiteDB.Engine
             Interlocked.Decrement(ref this.ShareCounter);
         }
 
-        /// <summary>
-        /// Checks if this page are completly empty (for DEBUG propose only)
-        /// </summary>
-        public bool IsEmpty()
-        {
-            for (var i = 0; i < PAGE_SIZE; i++)
-            {
-                if (this.Array[i + this.Offset] != 0) return false;
-            }
-
-            return true;
-        }
-
         ~PageBuffer()
         {
             ENSURE(this.ShareCounter == 0, "share count must be 0 in destroy PageBuffer");

@@ -34,9 +34,25 @@ namespace LiteDB.Engine
             set => this.Array[this.Offset + index] = value;
         }
 
+        /// <summary>
+        /// Fill all array slice with value parameter
+        /// </summary>
         public void Fill(byte value)
         {
             this.Array.Fill(value, this.Offset, this.Count);
+        }
+
+        /// <summary>
+        /// Checks if all values contains only value parameter (used for DEBUG)
+        /// </summary>
+        public bool All(byte value)
+        {
+            for (var i = 0; i < this.Count; i++)
+            {
+                if (this.Array[this.Offset + i] != value) return false;
+            }
+
+            return true;
         }
 
         /// <summary>

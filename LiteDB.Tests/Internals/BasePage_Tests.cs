@@ -112,18 +112,50 @@ namespace LiteDB.Internals
             Assert.AreEqual(8192 - 32 - 9 - 200, page.FreeBytes);
             Assert.AreEqual(100, page.FragmentedBytes);
 
-            // let's test defrag
-            page.Defrag();
-
-            Assert.AreEqual(32 + 200, page.NextFreePosition);
-            Assert.AreEqual(1, page.HighestIndex);
-
-            // ensure index0 will be reused
-            page.Insert(1000, out var newIndex0);
-            Assert.AreEqual(0, newIndex0);
-
             buffer.ShareCounter = 0;
         }
 
+        [TestMethod]
+        public void Defrag_BasePage()
+        {
+            var data = new byte[Constants.PAGE_SIZE];
+            var buffer = new PageBuffer(data, 0, 0);
+
+            // mark buffer as writable (debug propose)
+            buffer.ShareCounter = Constants.BUFFER_WRITABLE;
+
+            var page = new BasePage(buffer, 1, PageType.Empty);
+
+            page.Insert(100, out var index0).Fill(101);
+            page.Insert(200, out var index1).Fill(102);
+            page.Insert(300, out var index2).Fill(103);
+            page.Insert(400, out var index3).Fill(104);
+
+            Assert.AreEqual(0, page.FragmentedBytes);
+            Assert.AreEqual(1000, page.UsedBytes);
+            Assert.AreEqual(32 + 1000, page.NextFreePosition);
+
+            page.Delete(index0);
+            page.Delete(index1);
+
+            Assert.AreEqual(300, page.FragmentedBytes);
+            Assert.AreEqual(700, page.UsedBytes);
+            Assert.AreEqual(32 + 1000, page.NextFreePosition);
+
+            page.Defrag();
+
+            Assert.AreEqual(0, page.FragmentedBytes);
+            Assert.AreEqual(700, page.UsedBytes);
+            Assert.AreEqual(32 + 700, page.NextFreePosition);
+
+            Assert.IsTrue(page.Get(index2).All(103));
+            Assert.IsTrue(page.Get(index3).All(104));
+
+            var indexes = string.Join(",", page.GetUsedIndexs().ToArray());
+
+            Assert.AreEqual("2,3", indexes);
+
+            buffer.ShareCounter = 0;
+        }
     }
 }
