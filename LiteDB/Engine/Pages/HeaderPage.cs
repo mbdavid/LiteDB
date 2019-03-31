@@ -169,10 +169,12 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Create a save point before do any change on header page
+        /// Create a save point before do any change on header page (execute UpdateBuffer())
         /// </summary>
         public PageBuffer Savepoint()
         {
+            this.UpdateBuffer();
+
             var savepoint = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
 
             System.Buffer.BlockCopy(_buffer.Array, _buffer.Offset, savepoint.Array, savepoint.Offset, PAGE_SIZE);
