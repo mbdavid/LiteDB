@@ -4,7 +4,6 @@ using System.IO;
 using System.Text;
 using LiteDB.Engine;
 using static LiteDB.Constants;
-using System.Buffers;
 
 namespace LiteDB
 {
@@ -46,14 +45,14 @@ namespace LiteDB
             using (var stream = new MemoryStream(input.Array, input.Offset, input.Count))
             using (var crypto = new CryptoStream(stream, _encryptor, CryptoStreamMode.Read))
             {
-                var buffer = ArrayPool<byte>.Shared.Rent(input.Count);
+                var buffer = BufferPool.Rent(input.Count);
 
                 crypto.Read(buffer, 0, input.Count);
                 //crypto.FlushFinalBlock();
 
                 output.Write(buffer, 0, input.Count);
 
-                ArrayPool<byte>.Shared.Return(buffer);
+                BufferPool.Return(buffer);
             }
         }
 
@@ -62,7 +61,7 @@ namespace LiteDB
         /// </summary>
         public void Decrypt(Stream input, BufferSlice output)
         {
-            var buffer = ArrayPool<byte>.Shared.Rent(output.Count);
+            var buffer = BufferPool.Rent(output.Count);
 
             input.Read(buffer, 0, output.Count);
 
@@ -72,7 +71,7 @@ namespace LiteDB
                 crypto.Read(output.Array, output.Offset, output.Count);
             }
 
-            ArrayPool<byte>.Shared.Return(buffer);
+            BufferPool.Return(buffer);
         }
 
         /// <summary>

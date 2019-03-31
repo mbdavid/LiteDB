@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 namespace LiteDB.Engine
 {
     /// <summary>
+    /// Manage multiple open readonly Stream instances from same source (file). 
+    /// Support single writer instance
+    /// Close all Stream on dispose
     /// [ThreadSafe]
     /// </summary>
     internal class StreamPool : IDisposable

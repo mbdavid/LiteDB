@@ -1,15 +1,6 @@
 ﻿using System;
-using System.Buffers;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -175,7 +166,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = ArrayPool<byte>.Shared.Rent(bytesCount);
+                var buffer = BufferPool.Rent(bytesCount);
 
                 Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
 
@@ -185,7 +176,7 @@ namespace LiteDB.Engine
 
                 this.MoveFordward(1);
 
-                ArrayPool<byte>.Shared.Return(buffer);
+                BufferPool.Return(buffer);
             }
         }
 
@@ -211,13 +202,13 @@ namespace LiteDB.Engine
             else
             {
                 // rent a buffer to be re-usable
-                var buffer = ArrayPool<byte>.Shared.Rent(count);
+                var buffer = BufferPool.Rent(count);
 
                 Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
 
                 this.Write(buffer, 0, count);
 
-                ArrayPool<byte>.Shared.Return(buffer);
+                BufferPool.Return(buffer);
             }
 
             if (specs)

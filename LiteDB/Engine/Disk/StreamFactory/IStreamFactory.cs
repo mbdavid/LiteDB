@@ -12,17 +12,17 @@ namespace LiteDB.Engine
     internal interface IStreamFactory
     {
         /// <summary>
-        /// Get stream name
+        /// Get Stream name (filename)
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// Get new file stream instance
+        /// Get new Stream instance
         /// </summary>
         Stream GetStream(bool canWrite, bool sequencial);
 
         /// <summary>
-        /// Get if file exists
+        /// Checks if file exists
         /// </summary>
         bool Exists();
 

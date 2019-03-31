@@ -53,10 +53,6 @@
 
   <!-- Begin References -->
 
-  <ItemGroup>
-    <PackageReference Include="System.Buffers" Version="4.5.0" />
-  </ItemGroup>
-
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <Reference Include="System" />
     <Reference Include="System.Runtime" />
