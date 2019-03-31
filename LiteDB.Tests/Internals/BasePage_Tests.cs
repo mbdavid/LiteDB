@@ -17,7 +17,7 @@ namespace LiteDB.Internals
     public class BasePage_Tests
     {
         [TestMethod]
-        public void Insert_Bytes_In_BasePage()
+        public void BasePage_Insert()
         {
             // create new memory area with 10 bytes offset (just for fun)
             var data = new byte[Constants.PAGE_SIZE + 10];
@@ -63,7 +63,7 @@ namespace LiteDB.Internals
         }
 
         [TestMethod]
-        public void Insert_Full_Page_In_BasePage()
+        public void BasePage_Insert_Full_Page()
         {
             // create new memory area
             var data = new byte[Constants.PAGE_SIZE];
@@ -88,7 +88,7 @@ namespace LiteDB.Internals
         }
 
         [TestMethod]
-        public void Delete_Bytes_In_BasePage()
+        public void BasePage_Delete()
         {
             var data = new byte[Constants.PAGE_SIZE];
             var buffer = new PageBuffer(data, 0, 0);
@@ -134,7 +134,7 @@ namespace LiteDB.Internals
         }
 
         [TestMethod]
-        public void Defrag_BasePage()
+        public void BasePage_Defrag()
         {
             var data = new byte[Constants.PAGE_SIZE];
             var buffer = new PageBuffer(data, 0, 0);
@@ -177,7 +177,7 @@ namespace LiteDB.Internals
         }
 
         [TestMethod]
-        public void Update_Bytes_BasePage()
+        public void BasePage_Update()
         {
             var data = new byte[Constants.PAGE_SIZE];
             var buffer = new PageBuffer(data, 0, 0);

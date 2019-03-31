@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 using LiteDB.Engine;
 using System.Threading;
 
-namespace LiteDB.Internals.Disk
+namespace LiteDB.Internals
 {
     [TestClass]
     public class Cache_Tests
@@ -71,7 +71,7 @@ namespace LiteDB.Internals.Disk
         }
 
         [TestMethod]
-        public void Cache_Segments()
+        public void Cache_Extends()
         {
             var m = new MemoryCache(10);
             var pos = 0;
