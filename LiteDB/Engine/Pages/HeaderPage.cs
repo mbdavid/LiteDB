@@ -27,16 +27,18 @@ namespace LiteDB.Engine
 
         #region Buffer Field Positions
 
-        private const int P_HEADER_INFO = 32;  // 32-58
-        private const int P_FILE_VERSION = 59;
-        private const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63
-        private const int P_LAST_PAGE_ID = 64; // 64-67
-        private const int P_CREATION_TIME = 68; // 68-75
-        private const int P_LAST_CHECKPOINT = 76; // 76-83
-        private const int P_USER_VERSION = 84; // 84-87
-        // reserved 87-95 (9 bytes)
-        private const int P_COLLECTIONS = 96; // 96-8128
-        private const int P_COLLECTIONS_COUNT = PAGE_SIZE - P_COLLECTIONS - 1; // 8095 [-1 for CRC]
+        private const int P_HEADER_INFO = 32;  // 32-58 (27 bytes)
+        private const int P_FILE_VERSION = 59; // 59-59 (1 byte)
+        private const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63 (4 bytes)
+        private const int P_LAST_PAGE_ID = 64; // 64-67 (4 bytes)
+        private const int P_CREATION_TIME = 68; // 68-75 (8 bytes)
+        private const int P_LAST_CHECKPOINT = 76; // 76-83 (8 bytes)
+        private const int P_USER_VERSION = 84; // 84-87 (4 bytes)
+        // reserved 88-95 (8 bytes)
+        private const int P_COLLECTIONS = 96; // 96-8095 (8000 bytes)
+        // reserved 8096-8190 (95 bytes) (8191 to CRC)
+
+        private const int COLLECTIONS_SIZE = 8000; // 250 blocks with 32 bytes each
 
         #endregion
 
@@ -66,12 +68,12 @@ namespace LiteDB.Engine
         public int UserVersion { get; set; }
 
         /// <summary>
-        /// Global last used transaction ID (should be int to use in Interlocked.Increment)
+        /// Global last used transaction ID (should be int to use in Interlocked.Increment) - not persisted
         /// </summary>
         public int LastTransactionID = 0;
 
         /// <summary>
-        /// All collections names/link ponter are stored inside this document
+        /// All collections names/link pointers are stored inside this document
         /// </summary>
         private BsonDocument _collections;
 
@@ -79,11 +81,6 @@ namespace LiteDB.Engine
         /// Check if collections was changed
         /// </summary>
         private bool _isCollectionsChanged = false;
-
-        /// <summary>
-        /// Internal (no-shared) buffer to store page content in save point
-        /// </summary>
-        private PageBuffer _savepoint = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
 
         /// <summary>
         /// Create new Header Page
@@ -101,7 +98,6 @@ namespace LiteDB.Engine
             // writing direct into buffer in Ctor() because there is no change later (write once)
             _buffer.Write(HEADER_INFO, P_HEADER_INFO);
             _buffer.Write(FILE_VERSION, P_FILE_VERSION);
-
             _buffer.Write(this.CreationTime, P_CREATION_TIME);
 
             // initialize collections
@@ -116,48 +112,50 @@ namespace LiteDB.Engine
         {
             if (this.PageType != PageType.Header) throw new LiteException(0, $"Invalid HeaderPage buffer on {PageID}");
 
-            this.CreationTime = buffer.ReadDateTime(P_CREATION_TIME);
+            // CreateTime is readonly
+            this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
 
-            this.LoadPage(buffer);
+            this.LoadPage();
         }
 
         /// <summary>
         /// Load page content based on page buffer
         /// </summary>
-        private void LoadPage(PageBuffer buffer)
+        private void LoadPage()
         {
-            var info = buffer.ReadString(P_HEADER_INFO, HEADER_INFO.Length);
-            var ver = buffer[P_FILE_VERSION];
+            var info = _buffer.ReadString(P_HEADER_INFO, HEADER_INFO.Length);
+            var ver = _buffer[P_FILE_VERSION];
 
             if (string.CompareOrdinal(info, HEADER_INFO) != 0) throw LiteException.InvalidDatabase();
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
 
-            this.FreeEmptyPageID = buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
-            this.LastPageID = buffer.ReadUInt32(P_LAST_PAGE_ID);
-            this.LastCheckpoint = buffer.ReadDateTime(P_LAST_CHECKPOINT);
-            this.UserVersion = buffer.ReadInt32(P_USER_VERSION);
+            this.FreeEmptyPageID = _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
+            this.LastPageID = _buffer.ReadUInt32(P_LAST_PAGE_ID);
+            this.LastCheckpoint = _buffer.ReadDateTime(P_LAST_CHECKPOINT);
+            this.UserVersion = _buffer.ReadInt32(P_USER_VERSION);
 
             // create new buffer area to store BsonDocument collections
-            var area = buffer.Slice(P_COLLECTIONS, P_COLLECTIONS_COUNT);
+            var area = _buffer.Slice(P_COLLECTIONS, COLLECTIONS_SIZE);
 
             using (var r = new BufferReader(new[] { area }, false))
             {
                 _collections = r.ReadDocument();
             }
+
+            _isCollectionsChanged = false;
         }
 
         public override PageBuffer UpdateBuffer()
         {
             _buffer.Write(this.FreeEmptyPageID, P_FREE_EMPTY_PAGE_ID);
             _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
-            // CreationTime - never change - no need to override buffer
             _buffer.Write(this.LastCheckpoint, P_LAST_CHECKPOINT);
             _buffer.Write(this.UserVersion, P_USER_VERSION);
 
             // update collection only if needed
             if (_isCollectionsChanged)
             {
-                var area = _buffer.Slice(P_COLLECTIONS, P_COLLECTIONS_COUNT);
+                var area = _buffer.Slice(P_COLLECTIONS, COLLECTIONS_SIZE);
 
                 using (var w = new BufferWriter(area))
                 {
@@ -173,19 +171,23 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create a save point before do any change on header page
         /// </summary>
-        public void Savepoint()
+        public PageBuffer Savepoint()
         {
-            System.Buffer.BlockCopy(_buffer.Array, _buffer.Offset, _savepoint.Array, _savepoint.Offset, PAGE_SIZE);
+            var savepoint = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
+
+            System.Buffer.BlockCopy(_buffer.Array, _buffer.Offset, savepoint.Array, savepoint.Offset, PAGE_SIZE);
+
+            return savepoint;
         }
 
         /// <summary>
         /// Restore savepoint content and override on page. Must run in lock(_header)
         /// </summary>
-        public void RestoreSavepoint()
+        public void Restore(PageBuffer savepoint)
         {
-            System.Buffer.BlockCopy(_savepoint.Array, _savepoint.Offset, _buffer.Array, _buffer.Offset, PAGE_SIZE);
+            System.Buffer.BlockCopy(savepoint.Array, savepoint.Offset, _buffer.Array, _buffer.Offset, PAGE_SIZE);
 
-            this.LoadPage(_buffer);
+            this.LoadPage();
         }
 
         /// <summary>
@@ -237,7 +239,7 @@ namespace LiteDB.Engine
         /// </summary>
         public int GetAvaiableCollectionSpace()
         {
-            return P_COLLECTIONS_COUNT -
+            return COLLECTIONS_SIZE -
                 _collections.GetBytesCount() -
                 1 + // for int32 type (0x10)
                 1 + // for new CString ('\0')

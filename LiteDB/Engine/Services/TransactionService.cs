@@ -364,7 +364,7 @@ namespace LiteDB.Engine
                 };
 
                 // create a header save point before any change
-                _header.Savepoint();
+                var safepoint = _header.Savepoint();
 
                 try
                 {
@@ -374,7 +374,7 @@ namespace LiteDB.Engine
                 catch
                 {
                     // must revert all header content if any error occurs during header change
-                    _header.RestoreSavepoint();
+                    _header.Restore(safepoint);
                     throw;
                 }
 
