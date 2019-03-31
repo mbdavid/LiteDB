@@ -63,7 +63,7 @@ namespace LiteDB.Internals
         }
 
         [TestMethod]
-        public void BasePage_Insert_Full_Page()
+        public void BasePage_Insert_Full_Bytes_Page()
         {
             // create new memory area
             var data = new byte[Constants.PAGE_SIZE];
@@ -82,7 +82,34 @@ namespace LiteDB.Internals
             Assert.AreEqual(1, page.ItemsCount);
             Assert.AreEqual(full, page.UsedBytes);
             Assert.AreEqual(0, page.FreeBytes);
-            Assert.AreEqual(ushort.MaxValue, page.NextFreePosition);
+            Assert.AreEqual(32 + full, page.NextFreePosition);
+
+            buffer.ShareCounter = 0;
+        }
+
+        [TestMethod]
+        public void BasePage_Insert_Full_Items_Page()
+        {
+            // create new memory area
+            var data = new byte[Constants.PAGE_SIZE];
+            var buffer = new PageBuffer(data, 0, 1);
+
+            // mark buffer as writable (debug propose)
+            buffer.ShareCounter = Constants.BUFFER_WRITABLE;
+
+            // create new base page
+            var page = new BasePage(buffer, 1, PageType.Empty);
+
+            // create 255 page segments
+            for(byte i = 0; i < byte.MaxValue; i++)
+            {
+                page.Insert(10, out var index).Fill(i);
+            }
+
+            Assert.AreEqual(255, page.ItemsCount);
+            Assert.AreEqual(2550, page.UsedBytes);
+            Assert.AreEqual(0, page.FreeBytes);
+            Assert.AreEqual(32 + 2550, page.NextFreePosition);
 
             buffer.ShareCounter = 0;
         }

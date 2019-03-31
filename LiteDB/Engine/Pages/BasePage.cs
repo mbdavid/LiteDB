@@ -85,9 +85,11 @@ namespace LiteDB.Engine
         public byte HighestIndex { get; private set; }
 
         /// <summary>
-        /// Get how many free bytes (including fragmented bytes) are in this page (content space)
+        /// Get how many free bytes (including fragmented bytes) are in this page (content space) - Will return 0 bytes if page are full (or with max 255 items)
         /// </summary>
-        public int FreeBytes => PAGE_SIZE - PAGE_HEADER_SIZE - this.UsedBytes - this.FooterSize;
+        public int FreeBytes => this.ItemsCount == byte.MaxValue ?
+            0 :
+            PAGE_SIZE - PAGE_HEADER_SIZE - this.UsedBytes - this.FooterSize;
 
         /// <summary>
         /// Get how many bytes are used in footer page at this moment
@@ -305,7 +307,7 @@ namespace LiteDB.Engine
             // update next free position and counters
             this.ItemsCount++;
             this.UsedBytes += bytesLength;
-            this.NextFreePosition = this.FreeBytes == 0 ? ushort.MaxValue : (ushort)(this.NextFreePosition + bytesLength);
+            this.NextFreePosition += bytesLength;
 
             this.IsDirty = true;
 
@@ -358,6 +360,9 @@ namespace LiteDB.Engine
             {
                 this.UpdateHighestIndex();
             }
+
+            // reset start index (used in GetFreeIndex)
+            _startIndex = 0;
 
             // set page as dirty
             this.IsDirty = true;
@@ -519,25 +524,31 @@ namespace LiteDB.Engine
 
             // clear fragment blocks (page are in a continuous segment)
             this.FragmentedBytes = 0;
-            this.NextFreePosition = (ushort)next;
+            this.NextFreePosition = next;
         }
+
+        /// <summary>
+        /// Store start index used in GetFreeIndex to avoid always run full loop over all indexes
+        /// </summary>
+        private byte _startIndex = 0;
 
         /// <summary>
         /// Get a free index slot in this page
         /// </summary>
         private byte GetFreeIndex()
         {
-            //TODO** Aqui dá pra otimizar: manter uma MEMORIA de qual foi o ultimo espaço em branco achado
-            // com isso, a proxima busca é feita a partir deste valor....
-
             // check for all slot area to get first empty slot
-            for (byte index = 0; index < byte.MaxValue; index++)
+            for (byte index = _startIndex; index < byte.MaxValue; index++)
             {
                 var positionAddr = CalcPositionAddr(index);
                 var position = _buffer.ReadUInt16(positionAddr);
 
                 // if position contains 0x00 means this slot are not used
-                if (position == 0) return index;
+                if (position == 0)
+                {
+                    _startIndex = (byte)(index + 1);
+                    return index;
+                }
             }
 
             throw new InvalidOperationException("This page has no more free space to insert new data");
