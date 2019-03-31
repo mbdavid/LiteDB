@@ -102,7 +102,7 @@ namespace LiteDB.Engine
             header.LastPageID = aes == null ? 0u : 1u;
 
             // update buffer
-            header.GetBuffer(true);
+            header.UpdateBuffer();
 
             if (aes == null)
             {

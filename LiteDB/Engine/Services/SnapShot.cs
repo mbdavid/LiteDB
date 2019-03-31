@@ -101,7 +101,7 @@ namespace LiteDB.Engine
             // release all pages (except collection page)
             foreach(var page in _localPages.Values)
             {
-                page.GetBuffer(false).Release();
+                page.Buffer.Release();
             }
 
             _localPages.Clear();
@@ -116,7 +116,7 @@ namespace LiteDB.Engine
             this.Clear();
 
             // release collection page
-            _collectionPage?.GetBuffer(false).Release();
+            _collectionPage?.Buffer.Release();
 
             if (_mode == LockMode.Read)
             {
@@ -256,7 +256,7 @@ namespace LiteDB.Engine
                     pageID = free.PageID;
 
                     // get buffer inside re-used page
-                    buffer = free.GetBuffer(false);
+                    buffer = free.Buffer;
                 }
                 else
                 {
@@ -330,7 +330,7 @@ namespace LiteDB.Engine
             }
 
             // update localPage to new Empty Page
-            page = new BasePage(page.GetBuffer(false), page.PageID, PageType.Empty);
+            page = new BasePage(page.Buffer, page.PageID, PageType.Empty);
 
             page.IsDirty = true;
 

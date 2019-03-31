@@ -27,46 +27,64 @@ namespace LiteDB.Internals
             buffer.ShareCounter = Constants.BUFFER_WRITABLE;
 
             // create new base page
-            var page = new BasePage(buffer, 99, PageType.Empty);
+            var page = new BasePage(buffer, 1, PageType.Empty);
 
-            var seg0 = page.Insert(4, out var index0);
+            page.Insert(10, out var index0).Fill(1);
+            page.Insert(20, out var index1).Fill(2);
+            page.Insert(30, out var index2).Fill(3);
+            page.Insert(40, out var index3).Fill(4);
 
-            // write (int)123 in this segment
-            seg0.Write(123, 0);
+            Assert.AreEqual(0, page.FragmentedBytes);
+            Assert.AreEqual(100, page.UsedBytes);
+            Assert.AreEqual(32 + 100, page.NextFreePosition);
+            Assert.AreEqual(1 + (4 * 4), page.FooterSize);
+            Assert.AreEqual(8192 - 32 - 100 - (1 + (4 * 4)), page.FreeBytes);
 
-            Assert.AreEqual(123, seg0.ReadInt32(0));
+            Assert.IsTrue(page.Get(index0).All(1));
+            Assert.IsTrue(page.Get(index1).All(2));
+            Assert.IsTrue(page.Get(index2).All(3));
+            Assert.IsTrue(page.Get(index3).All(4));
 
-            // adding segment #1
-            var seg1 = page.Insert(16, out var index1);
-            var guid = Guid.NewGuid();
-
-            // second data slice must be just after header area + after first block (first slice use 6 bytes)
-            Assert.AreEqual(Constants.PAGE_HEADER_SIZE + 10 + 4, seg1.Offset); // 4 for first block
-
-            seg1.Write(guid, 0);
-
-            Assert.AreEqual(guid, seg1.ReadGuid(0));
-
-            // update page buffer (header info
-            page.GetBuffer(true);
-
-            // testing if data was persist correctly in page buffer
-            Assert.AreEqual(123, BitConverter.ToInt32(buffer.Array, 10 + Constants.PAGE_HEADER_SIZE));
-
-            var guidBytes = new byte[16];
-            Buffer.BlockCopy(buffer.Array, 10 + Constants.PAGE_HEADER_SIZE + 4, guidBytes, 0, 16);
-
-            Assert.AreEqual(guid, new Guid(guidBytes));
-
+            // update header buffer
+            page.UpdateBuffer();
 
             // let's create another page instance based on same page buffer
             var page2 = new BasePage(buffer);
 
-            Assert.AreEqual(99, (int)page.PageID);
+            Assert.AreEqual(1, (int)page.PageID);
             Assert.AreEqual(PageType.Empty, page.PageType);
 
-            buffer.ShareCounter = 0;
+            Assert.IsTrue(page.Get(index0).All(1));
+            Assert.IsTrue(page.Get(index1).All(2));
+            Assert.IsTrue(page.Get(index2).All(3));
+            Assert.IsTrue(page.Get(index3).All(4));
 
+            buffer.ShareCounter = 0;
+        }
+
+        [TestMethod]
+        public void Insert_Full_Page_In_BasePage()
+        {
+            // create new memory area
+            var data = new byte[Constants.PAGE_SIZE];
+            var buffer = new PageBuffer(data, 0, 1);
+
+            // mark buffer as writable (debug propose)
+            buffer.ShareCounter = Constants.BUFFER_WRITABLE;
+
+            // create new base page
+            var page = new BasePage(buffer, 1, PageType.Empty);
+
+            var full = page.FreeBytes - BasePage.SLOT_SIZE;
+
+            page.Insert((ushort)full, out var index0).Fill(1);
+
+            Assert.AreEqual(1, page.ItemsCount);
+            Assert.AreEqual(full, page.UsedBytes);
+            Assert.AreEqual(0, page.FreeBytes);
+            Assert.AreEqual(ushort.MaxValue, page.NextFreePosition);
+
+            buffer.ShareCounter = 0;
         }
 
         [TestMethod]
@@ -154,6 +172,69 @@ namespace LiteDB.Internals
             var indexes = string.Join(",", page.GetUsedIndexs().ToArray());
 
             Assert.AreEqual("2,3", indexes);
+
+            buffer.ShareCounter = 0;
+        }
+
+        [TestMethod]
+        public void Update_Bytes_BasePage()
+        {
+            var data = new byte[Constants.PAGE_SIZE];
+            var buffer = new PageBuffer(data, 0, 0);
+
+            // mark buffer as writable (debug propose)
+            buffer.ShareCounter = Constants.BUFFER_WRITABLE;
+
+            var page = new BasePage(buffer, 1, PageType.Empty);
+
+            page.Insert(100, out var index0).Fill(101);
+            page.Insert(200, out var index1).Fill(102);
+            page.Insert(300, out var index2).Fill(103);
+            page.Insert(400, out var index3).Fill(104);
+
+            Assert.AreEqual(0, page.FragmentedBytes);
+            Assert.AreEqual(1000, page.UsedBytes);
+            Assert.AreEqual(32 + 1000, page.NextFreePosition);
+
+            // update same segment length 
+            page.Update(index0, 100).Fill(201);
+
+            Assert.IsTrue(page.Get(index0).All(201));
+            Assert.AreEqual(0, page.FragmentedBytes);
+            Assert.AreEqual(1000, page.UsedBytes);
+            Assert.AreEqual(32 + 1000, page.NextFreePosition);
+
+            // less bytes (segment in middle of page)
+            page.Update(index1, 150).Fill(202);
+
+            Assert.IsTrue(page.Get(index1).All(202));
+            Assert.AreEqual(50, page.FragmentedBytes);
+            Assert.AreEqual(950, page.UsedBytes);
+            Assert.AreEqual(32 + 1000, page.NextFreePosition);
+
+            // less bytes (segment in end of page)
+            page.Update(index3, 350).Fill(204);
+
+            Assert.IsTrue(page.Get(index3).All(204));
+            Assert.AreEqual(50, page.FragmentedBytes);
+            Assert.AreEqual(900, page.UsedBytes);
+            Assert.AreEqual(32 + 950, page.NextFreePosition);
+
+            // more bytes (segment in end of page)
+            page.Update(index3, 550).Fill(214);
+
+            Assert.IsTrue(page.Get(index3).All(214));
+            Assert.AreEqual(50, page.FragmentedBytes);
+            Assert.AreEqual(1100, page.UsedBytes);
+            Assert.AreEqual(32 + 1150, page.NextFreePosition);
+
+            // more bytes (segment in middle of page)
+            page.Update(index0, 200).Fill(211);
+
+            Assert.IsTrue(page.Get(index0).All(211));
+            Assert.AreEqual(150, page.FragmentedBytes);
+            Assert.AreEqual(1200, page.UsedBytes);
+            Assert.AreEqual(32 + 1350, page.NextFreePosition);
 
             buffer.ShareCounter = 0;
         }

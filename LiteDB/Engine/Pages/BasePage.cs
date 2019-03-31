@@ -123,6 +123,11 @@ namespace LiteDB.Engine
         /// </summary>
         public bool IsDirty { get; set; }
 
+        /// <summary>
+        /// Get page buffer instance
+        /// </summary>
+        public PageBuffer Buffer => _buffer;
+
         #region Initialize/Update buffer
 
         /// <summary>
@@ -193,12 +198,10 @@ namespace LiteDB.Engine
         /// <summary>
         /// Write header data from variable into byte[] buffer. When override, call base.UpdateBuffer() after write your code
         /// </summary>
-        public virtual PageBuffer GetBuffer(bool update)
+        public virtual PageBuffer UpdateBuffer()
         {
             // using fixed position to be faster than BufferWriter
             ENSURE(this.PageID == _buffer.ReadUInt32(P_PAGE_ID), "pageID can't be changed");
-
-            if (update == false) return _buffer;
 
             // page information
             // PageID   - never change!
@@ -246,9 +249,9 @@ namespace LiteDB.Engine
             var length = _buffer.ReadUInt16(lengthAddr);
 
             ENSURE(this.IsValidPos(position), "invalid segment position");
-            ENSURE(this.IsValidPos(length), "invalid segment length");
+            ENSURE(this.IsValidLen(length), "invalid segment length");
 
-            // retrn buffer slice with content only data
+            // return buffer slice with content only data
             return _buffer.Slice(position, length);
         }
 
@@ -274,8 +277,8 @@ namespace LiteDB.Engine
             // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
             if (index > this.HighestIndex || this.HighestIndex == byte.MaxValue) this.HighestIndex = index;
 
-            // calculate how many continuous bytes are avaiable in this page (must consider new footer slot [4 bytes])
-            var continuosBlocks = this.FreeBytes - this.FragmentedBytes - SLOT_SIZE;
+            // calculate how many continuous bytes are avaiable in this page
+            var continuosBlocks = this.FreeBytes - this.FragmentedBytes;
 
             // if continuous blocks are not big enouth for this data, must run page defrag
             if (bytesLength > continuosBlocks)
@@ -300,9 +303,9 @@ namespace LiteDB.Engine
             _buffer.Write(bytesLength, lengthAddr);
 
             // update next free position and counters
-            this.NextFreePosition += bytesLength;
             this.ItemsCount++;
             this.UsedBytes += bytesLength;
+            this.NextFreePosition = this.FreeBytes == 0 ? ushort.MaxValue : (ushort)(this.NextFreePosition + bytesLength);
 
             this.IsDirty = true;
 
@@ -366,78 +369,84 @@ namespace LiteDB.Engine
         /// </summary>
         public BufferSlice Update(byte index, ushort bytesLength)
         {
-            throw new NotImplementedException();
-            /*
-            // read position on page where index are linking to
-            var slot = PAGE_SIZE - index - 1;
-            var block = _buffer[slot];
-
-            ENSURE(block > 1, "existing page segment must contains a valid block position (after header)");
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
 
-            var originalLength = _buffer[block * PAGE_BLOCK_SIZE]; // length in blocks
-            var newLength = PageSegment.GetLength(bytesLength); // length in blocks (add inside method +1 byte)
-            var isLastSegment = index == this.HighestIndex;
+            // read slot address
+            var positionAddr = CalcPositionAddr(index);
+            var lengthAddr = CalcLengthAddr(index);
 
+            // read segment position/length
+            var position = _buffer.ReadUInt16(positionAddr);
+            var length = _buffer.ReadUInt16(lengthAddr);
+
+            ENSURE(this.IsValidPos(position), "invalid segment position");
+            ENSURE(this.IsValidPos(length), "invalid segment length");
+
+            // check if deleted segment are at end of page
+            var isLastSegment = (position + length == this.NextFreePosition);
+
+            // mark page as dirty before return buffer slice
             this.IsDirty = true;
 
-            // best situation: same block count
-            if (newLength == originalLength)
+            // best situation: same slice length
+            if (bytesLength == length)
             {
-                return new PageSegment(_buffer, index, block, newLength);
+                return _buffer.Slice(position, length);
             }
             // when new length are less than original length (will fit in current segment)
-            else if (newLength < originalLength)
+            else if (bytesLength < length)
             {
-                var diff = (byte)(originalLength - newLength); // blocks removed
+                var diff = (ushort)(length - bytesLength); // bytes removed
 
                 if (isLastSegment)
                 {
-                    // if is at end of segment, must get back unused blocks 
-                    this.NextFreeBlock -= diff;
+                    // if is at end of page, must get back unused blocks 
+                    this.NextFreePosition -= diff;
                 }
                 else
                 {
                     // is this segment are not at end, must add this as fragment
-                    this.FragmentedBlocks += diff;
+                    this.FragmentedBytes += diff;
                 }
 
                 // less blocks will be used
-                this.UsedContentBlocks -= diff;
+                this.UsedBytes -= diff;
 
-                return new PageSegment(_buffer, index, block, newLength);
+                // update length
+                _buffer.Write(bytesLength, lengthAddr);
+
+                // clear fragment bytes
+                _buffer.Slice(position + bytesLength, diff).Fill(0);
+
+                return _buffer.Slice(position, bytesLength);
             }
             // when new length are large than current segment
             else
             {
-#if DEBUG
-                // fill segment with 99 value (for debug propose only) - there is no need on release
-                var diff = (byte)(newLength - originalLength); // blocks added
-                _buffer.Array.Fill(99, block * PAGE_BLOCK_SIZE, originalLength * PAGE_BLOCK_SIZE);
-#endif
+                // remove current segment
+                _buffer.Slice(position, length).Fill(0);
 
-                // release used content blocks with original length and decrease counter
-                this.UsedContentBlocks -= originalLength;
                 this.ItemsCount--;
+                this.UsedBytes -= length;
 
                 if (isLastSegment)
                 {
-                    // if segment is end of page, must update next free block as current block
-                    this.NextFreeBlock = block;
+                    // if segment is end of page, must update next free position to current segment position
+                    this.NextFreePosition = position;
                 }
                 else
                 {
-                    // if segment is on middle of page, add content as fragment blocks
-                    this.FragmentedBlocks += originalLength;
+                    // if segment is on middle of page, add content length as fragment bytes
+                    this.FragmentedBytes += length;
                 }
 
-                // clean slot position (to better debug - will be checked in Insert)
-                _buffer[slot] = 0;
+                // clear slot index position/length
+                _buffer.Write((ushort)0, positionAddr);
+                _buffer.Write((ushort)0, lengthAddr);
 
-                // run insert command but use same index
-                return this.Insert(index, newLength);
+                // call insert
+                return this.Insert(bytesLength, index);
             }
-            */
         }
 
         /// <summary>

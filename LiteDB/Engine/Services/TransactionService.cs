@@ -156,7 +156,7 @@ namespace LiteDB.Engine
                         page.Item.IsConfirmed = markLastAsConfirmed;
                     }
 
-                    var buffer = page.Item.GetBuffer(true);
+                    var buffer = page.Item.UpdateBuffer();
 
                     // buffer position will be set at end of file (it´s always log file)
                     yield return buffer;
@@ -193,7 +193,7 @@ namespace LiteDB.Engine
                                 };
 
                                 // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                                yield return lastDeletedPage.GetBuffer(true);
+                                yield return lastDeletedPage.UpdateBuffer();
 
                                 // release page just after write on disk
                                 empty.Release();
@@ -211,7 +211,7 @@ namespace LiteDB.Engine
                         _transPages.OnCommit(_header);
 
                         // clone header page
-                        var buffer = _header.GetBuffer(true);
+                        var buffer = _header.UpdateBuffer();
                         var clone = _reader.NewPage();
 
                         // mem copy from current header to new header clone
@@ -236,7 +236,7 @@ namespace LiteDB.Engine
             _disk.DiscardPages(_snapshots.Values
                     .Where(x => x.Mode == LockMode.Write)
                     .SelectMany(x => x.GetWritablePages(false, commit))
-                    .Select(x => x.GetBuffer(false)), false);
+                    .Select(x => x.Buffer), false);
         }
 
         /// <summary>
@@ -291,10 +291,10 @@ namespace LiteDB.Engine
                     if (snapshot.Mode == LockMode.Write)
                     {
                         // discard all dirty pages
-                        _disk.DiscardPages(snapshot.GetWritablePages(true, true).Select(x => x.GetBuffer(false)), true);
+                        _disk.DiscardPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer), true);
 
                         // discard all clean pages
-                        _disk.DiscardPages(snapshot.GetWritablePages(false, true).Select(x => x.GetBuffer(false)), false);
+                        _disk.DiscardPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer), false);
                     }
 
                     // now, release pages
@@ -339,7 +339,7 @@ namespace LiteDB.Engine
                             TransactionID = transactionID
                         };
 
-                        yield return page.GetBuffer(true);
+                        yield return page.UpdateBuffer();
 
                         buffer.Release();
 
@@ -353,7 +353,7 @@ namespace LiteDB.Engine
                     _header.IsConfirmed = true;
 
                     // clone header buffer
-                    var buf = _header.GetBuffer(true);
+                    var buf = _header.UpdateBuffer();
                     var clone = _reader.NewPage();
 
                     Buffer.BlockCopy(buf.Array, buf.Offset, clone.Array, clone.Offset, clone.Count);

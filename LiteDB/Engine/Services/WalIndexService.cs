@@ -146,7 +146,7 @@ namespace LiteDB.Engine
                     // when a header is modified in transaction, must always be the last page inside log file (per transaction)
                     if (page.PageType == PageType.Header)
                     {
-                        var headerBuffer = header.GetBuffer(false);
+                        var headerBuffer = header.Buffer;
 
                         // copy this buffer block into original header block
                         Buffer.BlockCopy(buffer.Array, buffer.Offset, headerBuffer.Array, headerBuffer.Offset, PAGE_SIZE);
@@ -225,7 +225,7 @@ namespace LiteDB.Engine
                             page.TransactionID = uint.MaxValue;
 
                             // get updated buffer with new CRC computed
-                            yield return page.GetBuffer(true);
+                            yield return page.UpdateBuffer();
 
                             // can remove from list when store in disk
                             if (isConfirmed)
@@ -239,7 +239,7 @@ namespace LiteDB.Engine
                     // return header page as last checkpoint page
                     header.LastCheckpoint = DateTime.UtcNow;
 
-                    var headerBuffer = header.GetBuffer(true);
+                    var headerBuffer = header.UpdateBuffer();
 
                     yield return headerBuffer;
                 }

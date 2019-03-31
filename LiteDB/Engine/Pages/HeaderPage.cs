@@ -146,10 +146,8 @@ namespace LiteDB.Engine
             }
         }
 
-        public override PageBuffer GetBuffer(bool update)
+        public override PageBuffer UpdateBuffer()
         {
-            if (update == false) return _buffer;
-
             _buffer.Write(this.FreeEmptyPageID, P_FREE_EMPTY_PAGE_ID);
             _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
             // CreationTime - never change - no need to override buffer
@@ -169,7 +167,7 @@ namespace LiteDB.Engine
                 _isCollectionsChanged = false;
             }
 
-            return base.GetBuffer(update);
+            return base.UpdateBuffer();
         }
 
         /// <summary>
@@ -177,7 +175,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Savepoint()
         {
-            Buffer.BlockCopy(_buffer.Array, _buffer.Offset, _savepoint.Array, _savepoint.Offset, PAGE_SIZE);
+            System.Buffer.BlockCopy(_buffer.Array, _buffer.Offset, _savepoint.Array, _savepoint.Offset, PAGE_SIZE);
         }
 
         /// <summary>
@@ -185,7 +183,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void RestoreSavepoint()
         {
-            Buffer.BlockCopy(_savepoint.Array, _savepoint.Offset, _buffer.Array, _buffer.Offset, PAGE_SIZE);
+            System.Buffer.BlockCopy(_savepoint.Array, _savepoint.Offset, _buffer.Array, _buffer.Offset, PAGE_SIZE);
 
             this.LoadPage(_buffer);
         }
