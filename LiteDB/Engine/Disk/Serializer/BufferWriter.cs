@@ -6,7 +6,7 @@ using static LiteDB.Constants;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Write data into multiple array segment
+    /// Write data types/BSON data into byte[]. It's fordward only and support multi buffer slice as source
     /// </summary>
     internal class BufferWriter : IDisposable
     {
@@ -182,7 +182,7 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Write string into output buffer. 
-        /// Support direct string (with no length information) or BSON specs (with Legnth + 1 before and \0 at end)
+        /// Support direct string (with no length information) or BSON specs: with (legnth + 1) [4 bytes] before and '\0' at end = 5 extra bytes
         /// </summary>
         public void WriteString(string value, bool specs)
         {
@@ -260,7 +260,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void Write(DateTime value)
         {
-            this.Write(value.ToUniversalTime().Ticks);
+            var utc = (value == DateTime.MinValue || value == DateTime.MaxValue) ? value : value.ToUniversalTime();
+
+            this.Write(utc.Ticks);
         }
 
         /// <summary>

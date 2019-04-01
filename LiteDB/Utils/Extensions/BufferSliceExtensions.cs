@@ -80,6 +80,11 @@ namespace LiteDB
 
         public static DateTime ReadDateTime(this BufferSlice buffer, int offset)
         {
+            var ticks = buffer.ReadInt64(offset);
+
+            if (ticks == 0) return DateTime.MinValue;
+            if (ticks == 3155378975999999999) return DateTime.MaxValue;
+
             return new DateTime(buffer.ReadInt64(offset), DateTimeKind.Utc).ToLocal();
         }
 
