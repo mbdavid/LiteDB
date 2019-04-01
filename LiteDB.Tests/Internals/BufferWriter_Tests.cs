@@ -14,7 +14,7 @@ using System.Threading;
 namespace LiteDB.Internals
 {
     [TestClass]
-    public class BufferRW_Tests
+    public class BufferWriter_Tests
     {
         [TestMethod]
         public void Buffer_Write_String()
@@ -148,6 +148,68 @@ namespace LiteDB.Internals
             Assert.AreEqual(PageAddress.Empty, source.ReadPageAddress(p)); p += PageAddress.SIZE;
             Assert.AreEqual(new PageAddress(199, 0), source.ReadPageAddress(p)); p += PageAddress.SIZE;
 
+        }
+
+        [TestMethod]
+        public void Buffer_Write_Overflow()
+        {
+            var data = new byte[50];
+            var source = new BufferSlice[]
+            {
+                new BufferSlice(data, 0, 10),
+                new BufferSlice(data, 10, 10),
+                new BufferSlice(data, 20, 10),
+                new BufferSlice(data, 30, 10),
+                new BufferSlice(data, 40, 10)
+            };
+
+            using (var w = new BufferWriter(source))
+            {
+                w.Write(new byte[50].Fill(99, 0, 50), 0, 50);
+            }
+
+            Assert.IsTrue(data.All(x => x == 99));
+        }
+
+        [TestMethod]
+        public void Buffer_Bson()
+        {
+            var source = new BufferSlice(new byte[1000], 0, 1000);
+
+            var doc = new BsonDocument
+            {
+                ["minValue"] = BsonValue.MinValue,
+                ["null"] = BsonValue.Null,
+                ["int"] = int.MaxValue,
+                ["long"] = long.MaxValue,
+                ["double"] = double.MaxValue,
+                ["decimal"] = decimal.MaxValue,
+                ["string"] = "String",
+                ["document"] = new BsonDocument { ["_id"] = 1 },
+                ["array"] = new BsonArray { 1, 2, 3 },
+                ["binary"] = new byte[50].Fill(255, 0, 49),
+                ["objectId"] = ObjectId.NewObjectId(),
+                ["guid"] = Guid.NewGuid(),
+                ["boolean"] = true,
+                ["date"] = DateTime.UtcNow,
+                ["maxValue"] = BsonValue.MaxValue
+            };
+
+            using (var w = new BufferWriter(source))
+            {
+                w.WriteDocument(doc);
+
+                Assert.AreEqual(307, w.Position);
+            }
+
+            using (var r = new BufferReader(source, true))
+            {
+                var reader = r.ReadDocument();
+
+                Assert.AreEqual(307, r.Position);
+
+                Assert.AreEqual(JsonSerializer.Serialize(doc), JsonSerializer.Serialize(reader));
+            }
         }
     }
 }

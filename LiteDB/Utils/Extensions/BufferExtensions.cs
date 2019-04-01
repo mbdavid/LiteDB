@@ -58,12 +58,14 @@ namespace LiteDB
         /// <summary>
         /// Fill all array with defined value
         /// </summary>
-        public static void Fill(this byte[] array, byte value, int offset, int count)
+        public static byte[] Fill(this byte[] array, byte value, int offset, int count)
         {
             for(var i = 0; i < count; i++)
             {
                 array[i + offset] = value;
             }
+
+            return array;
         }
 
         /// <summary>
