@@ -560,6 +560,7 @@ namespace LiteDB.Engine
                 if (position == 0)
                 {
                     _startIndex = (byte)(index + 1);
+
                     return index;
                 }
             }
