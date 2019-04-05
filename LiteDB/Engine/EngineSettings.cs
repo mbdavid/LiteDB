@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -64,6 +65,12 @@ namespace LiteDB.Engine
         /// Indicate that engine will open files in readonly mode (and will not support any database change)
         /// </summary>
         public bool ReadOnly { get; set; } = false;
+
+        /// <summary>
+        /// Size, in PAGES, for each buffer array (used in MemoryStore) - Each byte array will be created with this size * PAGE_SIZE. 
+        /// Should be > 100 (800kb) - Default: 1000 (8Mb each segment)
+        /// </summary>
+        public int MemorySegmentSize { get; set; } = MEMORY_SEGMENT_SIZE;
 
         /// <summary>
         /// Create new IStreamFactory for datafile

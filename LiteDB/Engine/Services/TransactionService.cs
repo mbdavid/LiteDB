@@ -183,7 +183,7 @@ namespace LiteDB.Engine
                             // if free empty list was not empty, let's fix my last page
                             if (_header.FreeEmptyPageID != uint.MaxValue)
                             {
-                                var empty = _reader.NewPage();
+                                var empty = _disk.NewPage();
 
                                 var lastDeletedPage = new BasePage(empty, _transPages.LastDeletedPageID, PageType.Empty)
                                 {
@@ -212,7 +212,7 @@ namespace LiteDB.Engine
 
                         // clone header page
                         var buffer = _header.UpdateBuffer();
-                        var clone = _reader.NewPage();
+                        var clone = _disk.NewPage();
 
                         // mem copy from current header to new header clone
                         Buffer.BlockCopy(buffer.Array, buffer.Offset, clone.Array, clone.Offset, clone.Count);
@@ -354,7 +354,7 @@ namespace LiteDB.Engine
 
                     // clone header buffer
                     var buf = _header.UpdateBuffer();
-                    var clone = _reader.NewPage();
+                    var clone = _disk.NewPage();
 
                     Buffer.BlockCopy(buf.Array, buf.Offset, clone.Array, clone.Offset, clone.Count);
 

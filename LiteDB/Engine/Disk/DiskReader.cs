@@ -14,6 +14,7 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Memory file reader - must call Dipose after use to return reader into pool
+    /// This class is not ThreadSafe - must have 1 instance per thread (get instance from DiskService)
     /// </summary>
     internal class DiskReader : IDisposable
     {
@@ -39,6 +40,8 @@ namespace LiteDB.Engine
 
         public PageBuffer ReadPage(long position, bool writable, FileOrigin origin)
         {
+            ENSURE(position % 8192 == 0, "page should step in 8192 bytes");
+
             var stream = origin == FileOrigin.Data ?
                 _dataStream.Value :
                 _logStream.Value;

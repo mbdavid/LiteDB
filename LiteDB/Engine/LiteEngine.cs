@@ -143,10 +143,6 @@ namespace LiteDB.Engine
 
         #endregion
 
-        public int PagesInUse => _disk.PagesInUse;
-        public int QueueLength => _disk.Queue.Length;
-        public void WaitQueue() => _disk.Queue.Wait();
-
         /// <summary>
         /// Run checkpoint command to copy log file into data file
         /// </summary>

@@ -14,7 +14,7 @@ namespace LiteDB.Engine
     /// Implement custom fast/in memory mapped disk access
     /// [ThreadSafe]
     /// </summary>
-    internal class DiskService
+    internal class DiskService : IDisposable
     {
         private readonly MemoryCache _cache;
         private readonly Lazy<DiskWriterQueue> _queue;
@@ -34,7 +34,7 @@ namespace LiteDB.Engine
 
         public DiskService(EngineSettings settings)
         {
-            _cache = new MemoryCache(MEMORY_SEGMENT_SIZE);
+            _cache = new MemoryCache(settings.MemorySegmentSize);
 
             // get new stream factory based on settings
             _dataFactory = settings.CreateDataFactory();
@@ -185,7 +185,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write pages inside file origin using async queue - works only for log file
+        /// Write pages inside file origin using async queue - WORKS ONLY FOR LOG FILE
         /// </summary>
         public void WriteAsync(IEnumerable<PageBuffer> pages)
         {
@@ -266,7 +266,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write pages inside disk with no async queue. This pages are not cached and are not shared
+        /// Write pages inside disk with no async queue. This pages are not cached and are not shared - WORKS FOR DATA FILE ONLY
         /// </summary>
         public void Write(IEnumerable<PageBuffer> pages, FileOrigin origin)
         {
@@ -338,12 +338,6 @@ namespace LiteDB.Engine
         }
 
         #endregion
-
-        /// <summary>
-        /// Return how many pages are in use when call this method (ShareCounter != 0).
-        /// Used only for DEBUG propose
-        /// </summary>
-        public int PagesInUse => _cache.PagesInUse;
 
         public void Dispose()
         {
