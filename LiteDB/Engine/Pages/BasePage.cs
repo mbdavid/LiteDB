@@ -204,6 +204,7 @@ namespace LiteDB.Engine
         {
             // using fixed position to be faster than BufferWriter
             ENSURE(this.PageID == _buffer.ReadUInt32(P_PAGE_ID), "pageID can't be changed");
+            ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be in write mode");
 
             // page information
             // PageID   - never change!

@@ -162,6 +162,8 @@ namespace LiteDB.Engine
                 // try move clean pages into _readable list (if not already there)
                 foreach (var page in pages)
                 {
+                    ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable");
+
                     _cache.TryMoveToReadable(page);
                 }
             }
@@ -170,6 +172,8 @@ namespace LiteDB.Engine
                 // only rollback action - this must will be keeped into _writable and wait for new Extend
                 foreach (var page in pages)
                 {
+                    ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable");
+
                     page.ShareCounter = 1; // will be decrease on page.Release();
                     page.Timestamp = 1; // be first page to be re-used on next Extend()
                 }
@@ -249,7 +253,15 @@ namespace LiteDB.Engine
                 {
                     var position = stream.Position;
 
-                    stream.Read(buffer, 0, PAGE_SIZE);
+                    // read encrypted or plain data from Stream into buffer
+                    if (_aes != null)
+                    {
+                        _aes.Decrypt(stream, new BufferSlice(buffer, 0, PAGE_SIZE));
+                    }
+                    else
+                    {
+                        stream.Read(buffer, 0, PAGE_SIZE);
+                    }
 
                     yield return new PageBuffer(buffer, 0, 0)
                     {
@@ -282,7 +294,15 @@ namespace LiteDB.Engine
 
                 stream.Position = page.Position;
 
-                stream.Write(page.Array, page.Offset, PAGE_SIZE);
+                // write plain or encrypted data into stream
+                if (_aes != null)
+                {
+                    _aes.Encrypt(page, stream);
+                }
+                else
+                {
+                    stream.Write(page.Array, page.Offset, PAGE_SIZE);
+                }
             }
 
             stream.FlushToDisk();
