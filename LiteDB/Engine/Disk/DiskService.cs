@@ -288,7 +288,7 @@ namespace LiteDB.Engine
 
             foreach (var page in pages)
             {
-                ENSURE(page.ShareCounter == 0, "this page can't be shared to use sync operation");
+                ENSURE(page.ShareCounter == 0, "this page can't be shared to use sync operation - do not use cached pages");
 
                 _dataLength = Math.Max(_dataLength, page.Position);
 

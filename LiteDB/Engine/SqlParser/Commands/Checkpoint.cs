@@ -13,16 +13,16 @@ namespace LiteDB.Engine
         {
             // read CHECKPOINT
             var token = _tokenizer.ReadToken();
-            var mode = CheckpointMode.Incremental;
+            var full = false;
 
             if (token.Is("FULL"))
             {
-                mode = CheckpointMode.Full;
+                full = true;
             }
 
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon, TokenType.Word);
 
-            var result = _engine.Checkpoint(mode);
+            var result = _engine.Checkpoint(full);
 
             return new BsonDataReader(result);
         }

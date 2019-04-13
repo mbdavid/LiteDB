@@ -194,8 +194,11 @@ namespace LiteDB.Engine
                 {
                     _locker.EnterReserved(true);
 
-                    // wait all async writer queue runs
+                    // wait all pages write on disk
                     _disk.Queue.Wait();
+
+                    // re-read log length after enter in exclusive mode - can be changed
+                    logLength = _disk.GetLength(FileOrigin.Log);
 
                     ENSURE(_transactions.Where(x => x.Value == false).Count() == 0, "should not have any pending transaction after queue wait");
 
@@ -236,12 +239,25 @@ namespace LiteDB.Engine
                         }
                     }
 
-                    // return header page as last checkpoint page
+                    // if no page was copied from log, do not update header
+                    if (counter == 0) yield break;
+
+                    // clone header page to avoid changes when saving in disk
                     header.LastCheckpoint = DateTime.UtcNow;
 
-                    var headerBuffer = header.UpdateBuffer();
+                    // create new memory space to allocate buffer - no cache usage
+                    var clone = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
 
-                    yield return headerBuffer;
+                    lock (header)
+                    {
+                        var buffer = header.UpdateBuffer();
+
+                        // mem copy from current header to new header clone
+                        Buffer.BlockCopy(buffer.Array, buffer.Offset, clone.Array, clone.Offset, clone.Count);
+                    }
+
+                    // persist clone header into data file
+                    yield return clone;
                 }
 
                 // write all log pages into data file (sync)
@@ -266,14 +282,13 @@ namespace LiteDB.Engine
                     if (locked == false) _locker.ExitReserved(true);
                 }
 
+                ENSURE(locked, _disk.GetLength(FileOrigin.Log) == 0, "full/shutdown checkpoint must finish with log file = 0");
+
                 // in shutdown mode, delete file (will Dispose Stream) - will delete only if file is complete empty
                 if (mode == CheckpointMode.Shutdown)
                 {
                     _disk.Delete(FileOrigin.Log);
                 }
-
-                ENSURE(mode == CheckpointMode.Full, _disk.GetLength(FileOrigin.Log) == 0, "full checkpoint must finish with log file = 0");
-                ENSURE(mode == CheckpointMode.Shutdown, _disk.GetLength(FileOrigin.Log) == 0, "shutdown checkpoint must finish with log file = 0");
 
                 // exit exclusive lock (if full/shutdown)
                 if (locked) _locker.ExitReserved(true);

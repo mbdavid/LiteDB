@@ -276,11 +276,12 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Do database checkpoint. Copy all commited transaction from log file into datafile.
+        /// Do database checkpoint. Copy all commited transaction from log file into datafile. 
+        /// If FULL = true will lock database to ensure complete copy log file and clear log length
         /// </summary>
-        public int Checkpoint(CheckpointMode mode)
+        public int Checkpoint(bool full = false)
         {
-            return _engine.Value.Checkpoint(mode);
+            return _engine.Value.Checkpoint(full);
         }
 
         /// <summary>

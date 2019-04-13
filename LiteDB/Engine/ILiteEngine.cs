@@ -6,7 +6,7 @@ namespace LiteDB.Engine
     public interface ILiteEngine : IDisposable
     {
         int Analyze(string[] collections);
-        int Checkpoint(CheckpointMode mode);
+        int Checkpoint(bool full);
         long Shrink();
         int Vaccum();
         DatabaseReport CheckIntegrity();

@@ -146,9 +146,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Run checkpoint command to copy log file into data file
         /// </summary>
-        public int Checkpoint(CheckpointMode mode)
+        public int Checkpoint(bool full)
         {
-            if (mode == CheckpointMode.Shutdown && _shutdown == false) throw new LiteException(0, "Checkpoint shutdown mode are avaiable only when database are closing");
+            var mode = full ? CheckpointMode.Full : CheckpointMode.Incremental;
 
             return _walIndex.Checkpoint(_header, mode);
         }
