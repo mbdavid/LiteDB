@@ -47,7 +47,7 @@ namespace LiteDB.Engine
             _done = done;
 
             // create new transactionID
-            _transactionID = (uint)Interlocked.Increment(ref _header.LastTransactionID);
+            _transactionID = walIndex.NextTransactionID();
 
             _reader = _disk.GetReader();
 
@@ -314,10 +314,9 @@ namespace LiteDB.Engine
         private void ReturnNewPages()
         {
             // create new transaction ID
-            var transactionID = (uint)Interlocked.Increment(ref _header.LastTransactionID);
+            var transactionID = _walIndex.NextTransactionID();
 
-
-            // now lock header to update FreePageList
+            // now lock header to update LastTransactionID/FreePageList
             lock (_header)
             {
                 // persist all empty pages into wal-file

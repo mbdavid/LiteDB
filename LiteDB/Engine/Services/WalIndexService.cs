@@ -24,6 +24,11 @@ namespace LiteDB.Engine
 
         private int _currentReadVersion = 0;
 
+        /// <summary>
+        /// Store last used transaction
+        /// </summary>
+        private int _lastTransactionID = 0;
+
         public WalIndexService(DiskService disk, LockService locker)
         {
             _disk = disk;
@@ -40,6 +45,14 @@ namespace LiteDB.Engine
         /// Get current read version for all new transactions
         /// </summary>
         public int CurrentReadVersion => _currentReadVersion;
+
+        /// <summary>
+        /// Get new transactionID in thread safe way
+        /// </summary>
+        public uint NextTransactionID()
+        {
+            return (uint)Interlocked.Increment(ref _lastTransactionID);
+        }
 
         /// <summary>
         /// Checks if a Page/Version are in WAL-index memory. Consider version that are below parameter. Returns PagePosition of this page inside WAL-file or Empty if page doesn't found.
@@ -155,7 +168,9 @@ namespace LiteDB.Engine
                         header = new HeaderPage(headerBuffer);
                         header.TransactionID = uint.MaxValue;
                         header.IsConfirmed = false;
-                        header.LastTransactionID = (int)page.TransactionID;
+
+                        // update last transaction ID
+                        _lastTransactionID = (int)page.TransactionID;
                     }
 
                     // mark transaction as persisted
@@ -200,6 +215,7 @@ namespace LiteDB.Engine
                     // re-read log length after enter in exclusive mode - can be changed
                     logLength = _disk.GetLength(FileOrigin.Log);
 
+                    ENSURE(_disk.Queue.Length == 0, "no pages on queue");
                     ENSURE(_transactions.Where(x => x.Value == false).Count() == 0, "should not have any pending transaction after queue wait");
 
                     locked = true;

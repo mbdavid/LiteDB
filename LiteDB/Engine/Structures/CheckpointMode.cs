@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     /// <summary>
     /// Get checkpoint mode operations
     /// </summary>
-    public enum CheckpointMode
+    internal enum CheckpointMode
     {
         /// <summary>
         /// Full checkpoint will exclusive lock on database, wait all async queue be write to disk, copy all pages from log to data file

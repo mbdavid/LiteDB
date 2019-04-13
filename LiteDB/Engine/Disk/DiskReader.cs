@@ -40,7 +40,7 @@ namespace LiteDB.Engine
 
         public PageBuffer ReadPage(long position, bool writable, FileOrigin origin)
         {
-            ENSURE(position % 8192 == 0, "page should step in 8192 bytes");
+            ENSURE(position % PAGE_SIZE == 0, "invalid page position");
 
             var stream = origin == FileOrigin.Data ?
                 _dataStream.Value :

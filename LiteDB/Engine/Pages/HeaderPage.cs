@@ -68,11 +68,6 @@ namespace LiteDB.Engine
         public int UserVersion { get; set; }
 
         /// <summary>
-        /// Global last used transaction ID (should be int to use in Interlocked.Increment) - not persisted
-        /// </summary>
-        public int LastTransactionID = 0;
-
-        /// <summary>
         /// All collections names/link pointers are stored inside this document
         /// </summary>
         private BsonDocument _collections;
