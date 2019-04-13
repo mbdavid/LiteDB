@@ -14,7 +14,7 @@ namespace LiteDB.Shell
 
         public Env()
         {
-            this.Log = new Logger(Logger.NONE, (msg) =>
+            this.Log = new Logger(LoggerLevel.NONE, (msg) =>
             {
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
                 Console.WriteLine(msg);

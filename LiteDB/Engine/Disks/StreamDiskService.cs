@@ -36,7 +36,7 @@ namespace LiteDB
             // if stream are empty, create header page and save to stream
             if (_stream.Length == 0)
             {
-                _log.Write(Logger.DISK, "initialize new datafile");
+                _log.Write(LoggerLevel.DISK, "initialize new datafile");
 
                 // create datafile
                 LiteEngine.CreateDatabase(_stream, password);
@@ -76,7 +76,7 @@ namespace LiteDB
             // read bytes from data file
             _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
 
-            _log.Write(Logger.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
+            _log.Write(LoggerLevel.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
             return buffer;
         }
@@ -88,7 +88,7 @@ namespace LiteDB
         {
             var position = BasePage.GetSizeOfPages(pageID);
 
-            _log.Write(Logger.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
+            _log.Write(LoggerLevel.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
             // position cursor
             if (_stream.Position != position)

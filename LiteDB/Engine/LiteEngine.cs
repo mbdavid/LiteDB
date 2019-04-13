@@ -179,7 +179,7 @@ namespace LiteDB
 
             if (col == null && addIfNotExits)
             {
-                _log.Write(Logger.COMMAND, "create new collection '{0}'", name);
+                _log.Write(LoggerLevel.COMMAND, "create new collection '{0}'", name);
 
                 col = _collections.Add(name);
             }
@@ -209,7 +209,7 @@ namespace LiteDB
                 }
                 catch (Exception ex)
                 {
-                    _log.Write(Logger.ERROR, ex.Message);
+                    _log.Write(LoggerLevel.ERROR, ex.Message);
 
                     // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
                     _cache.DiscardDirtyPages();

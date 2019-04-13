@@ -14,7 +14,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            _log.Write(Logger.COMMAND, "query documents in '{0}' => {1}", collection, query);
+            _log.Write(LoggerLevel.COMMAND, "query documents in '{0}' => {1}", collection, query);
 
             using (var cursor = new QueryCursor(query, skip, limit))
             {
@@ -29,7 +29,7 @@ namespace LiteDB
                     // get nodes from query executor to get all IndexNodes
                     cursor.Initialize(query.Run(col, _indexer).GetEnumerator());
 
-                    _log.Write(Logger.QUERY, "{0} :: {1}", collection, query);
+                    _log.Write(LoggerLevel.QUERY, "{0} :: {1}", collection, query);
 
                     // fill buffer with documents 
                     cursor.Fetch(_trans, _data, _bsonReader);
