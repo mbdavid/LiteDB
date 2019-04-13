@@ -13,7 +13,7 @@ namespace LiteDB
         /// <summary>
         /// File id have a specific format - it's like file path.
         /// </summary>
-        public const string ID_PATTERN = @"^[\w-$@!+%;\.]+(\/[\w-$@!+%;\.]+)*$";
+        public const string ID_PATTERN = @"^[\w-$@!+%;\. ]+(\/[\w-$@!+%;\. ]+)*$";
 
         private static Regex IdPattern = new Regex(ID_PATTERN, RegexOptions.Compiled);
 
