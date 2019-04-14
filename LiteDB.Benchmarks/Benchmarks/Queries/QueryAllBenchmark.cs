@@ -18,7 +18,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Queries
         [GlobalSetup]
         public void GlobalSetup()
         {
-            DatabaseInstance = new LiteDatabase(new ConnectionString(DatabasePath) {Mode = FileMode.Exclusive});
+            DatabaseInstance = new LiteDatabase(ConnectionString);
             _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
 
             _fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(N)); // executed once per each N value

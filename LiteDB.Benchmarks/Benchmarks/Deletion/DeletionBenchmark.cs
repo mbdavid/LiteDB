@@ -19,7 +19,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Deletion
         [GlobalSetup]
         public void GlobalSetup()
         {
-            DatabaseInstance = new LiteDatabase(new ConnectionString(DatabasePath) {Mode = FileMode.Exclusive});
+            DatabaseInstance = new LiteDatabase(ConnectionString);
             _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
             _fileMetaCollection.EnsureIndex(file => file.IsFavorite);
             _fileMetaCollection.EnsureIndex(file => file.ShouldBeShown);

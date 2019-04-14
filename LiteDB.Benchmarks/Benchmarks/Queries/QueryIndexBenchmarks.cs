@@ -17,7 +17,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Queries
         [GlobalSetup(Targets = new[] {nameof(FindWithExpression), nameof(FindWithQuery)})]
         public void GlobalSetup()
         {
-            DatabaseInstance = new LiteDatabase(new ConnectionString(DatabasePath) {Mode = FileMode.Exclusive});
+            DatabaseInstance = new LiteDatabase(ConnectionString);
             _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
 
             _fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(N)); // executed once per each N value
@@ -26,7 +26,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Queries
         [GlobalSetup(Targets = new[] {nameof(FindWithIndexExpression), nameof(FindWithIndexQuery)})]
         public void GlobalIndexSetup()
         {
-            DatabaseInstance = new LiteDatabase(new ConnectionString(DatabasePath) {Mode = FileMode.Exclusive});
+            DatabaseInstance = new LiteDatabase(ConnectionString);
             _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
             _fileMetaCollection.EnsureIndex(fileMeta => fileMeta.IsFavorite);
             _fileMetaCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
