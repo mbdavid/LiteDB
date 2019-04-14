@@ -8,7 +8,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Queries
 {
     public class QueryCountDatabaseBenchmark : DatabaseBenchmarkBase
     {
-        protected override string DatabasePath => @"Query.db";
+        protected override string DatabasePath => Constants.DatabaseNames.Queries;
 
         private LiteDatabase DatabaseInstance { get; set; }
         private LiteCollection<FileMetaBase> _fileMetaCollection { get; set; }
