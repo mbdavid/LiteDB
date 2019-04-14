@@ -25,17 +25,20 @@ namespace LiteDB.Engine
         private readonly Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private readonly TransactionPages _transPages = new TransactionPages();
         private readonly Action<uint> _done;
-        private bool _shutdown = false;
 
         // transaction info
         private readonly int _threadID = Thread.CurrentThread.ManagedThreadId;
         private readonly uint _transactionID;
+        private readonly DateTime _startTime;
         private TransactionState _state = TransactionState.New;
 
         // expose
         public int ThreadID => _threadID;
         public uint TransactionID => _transactionID;
         public TransactionState State => _state;
+        public TransactionPages Pages => _transPages;
+        public DateTime StartTime => _startTime;
+        public IEnumerable<Snapshot> Snapshots => _snapshots.Values;
 
         public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, Action<uint> done)
         {
@@ -48,7 +51,7 @@ namespace LiteDB.Engine
 
             // create new transactionID
             _transactionID = walIndex.NextTransactionID();
-
+            _startTime = DateTime.UtcNow;
             _reader = _disk.GetReader();
 
             // enter transaction locker to avoid 2 transactions in same thread
@@ -98,9 +101,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void Safepoint()
         {
-            // if transaction is in shutting down, stop transaction and do not commit
-            if (_shutdown) throw LiteException.DatabaseShutdown();
-
             // Safepoint are valid only during transaction execution
             ENSURE(_state == TransactionState.Active, "Safepoint() are called during an invalid transaction state");
 
@@ -401,22 +401,6 @@ namespace LiteDB.Engine
 
                 // now confirm this transaction to wal
                 _walIndex.ConfirmTransaction(transactionID, pagePositions.Values);
-            }
-        }
-
-        /// <summary>
-        /// Define this transaction must stop working and release resources because main thread are shutting down.
-        /// If was called by same thread, call rollback now (with no ReturnNewPages)
-        /// </summary>
-        public void Shutdown()
-        {
-            if (Thread.CurrentThread.ManagedThreadId == _threadID)
-            {
-                this.Rollback();
-            }
-            else
-            {
-                _shutdown = true;
             }
         }
 

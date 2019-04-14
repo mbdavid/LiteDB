@@ -27,9 +27,20 @@ namespace LiteDB.Engine
 
             doc["dataFileSize"] = (int)_disk.GetLength(FileOrigin.Data);
             doc["logFileSize"] = (int)_disk.GetLength(FileOrigin.Log);
-            doc["queueLength"] = _disk.Queue.Length;
+            doc["asyncQueueLength"] = _disk.Queue.Length;
 
             doc["userVersion"] = _header.UserVersion;
+
+            doc["cache"] = new BsonDocument
+            {
+                ["extendSegments"] = _disk.Cache.ExtendSegments,
+                ["memoryUsage"] = 
+                    (_disk.Cache.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE) +
+                    (40 * (_disk.Cache.ExtendSegments * MEMORY_SEGMENT_SIZE)),
+                ["freePages"] = _disk.Cache.FreePages,
+                ["pagesInUse"] = _disk.Cache.PagesInUse,
+                ["unusedPages"] = _disk.Cache.UnusedPages
+            };
 
             yield return doc;
         }

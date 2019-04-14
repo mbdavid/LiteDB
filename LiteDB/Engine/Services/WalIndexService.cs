@@ -312,8 +312,9 @@ namespace LiteDB.Engine
                     _disk.Delete(FileOrigin.Log);
                 }
 
-                // exit exclusive lock (if full/shutdown)
-                if (locked) _locker.ExitReserved(true);
+                // exit exclusive lock (only for full mode)
+                // - shutdown mode will be keeped in lock to not accept any new operation until end
+                if (mode == CheckpointMode.Full) _locker.ExitReserved(true);
 
                 return counter;
             }

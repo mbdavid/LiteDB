@@ -28,7 +28,6 @@ namespace LiteDB.Engine
         // immutable settings
         private readonly EngineSettings _settings;
 
-        private bool _shutdown = false;
         private bool _disposed = false;
 
         #region TempDB
@@ -154,40 +153,25 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Shutdown database and do not accept any other access. Wait finish all transactions
+        /// Shutdown process:
+        /// - Try do checkpoint (if defined as true)
+        /// - Dispose disks (no more can even read data from disk/cache)
+        /// - Dispose locker
+        /// (in DEBUG mode you can get some ENSURE "Release" problems, but it's ok)
         /// </summary>
-        private void Shutdown()
-        {
-            // here all private instances are loaded
-            if (_shutdown) return;
-
-            // start shutdown operation
-            _shutdown = true;
-
-            LOG("shutting down", "ENGINE");
-
-            // mark all transaction as shotdown status
-            foreach (var trans in _transactions.Values)
-            {
-                trans.Shutdown();
-            }
-
-            if (_settings.CheckpointOnShutdown && _settings.ReadOnly == false)
-            {
-                _walIndex.Checkpoint(_header, CheckpointMode.Shutdown);
-            }
-        }
-
         protected virtual void Dispose(bool disposing)
         {
             // this method can be called from Ctor, so many 
             // of this members can be null yet (even if are readonly). 
-
             if (_disposed) return;
 
             if (disposing)
             {
-                // do not release _header page because header contains an own PageBuffer
+                // do checkpoint if it's possible
+                if (_settings.CheckpointOnShutdown && _settings.ReadOnly == false)
+                {
+                    _walIndex?.Checkpoint(_header, CheckpointMode.Shutdown);
+                }
 
                 // close all disk connections
                 _disk?.Dispose();
@@ -204,19 +188,8 @@ namespace LiteDB.Engine
             _disposed = true;
         }
 
-        /// <summary>
-        /// Shutdown database
-        /// - After dispose engine, no more new transaction
-        /// - All transation will throw shutdown exception and do rollback
-        /// - Wait for async write with full flush to disk
-        /// - Do checkpoint (sync)
-        /// - Dispose disks
-        /// </summary>
         public void Dispose()
         {
-            // shutdown all operations
-            this.Shutdown();
-
             // dispose data file
             this.Dispose(true);
 

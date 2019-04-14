@@ -35,6 +35,8 @@ namespace LiteDB.Engine
         public LockMode Mode => _mode;
         public string CollectionName => _collectionName;
         public CollectionPage CollectionPage => _collectionPage;
+        public ICollection<BasePage> LocalPages => _localPages.Values;
+        public int ReadVersion => _readVersion;
 
         public Snapshot(LockMode mode, string collectionName, HeaderPage header, uint transactionID, TransactionPages transPages, LockService locker, WalIndexService walIndex, DiskReader reader, bool addIfNotExists)
         {

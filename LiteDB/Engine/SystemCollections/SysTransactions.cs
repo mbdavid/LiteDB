@@ -18,14 +18,12 @@ namespace LiteDB.Engine
                     ["threadID"] = transaction.ThreadID,
                     ["transactionID"] = (int)transaction.TransactionID,
                     ["transactionState"] = transaction.State.ToString(),
-                    //["startTime"] = transaction,
+                    ["startTime"] = transaction.StartTime,
                     ["mode"] = transaction.Mode.ToString(),
-                    //["snapshots"] = transaction.Snapshots.Count(),
-                    //["pagesInMemory"] = transaction.Snapshots.Values.Select(x => x.LocalPagesCount).Sum(),
-                    //["pagesInLogFile"] = transaction.Pages.DirtyPagesWal.Count,
-                    //["newPages"] = transaction.Pages.NewPages.Count,
-                    //["deletedPages"] = transaction.Pages.DeletedPages,
-                    //["newCollections"] = transaction.Pages.NewCollections.Count
+                    ["transactionSize"] = transaction.Pages.TransactionSize,
+                    ["pagesInLogFile"] = transaction.Pages.DirtyPages.Count,
+                    ["newPages"] = transaction.Pages.NewPages.Count,
+                    ["deletedPages"] = transaction.Pages.DeletedPages
                 };
             }
         }

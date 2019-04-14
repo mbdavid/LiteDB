@@ -443,10 +443,9 @@ namespace LiteDB.Engine
                 _writable.Values.Where(x => x.ShareCounter != 0).Count();
 
         /// <summary>
-        /// Return how many pages are available to be re-used (free pages + unused pages)
+        /// Return how many pages are available to be re-used (ShareCounter == 0)
         /// </summary>
         public int UnusedPages =>
-            _free.Count +
             _readable.Values.Where(x => x.ShareCounter == 0).Count() +
             _writable.Values.Where(x => x.ShareCounter == 0).Count();
 

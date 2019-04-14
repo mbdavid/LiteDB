@@ -13,9 +13,6 @@ namespace LiteDB.Engine
 
         internal TransactionService GetTransaction(bool create, out bool isNew)
         {
-            // if engine are disposing, do not accept any transaction/operation
-            if (_shutdown) throw LiteException.DatabaseShutdown();
-
             var transaction = Thread.GetData(_slot) as TransactionService;
 
             if (create && transaction == null)
