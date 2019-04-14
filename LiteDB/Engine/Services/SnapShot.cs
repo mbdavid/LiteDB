@@ -278,7 +278,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Delete a page - convert specific page type into a new instance of BasePage
         /// </summary>
-        private void DeletePage<T>(ref T page)
+        private void DeletePage<T>(T page)
             where T : BasePage
         {
             // remove from linked-list
@@ -300,13 +300,13 @@ namespace LiteDB.Engine
                 _transPages.FirstDeletedPageID = page.PageID;
             }
 
-            // update localPage to new Empty Page
-            page = (T)new BasePage(page.Buffer, page.PageID, PageType.Empty);
-
-            page.IsDirty = true;
+            // create an empty page with same PageID and Buffer
+            var empty = new BasePage(page.Buffer, page.PageID, PageType.Empty);
 
             // update my local page reference for this new page object instance
-            _localPages[page.PageID] = page;
+            _localPages[empty.PageID] = empty;
+
+            empty.IsDirty = true;
 
             _transPages.DeletedPages++;
         }
@@ -391,7 +391,7 @@ namespace LiteDB.Engine
             // if there is no items, delete page
             if (page.ItemsCount == 0)
             {
-                this.DeletePage(ref page);
+                this.DeletePage(page);
             }
             else
             {

@@ -139,7 +139,7 @@ namespace LiteDB.Engine
         {
             _buffer = buffer;
 
-            ENSURE(buffer.All(0), "new page buffer must be empty before use in a new page");
+            ENSURE(buffer.Slice(5, PAGE_SIZE - 6).All(0), "new page buffer must be empty before use in a new page");
 
             // page information
             this.PageID = pageID;
@@ -341,6 +341,9 @@ namespace LiteDB.Engine
             // add as free blocks
             this.ItemsCount--;
             this.UsedBytes -= length;
+
+            // clean segment area with \0
+            _buffer.Array.Fill(0, _buffer.Offset + position, length);
 
             // check if deleted segment are at end of page
             var isLastSegment = (position + length == this.NextFreePosition);

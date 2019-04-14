@@ -176,6 +176,7 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Read all documents from current collection with NO index use - read direct from free lists
+        /// There is no document order
         /// </summary>
         public IEnumerable<BsonDocument> ReadAll(HashSet<string> fields = null)
         {

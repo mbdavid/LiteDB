@@ -61,9 +61,14 @@ namespace LiteDB.Engine
         #endregion
 
         /// <summary>
-        /// Get database initialize settings
+        /// Get database initialize settings (used for Debug/UnitTest only)
         /// </summary>
         internal EngineSettings Settings => _settings;
+
+        /// <summary>
+        /// Get header page (used for Debug/UnitTest only)
+        /// </summary>
+        internal HeaderPage Header => _header;
 
         #endregion
 
