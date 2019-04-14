@@ -12,7 +12,7 @@ namespace LiteDB.Benchmarks
     {
         static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run(typeof(Program).Assembly, DefaultConfig.Instance
+            BenchmarkRunner.Run(typeof(Program).Assembly, DefaultConfig.Instance
                 .With(MemoryDiagnoser.Default)
                 .With(BenchmarkReportExporter.Default, HtmlExporter.Default, MarkdownExporter.GitHub)
                 .With(Job.Mono

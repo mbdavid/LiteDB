@@ -4,12 +4,14 @@ namespace LiteDB.Benchmarks.Benchmarks.Base
 {
     public abstract class DatabaseBenchmarkBase : BenchmarkBase
     {
-        protected virtual string DatabasePath { get; }
+        protected abstract string DatabasePath { get; }
 
         [ParamsAllValues]
+        // ReSharper disable once UnassignedGetOnlyAutoProperty
         private bool IsJournalEnabled { get; }
 
         [Params(null, "SecurePassword")]
+        // ReSharper disable once UnassignedGetOnlyAutoProperty
         private string Password { get; }
 
         private ConnectionString _connectionString;
