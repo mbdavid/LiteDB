@@ -9,7 +9,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
 {
     public class InsertionIgnoreExpressionPropertyDatabaseBenchmark : DatabaseBenchmarkBase
     {
-        protected override string DatabasePath => @"Insertion.db";
+        protected override string DatabasePath => Constants.DatabaseNames.Insertion;
 
         private List<FileMetaBase> baseData;
         private List<FileMetaWithExclusion> baseDataWithBsonIgnore;

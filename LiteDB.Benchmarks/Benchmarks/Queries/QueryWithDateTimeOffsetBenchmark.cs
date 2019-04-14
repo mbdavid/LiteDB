@@ -10,7 +10,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Queries
 {
     public class QueryWithDateTimeOffsetDatabaseBenchmark : DatabaseBenchmarkBase
     {
-        protected override string DatabasePath => @"Query.db";
+        protected override string DatabasePath => Constants.DatabaseNames.Queries;
 
         private DateTime _dateTimeConstraint;
         private BsonValue _dateTimeConstraintBsonValue;

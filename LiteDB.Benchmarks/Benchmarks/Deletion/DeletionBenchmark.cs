@@ -9,7 +9,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Deletion
 {
     public class DeletionDatabaseBenchmark : DatabaseBenchmarkBase
     {
-        protected override string DatabasePath => @"Deletion.db";
+        protected override string DatabasePath => Constants.DatabaseNames.Deletion;
 
         private List<FileMetaBase> data;
 

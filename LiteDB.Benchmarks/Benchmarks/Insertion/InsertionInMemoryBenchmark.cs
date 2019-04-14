@@ -10,7 +10,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
 {
     public class InsertionInMemoryDatabaseBenchmark : DatabaseBenchmarkBase
     {
-        protected override string DatabasePath => @"Insertion.db";
+        protected override string DatabasePath => Constants.DatabaseNames.Insertion;
 
         private List<FileMetaBase> data;
 
