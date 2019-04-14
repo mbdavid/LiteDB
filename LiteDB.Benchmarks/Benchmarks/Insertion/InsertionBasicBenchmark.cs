@@ -19,7 +19,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
         [GlobalSetup]
         public void GlobalSetup()
         {
-            DatabaseInstance = new LiteDatabase(new ConnectionString(DatabasePath) {Mode = FileMode.Exclusive});
+            DatabaseInstance = new LiteDatabase(ConnectionString);
             _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
 
             data = FileMetaGenerator<FileMetaBase>.GenerateList(N); // executed once per each N value
@@ -40,6 +40,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
         [Benchmark]
         public void InsertionWithLoop()
         {
+            // ReSharper disable once ForCanBeConvertedToForeach
             for (var i = 0; i < data.Count; i++)
             {
                 _fileMetaCollection.Insert(data[i]);
@@ -55,6 +56,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
         [Benchmark]
         public void UpsertionWithLoop()
         {
+            // ReSharper disable once ForCanBeConvertedToForeach
             for (var i = 0; i < data.Count; i++)
             {
                 _fileMetaCollection.Upsert(data[i]);

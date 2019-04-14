@@ -24,7 +24,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
         {
             data = FileMetaGenerator<FileMetaBase>.GenerateList(N); // executed once per each N value
 
-            DatabaseInstanceNormal = new LiteDatabase(new ConnectionString(DatabasePath) {Mode = FileMode.Exclusive});
+            DatabaseInstanceNormal = new LiteDatabase(ConnectionString);
             _fileMetaNormalCollection = DatabaseInstanceNormal.GetCollection<FileMetaBase>();
         }
 

@@ -21,7 +21,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
         [GlobalSetup(Target = nameof(Insertion))]
         public void GlobalBsonIgnoreSetup()
         {
-            DatabaseInstance = new LiteDatabase(new ConnectionString(DatabasePath) {Mode = FileMode.Exclusive});
+            DatabaseInstance = new LiteDatabase(ConnectionString);
             _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
             _fileMetaCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
 
@@ -31,7 +31,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
         [GlobalSetup(Target = nameof(InsertionWithBsonIgnore))]
         public void GlobalIgnorePropertySetup()
         {
-            DatabaseInstance = new LiteDatabase(new ConnectionString(DatabasePath) {Mode = FileMode.Exclusive});
+            DatabaseInstance = new LiteDatabase(ConnectionString);
             _fileMetaExclusionCollection = DatabaseInstance.GetCollection<FileMetaWithExclusion>();
             _fileMetaExclusionCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
 
