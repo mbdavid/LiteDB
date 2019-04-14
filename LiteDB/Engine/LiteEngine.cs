@@ -73,7 +73,7 @@ namespace LiteDB.Engine
         /// Initialize LiteEngine using connection memory database
         /// </summary>
         public LiteEngine()
-            : this(new EngineSettings())
+            : this(new EngineSettings { DataStream = new MemoryStream() })
         {
         }
 

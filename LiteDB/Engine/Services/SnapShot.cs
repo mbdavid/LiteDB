@@ -208,24 +208,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read all sequences pages from a start pageID (using NextPageID)
-        /// </summary>
-        public IEnumerable<T> GetSeqPages<T>(uint firstPageID)
-            where T : BasePage
-        {
-            var pageID = firstPageID;
-
-            while (pageID != uint.MaxValue)
-            {
-                var page = this.GetPage<T>(pageID);
-
-                pageID = page.NextPageID;
-
-                yield return page;
-            }
-        }
-
-        /// <summary>
         /// Get a new empty page - can be a reused page (EmptyPage) or a clean one (extend datafile)
         /// FreeEmptyPageID use a single linked list to avoid read old pages. Insert/Delete pages from this list is always from begin
         /// </summary>
@@ -294,23 +276,10 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Delete all sequence of pages based on first pageID
+        /// Delete a page - convert specific page type into a new instance of BasePage
         /// </summary>
-        public void DeletePages(uint firstPageID)
-        {
-            // get all pages in sequence or a single one
-            var pages = this.GetSeqPages<BasePage>(firstPageID);
-
-            foreach (var page in pages)
-            {
-                this.DeletePage(page);
-            }
-        }
-
-        /// <summary>
-        /// Delete a page - transform them in Empty Page and add to EmptyPageList
-        /// </summary>
-        public void DeletePage(BasePage page)
+        private void DeletePage<T>(ref T page)
+            where T : BasePage
         {
             // remove from linked-list
             ENSURE(page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue, "before delete a page, no linked list with any another page");
@@ -332,10 +301,11 @@ namespace LiteDB.Engine
             }
 
             // update localPage to new Empty Page
-            page = new BasePage(page.Buffer, page.PageID, PageType.Empty);
+            page = (T)new BasePage(page.Buffer, page.PageID, PageType.Empty);
 
             page.IsDirty = true;
 
+            // update my local page reference for this new page object instance
             _localPages[page.PageID] = page;
 
             _transPages.DeletedPages++;
@@ -421,7 +391,7 @@ namespace LiteDB.Engine
             // if there is no items, delete page
             if (page.ItemsCount == 0)
             {
-                this.DeletePage(page);
+                this.DeletePage(ref page);
             }
             else
             {
