@@ -27,6 +27,7 @@ namespace LiteDB.Engine
 
             doc["dataFileSize"] = (int)_disk.GetLength(FileOrigin.Data);
             doc["logFileSize"] = (int)_disk.GetLength(FileOrigin.Log);
+            doc["queueLength"] = _disk.Queue.Length;
 
             doc["userVersion"] = _header.UserVersion;
 

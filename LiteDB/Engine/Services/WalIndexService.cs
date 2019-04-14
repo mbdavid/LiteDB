@@ -25,7 +25,7 @@ namespace LiteDB.Engine
         private int _currentReadVersion = 0;
 
         /// <summary>
-        /// Store last used transaction
+        /// Store last used transaction ID
         /// </summary>
         private int _lastTransactionID = 0;
 
@@ -262,7 +262,10 @@ namespace LiteDB.Engine
                     header.LastCheckpoint = DateTime.UtcNow;
 
                     // create new memory space to allocate buffer - no cache usage
-                    var clone = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
+                    var clone = new PageBuffer(new byte[PAGE_SIZE], 0, 0)
+                    {
+                        Position = 0
+                    };
 
                     lock (header)
                     {

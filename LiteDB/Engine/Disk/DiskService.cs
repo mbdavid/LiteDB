@@ -120,6 +120,8 @@ namespace LiteDB.Engine
             {
                 stream.SetLength(initialSize);
             }
+
+            stream.FlushToDisk();
         }
 
         /// <summary>

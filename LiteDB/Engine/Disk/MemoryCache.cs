@@ -144,11 +144,12 @@ namespace LiteDB.Engine
             // enter extend-locker in read mode
             _locker.TryEnterReadLock(-1);
 
-            // write pages always contains a new buffer array
-            var writable = this.NewPage(position, origin, false);
             var key = this.GetReadableKey(position, origin);
 
             ENSURE(_writable.Values.Any(x => x.Position == key) == false, "only 1 page position can be request as writable at time");
+
+            // write pages always contains a new buffer array
+            var writable = this.NewPage(position, origin);
 
             // if requested page already in cache, just copy buffer and avoid load from stream
             if (_readable.TryGetValue(key, out var clean))
@@ -173,7 +174,7 @@ namespace LiteDB.Engine
             // enter extend-locker in read mode
             _locker.TryEnterReadLock(-1);
 
-            var page = this.NewPage(long.MaxValue, FileOrigin.None, true);
+            var page = this.NewPage(long.MaxValue, FileOrigin.None);
 
             _locker.ExitReadLock();
 
@@ -183,7 +184,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new page using an empty buffer block. Mark this page as writable. Add into _writable list
         /// </summary>
-        private PageBuffer NewPage(long position, FileOrigin origin, bool clear)
+        private PageBuffer NewPage(long position, FileOrigin origin)
         {
             var page = this.GetFreePage();
 
@@ -194,7 +195,7 @@ namespace LiteDB.Engine
             page.ShareCounter = BUFFER_WRITABLE;
 
             // Timestamp = 0 means this page was never used (do not clear)
-            if (clear && page.Timestamp > 0)
+            if (page.Timestamp > 0)
             {
                 Array.Clear(page.Array, page.Offset, page.Count);
             }
@@ -458,6 +459,27 @@ namespace LiteDB.Engine
         /// Return how many segments already loaded in memory
         /// </summary>
         public int ExtendSegments => _extends;
+
+        /// <summary>
+        /// Get readable/writable pages inside cache (used in DumpCache)
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, PageBuffer>> GetPages()
+        {
+            foreach(var page in _readable.Values)
+            {
+                yield return new KeyValuePair<string, PageBuffer>("read", page);
+            }
+
+            foreach (var page in _writable.Values)
+            {
+                yield return new KeyValuePair<string, PageBuffer>("write", page);
+            }
+
+            foreach (var page in _free)
+            {
+                yield return new KeyValuePair<string, PageBuffer>("free", page);
+            }
+        }
 
         /// <summary>
         /// Remove all pages from _readable and _writable to _free pages

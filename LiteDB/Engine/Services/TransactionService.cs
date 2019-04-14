@@ -145,25 +145,48 @@ namespace LiteDB.Engine
                 // mark last dirty page as confirmed only if there is no header change in commit
                 var markLastAsConfirmed = commit && _transPages.HeaderChanged == false;
 
-                foreach (var page in pages.IsLast())
+                // loop across all dirty pages
+                if (markLastAsConfirmed)
                 {
-                    // update page transactionID
-                    page.Item.TransactionID = _transactionID;
-
-                    // if last page, mask as confirm (if requested)
-                    if (page.IsLast)
+                    // neet use "IsLast" method to get when loop are last item
+                    foreach (var page in pages.IsLast())
                     {
-                        page.Item.IsConfirmed = markLastAsConfirmed;
+                        // update page transactionID
+                        page.Item.TransactionID = _transactionID;
+
+                        // if last page, mask as confirm
+                        if (page.IsLast)
+                        {
+                            page.Item.IsConfirmed = true;
+                        }
+
+                        var buffer = page.Item.UpdateBuffer();
+
+                        // buffer position will be set at end of file (it´s always log file)
+                        yield return buffer;
+
+                        dirty++;
+
+                        _transPages.DirtyPages[page.Item.PageID] = new PagePosition(page.Item.PageID, buffer.Position);
                     }
+                }
+                else
+                {
+                    // avoid use "IsLast" when was not needed (better performance)
+                    foreach (var page in pages)
+                    {
+                        // update page transactionID
+                        page.TransactionID = _transactionID;
 
-                    var buffer = page.Item.UpdateBuffer();
+                        var buffer = page.UpdateBuffer();
 
-                    // buffer position will be set at end of file (it´s always log file)
-                    yield return buffer;
+                        // buffer position will be set at end of file (it´s always log file)
+                        yield return buffer;
 
-                    dirty++;
+                        dirty++;
 
-                    _transPages.DirtyPages[page.Item.PageID] = new PagePosition(page.Item.PageID, buffer.Position);
+                        _transPages.DirtyPages[page.PageID] = new PagePosition(page.PageID, buffer.Position);
+                    }
                 }
 
                 // in commit with header page change, last page will be header
@@ -224,7 +247,6 @@ namespace LiteDB.Engine
                         clone.Release();
                     }
                 }
-
             };
 
             // write all dirty pages, in sequence on log-file and store references into log pages on transPages

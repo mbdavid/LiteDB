@@ -20,6 +20,9 @@ namespace LiteDB.Engine
             this.RegisterSystemCollection("$dump", () => this.SysDump(FileOrigin.Data));
             this.RegisterSystemCollection("$dump_log", () => this.SysDump(FileOrigin.Log));
 
+            this.RegisterSystemCollection("$cache", () => this.SysCache());
+            this.RegisterSystemCollection("$dump_cache", () => this.SysDumpCache());
+
             this.RegisterSystemCollection("$sequences", () => this.SysSequences());
 
             this.RegisterSystemCollection("$transactions", () => this.SysTransactions());

@@ -202,9 +202,11 @@ namespace LiteDB.Studio
 
         private void CreateThread(TaskData task)
         {
-            while (task.ThreadRunning)
+            while (true)
             {
                 task.WaitHandle.Wait();
+
+                if (task.ThreadRunning == false) break;
 
                 if (task.Sql.Trim() == "")
                 {
