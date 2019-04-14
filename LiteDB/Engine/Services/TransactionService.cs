@@ -32,7 +32,7 @@ namespace LiteDB.Engine
         private readonly DateTime _startTime;
         private TransactionState _state = TransactionState.New;
 
-        // expose
+        // expose (as read only)
         public int ThreadID => _threadID;
         public uint TransactionID => _transactionID;
         public TransactionState State => _state;

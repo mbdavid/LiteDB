@@ -460,23 +460,23 @@ namespace LiteDB.Engine
         public int ExtendSegments => _extends;
 
         /// <summary>
-        /// Get readable/writable pages inside cache (used in DumpCache)
+        /// Get readable/writable/free pages inside cache (used in DumpCache)
         /// </summary>
         public IEnumerable<KeyValuePair<string, PageBuffer>> GetPages()
         {
             foreach(var page in _readable.Values)
             {
-                yield return new KeyValuePair<string, PageBuffer>("read", page);
+                yield return new KeyValuePair<string, PageBuffer>("Read", page);
             }
 
             foreach (var page in _writable.Values)
             {
-                yield return new KeyValuePair<string, PageBuffer>("write", page);
+                yield return new KeyValuePair<string, PageBuffer>("Write", page);
             }
 
             foreach (var page in _free)
             {
-                yield return new KeyValuePair<string, PageBuffer>("free", page);
+                yield return new KeyValuePair<string, PageBuffer>("Free", page);
             }
         }
 

@@ -192,9 +192,23 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            _transaction.Dispose();
-            _reserved.Dispose();
-            _collections.ForEach((i, x) => x.Value.Dispose());
+            this.SafeDispose(_transaction);
+            this.SafeDispose(_reserved);
+            _collections.ForEach((i, x) => this.SafeDispose(x.Value));
+        }
+
+        /// <summary>
+        /// Dispose class testing for lock synchronization
+        /// </summary>
+        private void SafeDispose(IDisposable obj)
+        {
+            try
+            {
+                obj.Dispose();
+            }
+            catch (SynchronizationLockException)
+            {
+            }
         }
     }
 }

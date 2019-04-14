@@ -26,7 +26,6 @@ namespace LiteDB.Engine
 
             this.RegisterSystemCollection("$transactions", () => this.SysTransactions());
             this.RegisterSystemCollection("$snapshots", () => this.SysSnapshots());
-            this.RegisterSystemCollection("$versions", () => this.SysVersions());
 
             // external collections
             this.RegisterSystemCollection(new SysFileJson());
