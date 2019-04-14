@@ -49,7 +49,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Queries
             DatabaseInstance.DropCollection(nameof(FileMetaBase));
             DatabaseInstance.Dispose();
 
-            File.Delete("");
+            File.Delete(DatabasePath);
         }
     }
 }

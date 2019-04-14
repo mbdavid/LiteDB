@@ -93,6 +93,8 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
 
             DatabaseInstanceInMemory.DropCollection(nameof(FileMetaBase));
             DatabaseInstanceInMemory.Dispose();
+
+            File.Delete(DatabasePath);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using LiteDB.Benchmarks.Benchmarks.Base;
@@ -62,6 +63,8 @@ namespace LiteDB.Benchmarks.Benchmarks.Deletion
             // Disposing logic
             DatabaseInstance.DropCollection(nameof(FileMetaBase));
             DatabaseInstance.Dispose();
+
+            File.Delete(DatabasePath);
         }
     }
 }
