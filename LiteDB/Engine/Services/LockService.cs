@@ -34,6 +34,11 @@ namespace LiteDB.Engine
         public bool IsInTransaction => _transaction.IsReadLockHeld;
 
         /// <summary>
+        /// Return how many transactions are opened
+        /// </summary>
+        public int TransactionsCount => _transaction.CurrentReadCount;
+
+        /// <summary>
         /// Enter transaction read lock
         /// </summary>
         public void EnterTransaction()

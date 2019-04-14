@@ -207,6 +207,9 @@ namespace LiteDB.Engine
                 // for full/shutdown checkpoint need exclusive lock
                 if (mode == CheckpointMode.Full || mode == CheckpointMode.Shutdown)
                 {
+                    // in shutdown mode do not wait for lock - if there is any other transaction force quit
+                    if (mode == CheckpointMode.Shutdown && _locker.TransactionsCount > 0) return 0;
+
                     _locker.EnterReserved(true);
 
                     // wait all pages write on disk
