@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
+using LiteDB.Benchmarks.Benchmarks.Base;
 using LiteDB.Benchmarks.Models;
 using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Deletion
 {
-    public class DeletionBenchmark : BenchmarkBase
+    public class DeletionDatabaseBenchmark : DatabaseBenchmarkBase
     {
         protected override string DatabasePath => @"Deletion.db";
 

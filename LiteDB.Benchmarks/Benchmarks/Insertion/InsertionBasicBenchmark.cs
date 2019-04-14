@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
+using LiteDB.Benchmarks.Benchmarks.Base;
 using LiteDB.Benchmarks.Models;
 using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Insertion
 {
-    public class InsertionBasicBenchmark : BenchmarkBase
+    public class InsertionBasicDatabaseBenchmark : DatabaseBenchmarkBase
     {
         protected override string DatabasePath => @"Insertion.db";
 

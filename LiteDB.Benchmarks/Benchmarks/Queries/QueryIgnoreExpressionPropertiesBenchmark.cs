@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
+using LiteDB.Benchmarks.Benchmarks.Base;
 using LiteDB.Benchmarks.Models;
 using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Queries
 {
-    public class QueryIgnoreExpressionPropertiesBenchmark : BenchmarkBase
+    public class QueryIgnoreExpressionPropertiesDatabaseBenchmark : DatabaseBenchmarkBase
     {
         protected override string DatabasePath => @"Query.db";
 

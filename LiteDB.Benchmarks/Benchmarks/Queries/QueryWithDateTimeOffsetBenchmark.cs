@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
+using LiteDB.Benchmarks.Benchmarks.Base;
 using LiteDB.Benchmarks.Models;
 using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Queries
 {
-    public class QueryWithDateTimeOffsetBenchmark : BenchmarkBase
+    public class QueryWithDateTimeOffsetDatabaseBenchmark : DatabaseBenchmarkBase
     {
         protected override string DatabasePath => @"Query.db";
 
