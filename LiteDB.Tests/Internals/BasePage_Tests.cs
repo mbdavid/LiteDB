@@ -208,9 +208,7 @@ namespace LiteDB.Internals
             Assert.IsTrue(page.Get(index2).All(103));
             Assert.IsTrue(page.Get(index3).All(104));
 
-            var indexes = string.Join(",", page.GetUsedIndexs().ToArray());
-
-            Assert.AreEqual("2,3", indexes);
+            CollectionAssert.AreEqual(new byte[] { 2, 3 }, page.GetUsedIndexs().ToArray());
 
             buffer.ShareCounter = 0;
         }

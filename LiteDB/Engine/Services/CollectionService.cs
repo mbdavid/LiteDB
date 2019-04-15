@@ -50,7 +50,7 @@ namespace LiteDB.Engine
             collectionPage = _snapshot.NewPage<CollectionPage>();
             var pageID = collectionPage.PageID;
 
-            // update header page on commit
+            // insert collection name/pageID in header only in commit operation
             _transPages.Commit += (h) => h.InsertCollection(name, pageID);
 
             // create first index (_id pk) (must pass collectionPage because snapshot contains null in CollectionPage prop)

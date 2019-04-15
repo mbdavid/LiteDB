@@ -208,17 +208,73 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get a new empty page - can be a reused page (EmptyPage) or a clean one (extend datafile)
-        /// FreeEmptyPageID use a single linked list to avoid read old pages. Insert/Delete pages from this list is always from begin
+        /// Returns a page that contains space enough to data to insert new object - if one does not exit, creates a new page.
+        /// Before return page, fix empty free list slot according with passed length
+        /// </summary>
+        public T GetFreePage<T>(int bytesLength)
+            where T : BasePage
+        {
+            var length = bytesLength + BasePage.SLOT_SIZE; // add +4 bytes for footer slot
+
+            // select if I will get from free index list or data list
+            var freeLists = typeof(T) == typeof(IndexPage) ?
+                _collectionPage.FreeIndexPageID :
+                _collectionPage.FreeDataPageID;
+
+            // get minimum slot to check for free page. Returns -1 if need NewPage
+            var startSlot = BasePage.GetMinimumIndexSlot(length);
+
+            // check for avaiable re-usable page
+            for (int currentSlot = startSlot; currentSlot >= 0; currentSlot--)
+            {
+                var freePageID = freeLists[currentSlot];
+
+                // there is no free page here, try find princess in another castle
+                if (freePageID == uint.MaxValue) continue;
+
+                var page = this.GetPage<T>(freePageID);
+
+                var newSlot = BasePage.FreeIndexSlot(page.FreeBytes - length);
+
+                // if slots will change, fix now
+                if (currentSlot != newSlot)
+                {
+                    this.RemoveFreeList<T>(page, ref freeLists[currentSlot]);
+                    this.AddFreeList<T>(page, ref freeLists[newSlot]);
+                }
+
+                ENSURE(page.FreeBytes >= length, "ensure selected page has space enougth for this content");
+
+                // mark page page as dirty
+                page.IsDirty = true;
+
+                return page;
+            }
+
+            // if not page avaiable, create new and add in free list
+            var newPage = this.NewPage<T>();
+
+            // get slot based on how many blocks page will have after use
+            var slot = BasePage.FreeIndexSlot(newPage.FreeBytes - length - BasePage.SLOT_SIZE);
+
+            // and add into free-list
+            this.AddFreeList<T>(newPage, ref freeLists[slot]);
+
+            return newPage;
+        }
+
+        /// <summary>
+        /// Get a new empty page from disk: can be a reused page (from header free list) or file extend
+        /// Never re-use page from same transaction
         /// </summary>
         public T NewPage<T>()
             where T : BasePage
         {
+            ENSURE(_collectionPage == null, typeof(T) == typeof(CollectionPage), "if no collection page defined yet, must be first request");
+            ENSURE(typeof(T) == typeof(CollectionPage), _collectionPage == null, "there is no new collection page if page already exists");
+
             var pageID = 0u;
             PageBuffer buffer;
-
-            // do not release collection page (only at dispose)
-            var release = typeof(T) != typeof(CollectionPage);
 
             // lock header instance to get new page
             lock (_header)
@@ -273,98 +329,6 @@ namespace LiteDB.Engine
             _transPages.TransactionSize++;
 
             return page;
-        }
-
-        /// <summary>
-        /// Delete a page - convert specific page type into a new instance of BasePage
-        /// </summary>
-        private void DeletePage<T>(T page)
-            where T : BasePage
-        {
-            // remove from linked-list
-            ENSURE(page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue, "before delete a page, no linked list with any another page");
-
-            // if first page in sequence
-            if (_transPages.FirstDeletedPageID == uint.MaxValue)
-            {
-                // set first and last deleted page as current deleted page
-                _transPages.FirstDeletedPageID = page.PageID;
-                _transPages.LastDeletedPageID = page.PageID;
-            }
-            else
-            {
-                // set next link from current deleted page to first deleted page
-                page.NextPageID = _transPages.FirstDeletedPageID;
-
-                // and then, set this current deleted page as first page making a linked list
-                _transPages.FirstDeletedPageID = page.PageID;
-            }
-
-            // create an empty page with same PageID and Buffer
-            var empty = new BasePage(page.Buffer, page.PageID, PageType.Empty);
-
-            // update my local page reference for this new page object instance
-            _localPages[empty.PageID] = empty;
-
-            empty.IsDirty = true;
-
-            _transPages.DeletedPages++;
-        }
-
-        /// <summary>
-        /// Returns a page that contains space enough to data to insert new object - if one does not exit, creates a new page.
-        /// Before return page, fix empty free list slot according with passed length
-        /// </summary>
-        public T GetFreePage<T>(int bytesLength)
-            where T : BasePage
-        {
-            var length = bytesLength + BasePage.SLOT_SIZE; // add +4 bytes for footer slot
-
-            // select if I will get from free index list or data list
-            var freeLists = typeof(T) == typeof(IndexPage) ?
-                _collectionPage.FreeIndexPageID :
-                _collectionPage.FreeDataPageID;
-
-            // get minimum slot to check for free page. Returns -1 if need NewPage
-            var startSlot = BasePage.GetMinimumIndexSlot(length);
-
-            // check for avaiable re-usable page
-            for(int currentSlot = startSlot; currentSlot >= 0; currentSlot--)
-            {
-                var freePageID = freeLists[currentSlot];
-
-                // there is no free page here, try find princess in another castle
-                if (freePageID == uint.MaxValue) continue;
-
-                var page = this.GetPage<T>(freePageID);
-
-                var newSlot = BasePage.FreeIndexSlot(page.FreeBytes - length);
-
-                // if slots will change, fix now
-                if (currentSlot != newSlot)
-                {
-                    this.RemoveFreeList<T>(page, ref freeLists[currentSlot]);
-                    this.AddFreeList<T>(page, ref freeLists[newSlot]);
-                }
-
-                ENSURE(page.FreeBytes >= length, "ensure selected page has space enougth for this content");
-
-                // mark page page as dirty
-                page.IsDirty = true;
-
-                return page;
-            }
-
-            // if not page avaiable, create new and add in free list
-            var newPage = this.NewPage<T>();
-
-            // get slot based on how many blocks page will have after use
-            var slot = BasePage.FreeIndexSlot(newPage.FreeBytes - length - BasePage.SLOT_SIZE);
-
-            // and add into free-list
-            this.AddFreeList<T>(newPage, ref freeLists[slot]);
-
-            return newPage;
         }
 
         /// <summary>
@@ -453,6 +417,44 @@ namespace LiteDB.Engine
 
             // clear page pointer (MaxValue = not used)
             page.PrevPageID = page.NextPageID = uint.MaxValue;
+        }
+
+        /// <summary>
+        /// Delete a page - convert specific page type into a new instance of BasePage
+        /// There is no re-use deleted page in same transaction - deleted pages will be in another linked list and will
+        /// be part of Header free list page only in commit
+        /// </summary>
+        private void DeletePage<T>(T page)
+            where T : BasePage
+        {
+            // remove from linked-list
+            ENSURE(page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue, "before delete a page, no linked list with any another page");
+
+            // if first page in sequence
+            if (_transPages.FirstDeletedPageID == uint.MaxValue)
+            {
+                // set first and last deleted page as current deleted page
+                _transPages.FirstDeletedPageID = page.PageID;
+                _transPages.LastDeletedPageID = page.PageID;
+            }
+            else
+            {
+                // set next link from current deleted page to first deleted page
+                page.NextPageID = _transPages.FirstDeletedPageID;
+
+                // and then, set this current deleted page as first page making a linked list
+                _transPages.FirstDeletedPageID = page.PageID;
+            }
+
+            // create an empty page with same PageID and Buffer
+            var empty = new BasePage(page.Buffer, page.PageID, PageType.Empty);
+
+            // update my local page reference for this new page object instance
+            _localPages[empty.PageID] = empty;
+
+            empty.IsDirty = true;
+
+            _transPages.DeletedPages++;
         }
 
         #endregion
