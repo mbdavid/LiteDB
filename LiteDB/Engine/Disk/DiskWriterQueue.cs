@@ -78,7 +78,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Wait until all queue be executed and no more pending pages are waiting for write
+        /// Wait until all queue be executed and no more pending pages are waiting for write - be sure you do a full lock database before call this
         /// </summary>
         public void Wait()
         {
@@ -94,6 +94,10 @@ namespace LiteDB.Engine
                 _waiter.Set();
                 _writing.Wait();
             }
+
+            // here, there is no more item in queue
+            // BUT, before call this Wait() you should do a full lock database
+            // otherwise just after exit this method new data can be enqueue by another thread
 
             ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
         }

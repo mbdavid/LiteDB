@@ -58,6 +58,8 @@ namespace LiteDB.Engine
         /// </summary>
         private void ReadStream(Stream stream, long position, BufferSlice buffer)
         {
+            ENSURE(stream.Length <= position - PAGE_SIZE, "can't be read from beyond file length");
+
             stream.Position = position;
 
             // read encrypted or plain data from Stream into buffer

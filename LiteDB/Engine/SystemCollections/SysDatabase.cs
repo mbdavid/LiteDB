@@ -35,8 +35,8 @@ namespace LiteDB.Engine
             {
                 ["extendSegments"] = _disk.Cache.ExtendSegments,
                 ["memoryUsage"] = 
-                    (_disk.Cache.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE) +
-                    (40 * (_disk.Cache.ExtendSegments * MEMORY_SEGMENT_SIZE)),
+                    (_disk.Cache.ExtendSegments * _settings.MemorySegmentSize * PAGE_SIZE) +
+                    (40 * (_disk.Cache.ExtendSegments * _settings.MemorySegmentSize)),
                 ["freePages"] = _disk.Cache.FreePages,
                 ["pagesInUse"] = _disk.Cache.PagesInUse,
                 ["unusedPages"] = _disk.Cache.UnusedPages
