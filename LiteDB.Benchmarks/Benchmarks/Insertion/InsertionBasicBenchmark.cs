@@ -8,7 +8,8 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Insertion
 {
-    public class InsertionBasicDatabaseBenchmark : DatabaseBenchmarkBase
+    [BenchmarkCategory(LiteDB.Benchmarks.Constants.Categories.INSERTION)]
+    public class InsertionBasicBenchmark : DatabaseBenchmarkBase
     {
         protected override string DatabasePath => Constants.DatabaseNames.Insertion;
 

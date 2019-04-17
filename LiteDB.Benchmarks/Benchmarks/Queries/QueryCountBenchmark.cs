@@ -7,7 +7,8 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Queries
 {
-    public class QueryCountDatabaseBenchmark : DatabaseBenchmarkBase
+    [BenchmarkCategory(LiteDB.Benchmarks.Constants.Categories.QUERIES)]
+    public class QueryCountBenchmark : DatabaseBenchmarkBase
     {
         protected override string DatabasePath => Constants.DatabaseNames.Queries;
 

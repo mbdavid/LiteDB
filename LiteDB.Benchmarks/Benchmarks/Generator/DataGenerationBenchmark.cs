@@ -6,6 +6,7 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Generator
 {
+    [BenchmarkCategory(LiteDB.Benchmarks.Constants.Categories.DATA_GEN)]
     public class DataGenerationDatabaseBenchmark : BenchmarkBase
     {
         [Benchmark]
