@@ -43,6 +43,11 @@ namespace LiteDB.Engine
         public DateTime LastAnalyzed { get; set; }
 
         /// <summary>
+        /// Store how many documents this collection contains
+        /// </summary>
+        public long DocumentCount { get; set; }
+
+        /// <summary>
         /// All indexes references for this collection
         /// </summary>
         private readonly Dictionary<string, CollectionIndex> _indexes = new Dictionary<string, CollectionIndex>();
@@ -58,6 +63,7 @@ namespace LiteDB.Engine
             // initialize page version
             this.CreationTime = DateTime.Now;
             this.LastAnalyzed = DateTime.MinValue;
+            this.DocumentCount = 0;
 
             for(var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
             {
@@ -86,6 +92,10 @@ namespace LiteDB.Engine
                 // read create/last analyzed (16 bytes)
                 this.CreationTime = r.ReadDateTime();
                 this.LastAnalyzed = r.ReadDateTime();
+                this.DocumentCount = r.ReadInt64();
+
+                // skip reserved area
+                r.Skip(r.Position - P_INDEXES);
 
                 // read indexes count (max 256 indexes per collection)
                 var count = r.ReadByte(); // 1 byte
@@ -126,6 +136,10 @@ namespace LiteDB.Engine
                 // write creation/last analyzed (16 bytes)
                 w.Write(this.CreationTime);
                 w.Write(this.LastAnalyzed);
+                w.Write(this.DocumentCount);
+
+                // skip reserved area (indexes starts at position 96)
+                w.Skip(w.Position - P_INDEXES);
 
                 // update collection only if needed
                 if (_isIndexesChanged)
@@ -183,6 +197,13 @@ namespace LiteDB.Engine
         /// </summary>
         public CollectionIndex InsertCollectionIndex(string name, string expr, bool unique)
         {
+            var totalLength = 1 +
+                _indexes.Sum(x => CollectionIndex.GetLength(x.Value)) +
+                CollectionIndex.GetLength(name, expr);
+
+            // check if has space avaiable
+            if (_indexes.Count == 255 || totalLength >= P_INDEXES_COUNT) throw new LiteException(0, $"This collection has no more space for new indexes");
+
             var slot = (byte)(_indexes.Count == 0 ? 0 : (_indexes.Max(x => x.Value.Slot) + 1));
 
             var index = new CollectionIndex(slot, name, expr, unique);
@@ -220,12 +241,5 @@ namespace LiteDB.Engine
             _isIndexesChanged = true;
         }
 
-        /// <summary>
-        /// Get how many bytes are avaiable in page to store new indexes
-        /// </summary>
-        public int GetAvaiableIndexSpace()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

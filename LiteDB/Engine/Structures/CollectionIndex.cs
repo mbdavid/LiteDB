@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LiteDB.Engine
@@ -91,6 +92,31 @@ namespace LiteDB.Engine
             this.Unique = unique;
 
             this.BsonExpr = BsonExpression.Create(expr);
+        }
+
+        /// <summary>
+        /// Get index collection size used in CollectionPage
+        /// </summary>
+        public static int GetLength(CollectionIndex index)
+        {
+            return GetLength(index.Name, index.Expression);
+        }
+
+        /// <summary>
+        /// Get index collection size used in CollectionPage
+        /// </summary>
+        public static int GetLength(string name, string expr)
+        {
+            return
+                1 + // Slot
+                Encoding.UTF8.GetByteCount(name) + 1 + // Name + \0
+                Encoding.UTF8.GetByteCount(expr) + 1 + // Expression + \0
+                1 + // Unique
+                PageAddress.SIZE + // Head
+                PageAddress.SIZE + // Tail
+                1 + // MaxLevel
+                4 + // KeyCount
+                4; // UniqueKeyCount
         }
     }
 }

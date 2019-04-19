@@ -84,11 +84,6 @@ namespace LiteDB.Internals
                 // but now, I'm sure this page was saved and thread A release
                 Assert.AreEqual(1, p0.ShareCounter);
 
-
-
-
-
-
                 // release thread A
                 serialize(null, wa);
 
@@ -98,9 +93,6 @@ namespace LiteDB.Internals
             tb.Start();
 
             Task.WaitAll(ta, tb);
-
-
-
         }
     }
 }
