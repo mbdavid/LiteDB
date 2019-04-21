@@ -6,6 +6,26 @@ namespace LiteDB
 {
     internal static class LinqExtensions
     {
+        /// <summary>
+        /// Better user message over SingleOrDefault() for ExecuteScalar
+        /// </summary>
+        public static BsonValue ScalarValue(this IEnumerable<BsonValue> source, string expressionSource)
+        {
+            using (var e = source.GetEnumerator())
+            {
+                if (!e.MoveNext()) return BsonValue.Null;
+                var result = e.Current;
+                if (!e.MoveNext()) return result;
+            }
+
+            throw new LiteException(0, $"Invalid scalar expression: Expression `{expressionSource}` returns more than one result");
+        }
+
+        /// <summary>
+        /// Better user message over SingleOrDefault() for ExecuteScalar
+        /// </summary>
+        public static BsonValue ScalarValue(this IEnumerable<BsonValue> source, BsonExpression expr) => ScalarValue(source, expr.Source);
+
         public static IEnumerable<T> ForEach<T>(this IEnumerable<T> source, Action<int, T> action)
         {
             var index = 0;

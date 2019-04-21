@@ -58,7 +58,7 @@ namespace LiteDB.Engine
                         IndexNode first = null;
 
                         // get values from expression in document
-                        var keys = expression.Execute(doc, true);
+                        var keys = expression.Execute(doc);
 
                         // adding index node for each value
                         foreach (var key in keys)

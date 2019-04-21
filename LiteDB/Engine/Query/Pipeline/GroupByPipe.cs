@@ -105,13 +105,14 @@ namespace LiteDB.Engine
 
         private IEnumerable<BsonDocument> YieldDocuments(IEnumerator<BsonDocument> source, BsonExpression expr, Done done)
         {
-            var current = expr.Execute(source.Current, true).First();
+            //TODO: não deveria usar aqui o ExecuteScalar???
+            var current = expr.Execute(source.Current).First();
 
             yield return source.Current;
 
             while (done.Running = source.MoveNext())
             {
-                var key = expr.Execute(source.Current, true).First();
+                var key = expr.Execute(source.Current).First();
 
                 if (key == current)
                 {
@@ -134,7 +135,8 @@ namespace LiteDB.Engine
                 // transfom group result if contains select expression
                 if (select != null)
                 {
-                    var result = select.Execute(group, true);
+                    //TODO: deveria usar Scalar??
+                    var result = select.Execute(group);
 
                     // each group result must return a single value after run expression
                     var value = result.First();
@@ -167,7 +169,8 @@ namespace LiteDB.Engine
         {
             foreach (var doc in source)
             {
-                var result = having.Execute(doc, true).First();
+                //TODO: não deveria usar scalar?
+                var result = having.Execute(doc).First();
 
                 if (result.IsBoolean && result.AsBoolean)
                 {

@@ -129,39 +129,55 @@ namespace LiteDB
         /// <summary>
         /// Execute expression with an empty document (used only for resolve math/functions).
         /// </summary>
-        public IEnumerable<BsonValue> Execute(bool includeNullIfEmpty = true)
+        public IEnumerable<BsonValue> Execute()
         {
             var docs = new BsonDocument[] { new BsonDocument() };
 
-            return this.Execute(docs, docs, includeNullIfEmpty);
+            return this.Execute(docs, docs);
         }
 
         /// <summary>
-        /// Execute expression and returns IEnumerable values (can returns NULL if no elements).
+        /// Execute expression and returns IEnumerable values
         /// </summary>
-        public IEnumerable<BsonValue> Execute(BsonDocument doc, bool includeNullIfEmpty = true)
+        public IEnumerable<BsonValue> Execute(BsonDocument doc)
         {
             if (doc == null) throw new ArgumentNullException(nameof(doc));
 
             var docs = new BsonDocument[] { doc };
 
-            return this.Execute(docs, docs, includeNullIfEmpty);
+            return this.Execute(docs, docs);
         }
 
         /// <summary>
-        /// Execute expression and returns IEnumerable values (can returns NULL if no elements).
+        /// Execute expression and returns IEnumerable values
         /// </summary>
-        public IEnumerable<BsonValue> Execute(IEnumerable<BsonDocument> doc, bool includeNullIfEmpty = true)
+        public IEnumerable<BsonValue> Execute(IEnumerable<BsonDocument> docs)
         {
-            if (doc == null) throw new ArgumentNullException(nameof(doc));
+            if (docs == null) throw new ArgumentNullException(nameof(docs));
 
-            return this.Execute(doc, doc, includeNullIfEmpty);
+            return this.Execute(docs, docs);
         }
 
+
         /// <summary>
-        /// Execute expression and returns IEnumerable values (can returns NULL if no elements).
+        /// Execute scalar expression with an empty document (used only for resolve math/functions).
         /// </summary>
-        internal IEnumerable<BsonValue> Execute(IEnumerable<BsonDocument> root, IEnumerable<BsonValue> current, bool includeNullIfEmpty = true)
+        public BsonValue ExecuteScalar() => this.Execute().ScalarValue(this);
+
+        /// <summary>
+        /// Execute scalar expression over single document and return a single value (or BsonNull when empty). Throws exception if contains more than 1 result
+        /// </summary>
+        public BsonValue ExecuteScalar(BsonDocument doc) => this.Execute(doc).ScalarValue(this);
+
+        /// <summary>
+        /// Execute scalar expression over document collection and return a single value (or BsonNull when empty). Throws exception if contains more than 1 result
+        /// </summary>
+        public BsonValue ExecuteScalar(IEnumerable<BsonDocument> docs) => this.Execute(docs).ScalarValue(this);
+
+        /// <summary>
+        /// Execute expression and returns IEnumerable values - returns NULL if no elements
+        /// </summary>
+        internal IEnumerable<BsonValue> Execute(IEnumerable<BsonDocument> root, IEnumerable<BsonValue> current)
         {
             if (this.Type == BsonExpressionType.Empty)
             {
@@ -172,16 +188,16 @@ namespace LiteDB
             }
             else
             {
-                var index = 0;
+                var contains = false;
                 var values = _func(root, current ?? root, this.Parameters);
 
                 foreach (var value in values)
                 {
-                    index++;
+                    contains = true;
                     yield return value;
                 }
 
-                if (index == 0 && includeNullIfEmpty) yield return BsonValue.Null;
+                if (contains == false) yield return BsonValue.Null;
             }
         }
 

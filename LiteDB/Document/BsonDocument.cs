@@ -60,11 +60,11 @@ namespace LiteDB
         /// <summary>
         /// Get an IEnumerable of values from a json-like path inside document. Use BsonExpression to parse this path
         /// </summary>
-        public IEnumerable<BsonValue> Get(string path, bool includeNullIfEmpty = false)
+        public IEnumerable<BsonValue> Get(string pathExpression)
         {
-            var expr = BsonExpression.Create(path);
+            var expr = BsonExpression.Create(pathExpression);
 
-            return expr.Execute(this, includeNullIfEmpty);
+            return expr.Execute(this);
         }
 
         /// <summary>

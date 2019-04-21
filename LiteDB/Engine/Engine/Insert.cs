@@ -71,9 +71,9 @@ namespace LiteDB.Engine
             // for each index, insert new IndexNode
             foreach (var index in snapshot.CollectionPage.GetCollectionIndexes())
             {
-                // for each index, get all keys (support now multi-key) - gets distinct values only
+                // for each index, get all keys (supports multi-key) - gets distinct values only
                 // if index are unique, get single key only
-                var keys = index.BsonExpr.Execute(doc, true);
+                var keys = index.BsonExpr.Execute(doc);
 
                 // do a loop with all keys (multi-key supported)
                 foreach(var key in keys)

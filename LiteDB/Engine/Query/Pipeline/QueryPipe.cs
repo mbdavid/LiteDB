@@ -94,7 +94,7 @@ namespace LiteDB.Engine
 
                 foreach (var doc in source)
                 {
-                    var result = select.Execute(doc, true);
+                    var result = select.Execute(doc);
 
                     foreach (var value in result)
                     {
@@ -117,7 +117,7 @@ namespace LiteDB.Engine
         private IEnumerable<BsonDocument> SelectAll(IEnumerable<BsonDocument> source, BsonExpression select)
         {
             var defaultName = select.DefaultFieldName();
-            var result = select.Execute(source, true);
+            var result = select.Execute(source);
 
             foreach (var value in result)
             {

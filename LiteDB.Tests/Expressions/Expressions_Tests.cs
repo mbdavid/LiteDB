@@ -108,13 +108,13 @@ namespace LiteDB.Tests.Expressions
 
                 if (test.Aggregate)
                 {
-                    results.Add(expr.Execute(inputs, true).First());
+                    results.Add(expr.Execute(inputs).First());
                 }
                 else
                 {
                     foreach(var doc in inputs)
                     {
-                        var r = expr.Execute(doc, true);
+                        var r = expr.Execute(doc);
 
                         results.AddRange(r);
                     }

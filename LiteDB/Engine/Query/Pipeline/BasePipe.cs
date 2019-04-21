@@ -55,7 +55,7 @@ namespace LiteDB.Engine
 
             foreach (var doc in source)
             {
-                foreach (var value in path.Execute(doc, false)
+                foreach (var value in path.Execute(doc)
                                         .Where(x => x.IsDocument)
                                         .Select(x => x.AsDocument)
                                         .ToList())
@@ -121,7 +121,7 @@ namespace LiteDB.Engine
             foreach(var doc in source)
             {
                 // checks if any result of expression is true
-                var result = expr.Execute(doc, true)
+                var result = expr.Execute(doc)
                     .Where(x => x.IsBoolean && x.AsBoolean == true)
                     .Any();
 

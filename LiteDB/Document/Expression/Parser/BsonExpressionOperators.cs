@@ -324,7 +324,7 @@ namespace LiteDB
                         parameters.CopyTo(expr.Parameters);
 
                         // get fixed position based on parameter value (must return int value)
-                        var idx = expr.Execute(root, root, true).First();
+                        var idx = expr.Execute(root, root).ScalarValue(expr);
 
                         if (!idx.IsNumber) throw new LiteException(0, "Parameter expression must return number when called inside an array");
 
@@ -340,7 +340,7 @@ namespace LiteDB
                         foreach (var item in arr)
                         {
                             // execute for each child value and except a first bool value (returns if true)
-                            var c = expr.Execute(root, new BsonValue[] { item }, true).First();
+                            var c = expr.Execute(root, new BsonValue[] { item }).ScalarValue(expr);
 
                             if (c.IsBoolean && c.AsBoolean == true)
                             {
@@ -388,36 +388,20 @@ namespace LiteDB
         /// <summary>
         /// Create multi documents based on key-value pairs on parameters. DOCUMENT('_id', 1)
         /// </summary>
-        public static IEnumerable<BsonValue> DOCUMENT_INIT(string[] keys, IEnumerable<IEnumerable<BsonValue>> values)
+        public static IEnumerable<BsonValue> DOCUMENT_INIT(string[] keys, IEnumerable<BsonValue>[] values, string[] sources)
         {
-            var matrix = values.Select(x => x.ToArray()).ToArray();
+            var doc = new BsonDocument();
 
-            var i = 0;
-
-            while(true)
+            for(var i = 0; i < keys.Length; i++)
             {
-                var doc = new BsonDocument();
+                var key = keys[i];
+                var source = sources[i];
+                var value = values[i].ScalarValue(source);
 
-                for (var j = 0; j < keys.Length; j++)
-                {
-                    var key = keys[j];
-                    var counter = matrix[j].Length;
-
-                    if (i < counter)
-                    {
-                        var value = matrix[j][i];
-
-                        doc[key] = value;
-                    }
-                }
-
-                if (doc.Keys.Count == 0) yield break;
-
-                yield return doc;
-
-                i++;
+                doc[key] = value;
             }
 
+            yield return doc;
         }
 
         /// <summary>
