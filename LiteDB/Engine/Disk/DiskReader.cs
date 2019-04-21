@@ -58,7 +58,8 @@ namespace LiteDB.Engine
         /// </summary>
         private void ReadStream(Stream stream, long position, BufferSlice buffer)
         {
-            ENSURE(stream.Length <= position - PAGE_SIZE, "can't be read from beyond file length");
+            // can't test "Length" from out-to-date stream
+            // ENSURE(stream.Length <= position - PAGE_SIZE, "can't be read from beyond file length");
 
             stream.Position = position;
 

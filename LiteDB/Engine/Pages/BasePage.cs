@@ -47,7 +47,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Indicate the page type [1 byte]
         /// </summary>
-        public PageType PageType { get; }
+        public PageType PageType { get; set; }
 
         /// <summary>
         /// Represent the previous page. Used for page-sequences - MaxValue represent that has NO previous page [4 bytes]
@@ -139,7 +139,7 @@ namespace LiteDB.Engine
         {
             _buffer = buffer;
 
-            ENSURE(buffer.Slice(5, PAGE_SIZE - 6).All(0), "new page buffer must be empty before use in a new page");
+            ENSURE(buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE - 1).All(0), "new page buffer must be empty before use in a new page");
 
             // page information
             this.PageID = pageID;
@@ -165,7 +165,6 @@ namespace LiteDB.Engine
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
             _buffer.Write(this.PageID, P_PAGE_ID);
-            _buffer.Write((byte)this.PageType, P_PAGE_TYPE);
         }
 
         /// <summary>
@@ -207,7 +206,8 @@ namespace LiteDB.Engine
             ENSURE(this.PageID == _buffer.ReadUInt32(P_PAGE_ID), "pageID can't be changed");
 
             // page information
-            // PageID/PageType - never change!
+            // PageID - never change!
+            _buffer.Write((byte)this.PageType, P_PAGE_TYPE);
             _buffer.Write(this.PrevPageID, P_PREV_PAGE_ID);
             _buffer.Write(this.NextPageID, P_NEXT_PAGE_ID);
 

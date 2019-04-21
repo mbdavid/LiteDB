@@ -24,28 +24,21 @@ namespace LiteDB.Engine
             // drop collection is possible only in exclusive transaction for this
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("DropCollection", TransactionState.Active);
 
-
-
-            return true;
-            /*
             return this.AutoTransaction(transaction =>
             {
-                var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
-                var col = snapshot.CollectionPage;
+                var snapshot = transaction.CreateSnapshot(LockMode.Write, name, false);
 
                 // if collection do not exist, just exit
-                if (col == null) return false;
+                if (snapshot.CollectionPage == null) return false;
 
-                var srv = snapshot.GetCollectionService();
-
-                srv.Drop(col, transaction);
+                // call drop collection service
+                snapshot.DropCollection(transaction.Safepoint);
 
                 // remove sequence number (if exists)
-                _sequences.TryRemove(collection, out var dummy);
+                _sequences.TryRemove(name, out var dummy);
 
                 return true;
             });
-            */
         }
 
         /// <summary>

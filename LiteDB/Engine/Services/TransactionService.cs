@@ -208,6 +208,7 @@ namespace LiteDB.Engine
                             {
                                 var empty = _disk.NewPage();
 
+                                // to avoid read a empty page from disk I will create new page as empty and override it
                                 var lastDeletedPage = new BasePage(empty, _transPages.LastDeletedPageID, PageType.Empty)
                                 {
                                     // update nextPageID of last deleted page to old first page ID

@@ -247,7 +247,7 @@ namespace LiteDB.Engine
             try
             {
                 // get length before starts (avoid grow during loop)
-                var length = stream.Length;
+                var length = this.GetLength(origin);
 
                 stream.Position = 0;
 

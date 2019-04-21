@@ -95,7 +95,7 @@ namespace LiteDB.Engine
                 this.DocumentCount = r.ReadInt64();
 
                 // skip reserved area
-                r.Skip(r.Position - P_INDEXES);
+                r.Skip(P_INDEXES - r.Position);
 
                 // read indexes count (max 256 indexes per collection)
                 var count = r.ReadByte(); // 1 byte
@@ -139,7 +139,7 @@ namespace LiteDB.Engine
                 w.Write(this.DocumentCount);
 
                 // skip reserved area (indexes starts at position 96)
-                w.Skip(w.Position - P_INDEXES);
+                w.Skip(P_INDEXES - w.Position);
 
                 // update collection only if needed
                 if (_isIndexesChanged)
