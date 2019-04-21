@@ -32,9 +32,8 @@ namespace LiteDB.Engine
         private const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63 (4 bytes)
         private const int P_LAST_PAGE_ID = 64; // 64-67 (4 bytes)
         private const int P_CREATION_TIME = 68; // 68-75 (8 bytes)
-        private const int P_LAST_CHECKPOINT = 76; // 76-83 (8 bytes)
-        private const int P_USER_VERSION = 84; // 84-87 (4 bytes)
-        // reserved 88-95 (8 bytes)
+        private const int P_USER_VERSION = 76; // 76-79 (4 bytes)
+        // reserved 80-95 (16 bytes)
         private const int P_COLLECTIONS = 96; // 96-8095 (8000 bytes)
         // reserved 8096-8190 (95 bytes) (8191 to CRC)
 
@@ -56,11 +55,6 @@ namespace LiteDB.Engine
         /// DateTime when database was created [8 bytes]
         /// </summary>
         public DateTime CreationTime { get; }
-
-        /// <summary>
-        /// DateTime last checkpoint command was executed [8 bytes]
-        /// </summary>
-        public DateTime LastCheckpoint { get; set; }
 
         /// <summary>
         /// UserVersion int - for user get/set database version changes
@@ -85,7 +79,6 @@ namespace LiteDB.Engine
         {
             // initialize page version
             this.CreationTime = DateTime.UtcNow;
-            this.LastCheckpoint = DateTime.MinValue;
             this.FreeEmptyPageID = uint.MaxValue;
             this.LastPageID = 0;
             this.UserVersion = 0;
@@ -126,7 +119,6 @@ namespace LiteDB.Engine
 
             this.FreeEmptyPageID = _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
             this.LastPageID = _buffer.ReadUInt32(P_LAST_PAGE_ID);
-            this.LastCheckpoint = _buffer.ReadDateTime(P_LAST_CHECKPOINT);
             this.UserVersion = _buffer.ReadInt32(P_USER_VERSION);
 
             // create new buffer area to store BsonDocument collections
@@ -144,7 +136,6 @@ namespace LiteDB.Engine
         {
             _buffer.Write(this.FreeEmptyPageID, P_FREE_EMPTY_PAGE_ID);
             _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
-            _buffer.Write(this.LastCheckpoint, P_LAST_CHECKPOINT);
             _buffer.Write(this.UserVersion, P_USER_VERSION);
 
             // update collection only if needed

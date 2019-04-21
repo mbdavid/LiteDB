@@ -45,7 +45,6 @@ namespace LiteDB.Engine
                     doc["freeEmptyPageID"] = dumpPageID(header.FreeEmptyPageID);
                     doc["lastPageID"] = (int)header.LastPageID;
                     doc["creationTime"] = header.CreationTime;
-                    doc["lastCheckpoint"] = header.LastCheckpoint;
                     doc["userVersion"] = header.UserVersion;
                     doc["collections"] = new BsonDocument(header.GetCollections().ToDictionary(x => x.Key, x => new BsonValue((int)x.Value)));
                 }

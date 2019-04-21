@@ -23,7 +23,6 @@ namespace LiteDB.Engine
             doc["freeEmptyPageID"] = (int)_header.FreeEmptyPageID;
 
             doc["creationTime"] = _header.CreationTime;
-            doc["lastCheckpoint"] = _header.LastCheckpoint;
 
             doc["dataFileSize"] = (int)_disk.GetLength(FileOrigin.Data);
             doc["logFileSize"] = (int)_disk.GetLength(FileOrigin.Log);

@@ -43,11 +43,6 @@ namespace LiteDB.Engine
         public DateTime LastAnalyzed { get; set; }
 
         /// <summary>
-        /// Store how many documents this collection contains
-        /// </summary>
-        public long DocumentCount { get; set; }
-
-        /// <summary>
         /// All indexes references for this collection
         /// </summary>
         private readonly Dictionary<string, CollectionIndex> _indexes = new Dictionary<string, CollectionIndex>();
@@ -63,7 +58,6 @@ namespace LiteDB.Engine
             // initialize page version
             this.CreationTime = DateTime.Now;
             this.LastAnalyzed = DateTime.MinValue;
-            this.DocumentCount = 0;
 
             for(var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
             {
@@ -92,7 +86,6 @@ namespace LiteDB.Engine
                 // read create/last analyzed (16 bytes)
                 this.CreationTime = r.ReadDateTime();
                 this.LastAnalyzed = r.ReadDateTime();
-                this.DocumentCount = r.ReadInt64();
 
                 // skip reserved area
                 r.Skip(P_INDEXES - r.Position);
@@ -136,7 +129,6 @@ namespace LiteDB.Engine
                 // write creation/last analyzed (16 bytes)
                 w.Write(this.CreationTime);
                 w.Write(this.LastAnalyzed);
-                w.Write(this.DocumentCount);
 
                 // skip reserved area (indexes starts at position 96)
                 w.Skip(P_INDEXES - w.Position);

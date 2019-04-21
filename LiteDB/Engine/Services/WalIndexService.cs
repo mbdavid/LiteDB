@@ -257,29 +257,6 @@ namespace LiteDB.Engine
                             }
                         }
                     }
-
-                    // if no page was copied from log, do not update header
-                    if (counter == 0) yield break;
-
-                    // clone header page to avoid changes when saving in disk
-                    header.LastCheckpoint = DateTime.UtcNow;
-
-                    // create new memory space to allocate buffer - no cache usage
-                    var clone = new PageBuffer(new byte[PAGE_SIZE], 0, 0)
-                    {
-                        Position = 0
-                    };
-
-                    lock (header)
-                    {
-                        var buffer = header.UpdateBuffer();
-
-                        // mem copy from current header to new header clone
-                        Buffer.BlockCopy(buffer.Array, buffer.Offset, clone.Array, clone.Offset, clone.Count);
-                    }
-
-                    // persist clone header into data file
-                    yield return clone;
                 }
 
                 // write all log pages into data file (sync)

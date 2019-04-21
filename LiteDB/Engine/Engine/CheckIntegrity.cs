@@ -22,7 +22,6 @@ namespace LiteDB.Engine
 
             rpt.Run("Data file", "{0}", () => _disk.GetName(FileOrigin.Data) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Data)) + ")");
             rpt.Run("Log file", "{0}", () => _disk.GetName(FileOrigin.Log) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Log)) + ")");
-            rpt.Run("Last checkpoint", "{0}", () => _header.LastCheckpoint);
             rpt.Run("Clear cache memory", "OK ({0} pages)", () => _disk.Cache.Clear());
             rpt.Run("Verify CRC data file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Data));
             rpt.Run("Verify CRC log file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Log));

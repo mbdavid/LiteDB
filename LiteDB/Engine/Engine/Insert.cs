@@ -64,8 +64,6 @@ namespace LiteDB.Engine
             // storage in data pages - returns dataBlock address
             var dataBlock = data.Insert(doc);
 
-            //return;
-
             IndexNode last = null;
 
             // for each index, insert new IndexNode

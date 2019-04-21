@@ -71,7 +71,6 @@ namespace LiteDB.Engine
                 var density = (double)Math.Min(this.UniqueKeyCount, this.KeyCount) /
                     (double)this.KeyCount;
 
-
                 return Math.Round(density, 2);
             }
         }
