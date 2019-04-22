@@ -8,10 +8,10 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Queries
 {
-    [BenchmarkCategory(LiteDB.Benchmarks.Constants.Categories.QUERIES)]
+    [BenchmarkCategory(Constants.Categories.QUERIES)]
     public class QueryIgnoreExpressionPropertiesBenchmark : DatabaseBenchmarkBase
     {
-        protected override string DatabasePath => Constants.DatabaseNames.Queries;
+        protected override string DatabasePath => Constants.DatabaseNames.QUERIES;
 
         private LiteDatabase DatabaseInstance { get; set; }
         private LiteCollection<FileMetaBase> _fileMetaCollection { get; set; }

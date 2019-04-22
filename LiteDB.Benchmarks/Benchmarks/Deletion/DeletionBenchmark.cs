@@ -8,10 +8,10 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Deletion
 {
-    [BenchmarkCategory(LiteDB.Benchmarks.Constants.Categories.DELETION)]
+    [BenchmarkCategory(Constants.Categories.DELETION)]
     public class DeletionBenchmark : DatabaseBenchmarkBase
     {
-        protected override string DatabasePath => Constants.DatabaseNames.Deletion;
+        protected override string DatabasePath => Constants.DatabaseNames.DELETION;
 
         private List<FileMetaBase> data;
 

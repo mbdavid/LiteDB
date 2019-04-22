@@ -8,10 +8,10 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Queries
 {
-    [BenchmarkCategory(LiteDB.Benchmarks.Constants.Categories.QUERIES)]
+    [BenchmarkCategory(Constants.Categories.QUERIES)]
     public class QuerySimpleIndexBenchmarks : DatabaseBenchmarkBase
     {
-        protected override string DatabasePath => Constants.DatabaseNames.Queries;
+        protected override string DatabasePath => Constants.DatabaseNames.QUERIES;
 
         private LiteDatabase DatabaseInstance { get; set; }
         private LiteCollection<FileMetaBase> _fileMetaCollection { get; set; }
@@ -31,7 +31,6 @@ namespace LiteDB.Benchmarks.Benchmarks.Queries
             DatabaseInstance = new LiteDatabase(ConnectionString);
             _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
             _fileMetaCollection.EnsureIndex(fileMeta => fileMeta.IsFavorite);
-            _fileMetaCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
 
             _fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(N)); // executed once per each N value
         }

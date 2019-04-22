@@ -1,12 +1,20 @@
 namespace LiteDB.Benchmarks.Benchmarks
 {
-    public static class Constants
+    internal static class Constants
     {
-        public static class DatabaseNames
+        internal static class DatabaseNames
         {
-            public const string Queries = @"Query.db";
-            public const string Insertion = @"Insertion.db";
-            public const string Deletion = @"Deletion.db";
+            public const string QUERIES = @"Query.db";
+            public const string INSERTION = @"Insertion.db";
+            public const string DELETION = @"Deletion.db";
+        }
+
+        internal static class Categories
+        {
+            internal const string DATA_GEN = nameof(DATA_GEN);
+            internal const string QUERIES = nameof(QUERIES);
+            internal const string INSERTION = nameof(INSERTION);
+            internal const string DELETION = nameof(DELETION);
         }
     }
 }
