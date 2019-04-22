@@ -33,17 +33,12 @@ namespace LiteDB.Internals
             p0.Position = 0;
             p0.Write(123, 10);
 
-            Assert.AreEqual(1, m.PagesInUse);
+            Assert.AreEqual(1, m.WritablePages);
 
             var readable = m.TryMoveToReadable(p0);
 
-            // now, page are readable (but still in use)
+            // now, page are readable
             Assert.IsTrue(readable);
-            Assert.AreEqual(1, p0.ShareCounter);
-
-            // after save page in disk - release page
-            p0.Release();
-
             Assert.AreEqual(0, p0.ShareCounter);
 
             // now get same page again
@@ -68,6 +63,10 @@ namespace LiteDB.Internals
             p2.Release();
 
             Assert.AreEqual(0, m.PagesInUse);
+
+            Assert.AreEqual(0, p0.ShareCounter);
+            Assert.AreEqual(0, p1.ShareCounter);
+            Assert.AreEqual(0, p2.ShareCounter);
         }
 
         [TestMethod]
@@ -97,7 +96,6 @@ namespace LiteDB.Internals
                 p.Position = ++pos;
 
                 m.TryMoveToReadable(p);
-                p.Release();
             }
 
             // checks if still 2 segments in memory (segments never decrease)
@@ -123,10 +121,9 @@ namespace LiteDB.Internals
                 p.Position = ++pos;
 
                 m.TryMoveToReadable(p);
-                p.Release();
             }
 
-            Assert.AreEqual(7, m.PagesInUse);
+            Assert.AreEqual(7, m.WritablePages);
             Assert.AreEqual(8, m.FreePages);
 
             // now, if I request for 10 pages, all pages will be reused (no segment extend)

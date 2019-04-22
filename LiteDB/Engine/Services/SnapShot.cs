@@ -121,8 +121,11 @@ namespace LiteDB.Engine
             // release all data/index pages
             this.Clear();
 
-            // release collection page
-            _collectionPage?.Buffer.Release();
+            // release collection page (in read mode)
+            if (_mode == LockMode.Read && _collectionPage != null)
+            {
+                _collectionPage.Buffer.Release();
+            }
 
             if (_mode == LockMode.Read)
             {

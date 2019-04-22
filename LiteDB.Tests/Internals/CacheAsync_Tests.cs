@@ -52,9 +52,6 @@ namespace LiteDB.Internals
                 serialize(wa, wb);
                 // (2 <-) continue from thread B
 
-                // releasing my page and wait async writer
-                p0.Buffer.Release();
-
                 disk.Queue.Wait();
 
                 // (3 ->) jump to thread B
@@ -71,11 +68,11 @@ namespace LiteDB.Internals
                 var p0 = r.ReadPage(0, false, FileOrigin.Log);
 
                 // share counter can be 2 or 3
-                // - if 3, page was not persisted yet on disk (async)
-                // - if 2, page already persisted on disk
+                // - if 2, page was not persisted yet on disk (async)
+                // - if 1, page already persisted on disk
                 var share = p0.ShareCounter;
 
-                Assert.IsTrue(share >= 2 && share <= 3);
+                Assert.IsTrue(share >= 1 && share <= 2);
 
                 // (2 ->) jump to thread A
                 serialize(wb, wa);
@@ -83,6 +80,11 @@ namespace LiteDB.Internals
 
                 // but now, I'm sure this page was saved and thread A release
                 Assert.AreEqual(1, p0.ShareCounter);
+
+                // let's release my page
+                p0.Release();
+
+                Assert.AreEqual(0, p0.ShareCounter);
 
                 // release thread A
                 serialize(null, wa);
