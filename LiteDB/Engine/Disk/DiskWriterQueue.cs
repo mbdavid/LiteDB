@@ -30,16 +30,10 @@ namespace LiteDB.Engine
 
         private ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
 
-        /// <summary>
-        /// Callback function to notify that some transaction already saved in disk
-        /// </summary>
-        private readonly Action<uint> _flushed;
-
-        public DiskWriterQueue(Stream stream, AesEncryption aes, Action<uint> flushed)
+        public DiskWriterQueue(Stream stream, AesEncryption aes)
         {
             _stream = stream;
             _aes = aes;
-            _flushed = flushed;
 
             // prepare async thread writer
             _waiter = new ManualResetEventSlim(false);
@@ -98,7 +92,6 @@ namespace LiteDB.Engine
             // here, there is no more item in queue
             // BUT, before call this Wait() you should do a full lock database
             // otherwise just after exit this method new data can be enqueue by another thread
-
             ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
         }
 
@@ -132,7 +125,6 @@ namespace LiteDB.Engine
             if (_queue.Count == 0) return;
 
             var count = 0;
-            var flush = false;
 
             while (_queue.TryDequeue(out var page))
             {
@@ -151,35 +143,16 @@ namespace LiteDB.Engine
                     _stream.Write(page.Array, page.Offset, PAGE_SIZE);
                 }
 
-                // checks if current page is a ConfirmedPage
-                var isConfirmed = page[BasePage.P_IS_CONFIRMED] == 1;
-                var transactionID = isConfirmed ? page.ReadUInt32(BasePage.P_TRANSACTION_ID) : 0u;
-
                 // release page here (no page use after this)
                 page.Release();
 
-                flush = true;
                 count++;
-
-                // if is confirmed page
-                if (isConfirmed)
-                {
-                    LOG($"flushing transactions in disk: {transactionID}", "DISK");
-
-                    // flush to disk to ensure this page are persisted before call event
-                    _stream.FlushToDisk();
-
-                    _flushed?.Invoke(transactionID);
-
-                    // already flushed - do not flush when finish loop
-                    flush = false;
-                }
             }
 
-            // after this I will have 100% sure data are safe
-            if (flush) _stream.FlushToDisk();
+            // after this I will have 100% sure data are safe on log file
+            _stream.FlushToDisk();
 
-            // when done, if has more pages in queue, run again
+            // when queue finish, test if has no more items on queue
             if (_queue.Count > 0) this.ExecuteQueue();
         }
 

@@ -29,13 +29,6 @@ namespace LiteDB.Internals
             var disk = new DiskService(settings);
             var pages = new List<PageBuffer>();
 
-            // check when IsConfirmed was saved in disk
-            disk.Flush += (transactionID) =>
-            {
-                // when write full 1 page byte, will run here
-                Assert.AreEqual(16843009u, transactionID);
-            };
-
             // let's create 100 pages with 0-99 full data
             for (var i = 0; i < 100; i++)
             {

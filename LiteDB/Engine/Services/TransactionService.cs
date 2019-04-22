@@ -218,9 +218,6 @@ namespace LiteDB.Engine
 
                                 // this page will write twice on wal, but no problem, only this last version will be saved on data file
                                 yield return lastDeletedPage.UpdateBuffer();
-
-                                // release page just after write on disk
-                                empty.Release();
                             }
                         }
 
@@ -243,9 +240,6 @@ namespace LiteDB.Engine
 
                         // persist header in log file
                         yield return clone;
-
-                        // release page just after write on disk
-                        clone.Release();
                     }
                 }
             };
@@ -363,8 +357,6 @@ namespace LiteDB.Engine
 
                         yield return page.UpdateBuffer();
 
-                        buffer.Release();
-
                         // update wal
                         pagePositions[pageID] = new PagePosition(pageID, buffer.Position);
                     }
@@ -381,8 +373,6 @@ namespace LiteDB.Engine
                     Buffer.BlockCopy(buf.Array, buf.Offset, clone.Array, clone.Offset, clone.Count);
 
                     yield return clone;
-
-                    clone.Release();
                 };
 
                 // create a header save point before any change

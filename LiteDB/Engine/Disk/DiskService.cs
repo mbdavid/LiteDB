@@ -30,8 +30,6 @@ namespace LiteDB.Engine
 
         private readonly AesEncryption _aes;
 
-        public event Action<uint> Flush;
-
         public DiskService(EngineSettings settings)
         {
             _cache = new MemoryCache(settings.MemorySegmentSize);
@@ -52,7 +50,7 @@ namespace LiteDB.Engine
                 null;
 
             // create lazy async writer queue for log file
-            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer, _aes, this.Flush));
+            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer, _aes));
 
             // create new database if not exist yet
             if (isNew)

@@ -150,12 +150,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Run checkpoint command to copy log file into data file
         /// </summary>
-        public int Checkpoint(bool full)
-        {
-            var mode = full ? CheckpointMode.Full : CheckpointMode.Incremental;
-
-            return _walIndex.Checkpoint(_header, mode);
-        }
+        public void Checkpoint() => _walIndex.Checkpoint(_header);
 
         /// <summary>
         /// Shutdown process:
@@ -175,7 +170,7 @@ namespace LiteDB.Engine
                 // do checkpoint if it's possible
                 if (_settings.CheckpointOnShutdown && _settings.ReadOnly == false)
                 {
-                    _walIndex?.Checkpoint(_header, CheckpointMode.Shutdown);
+                    _walIndex?.Checkpoint(_header);
                 }
 
                 // close all disk connections

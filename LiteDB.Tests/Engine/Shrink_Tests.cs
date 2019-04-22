@@ -64,7 +64,7 @@ namespace LiteDB.Tests.Engine
                     Assert.AreEqual(1, col.Count());
 
                     // must checkpoint
-                    db.Checkpoint(true);
+                    db.Checkpoint();
 
                     // file still large than 5mb (even with only 1 document)
                     Assert.IsTrue(file.Size > 5 * 1024 * 1024);

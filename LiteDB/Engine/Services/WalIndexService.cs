@@ -17,10 +17,9 @@ namespace LiteDB.Engine
         private readonly DiskService _disk;
         private readonly LockService _locker;
 
-        private readonly ConcurrentDictionary<uint, bool> _transactions = new ConcurrentDictionary<uint, bool>();
         private readonly ConcurrentDictionary<uint, List<KeyValuePair<int, long>>> _index = new ConcurrentDictionary<uint, List<KeyValuePair<int, long>>>();
 
-        private readonly object _checkpointLocker = new object();
+        private readonly HashSet<uint> _confirmTransactions = new HashSet<uint>();
 
         private int _currentReadVersion = 0;
 
@@ -33,12 +32,6 @@ namespace LiteDB.Engine
         {
             _disk = disk;
             _locker = locker;
-
-            // when writer queue flush some transaction, confirm in my transaction list (or add)
-            _disk.Flush += (transactionID) =>
-            {
-                _transactions.AddOrUpdate(transactionID, true, (t, o) => true);
-            };
         }
 
         /// <summary>
@@ -95,9 +88,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void ConfirmTransaction(uint transactionID, ICollection<PagePosition> pagePositions)
         {
-            // if this transaction was no persisted yet (by async writer) create as not persisted yet
-            _transactions.TryAdd(transactionID, false);
-
             // if no pages was saved, just exit
             if (pagePositions.Count == 0) return;
 
@@ -116,6 +106,9 @@ namespace LiteDB.Engine
                     // add version/position into pageID slot
                     slot.Add(new KeyValuePair<int, long>(_currentReadVersion, pos.Position));
                 }
+
+                // add transaction as confirmed
+                _confirmTransactions.Add(transactionID);
             }
         }
 
@@ -172,9 +165,6 @@ namespace LiteDB.Engine
                         // update last transaction ID
                         _lastTransactionID = (int)page.TransactionID;
                     }
-
-                    // mark transaction as persisted
-                    _transactions[page.TransactionID] = true;
                 }
 
                 current += PAGE_SIZE;
@@ -184,117 +174,60 @@ namespace LiteDB.Engine
         /// <summary>
         /// Do checkpoint operation to copy log pages into data file. Return how many transactions was commited inside data file
         /// </summary>
-        public int Checkpoint(HeaderPage header, CheckpointMode mode)
+        public void Checkpoint(HeaderPage header)
         {
-            // ensure only 1 thread can run checkpoint
-            lock (_checkpointLocker)
+            // get original log length
+            var logLength = _disk.GetLength(FileOrigin.Log);
+
+            // no log file, just exit
+            if (logLength == 0) return;
+
+            LOG($"checkpoint", "WAL");
+
+            // enter in exclusive lock
+            _locker.EnterReserved(true);
+
+            // wait all pages write on disk
+            _disk.Queue.Wait();
+
+            // re-read log length after enter in exclusive mode - can be changed
+            logLength = _disk.GetLength(FileOrigin.Log);
+
+            ENSURE(_disk.Queue.Length == 0, "no pages on queue when checkpoint");
+
+            // getting all "good" pages from log file to be copied into data file
+            IEnumerable<PageBuffer> source()
             {
-                // get original log length
-                var logLength = _disk.GetLength(FileOrigin.Log);
-                var counter = 0;
-                var locked = false;
-
-                // no log file, just exit
-                if (logLength == 0)
+                foreach (var buffer in _disk.ReadFull(FileOrigin.Log))
                 {
-                    if (mode == CheckpointMode.Shutdown) _disk.Delete(FileOrigin.Log);
+                    var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
+                    var transactionID = buffer.ReadUInt32(BasePage.P_TRANSACTION_ID);
 
-                    return 0;
-                }
-
-                LOG($"{mode.ToString().ToLower()} checkpoint", "WAL");
-
-                // for full/shutdown checkpoint need exclusive lock
-                if (mode == CheckpointMode.Full || mode == CheckpointMode.Shutdown)
-                {
-                    // in shutdown mode do not wait for lock - if there is any other transaction force quit
-                    if (mode == CheckpointMode.Shutdown && _locker.TransactionsCount > 0) return 0;
-
-                    _locker.EnterReserved(true);
-
-                    // wait all pages write on disk
-                    _disk.Queue.Wait();
-
-                    // re-read log length after enter in exclusive mode - can be changed
-                    logLength = _disk.GetLength(FileOrigin.Log);
-
-                    ENSURE(_disk.Queue.Length == 0, "no pages on queue");
-                    ENSURE(_transactions.Where(x => x.Value == false).Count() == 0, "should not have any pending transaction after queue wait");
-
-                    locked = true;
-                }
-
-                // get only flushed transactions (need run before starts)
-                var confirmTransactions = new HashSet<uint>(_transactions.Where(x => x.Value).Select(x => x.Key));
-
-                // getting all "good" pages from log file to be copied into data file
-                IEnumerable<PageBuffer> source()
-                {
-                    foreach (var buffer in _disk.ReadFull(FileOrigin.Log))
+                    // only confied paged can be write on data disk
+                    if (_confirmTransactions.Contains(transactionID))
                     {
-                        var page = new BasePage(buffer);
+                        buffer.Position = BasePage.GetPagePosition(pageID);
 
-                        // only confied paged can be write on data disk
-                        if (confirmTransactions.Contains(page.TransactionID))
-                        {
-                            buffer.Position = BasePage.GetPagePosition(page.PageID);
-
-                            var isConfirmed = page.IsConfirmed;
-                            var transactionID = page.TransactionID;
-
-                            // clean log-only data
-                            page.IsConfirmed = false;
-                            page.TransactionID = uint.MaxValue;
-
-                            // get updated buffer with new CRC computed
-                            yield return page.UpdateBuffer();
-
-                            // can remove from list when store in disk
-                            if (isConfirmed)
-                            {
-                                counter++;
-                                _transactions.TryRemove(transactionID, out var d);
-                            }
-                        }
+                        // get same buffer with old CRC computed (I will not update IsConfirmed/TransactionID)
+                        yield return buffer;
                     }
                 }
-
-                // write all log pages into data file (sync)
-                _disk.Write(source(), FileOrigin.Data);
-
-                // check if is possible clear log file (no pending transaction and no new log pages)
-                if (_transactions.Count == 0 && logLength == _disk.GetLength(FileOrigin.Log))
-                {
-                    // enter exclusive mode (if not yet)
-                    if (locked == false) _locker.EnterReserved(true);
-
-                    // double check because lock waiter can be executed a write operation
-                    if (_transactions.Count == 0 && logLength == _disk.GetLength(FileOrigin.Log))
-                    {
-                        _currentReadVersion = 0;
-                        _index.Clear();
-
-                        // clear log file (sync)
-                        _disk.SetLength(0, FileOrigin.Log);
-                    }
-
-                    if (locked == false) _locker.ExitReserved(true);
-                }
-
-                ENSURE(locked, _disk.GetLength(FileOrigin.Log) == 0, "full/shutdown checkpoint must finish with log file = 0");
-
-                // in shutdown mode, delete file (will Dispose Stream) - will delete only if file is complete empty
-                if (mode == CheckpointMode.Shutdown)
-                {
-                    _disk.Delete(FileOrigin.Log);
-                }
-
-                // exit exclusive lock (only for full mode)
-                // - shutdown mode will be keeped in lock to not accept any new operation until end
-                if (mode == CheckpointMode.Full) _locker.ExitReserved(true);
-
-                return counter;
             }
+
+            // write all log pages into data file (sync)
+            _disk.Write(source(), FileOrigin.Data);
+
+            // reset 
+            _confirmTransactions.Clear();
+            _index.Clear();
+
+            _currentReadVersion = 0;
+
+            // clear log file (sync)
+            _disk.SetLength(0, FileOrigin.Log);
+
+            // remove exclusive lock
+            _locker.ExitReserved(true);
         }
     }
 }

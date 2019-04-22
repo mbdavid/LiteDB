@@ -57,13 +57,13 @@ namespace LiteDB
             }
         }
 
-        public int Checkpoint(bool full)
+        public void Checkpoint()
         {
             this.OpenShared();
 
             try
             {
-                return _engine.Checkpoint(full);
+                _engine.Checkpoint();
             }
             finally
             {
