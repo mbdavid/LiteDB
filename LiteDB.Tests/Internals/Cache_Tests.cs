@@ -103,9 +103,6 @@ namespace LiteDB.Internals
             // checks if still 2 segments in memory (segments never decrease)
             Assert.AreEqual(2, m.ExtendSegments);
 
-            // now, I must have 8 unused pages
-            Assert.AreEqual(5, m.UnusedPages);
-
             // but only 3 free pages
             Assert.AreEqual(3, m.FreePages);
 
@@ -130,7 +127,6 @@ namespace LiteDB.Internals
             }
 
             Assert.AreEqual(7, m.PagesInUse);
-            Assert.AreEqual(15, m.UnusedPages);
             Assert.AreEqual(8, m.FreePages);
 
             // now, if I request for 10 pages, all pages will be reused (no segment extend)

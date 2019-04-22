@@ -47,7 +47,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Indicate the page type [1 byte]
         /// </summary>
-        public PageType PageType { get; set; }
+        public PageType PageType { get; private set; }
 
         /// <summary>
         /// Represent the previous page. Used for page-sequences - MaxValue represent that has NO previous page [4 bytes]
@@ -165,6 +165,7 @@ namespace LiteDB.Engine
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
             _buffer.Write(this.PageID, P_PAGE_ID);
+            _buffer.Write((byte)this.PageType, P_PAGE_TYPE);
         }
 
         /// <summary>
@@ -207,7 +208,6 @@ namespace LiteDB.Engine
 
             // page information
             // PageID - never change!
-            _buffer.Write((byte)this.PageType, P_PAGE_TYPE);
             _buffer.Write(this.PrevPageID, P_PREV_PAGE_ID);
             _buffer.Write(this.NextPageID, P_NEXT_PAGE_ID);
 
@@ -229,6 +229,39 @@ namespace LiteDB.Engine
             _buffer.Write(this.CRC, P_CRC);
 
             return _buffer;
+        }
+
+        /// <summary>
+        /// Change current page to Empty page - fix variables and buffer (DO NOT change PageID)
+        /// </summary>
+        public void MarkAsEmtpy()
+        {
+            this.IsDirty = true;
+
+            this.PageType = PageType.Empty;
+            this.ItemsCount = 0;
+            this.PrevPageID = uint.MaxValue;
+            this.NextPageID = uint.MaxValue;
+
+            // transaction information
+            this.ColID = uint.MaxValue;
+            this.TransactionID = uint.MaxValue;
+            this.IsConfirmed = false;
+
+            // block information
+            this.ItemsCount = 0;
+            this.UsedBytes = 0;
+            this.FragmentedBytes = 0;
+            this.NextFreePosition = PAGE_HEADER_SIZE; // 32
+            this.HighestIndex = byte.MaxValue; // empty - not used yet
+
+            // MUST CLEAR CONTENT
+            // because this page will be readed when re-used
+            _buffer.Clear(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE);
+
+            // fix buffer page type position
+            _buffer.Write((byte)this.PageType, P_PAGE_TYPE);
+
         }
 
         #endregion
@@ -435,7 +468,7 @@ namespace LiteDB.Engine
                 _buffer.Write(bytesLength, lengthAddr);
 
                 // clear fragment bytes
-                _buffer.Slice(position + bytesLength, diff).Fill(0);
+                _buffer.Clear(position + bytesLength, diff);
 
                 return _buffer.Slice(position, bytesLength);
             }
@@ -443,7 +476,7 @@ namespace LiteDB.Engine
             else
             {
                 // clear current segment
-                _buffer.Slice(position, length).Fill(0);
+                _buffer.Clear(position, length);
 
                 this.ItemsCount--;
                 this.UsedBytes -= length;

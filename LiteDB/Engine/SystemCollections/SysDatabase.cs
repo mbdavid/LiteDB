@@ -37,8 +37,9 @@ namespace LiteDB.Engine
                     (_disk.Cache.ExtendSegments * _settings.MemorySegmentSize * PAGE_SIZE) +
                     (40 * (_disk.Cache.ExtendSegments * _settings.MemorySegmentSize)),
                 ["freePages"] = _disk.Cache.FreePages,
+                ["readablePages"] = _disk.Cache.GetPages().Count,
+                ["writablePages"] = _disk.Cache.WritablePages,
                 ["pagesInUse"] = _disk.Cache.PagesInUse,
-                ["unusedPages"] = _disk.Cache.UnusedPages
             };
 
             yield return doc;

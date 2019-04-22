@@ -161,23 +161,23 @@ namespace LiteDB.Engine
         {
             if (isDirty == false)
             {
-                // try move clean pages into _readable list (if not already there)
                 foreach (var page in pages)
                 {
-                    ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable");
-
-                    _cache.TryMoveToReadable(page);
+                    // if page was not modified, try move to readable list
+                    if (_cache.TryMoveToReadable(page) == false)
+                    {
+                        // if already in readable list, just discard
+                        _cache.DiscardPage(page);
+                    }
                 }
             }
             else
             {
-                // only rollback action - this must will be keeped into _writable and wait for new Extend
+                // only for ROLLBACK action
                 foreach (var page in pages)
                 {
-                    ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable");
-
-                    page.ShareCounter = 1; // will be decrease on page.Release();
-                    page.Timestamp = 1; // be first page to be re-used on next Extend()
+                    // complete discard page and content
+                    _cache.DiscardPage(page);
                 }
             }
         }

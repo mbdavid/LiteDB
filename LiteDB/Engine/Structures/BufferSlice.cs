@@ -35,11 +35,32 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Fill all array slice with value parameter
+        /// Clear all page content byte array (not controls)
+        /// </summary>
+        public void Clear()
+        {
+            System.Array.Clear(this.Array, this.Offset, this.Count);
+        }
+
+        /// <summary>
+        /// Clear page content byte array
+        /// </summary>
+        public void Clear(int offset, int count)
+        {
+            ENSURE(offset + count <= this.Count, "must fit in this page");
+
+            System.Array.Clear(this.Array, this.Offset + offset, count);
+        }
+
+        /// <summary>
+        /// Fill all content with value. Used for DEBUG propost
         /// </summary>
         public void Fill(byte value)
         {
-            this.Array.Fill(value, this.Offset, this.Count);
+            for (var i = 0; i < this.Count; i++)
+            {
+                this.Array[this.Offset + i] = value;
+            }
         }
 
         /// <summary>

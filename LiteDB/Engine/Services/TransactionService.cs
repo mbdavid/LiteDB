@@ -126,7 +126,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Persist all dirty in-memory pages (in all snapshots) and clear local pages (even clean pages)
+        /// Persist all dirty in-memory pages (in all snapshots) and clear local pages list (even clean pages)
         /// </summary>
         private void PersistDirtyPages(bool commit)
         {

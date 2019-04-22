@@ -14,15 +14,14 @@ namespace LiteDB.Engine
             {
                 var doc = new BsonDocument
                 {
-                    ["uniqueID"] = page.Value.UniqueID,
-                    ["state"] = page.Key,
-                    ["position"] = page.Value.Position == long.MaxValue ? -1 : (int)page.Value.Position,
-                    ["origin"] = page.Value.Origin.ToString(),
-                    ["shareCounter"] = page.Value.ShareCounter,
-                    ["timestamp"] = (int)page.Value.Timestamp,
-                    ["offset"] = page.Value.Offset,
-                    ["pageID"] = (int)page.Value.ReadUInt32(0),
-                    ["pageType"] = ((PageType)page.Value[4]).ToString()
+                    ["uniqueID"] = page.UniqueID,
+                    ["position"] = page.Position == long.MaxValue ? -1 : (int)page.Position,
+                    ["origin"] = page.Origin.ToString(),
+                    ["shareCounter"] = page.ShareCounter,
+                    ["timestamp"] = (int)page.Timestamp,
+                    ["offset"] = page.Offset,
+                    ["pageID"] = (int)page.ReadUInt32(BasePage.P_PAGE_ID),
+                    ["pageType"] = ((PageType)page[BasePage.P_PAGE_TYPE]).ToString()
                 };
 
                 yield return doc;

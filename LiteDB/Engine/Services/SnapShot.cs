@@ -75,7 +75,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get writable pages (only if snapshot mode is Write). Can be Dirty (changed) or Clean 
+        /// Get all snapshot pages (can or not include collectionPage) - If included, will be last page
         /// </summary>
         public IEnumerable<BasePage> GetWritablePages(bool dirty, bool includeCollectionPage)
         {
@@ -100,10 +100,14 @@ namespace LiteDB.Engine
         /// </summary>
         public void Clear()
         {
-            // release all pages (except collection page)
-            foreach(var page in _localPages.Values)
+            // release pages only if snapshot are read only
+            if (_mode == LockMode.Read)
             {
-                page.Buffer.Release();
+                // release all read pages (except collection page)
+                foreach (var page in _localPages.Values)
+                {
+                    page.Buffer.Release();
+                }
             }
 
             _localPages.Clear();
@@ -431,8 +435,10 @@ namespace LiteDB.Engine
             ENSURE(page.Buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE - 1).All(0), "page content shloud be empty");
             ENSURE(page.ItemsCount == 0 && page.UsedBytes == 0, "no items on page when delete this page");
 
-            // remove from linked-list
-            // if first page in sequence
+            // mark page as empty and dirty
+            page.MarkAsEmtpy();
+
+            // fix this page in free-link-list
             if (_transPages.FirstDeletedPageID == uint.MaxValue)
             {
                 // set first and last deleted page as current deleted page
@@ -448,12 +454,6 @@ namespace LiteDB.Engine
                 _transPages.FirstDeletedPageID = page.PageID;
             }
 
-            // mark page as empty and dirty
-            page.PageType = PageType.Empty;
-            page.ColID = uint.MaxValue;
-
-            page.IsDirty = true;
-
             _transPages.DeletedPages++;
         }
 
@@ -468,9 +468,12 @@ namespace LiteDB.Engine
         {
             ENSURE(_transPages.DeletedPages == 0, "transaction should be clean before any drop collection");
 
-            // first deleted page will be CollectionPage
+            // CollectionPage will be last deleted page (there is no NextPageID from CollectionPage)
             _transPages.FirstDeletedPageID = _collectionPage.PageID;
             _transPages.LastDeletedPageID = _collectionPage.PageID;
+
+            // mark collection page as empty
+            _collectionPage.MarkAsEmtpy();
 
             _transPages.DeletedPages = 1;
 
@@ -488,21 +491,12 @@ namespace LiteDB.Engine
 
                         next = page.NextPageID;
 
-                        // emtpy full page content
-                        page.Buffer.Fill(0);
-
-                        // create same page as empty page
-                        var emtpy = new BasePage(page.Buffer, page.PageID, PageType.Empty)
-                        {
-                            IsDirty = true,
-                            NextPageID = _transPages.FirstDeletedPageID
-                        };
+                        page.MarkAsEmtpy();
 
                         // fix last free linked link page
-                        _transPages.FirstDeletedPageID = emtpy.PageID;
+                        page.NextPageID = _transPages.FirstDeletedPageID;
 
-                        // add into localPages correct page instance (emtpy page)
-                        _localPages[emtpy.PageID] = emtpy;
+                        _transPages.FirstDeletedPageID = page.PageID;
 
                         _transPages.DeletedPages++;
 
@@ -511,14 +505,6 @@ namespace LiteDB.Engine
                     }
                 }
             }
-
-            // force collection override PageType to empty
-            _collectionPage.PageType = PageType.Empty;
-
-            // clear all collection page content (with \0)
-            _collectionPage.Buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE).Fill(0);
-
-            _collectionPage.IsDirty = true;
 
             // remove collection name (in header) at commit time
             _transPages.Commit += (h) => h.DeleteCollection(_collectionName);
