@@ -9,10 +9,10 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Queries
 {
-    [BenchmarkCategory(LiteDB.Benchmarks.Constants.Categories.QUERIES)]
+    [BenchmarkCategory(Constants.Categories.QUERIES)]
     public class QueryWithDateTimeOffsetBenchmark : DatabaseBenchmarkBase
     {
-        protected override string DatabasePath => Constants.DatabaseNames.Queries;
+        protected override string DatabasePath => Constants.DatabaseNames.QUERIES;
 
         private DateTime _dateTimeConstraint;
         private BsonValue _dateTimeConstraintBsonValue;

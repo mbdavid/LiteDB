@@ -39,7 +39,7 @@ namespace LiteDB.Benchmarks
                     .WithGcForce(true)));*/
 
             BenchmarkRunner.Run(typeof(Program).Assembly, DefaultConfig.Instance
-                .With(new AnyCategoriesFilter(new[] {Constants.Categories.QUERIES}))
+                //.With(new AnyCategoriesFilter(new[] {Benchmarks.Constants.Categories.QUERIES}))
                 .With(Job.Mono
                     .With(Jit.Llvm)
                     .With(new[] {new MonoArgument("--optimize=inline")})

@@ -8,10 +8,10 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Insertion
 {
-    [BenchmarkCategory(LiteDB.Benchmarks.Constants.Categories.INSERTION)]
+    [BenchmarkCategory(Constants.Categories.INSERTION)]
     public class InsertionInMemoryBenchmark : DatabaseBenchmarkBase
     {
-        protected override string DatabasePath => Constants.DatabaseNames.Insertion;
+        protected override string DatabasePath => Constants.DatabaseNames.INSERTION;
 
         private List<FileMetaBase> data;
 
