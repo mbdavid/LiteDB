@@ -203,6 +203,8 @@ namespace LiteDB
 
                     _trans.PersistDirtyPages();
 
+                    _trans.CheckPoint();
+
                     return result;
                 }
                 catch (Exception ex)
