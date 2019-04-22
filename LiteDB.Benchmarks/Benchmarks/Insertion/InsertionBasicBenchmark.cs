@@ -36,7 +36,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
         [Benchmark]
         public int InsertionBulk()
         {
-            return _fileMetaCollection.InsertBulk(data);
+            return _fileMetaCollection.InsertBulk(data, 1000);
         }
 
         [Benchmark]
@@ -53,6 +53,12 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
         public int Upsertion()
         {
             return _fileMetaCollection.Upsert(data);
+        }
+
+        [Benchmark]
+        public int UpsertionBulk()
+        {
+            return _fileMetaCollection.UpsertBulk(data, 1000);
         }
 
         [Benchmark]
