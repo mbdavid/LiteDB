@@ -18,7 +18,7 @@ namespace LiteDB.Engine
         #region Buffer Field Positions
 
         private const int P_INDEXES = 96; // 96-8192
-        private const int P_INDEXES_COUNT = PAGE_SIZE - P_INDEXES - 1; // 8095 [1 for CRC]
+        private const int P_INDEXES_COUNT = PAGE_SIZE - P_INDEXES; // 8096
 
         #endregion
 

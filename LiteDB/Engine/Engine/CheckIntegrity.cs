@@ -23,8 +23,8 @@ namespace LiteDB.Engine
             rpt.Run("Data file", "{0}", () => _disk.GetName(FileOrigin.Data) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Data)) + ")");
             rpt.Run("Log file", "{0}", () => _disk.GetName(FileOrigin.Log) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Log)) + ")");
             rpt.Run("Clear cache memory", "OK ({0} pages)", () => _disk.Cache.Clear());
-            rpt.Run("Verify CRC data file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Data));
-            rpt.Run("Verify CRC log file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Log));
+            //rpt.Run("Verify CRC data file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Data));
+            //rpt.Run("Verify CRC log file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Log));
             rpt.Run("Verify free empty list", "OK ({0} pages)", () => this.VerifyFreeEmptyList());
             rpt.Run("Verify data pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Data));
             rpt.Run("Verify index pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Index));
@@ -45,21 +45,21 @@ namespace LiteDB.Engine
         {
             var counter = 0;
 
-            foreach (var buffer in _disk.ReadFull(origin))
-            {
-                // do not check CRC at Page 1 when encryption datafile (salt page)
-                if (buffer.Position == 1 && _settings.Password != null && origin == FileOrigin.Data) continue;
-
-                var page = new BasePage(buffer);
-                var crc = buffer.ComputeChecksum();
-                
-                if (page.CRC != crc)
-                {
-                    throw new LiteException(0, $"Invalid CRC at page {page.PageID}");
-                }
-
-                counter++;
-            }
+            //foreach (var buffer in _disk.ReadFull(origin))
+            //{
+            //    // do not check CRC at Page 1 when encryption datafile (salt page)
+            //    if (buffer.Position == 1 && _settings.Password != null && origin == FileOrigin.Data) continue;
+            //
+            //    var page = new BasePage(buffer);
+            //    var crc = buffer.ComputeChecksum();
+            //    
+            //    if (page.CRC != crc)
+            //    {
+            //        throw new LiteException(0, $"Invalid CRC at page {page.PageID}");
+            //    }
+            //
+            //    counter++;
+            //}
 
             return counter;
         }

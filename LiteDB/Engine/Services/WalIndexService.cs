@@ -127,13 +127,6 @@ namespace LiteDB.Engine
             {
                 // check if page is ok
                 var page = new BasePage(buffer);
-                var crc = buffer.ComputeChecksum();
-                
-                if (page.CRC != crc)
-                {
-                    throw new LiteException(0, $"Invalid checksum (CRC) in log file on position {current}");
-                }
-
                 var position = new PagePosition(page.PageID, current);
 
                 if (positions.TryGetValue(page.TransactionID, out var list))
@@ -200,15 +193,20 @@ namespace LiteDB.Engine
             {
                 foreach (var buffer in _disk.ReadFull(FileOrigin.Log))
                 {
-                    var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
+                    // read direct from buffer to avoid create BasePage structure
                     var transactionID = buffer.ReadUInt32(BasePage.P_TRANSACTION_ID);
 
                     // only confied paged can be write on data disk
                     if (_confirmTransactions.Contains(transactionID))
                     {
+                        var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
+
+                        // clear isConfirmed/transactionID
+                        buffer.Write(uint.MaxValue, BasePage.P_TRANSACTION_ID);
+                        buffer.Write(false, BasePage.P_IS_CONFIRMED);
+
                         buffer.Position = BasePage.GetPagePosition(pageID);
 
-                        // get same buffer with old CRC computed (I will not update IsConfirmed/TransactionID)
                         yield return buffer;
                     }
                 }

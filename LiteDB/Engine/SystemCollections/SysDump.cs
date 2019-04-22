@@ -25,7 +25,6 @@ namespace LiteDB.Engine
                 doc["pageType"] = page.PageType.ToString();
                 doc["nextPageID"] = dumpPageID(page.NextPageID);
                 doc["prevPageID"] = dumpPageID(page.PrevPageID);
-                doc["crc"] = (int)page.CRC;
 
                 doc["collection"] = collections.GetOrDefault(page.ColID, "-");
                 doc["transactionID"] = (int)page.TransactionID;

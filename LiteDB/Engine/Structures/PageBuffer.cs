@@ -57,7 +57,7 @@ namespace LiteDB.Engine
         /// </summary>
         public byte ComputeChecksum()
         {
-            return Crc8.ComputeChecksum(this.Array, this.Offset, PAGE_SIZE - 1);
+            return Crc8.ComputeChecksum(this.Array, this.Offset, PAGE_SIZE);
         }
 
         /// <summary>

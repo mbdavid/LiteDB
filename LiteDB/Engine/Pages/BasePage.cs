@@ -35,7 +35,7 @@ namespace LiteDB.Engine
         public const int P_NEXT_FREE_POSITION = 27; // 27-28 [ushort]
         public const int P_HIGHEST_INDEX = 29; // 29-29 [byte]
 
-        public const int P_CRC = PAGE_SIZE - 1; // 8191-8191 [byte]
+        // public const int P_CRC = 31; // 31-31 [byte]
 
         #endregion
 
@@ -93,9 +93,9 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Get how many bytes are used in footer page at this moment
-        /// CRC [1 byte] + ((HighestIndex + 1) * 4 bytes per slot: [2 for position, 2 for length])
+        /// ((HighestIndex + 1) * 4 bytes per slot: [2 for position, 2 for length])
         /// </summary>
-        public int FooterSize => 1 + // CRC
+        public int FooterSize => 
             (this.HighestIndex == byte.MaxValue ? 
             0 :  // no items in page
             ((this.HighestIndex + 1) * SLOT_SIZE)); // 4 bytes PER item (2 to position + 2 to length) - need consider HighestIndex used
@@ -114,11 +114,6 @@ namespace LiteDB.Engine
         /// Used in WAL, define this page is last transaction page and are confirmed on disk [1 byte]
         /// </summary>
         public bool IsConfirmed { get; set; }
-
-        /// <summary>
-        /// Page CRC8 - page CRC are calculated from byte 0 to 8190
-        /// </summary>
-        public byte CRC { get; private set; }
 
         /// <summary>
         /// Set this pages that was changed and must be persist in disk [not peristable]
@@ -160,7 +155,6 @@ namespace LiteDB.Engine
             this.HighestIndex = byte.MaxValue; // empty - not used yet
 
             // default values
-            this.CRC = 0;
             this.IsDirty = false;
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
@@ -193,9 +187,6 @@ namespace LiteDB.Engine
             this.FragmentedBytes = _buffer.ReadUInt16(P_FRAGMENTED_BYTES);
             this.NextFreePosition = _buffer.ReadUInt16(P_NEXT_FREE_POSITION);
             this.HighestIndex = _buffer.ReadByte(P_HIGHEST_INDEX);
-
-            // last CRC byte
-            this.CRC = _buffer.ReadByte(P_CRC);
         }
 
         /// <summary>
@@ -222,11 +213,6 @@ namespace LiteDB.Engine
             _buffer.Write(this.FragmentedBytes, P_FRAGMENTED_BYTES);
             _buffer.Write(this.NextFreePosition, P_NEXT_FREE_POSITION);
             _buffer.Write(this.HighestIndex, P_HIGHEST_INDEX);
-
-            // compute CRC byte
-            this.CRC = _buffer.ComputeChecksum();
-
-            _buffer.Write(this.CRC, P_CRC);
 
             return _buffer;
         }
@@ -261,7 +247,6 @@ namespace LiteDB.Engine
 
             // fix buffer page type position
             _buffer.Write((byte)this.PageType, P_PAGE_TYPE);
-
         }
 
         #endregion
@@ -678,12 +663,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get buffer offset position where one page segment length are located (based on index slot)
         /// </summary>
-        public static int CalcPositionAddr(byte index) => P_CRC - ((index + 1) * SLOT_SIZE) + 2;
+        public static int CalcPositionAddr(byte index) => ((index + 1) * SLOT_SIZE) + 2;
 
         /// <summary>
         /// Get buffer offset position where one page segment length are located (based on index slot)
         /// </summary>
-        public static int CalcLengthAddr(byte index) => P_CRC - ((index + 1) * 4);
+        public static int CalcLengthAddr(byte index) => ((index + 1) * 4);
 
         /// <summary>
         /// Returns a size of specified number of pages

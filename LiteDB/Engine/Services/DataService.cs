@@ -13,7 +13,6 @@ namespace LiteDB.Engine
         public const int MAX_DATA_BYTES_PER_PAGE =
             PAGE_SIZE - // 8192
             PAGE_HEADER_SIZE - // [32 bytes]
-            1 - // CRC [1 byte]
             BasePage.SLOT_SIZE - // [4 bytes]
             DataBlock.DATA_BLOCK_FIXED_SIZE; // [6 bytes];
 

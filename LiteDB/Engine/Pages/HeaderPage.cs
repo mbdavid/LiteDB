@@ -35,7 +35,7 @@ namespace LiteDB.Engine
         private const int P_USER_VERSION = 76; // 76-79 (4 bytes)
         // reserved 80-95 (16 bytes)
         private const int P_COLLECTIONS = 96; // 96-8095 (8000 bytes)
-        // reserved 8096-8190 (95 bytes) (8191 to CRC)
+        // reserved 8096-8191 (96 bytes)
 
         private const int COLLECTIONS_SIZE = 8000; // 250 blocks with 32 bytes each
 
