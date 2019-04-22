@@ -663,12 +663,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get buffer offset position where one page segment length are located (based on index slot)
         /// </summary>
-        public static int CalcPositionAddr(byte index) => ((index + 1) * SLOT_SIZE) + 2;
+        public static int CalcPositionAddr(byte index) => PAGE_SIZE - ((index + 1) * SLOT_SIZE) + 2;
 
         /// <summary>
         /// Get buffer offset position where one page segment length are located (based on index slot)
         /// </summary>
-        public static int CalcLengthAddr(byte index) => ((index + 1) * 4);
+        public static int CalcLengthAddr(byte index) => PAGE_SIZE - ((index + 1) * 4);
 
         /// <summary>
         /// Returns a size of specified number of pages
