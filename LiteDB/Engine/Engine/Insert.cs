@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -57,6 +57,26 @@ namespace LiteDB
             foreach(var batch in docs.Batch(batchSize))
             {
                 count += this.Insert(collection, batch, autoId);
+            }
+
+            return count;
+        }
+
+
+        /// <summary>
+        /// Bulk upsert documents to a collection - use data chunks for most efficient insert
+        /// </summary>
+        public int UpsertBulk(string collection, IEnumerable<BsonDocument> docs, int batchSize = 5000, BsonType autoId = BsonType.ObjectId)
+        {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (docs == null) throw new ArgumentNullException(nameof(docs));
+            if (batchSize < 100 || batchSize > 100000) throw new ArgumentException("batchSize must be a value between 100 and 100000");
+
+            var count = 0;
+
+            foreach (var batch in docs.Batch(batchSize))
+            {
+                count += this.Upsert(collection, batch, autoId);
             }
 
             return count;
