@@ -125,26 +125,32 @@ namespace LiteDB.Engine
             // read all pages to get confirmed transactions (do not read page content, only page header)
             foreach (var buffer in _disk.ReadFull(FileOrigin.Log))
             {
-                // check if page is ok
-                var page = new BasePage(buffer);
-                var position = new PagePosition(page.PageID, current);
+                // read direct from buffer to avoid create BasePage structure
+                var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
+                var isConfirmed = buffer.ReadBool(BasePage.P_IS_CONFIRMED);
+                var transactionID = buffer.ReadUInt32(BasePage.P_TRANSACTION_ID);
 
-                if (positions.TryGetValue(page.TransactionID, out var list))
+                var position = new PagePosition(pageID, current);
+
+                if (positions.TryGetValue(transactionID, out var list))
                 {
                     list.Add(position);
                 }
                 else
                 {
-                    positions[page.TransactionID] = new List<PagePosition> { position };
+                    positions[transactionID] = new List<PagePosition> { position };
                 }
 
-                if (page.IsConfirmed)
+                if (isConfirmed)
                 {
-                    this.ConfirmTransaction(page.TransactionID, positions[page.TransactionID]);
+                    this.ConfirmTransaction(transactionID, positions[transactionID]);
+
+                    var pageType = (PageType)buffer.ReadByte(BasePage.P_PAGE_TYPE);
 
                     // when a header is modified in transaction, must always be the last page inside log file (per transaction)
-                    if (page.PageType == PageType.Header)
+                    if (pageType == PageType.Header)
                     {
+                        // page buffer instance can't change
                         var headerBuffer = header.Buffer;
 
                         // copy this buffer block into original header block
@@ -156,7 +162,7 @@ namespace LiteDB.Engine
                         header.IsConfirmed = false;
 
                         // update last transaction ID
-                        _lastTransactionID = (int)page.TransactionID;
+                        _lastTransactionID = (int)transactionID;
                     }
                 }
 
