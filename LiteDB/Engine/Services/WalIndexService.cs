@@ -191,9 +191,6 @@ namespace LiteDB.Engine
             // wait all pages write on disk
             _disk.Queue.Wait();
 
-            // re-read log length after enter in exclusive mode - can be changed
-            logLength = _disk.GetLength(FileOrigin.Log);
-
             ENSURE(_disk.Queue.Length == 0, "no pages on queue when checkpoint");
 
             // getting all "good" pages from log file to be copied into data file
