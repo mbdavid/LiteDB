@@ -177,8 +177,10 @@ namespace LiteDB.Engine
 
             LOG($"checkpoint", "WAL");
 
-            // enter in exclusive lock
-            _locker.EnterReserved(true);
+            // enter in reserved lock - wait all readers/writers finish
+            // after enter in reserved lock, new readers are allowed but
+            // not new writers
+            _locker.EnterReserved(false);
 
             // wait all pages write on disk
             _disk.Queue.Wait();
@@ -225,7 +227,7 @@ namespace LiteDB.Engine
             _disk.SetLength(0, FileOrigin.Log);
 
             // remove exclusive lock
-            _locker.ExitReserved(true);
+            _locker.ExitReserved(false);
         }
     }
 }
