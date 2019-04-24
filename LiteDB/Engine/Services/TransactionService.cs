@@ -128,7 +128,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Persist all dirty in-memory pages (in all snapshots) and clear local pages list (even clean pages)
         /// </summary>
-        private void PersistDirtyPages(bool commit)
+        private int PersistDirtyPages(bool commit)
         {
             var dirty = 0;
 
@@ -246,7 +246,7 @@ namespace LiteDB.Engine
 
             // write all dirty pages, in sequence on log-file and store references into log pages on transPages
             // (works only for Write snapshots)
-            _disk.WriteAsync(source());
+            var count = _disk.WriteAsync(source());
 
             // now, discard all clean pages (because those pages are writable and must be readable)
             // from write snapshots
@@ -254,6 +254,8 @@ namespace LiteDB.Engine
                     .Where(x => x.Mode == LockMode.Write)
                     .SelectMany(x => x.GetWritablePages(false, commit))
                     .Select(x => x.Buffer), false);
+
+            return count;
         }
 
         /// <summary>
@@ -268,10 +270,13 @@ namespace LiteDB.Engine
                 if (this.Mode == LockMode.Write)
                 {
                     // persist all dirty page as commit mode (mark last page as IsConfirm)
-                    this.PersistDirtyPages(true);
+                    var count = this.PersistDirtyPages(true);
 
-                    // update wal-index 
-                    _walIndex.ConfirmTransaction(_transactionID, _transPages.DirtyPages.Values);
+                    // update wal-index (if any page was added into log disk)
+                    if(count > 0)
+                    {
+                        _walIndex.ConfirmTransaction(_transactionID, _transPages.DirtyPages.Values);
+                    }
                 }
 
                 // dispose all snapshosts

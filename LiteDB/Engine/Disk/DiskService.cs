@@ -189,10 +189,12 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write pages inside file origin using async queue - WORKS ONLY FOR LOG FILE
+        /// Write pages inside file origin using async queue - WORKS ONLY FOR LOG FILE - returns how many pages are inside "pages"
         /// </summary>
-        public void WriteAsync(IEnumerable<PageBuffer> pages)
+        public int WriteAsync(IEnumerable<PageBuffer> pages)
         {
+            var count = 0;
+
             foreach (var page in pages)
             {
                 ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to enqueue page, page must be writable");
@@ -209,9 +211,13 @@ namespace LiteDB.Engine
                 var readable = _cache.MoveToReadable(page);
 
                 _queue.Value.EnqueuePage(readable);
+
+                count++;
             }
 
             _queue.Value.Run();
+
+            return count;
         }
 
         /// <summary>

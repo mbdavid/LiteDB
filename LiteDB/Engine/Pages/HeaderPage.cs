@@ -223,6 +223,20 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Rename collection with new name
+        /// </summary>
+        public void RenameCollection(string oldName, string newName)
+        {
+            var pageID = _collections[oldName];
+
+            _collections.Remove(oldName);
+
+            _collections.Add(newName, pageID);
+
+            _isCollectionsChanged = true;
+        }
+
+        /// <summary>
         /// Get how many bytes are avaiable in collection to store new collections
         /// </summary>
         public int GetAvaiableCollectionSpace()

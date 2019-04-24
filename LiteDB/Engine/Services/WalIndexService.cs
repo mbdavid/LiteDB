@@ -88,9 +88,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void ConfirmTransaction(uint transactionID, ICollection<PagePosition> pagePositions)
         {
-            // if no pages was saved, just exit
-            if (pagePositions.Count == 0) return;
-
             // must lock commit operation to update WAL-Index (memory only operation)
             lock (_index)
             {
@@ -225,6 +222,9 @@ namespace LiteDB.Engine
             _index.Clear();
 
             _currentReadVersion = 0;
+
+            // clear cache
+            _disk.Cache.Clear();
 
             // clear log file (sync)
             _disk.SetLength(0, FileOrigin.Log);

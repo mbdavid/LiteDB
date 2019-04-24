@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace LiteDB.Engine
 {
@@ -53,39 +54,35 @@ namespace LiteDB.Engine
             // rename collection is possible only in exclusive transaction for this
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("RenameCollection", TransactionState.Active);
 
-            return true;
-            /*
             return this.AutoTransaction(transaction =>
             {
                 var currentSnapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var newSnapshot = transaction.CreateSnapshot(LockMode.Write, newName, false);
 
-                // check if has space in header if new name are larger than current name
-                if (newName.Length > collection.Length)
+                if (currentSnapshot.CollectionPage == null) return false;
+
+                var diff = Encoding.UTF8.GetByteCount(newName) - Encoding.UTF8.GetByteCount(collection);
+
+                // check if new size fit on header page
+                if (diff > 0 && diff > _header.GetAvaiableCollectionSpace())
                 {
-                    _header.CheckCollectionsSize(newName.Substring(0, newName.Length - collection.Length));
+                    throw new LiteException(0, "This is no space to rename this collection");
                 }
 
                 // checks if do not already exists this collection name
-                if (_header.Collections.ContainsKey(newName))
+                if (_header.GetCollectionPageID(newName) != uint.MaxValue)
                 {
                     throw LiteException.AlreadyExistsCollectionName(newName);
                 }
 
-                var col = currentSnapshot.CollectionPage;
-
-                if (col == null) return false;
-
-                // rename collection and set page as dirty
-                col.CollectionName = newName;
-                currentSnapshot.SetDirty(col);
-
-                transaction.Pages.DeletedCollection = collection;
-                transaction.Pages.NewCollections.Add(newName, col.PageID);
+                // rename collection and set page as dirty (there is no need to set IsDirty in HeaderPage)
+                transaction.Pages.Commit += (h) =>
+                {
+                    h.RenameCollection(collection, newName);
+                };
 
                 return true;
             });
-            */
         }
     }
 }
