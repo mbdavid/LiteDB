@@ -19,7 +19,7 @@ namespace LiteDB.Engine
             {
                 isNew = true;
 
-                transaction = new TransactionService(_header, _locker, _disk, _walIndex, (id) =>
+                transaction = new TransactionService(_header, _locker, _disk, _walIndex, _settings.MaxTransactionSize, (id) =>
                 {
                     Thread.SetData(_slot, null);
 
@@ -47,6 +47,10 @@ namespace LiteDB.Engine
         {
             var transacion = this.GetTransaction(true, out var isNew);
 
+            transacion.ExplicitTransaction = true;
+
+            if (transacion.OpenCursors > 0) throw new LiteException(0, "This thread contains an open cursors/query. Close cursors before Begin()");
+
             return isNew;
         }
 
@@ -59,6 +63,9 @@ namespace LiteDB.Engine
 
             if (transaction != null)
             {
+                // do not accept explicit commit transaction when contains open cursors running
+                if (transaction.OpenCursors > 0) throw new LiteException(0, "This thread contains an open query/cursor. Close cursors before run Commit()");
+
                 return transaction.Commit();
             }
             else
@@ -96,7 +103,7 @@ namespace LiteDB.Engine
                 var result = fn(transaction);
 
                 // if this transaction was auto-created for this operation, commit & dispose now
-                if (isNew)
+                if (isNew && transaction.OpenCursors == 0)
                 {
                     transaction.Commit();
                 }

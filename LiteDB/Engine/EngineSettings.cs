@@ -73,6 +73,12 @@ namespace LiteDB.Engine
         public int MemorySegmentSize { get; set; } = MEMORY_SEGMENT_SIZE;
 
         /// <summary>
+        /// Define, in page size, how many pages each collection will keep in memory before flush to disk. When reach this size
+        /// all dirty pages will be saved on log files and clean pages will be removed from cache
+        /// </summary>
+        public int MaxTransactionSize { get; set; } = MAX_TRANSACTION_SIZE;
+
+        /// <summary>
         /// Create new IStreamFactory for datafile
         /// </summary>
         internal IStreamFactory CreateDataFactory() => this.CreateStreamFactory(true);

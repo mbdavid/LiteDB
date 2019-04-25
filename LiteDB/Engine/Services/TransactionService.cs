@@ -19,6 +19,7 @@ namespace LiteDB.Engine
         private readonly LockService _locker;
         private readonly DiskService _disk;
         private readonly DiskReader _reader;
+        private readonly int _maxTransactionSize;
         private readonly WalIndexService _walIndex;
 
         // transaction controls
@@ -30,23 +31,36 @@ namespace LiteDB.Engine
         private readonly int _threadID = Thread.CurrentThread.ManagedThreadId;
         private readonly uint _transactionID;
         private readonly DateTime _startTime;
+        private LockMode _mode = LockMode.Read;
         private TransactionState _state = TransactionState.New;
 
         // expose (as read only)
         public int ThreadID => _threadID;
         public uint TransactionID => _transactionID;
+        public LockMode Mode => _mode;
         public TransactionState State => _state;
         public TransactionPages Pages => _transPages;
         public DateTime StartTime => _startTime;
         public IEnumerable<Snapshot> Snapshots => _snapshots.Values;
 
-        public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, Action<uint> done)
+        /// <summary>
+        /// Get/Set how many open cursor this transaction are running
+        /// </summary>
+        public int OpenCursors { get; set; } = 0;
+
+        /// <summary>
+        /// Get/Set if this transaction was opened by BeginTrans() method (not by AutoTransaction/Cursor)
+        /// </summary>
+        public bool ExplicitTransaction { get; set; } = false;
+
+        public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, int maxTransactionSize, Action<uint> done)
         {
             // retain instances
             _header = header;
             _locker = locker;
             _disk = disk;
             _walIndex = walIndex;
+            _maxTransactionSize = maxTransactionSize;
             _done = done;
 
             // create new transactionID
@@ -57,11 +71,6 @@ namespace LiteDB.Engine
             // enter transaction locker to avoid 2 transactions in same thread
             _locker.EnterTransaction();
         }
-
-        /// <summary>
-        /// Return if this transaction is readonly or writable. If any snapshot are writable, return as Writable.
-        /// </summary>
-        public LockMode Mode => _snapshots.Any(x => x.Value.Mode == LockMode.Write) ? LockMode.Write : LockMode.Read;
 
         /// <summary>
         /// Create (or get from transaction-cache) snapshot and return
@@ -93,6 +102,9 @@ namespace LiteDB.Engine
                 _snapshots[collection] = snapshot = create();
             }
 
+            // update transaction mode to write in first write snaphost request 
+            if (mode == LockMode.Write) _mode = LockMode.Write;
+
             return snapshot;
         }
 
@@ -104,12 +116,12 @@ namespace LiteDB.Engine
             // Safepoint are valid only during transaction execution
             ENSURE(_state == TransactionState.Active, "Safepoint() are called during an invalid transaction state");
 
-            if (_transPages.TransactionSize >= MAX_TRANSACTION_SIZE)
+            if (_transPages.TransactionSize >= _maxTransactionSize)
             {
                 LOG($"safepoint flushing transaction pages: {_transPages.TransactionSize}", "TRANSACTION");
 
                 // if any snapshot are writable, persist pages
-                if (this.Mode == LockMode.Write)
+                if (_mode == LockMode.Write)
                 {
                     this.PersistDirtyPages(false);
                 }
@@ -267,7 +279,7 @@ namespace LiteDB.Engine
 
             if (_state == TransactionState.Active)
             {
-                if (this.Mode == LockMode.Write)
+                if (_mode == LockMode.Write)
                 {
                     // persist all dirty page as commit mode (mark last page as IsConfirm)
                     var count = this.PersistDirtyPages(true);

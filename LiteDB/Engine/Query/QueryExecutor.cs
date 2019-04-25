@@ -44,6 +44,8 @@ namespace LiteDB.Engine
         {
             var transaction = _engine.GetTransaction(true, out var isNew);
 
+            transaction.OpenCursors++;
+
             try
             {
                 // encapsulate all execution to catch any error
@@ -66,7 +68,11 @@ namespace LiteDB.Engine
                 // no collection, no documents
                 if (snapshot.CollectionPage == null && _source == null)
                 {
-                    if (isNew) transaction.Commit();
+                    if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
+                    {
+                        transaction.Commit();
+                    }
+
                     yield break;
                 }
 
@@ -83,7 +89,11 @@ namespace LiteDB.Engine
                 {
                     yield return queryPlan.GetExecutionPlan();
 
-                    if (isNew) transaction.Commit();
+                    if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
+                    {
+                        transaction.Commit();
+                    }
+
                     yield break;
                 }
 
@@ -111,7 +121,7 @@ namespace LiteDB.Engine
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>
                     {
-                        if (isNew)
+                        if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
                         {
                             transaction.Commit();
                         }
@@ -156,7 +166,7 @@ namespace LiteDB.Engine
             // otherwise insert as normal collection
             else
             {
-            result = _engine.Insert(into, getResultset(), autoId);
+                result = _engine.Insert(into, getResultset(), autoId);
             }
 
             return new BsonDataReader(result);
