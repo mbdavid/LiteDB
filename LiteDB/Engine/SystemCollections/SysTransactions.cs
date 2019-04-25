@@ -17,7 +17,6 @@ namespace LiteDB.Engine
                 {
                     ["threadID"] = transaction.ThreadID,
                     ["transactionID"] = (int)transaction.TransactionID,
-                    ["transactionState"] = transaction.State.ToString(),
                     ["startTime"] = transaction.StartTime,
                     ["mode"] = transaction.Mode.ToString(),
                     ["transactionSize"] = transaction.Pages.TransactionSize,

@@ -23,7 +23,7 @@ namespace LiteDB.Engine
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
             // drop collection is possible only in exclusive transaction for this
-            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("DropCollection", TransactionState.Active);
+            if (_locker.IsInTransaction) throw LiteException.AlreadyExistsTransaction();
 
             return this.AutoTransaction(transaction =>
             {
@@ -52,7 +52,7 @@ namespace LiteDB.Engine
             if (collection.Equals(newName, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("To rename a collection the new name must be different from current collection name");
 
             // rename collection is possible only in exclusive transaction for this
-            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("RenameCollection", TransactionState.Active);
+            if (_locker.IsInTransaction) throw LiteException.AlreadyExistsTransaction();
 
             return this.AutoTransaction(transaction =>
             {

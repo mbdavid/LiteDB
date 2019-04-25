@@ -32,13 +32,12 @@ namespace LiteDB.Engine
         private readonly uint _transactionID;
         private readonly DateTime _startTime;
         private LockMode _mode = LockMode.Read;
-        private TransactionState _state = TransactionState.New;
+        private bool _dispose = false;
 
         // expose (as read only)
         public int ThreadID => _threadID;
         public uint TransactionID => _transactionID;
         public LockMode Mode => _mode;
-        public TransactionState State => _state;
         public TransactionPages Pages => _transPages;
         public DateTime StartTime => _startTime;
         public IEnumerable<Snapshot> Snapshots => _snapshots.Values;
@@ -77,10 +76,7 @@ namespace LiteDB.Engine
         /// </summary>
         public Snapshot CreateSnapshot(LockMode mode, string collection, bool addIfNotExists)
         {
-            // if transaction are commited/aborted do not accept new snapshots
-            if (_state == TransactionState.Commited || _state == TransactionState.Aborted) throw LiteException.InvalidTransactionState("CreateSnapshot", _state);
-
-            _state = TransactionState.Active;
+            ENSURE(_dispose == false, "transaction must be active to create new snapshot");
 
             Snapshot create() => new Snapshot(mode, collection, _header, _transactionID, _transPages, _locker, _walIndex, _reader, addIfNotExists);
 
@@ -113,8 +109,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Safepoint()
         {
-            // Safepoint are valid only during transaction execution
-            ENSURE(_state == TransactionState.Active, "Safepoint() are called during an invalid transaction state");
+            ENSURE(_dispose == false, "transaction must be active to call safepoint");
 
             if (_transPages.TransactionSize >= _maxTransactionSize)
             {
@@ -275,30 +270,27 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Commit()
         {
-            if (_state == TransactionState.Commited || _state == TransactionState.Aborted) return false;
+            ENSURE(_dispose == false, "transaction must be actived to commit");
 
-            if (_state == TransactionState.Active)
+            if (_mode == LockMode.Write || _transPages.HeaderChanged)
             {
-                if (_mode == LockMode.Write)
-                {
-                    // persist all dirty page as commit mode (mark last page as IsConfirm)
-                    var count = this.PersistDirtyPages(true);
+                // persist all dirty page as commit mode (mark last page as IsConfirm)
+                var count = this.PersistDirtyPages(true);
 
-                    // update wal-index (if any page was added into log disk)
-                    if(count > 0)
-                    {
-                        _walIndex.ConfirmTransaction(_transactionID, _transPages.DirtyPages.Values);
-                    }
-                }
-
-                // dispose all snapshosts
-                foreach (var snapshot in _snapshots.Values)
+                // update wal-index (if any page was added into log disk)
+                if(count > 0)
                 {
-                    snapshot.Dispose();
+                    _walIndex.ConfirmTransaction(_transactionID, _transPages.DirtyPages.Values);
                 }
             }
 
-            this.Done(TransactionState.Commited);
+            // dispose all snapshosts
+            foreach (var snapshot in _snapshots.Values)
+            {
+                snapshot.Dispose();
+            }
+
+            this.Done();
 
             return true;
         }
@@ -308,35 +300,32 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Rollback()
         {
-            if (_state == TransactionState.Commited || _state == TransactionState.Aborted) return false;
+            ENSURE(_dispose == false, "transaction must be actived to rollback");
 
-            if (_state == TransactionState.Active)
+            // if transaction contains new pages, must return to database in another transaction
+            if (_transPages.NewPages.Count > 0)
             {
-                // if transaction contains new pages, must return to database in another transaction
-                if (_transPages.NewPages.Count > 0)
-                {
-                    this.ReturnNewPages();
-                }
-
-                // dispose all snaphosts
-                foreach (var snapshot in _snapshots.Values)
-                {
-                    // but first, if writable, discard changes
-                    if (snapshot.Mode == LockMode.Write)
-                    {
-                        // discard all dirty pages
-                        _disk.DiscardPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer), true);
-
-                        // discard all clean pages
-                        _disk.DiscardPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer), false);
-                    }
-
-                    // now, release pages
-                    snapshot.Dispose();
-                }
+                this.ReturnNewPages();
             }
 
-            this.Done(TransactionState.Aborted);
+            // dispose all snaphosts
+            foreach (var snapshot in _snapshots.Values)
+            {
+                // but first, if writable, discard changes
+                if (snapshot.Mode == LockMode.Write)
+                {
+                    // discard all dirty pages
+                    _disk.DiscardPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer), true);
+
+                    // discard all clean pages
+                    _disk.DiscardPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer), false);
+                }
+
+                // now, release pages
+                snapshot.Dispose();
+            }
+
+            this.Done();
 
             return true;
         }
@@ -415,9 +404,11 @@ namespace LiteDB.Engine
         /// <summary>
         /// Finish transaction, release lock and call done action
         /// </summary>
-        private void Done(TransactionState state)
+        private void Done()
         {
-            _state = state;
+            ENSURE(_dispose == false, "transaction must be active before call Done");
+
+            _dispose = true;
 
             // release thread transaction lock
             _locker.ExitTransaction();
@@ -425,7 +416,7 @@ namespace LiteDB.Engine
             // release memory file thread (stream)
             _reader.Dispose();
 
-            // call done
+            // call done callback
             _done(_transactionID);
         }
     }

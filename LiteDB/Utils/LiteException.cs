@@ -207,19 +207,9 @@ namespace LiteDB
             return new LiteException(INVALID_DBREF, "Invalid value for DbRef in path '{0}'. Value must be document like {{ $ref: \"?\", $id: ? }}", path);
         }
 
-        internal static LiteException InvalidTransactionState(string method, TransactionState state)
-        {
-            return new LiteException(INVALID_TRANSACTION_STATE, "'{0}' are not supported because transaction are in {1} state", method, state);
-        }
-
         internal static LiteException AlreadyExistsTransaction()
         {
             return new LiteException(INVALID_TRANSACTION_STATE, "The current thread already contains an open transaction. Use the Commit/Rollback method to release the previous transaction.");
-        }
-
-        internal static LiteException MissingTransaction(string method)
-        {
-            return new LiteException(INVALID_TRANSACTION_STATE, "'{0}' are not supported because there is no open transaction in current thread.", method);
         }
 
         internal static LiteException CollectionLockerNotFound(string collection)

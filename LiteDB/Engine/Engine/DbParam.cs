@@ -28,7 +28,7 @@ namespace LiteDB.Engine
             // check if same value or database are in shutdown mode
             if (this.DbParam(parameterName) == value) return false;
 
-            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("DbParam", TransactionState.Active);
+            if (_locker.IsInTransaction) throw LiteException.AlreadyExistsTransaction();
 
             return this.AutoTransaction(transaction =>
             {
