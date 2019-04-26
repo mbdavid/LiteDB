@@ -126,7 +126,7 @@ namespace LiteDB.Engine
 
             var count = 0;
 
-            while (_queue.TryDequeue(out var page))
+            while (_queue.TryDequeue(out var page) && _running)
             {
                 ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
 

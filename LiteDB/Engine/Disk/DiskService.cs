@@ -370,9 +370,15 @@ namespace LiteDB.Engine
             // dispose queue (wait finish)
             if (_queue.IsValueCreated) _queue.Value.Dispose();
 
+            // get stream length from writer - is safe because only this instance
+            // can change file size
+            var delete = _logFactory.Exists() && _logPool.Writer.Length == 0;
+
             // dispose Stream pools
             _dataPool.Dispose();
             _logPool.Dispose();
+
+            if (delete) _logFactory.Delete();
 
             // other disposes
             _cache.Dispose();

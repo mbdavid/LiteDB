@@ -65,11 +65,6 @@ namespace LiteDB.Engine
         /// </summary>
         internal EngineSettings Settings => _settings;
 
-        /// <summary>
-        /// Get header page (used for Debug/UnitTest only)
-        /// </summary>
-        internal HeaderPage Header => _header;
-
         #endregion
 
         #region Ctor
@@ -167,11 +162,14 @@ namespace LiteDB.Engine
 
             if (disposing)
             {
-                // do checkpoint if it's possible
-                if (_settings.CheckpointOnShutdown && _settings.ReadOnly == false)
-                {
-                    _walIndex?.Checkpoint(_header);
-                }
+                // stop running all transactions
+                _transactions.ForEach((x, i) => i.Value.Dispose());
+
+                // // do checkpoint if it's possible
+                // if (_settings.CheckpointOnShutdown && _settings.ReadOnly == false)
+                // {
+                //     _walIndex?.Checkpoint(_header);
+                // }
 
                 // close all disk connections
                 _disk?.Dispose();

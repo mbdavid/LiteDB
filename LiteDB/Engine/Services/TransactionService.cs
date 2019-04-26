@@ -12,7 +12,7 @@ namespace LiteDB.Engine
     /// Represent a single transaction service. Need a new instance for each transaction.
     /// You must run each transaction in a different thread - no 2 transaction in same thread (locks as per-thread)
     /// </summary>
-    internal class TransactionService
+    internal class TransactionService : IDisposable
     {
         // instances from Engine
         private readonly HeaderPage _header;
@@ -109,7 +109,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Safepoint()
         {
-            ENSURE(_dispose == false, "transaction must be active to call safepoint");
+            if (_dispose) throw new LiteException(0, "Engine is in shutdown process");
 
             if (_transPages.TransactionSize >= _maxTransactionSize)
             {
@@ -270,7 +270,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Commit()
         {
-            ENSURE(_dispose == false, "transaction must be actived to commit");
+            if (_dispose) return false;
 
             if (_mode == LockMode.Write || _transPages.HeaderChanged)
             {
@@ -300,7 +300,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Rollback()
         {
-            ENSURE(_dispose == false, "transaction must be actived to rollback");
+            if (_dispose) return false;
 
             // if transaction contains new pages, must return to database in another transaction
             if (_transPages.NewPages.Count > 0)
@@ -365,6 +365,8 @@ namespace LiteDB.Engine
 
                         // update wal
                         pagePositions[pageID] = new PagePosition(pageID, buffer.Position);
+
+                        if (_dispose) yield break;
                     }
 
                     // update header page with my new transaction ID
@@ -418,6 +420,22 @@ namespace LiteDB.Engine
 
             // call done callback
             _done(_transactionID);
+        }
+
+        /// <summary>
+        /// Abort transaction - called from Dispose engine
+        /// </summary>
+        public void Dispose()
+        {
+            // abort transaction
+            _dispose = true;
+
+            if (_locker.IsInTransaction)
+            {
+                _locker.ExitTransaction();
+            }
+
+            _reader.Dispose();
         }
     }
 }

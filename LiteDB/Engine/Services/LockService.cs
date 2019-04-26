@@ -194,6 +194,7 @@ namespace LiteDB.Engine
         {
             this.SafeDispose(_transaction);
             this.SafeDispose(_reserved);
+
             _collections.ForEach((i, x) => this.SafeDispose(x.Value));
         }
 
