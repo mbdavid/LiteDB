@@ -52,12 +52,6 @@ namespace LiteDB
         public bool UtcDate { get; set; } = false;
 
         /// <summary>
-        /// "checkpoint": Indicate that engine will do a checkpoint on dispose database (default: true)
-        /// Supported in [Local, Shared] connection type
-        /// </summary>
-        public bool CheckpointOnShutdown { get; set; } = true;
-
-        /// <summary>
         /// "readonly": Open datafile in readonly mode (default: false)
         /// Supported in [Local, Shared] connection type
         /// </summary>
@@ -99,7 +93,6 @@ namespace LiteDB
             this.LimitSize = _values.GetFileSize(@"limit size", this.LimitSize);
             this.UtcDate = _values.GetValue("utc", this.UtcDate);
             this.ReadOnly = _values.GetValue("readonly", this.ReadOnly);
-            this.CheckpointOnShutdown = _values.GetValue("checkpoint", this.CheckpointOnShutdown);
         }
 
         /// <summary>
@@ -120,7 +113,6 @@ namespace LiteDB
                 LimitSize = this.LimitSize,
                 UtcDate = this.UtcDate,
                 Timeout = this.Timeout,
-                CheckpointOnShutdown = this.CheckpointOnShutdown,
                 ReadOnly = this.ReadOnly
             };
 

@@ -16,12 +16,19 @@ namespace LiteDB.Engine
             foreach (var buffer in _disk.ReadFull(origin))
             {
                 var page = new BasePage(buffer);
+                var pageID = page.PageID;
+
+                if (origin == FileOrigin.Data && buffer.Position > 0 && pageID == 0)
+                {
+                    // this will fix print PageID in data file bubbles pages 
+                    pageID = (uint)(buffer.Position / PAGE_SIZE);
+                }
 
                 var doc = new BsonDocument();
 
                 doc["_position"] = (int)buffer.Position;
 
-                doc["pageID"] = (int)page.PageID;
+                doc["pageID"] = (int)pageID;
                 doc["pageType"] = page.PageType.ToString();
                 doc["nextPageID"] = dumpPageID(page.NextPageID);
                 doc["prevPageID"] = dumpPageID(page.PrevPageID);

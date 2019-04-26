@@ -26,8 +26,7 @@ namespace LiteDB.Demo
 
             var settings = new EngineSettings
             {
-                Filename = PATH,
-                CheckpointOnShutdown = true
+                Filename = PATH
             };
 
             var query = new QueryDefinition();

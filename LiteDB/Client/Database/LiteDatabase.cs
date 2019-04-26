@@ -61,8 +61,7 @@ namespace LiteDB
                 var settings = new EngineSettings
                 {
                     DataStream = stream,
-                    LogStream = new MemoryStream(),
-                    CheckpointOnShutdown = true
+                    LogStream = new MemoryStream()
                 };
 
                 return new LiteEngine(settings);

@@ -57,11 +57,6 @@ namespace LiteDB.Engine
         public bool UtcDate { get; set; } = false;
 
         /// <summary>
-        /// Indicate that engine will do a checkpoint on dispose database
-        /// </summary>
-        public bool CheckpointOnShutdown { get; set; } = false;
-
-        /// <summary>
         /// Indicate that engine will open files in readonly mode (and will not support any database change)
         /// </summary>
         public bool ReadOnly { get; set; } = false;

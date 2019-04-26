@@ -17,7 +17,6 @@ namespace LiteDB.Engine
             doc["timeout"] = _settings.Timeout.TotalSeconds;
             doc["utcDate"] = _settings.UtcDate;
             doc["readOnly"] = _settings.ReadOnly;
-            doc["checkpointOnShutdown"] = _settings.CheckpointOnShutdown;
 
             doc["lastPageID"] = (int)_header.LastPageID;
             doc["freeEmptyPageID"] = (int)_header.FreeEmptyPageID;
@@ -27,6 +26,9 @@ namespace LiteDB.Engine
             doc["dataFileSize"] = (int)_disk.GetLength(FileOrigin.Data);
             doc["logFileSize"] = (int)_disk.GetLength(FileOrigin.Log);
             doc["asyncQueueLength"] = _disk.Queue.Length;
+
+            doc["currentReadVersion"] = _walIndex.CurrentReadVersion;
+            doc["lastTransactionID"] = _walIndex.LastTransactionID;
 
             doc["userVersion"] = _header.UserVersion;
 

@@ -40,6 +40,11 @@ namespace LiteDB.Engine
         public int CurrentReadVersion => _currentReadVersion;
 
         /// <summary>
+        /// Get current counter for transaction ID
+        /// </summary>
+        public int LastTransactionID => _lastTransactionID;
+
+        /// <summary>
         /// Get new transactionID in thread safe way
         /// </summary>
         public uint NextTransactionID()
@@ -157,11 +162,11 @@ namespace LiteDB.Engine
                         header = new HeaderPage(headerBuffer);
                         header.TransactionID = uint.MaxValue;
                         header.IsConfirmed = false;
-
-                        // update last transaction ID
-                        _lastTransactionID = (int)transactionID;
                     }
                 }
+
+                // update last transaction ID
+                _lastTransactionID = (int)transactionID;
 
                 current += PAGE_SIZE;
             }

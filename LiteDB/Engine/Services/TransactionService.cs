@@ -12,7 +12,7 @@ namespace LiteDB.Engine
     /// Represent a single transaction service. Need a new instance for each transaction.
     /// You must run each transaction in a different thread - no 2 transaction in same thread (locks as per-thread)
     /// </summary>
-    internal class TransactionService : IDisposable
+    internal class TransactionService
     {
         // instances from Engine
         private readonly HeaderPage _header;
@@ -32,7 +32,7 @@ namespace LiteDB.Engine
         private readonly uint _transactionID;
         private readonly DateTime _startTime;
         private LockMode _mode = LockMode.Read;
-        private bool _dispose = false;
+        private bool _disposed = false;
 
         // expose (as read only)
         public int ThreadID => _threadID;
@@ -76,7 +76,7 @@ namespace LiteDB.Engine
         /// </summary>
         public Snapshot CreateSnapshot(LockMode mode, string collection, bool addIfNotExists)
         {
-            ENSURE(_dispose == false, "transaction must be active to create new snapshot");
+            ENSURE(_disposed == false, "transaction must be active to create new snapshot");
 
             Snapshot create() => new Snapshot(mode, collection, _header, _transactionID, _transPages, _locker, _walIndex, _reader, addIfNotExists);
 
@@ -109,7 +109,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Safepoint()
         {
-            if (_dispose) throw new LiteException(0, "Engine is in shutdown process");
+            if (_disposed) throw new LiteException(0, "Engine is in shutdown process");
 
             if (_transPages.TransactionSize >= _maxTransactionSize)
             {
@@ -270,7 +270,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Commit()
         {
-            if (_dispose) return false;
+            if (_disposed) return false;
 
             if (_mode == LockMode.Write || _transPages.HeaderChanged)
             {
@@ -300,7 +300,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Rollback()
         {
-            if (_dispose) return false;
+            if (_disposed) return false;
 
             // if transaction contains new pages, must return to database in another transaction
             if (_transPages.NewPages.Count > 0)
@@ -366,7 +366,7 @@ namespace LiteDB.Engine
                         // update wal
                         pagePositions[pageID] = new PagePosition(pageID, buffer.Position);
 
-                        if (_dispose) yield break;
+                        if (_disposed) yield break;
                     }
 
                     // update header page with my new transaction ID
@@ -408,14 +408,12 @@ namespace LiteDB.Engine
         /// </summary>
         private void Done()
         {
-            ENSURE(_dispose == false, "transaction must be active before call Done");
+            ENSURE(_disposed == false, "transaction must be active before call Done");
 
-            _dispose = true;
+            _disposed = true;
 
-            // release thread transaction lock
             _locker.ExitTransaction();
 
-            // release memory file thread (stream)
             _reader.Dispose();
 
             // call done callback
@@ -423,19 +421,30 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Abort transaction - called from Dispose engine
+        /// Stop transaction because database are in shutdown process
         /// </summary>
-        public void Dispose()
+        public void Abort()
         {
-            // abort transaction
-            _dispose = true;
+            if (_disposed) return;
 
-            if (_locker.IsInTransaction)
+            _disposed = true;
+
+            try
             {
-                _locker.ExitTransaction();
-            }
+                foreach (var snapshot in _snapshots.Values)
+                {
+                    snapshot.Dispose();
+                }
 
-            _reader.Dispose();
+                _locker.ExitTransaction();
+
+                _reader.Dispose();
+            }
+            catch
+            {
+                // doint this inside a try/catch block because some operation can already runned
+                // it's depend when shutdown method runs
+            }
         }
     }
 }

@@ -36,10 +36,9 @@
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.btnOpen = new System.Windows.Forms.Button();
+            this.chkUTC = new System.Windows.Forms.CheckBox();
             this.txtLimitSize = new System.Windows.Forms.TextBox();
             this.txtInitialSize = new System.Windows.Forms.TextBox();
-            this.chkCheckpoint = new System.Windows.Forms.CheckBox();
-            this.chkUTC = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.txtFilename = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
@@ -115,6 +114,18 @@
             this.btnOpen.UseVisualStyleBackColor = true;
             this.btnOpen.Click += new System.EventHandler(this.BtnOpen_Click);
             // 
+            // chkUTC
+            // 
+            this.chkUTC.AutoSize = true;
+            this.chkUTC.Location = new System.Drawing.Point(257, 30);
+            this.chkUTC.Name = "chkUTC";
+            this.chkUTC.Size = new System.Drawing.Size(75, 19);
+            this.chkUTC.TabIndex = 26;
+            this.chkUTC.Text = "UTC Date";
+            this.toolTip.SetToolTip(this.chkUTC, "When deserialize BSON document from datafile, use UTC converstion (default is con" +
+        "vert date into Local time)");
+            this.chkUTC.UseVisualStyleBackColor = true;
+            // 
             // txtLimitSize
             // 
             this.txtLimitSize.Location = new System.Drawing.Point(151, 86);
@@ -130,30 +141,6 @@
             this.txtInitialSize.Size = new System.Drawing.Size(70, 23);
             this.txtInitialSize.TabIndex = 24;
             this.txtInitialSize.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // chkCheckpoint
-            // 
-            this.chkCheckpoint.AutoSize = true;
-            this.chkCheckpoint.Location = new System.Drawing.Point(257, 88);
-            this.chkCheckpoint.Name = "chkCheckpoint";
-            this.chkCheckpoint.Size = new System.Drawing.Size(165, 19);
-            this.chkCheckpoint.TabIndex = 28;
-            this.chkCheckpoint.Text = "Checkpoint on disconnect";
-            this.toolTip.SetToolTip(this.chkCheckpoint, "Run CHECKPOINT command before close database engine. Checkpoint command update da" +
-        "tafile with log file and than clear the log file.");
-            this.chkCheckpoint.UseVisualStyleBackColor = true;
-            // 
-            // chkUTC
-            // 
-            this.chkUTC.AutoSize = true;
-            this.chkUTC.Location = new System.Drawing.Point(257, 30);
-            this.chkUTC.Name = "chkUTC";
-            this.chkUTC.Size = new System.Drawing.Size(75, 19);
-            this.chkUTC.TabIndex = 26;
-            this.chkUTC.Text = "UTC Date";
-            this.toolTip.SetToolTip(this.chkUTC, "When deserialize BSON document from datafile, use UTC converstion (default is con" +
-        "vert date into Local time)");
-            this.chkUTC.UseVisualStyleBackColor = true;
             // 
             // groupBox2
             // 
@@ -178,7 +165,6 @@
             this.groupBox3.Controls.Add(this.txtTimeout);
             this.groupBox3.Controls.Add(this.txtLimitSize);
             this.groupBox3.Controls.Add(this.txtInitialSize);
-            this.groupBox3.Controls.Add(this.chkCheckpoint);
             this.groupBox3.Controls.Add(this.chkReadonly);
             this.groupBox3.Controls.Add(this.chkUTC);
             this.groupBox3.Controls.Add(this.label4);
@@ -278,7 +264,6 @@
         private System.Windows.Forms.TextBox txtTimeout;
         private System.Windows.Forms.TextBox txtLimitSize;
         private System.Windows.Forms.TextBox txtInitialSize;
-        private System.Windows.Forms.CheckBox chkCheckpoint;
         private System.Windows.Forms.CheckBox chkReadonly;
         private System.Windows.Forms.CheckBox chkUTC;
         private System.Windows.Forms.Label label4;

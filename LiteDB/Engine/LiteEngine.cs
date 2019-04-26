@@ -163,13 +163,7 @@ namespace LiteDB.Engine
             if (disposing)
             {
                 // stop running all transactions
-                _transactions.ForEach((x, i) => i.Value.Dispose());
-
-                // // do checkpoint if it's possible
-                // if (_settings.CheckpointOnShutdown && _settings.ReadOnly == false)
-                // {
-                //     _walIndex?.Checkpoint(_header);
-                // }
+                _transactions.ForEach((x, i) => i.Value.Abort());
 
                 // close all disk connections
                 _disk?.Dispose();
