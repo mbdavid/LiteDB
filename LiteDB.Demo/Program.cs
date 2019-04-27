@@ -41,8 +41,6 @@ namespace LiteDB.Demo
             Console.WriteLine("===========================================================");
             Console.WriteLine("End");
             Console.ReadKey();
-
         }
     }
-
 }

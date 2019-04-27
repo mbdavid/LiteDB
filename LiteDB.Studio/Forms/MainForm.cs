@@ -536,6 +536,8 @@ namespace LiteDB.Studio
 
         private void TabResult_Selected(object sender, TabControlEventArgs e)
         {
+            if (tabSql.TabPages.Count == 0) return;
+
             this.LoadResult(this.ActiveTask);
 
             // set focus to result
