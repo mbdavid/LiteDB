@@ -1,17 +1,3 @@
-> branch: vf - Virtual File
-
-I will use this branch to implement new virtual file and new storage processes looking for performance with better memory managment.
-
-The main idea here is:
-- Avoid, at all, re-create byte[] in memory for each use - always re-use same heap memory allocation
-- Create large memory store (extensions) and use slices to read data page
-- Change how BasePage read/write data on page - do not read all page structure (Nodes/DataBlocks) in memory for each page-read
-    - Use same structure as SQL Server (index offset on page footer)
-- All this will speed up read data and changes will be not re-write all page    
-- Back to async write
-
----
-
 # LiteDB v5
 
 > What's new in v5?
@@ -32,6 +18,7 @@ The main idea here is:
     - Input/Output parameter support: `@name`
     - Simplified document notation `{ _id, name, year }`
     - Support partial BSON document: read/deserialize only used data in query
+    - New Map
     
 - System Collections
     - Support query over internal collection 
@@ -43,27 +30,14 @@ The main idea here is:
     - Support OrderBy/GroupBy expressions
     - Query optimization with Explain Plan
     - Aggregate functions
-    - LINQ to `BsonExpression` query support
+    - LINQ to `BsonExpression` query support - easy to use (and similar to EF)
     
 - New SQL-Like syntax
     - Simple SQL syntax for any command
     - Syntax near to SQL ANSI 
     - Support INSERT/UPDATE/DELETE/...
-
-```SQL
- SELECT { _id, fullname: name.first + ' ' + name.last, age: 2018 - YEAR(birthday) }
-   FROM customers
-INCLUDE orders
-  WHERE name LIKE 'John%'
-    AND _id BETWEEN 1 AND 2000
-  ORDER BY name
-  LIMIT 10
-
-SELECT { city, count: COUNT($), high_pop: MAX(pop) }
-  FROM zip
- GROUP BY city
-```    
-    
+    - MapReduce using GroupBy/Having
+   
 - New Native UI - LiteDB.Studio
     - WinForms app to manipulate database
     - Based on SQL commands
@@ -73,7 +47,6 @@ SELECT { city, count: COUNT($), high_pop: MAX(pop) }
 > What was droped?
 
 - Single process only - optimazed for multi thread (open file as exclusive mode)
-- Datafile Encryption (will be external plugin)
 - Drop .NET 3.5/4.0 - works only in .NET 4.5+ and .NETStandard 2.0
 - Shell commands (use SQL commands)
     
@@ -84,7 +57,7 @@ SELECT { city, count: COUNT($), high_pop: MAX(pop) }
 - Single DLL, no dependency and 100% C#
 - 100% free open source
     
-> Roadmap: late in 2018 :smile:
+> Roadmap: first beta version will be released in 31/May/2019
     
 ---
 
