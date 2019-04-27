@@ -43,7 +43,7 @@ namespace LiteDB.Engine
             if (from.Type == TokenType.EOF || from.Type == TokenType.SemiColon)
             {
                 // select with no FROM - just run expression (avoid DUAL table, Mr. Oracle)
-                var result = query.Select.Execute(true);
+                var result = query.Select.Execute();
 
                 var defaultName = query.Select.DefaultFieldName();
 

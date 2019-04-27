@@ -773,11 +773,11 @@ namespace LiteDB
         internal int? Length = null;
 
         /// <summary>
-        /// Returns how many bytes this BsonValue will use to persist in index writes
+        /// Returns how many bytes this BsonValue will consume when converted into binary BSON
         /// </summary>
-        public int GetBytesCount(bool recalc)
+        public int GetBytesCount()
         {
-            if (recalc == false && this.Length.HasValue) return this.Length.Value;
+            if (this.Length.HasValue) return this.Length.Value;
 
             switch (this.Type)
             {
@@ -806,7 +806,7 @@ namespace LiteDB
                     this.Length = 5; // header + footer
                     for (var i = 0; i < array.Count; i++)
                     {
-                        this.Length += this.GetBytesCountElement(i.ToString(), array[i] ?? BsonValue.Null, recalc);
+                        this.Length += this.GetBytesCountElement(i.ToString(), array[i] ?? BsonValue.Null);
                     }
                     break;
 
@@ -815,7 +815,7 @@ namespace LiteDB
                     this.Length = 5; // header + footer
                     foreach (var key in doc.Keys)
                     {
-                        this.Length += this.GetBytesCountElement(key, doc[key] ?? BsonValue.Null, recalc);
+                        this.Length += this.GetBytesCountElement(key, doc[key] ?? BsonValue.Null);
                     }
                     break;
             }
@@ -823,13 +823,13 @@ namespace LiteDB
             return this.Length.Value;
         }
 
-        private int GetBytesCountElement(string key, BsonValue value, bool recalc)
+        private int GetBytesCountElement(string key, BsonValue value)
         {
             return
                 1 + // element type
                 Encoding.UTF8.GetByteCount(key) + // CString
-                1 + // CString 0x00
-                value.GetBytesCount(recalc) +
+                1 + // CString \0
+                value.GetBytesCount() +
                 (value.Type == BsonType.String || value.Type == BsonType.Binary || value.Type == BsonType.Guid ? 5 : 0); // bytes.Length + 0x??
         }
 

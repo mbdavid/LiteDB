@@ -11,6 +11,8 @@ namespace LiteDB.Engine
         /// </summary>
         public int Analyze(string[] collections)
         {
+            throw new NotImplementedException();
+            /*
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Analyze", TransactionState.Active);
 
             var cols = collections == null || collections.Length == 0 ? _header.Collections.Keys.ToArray() : collections;
@@ -70,7 +72,7 @@ namespace LiteDB.Engine
                 });
             }
 
-            return count;
+            return count;*/
         }
     }
 }

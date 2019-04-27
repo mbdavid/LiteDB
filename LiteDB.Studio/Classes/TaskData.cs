@@ -14,7 +14,7 @@ namespace LiteDB.Studio
         public const int RESULT_LIMIT = 1000;
 
         public int Id { get; set; }
-        public bool Running { get; set; } = false;
+        public bool Executing { get; set; } = false;
 
         public string EditorContent { get; set; } = "";
         public string SelectedTab { get; set; } = "";
@@ -34,7 +34,8 @@ namespace LiteDB.Studio
         public bool IsParametersLoaded = false;
 
         public Thread Thread { get; set; }
-        public ManualResetEvent WaitHandle = new ManualResetEvent(false);
+        public bool ThreadRunning { get; set; } = true;
+        public ManualResetEventSlim WaitHandle = new ManualResetEventSlim(false);
 
         public void ReadResult(IBsonDataReader reader)
         {

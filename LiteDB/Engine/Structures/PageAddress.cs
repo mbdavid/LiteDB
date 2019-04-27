@@ -1,31 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace LiteDB.Engine
 {
     /// <summary>
     /// Represents a page address inside a page structure - index could be byte offset position OR index in a list (6 bytes)
     /// </summary>
+    [DebuggerStepThrough]
     internal struct PageAddress
     {
-        public const int SIZE = 6;
+        public const int SIZE = 5;
 
-        public static PageAddress Empty => new PageAddress(uint.MaxValue, ushort.MaxValue);
+        public static PageAddress Empty = new PageAddress(uint.MaxValue, byte.MaxValue);
 
         /// <summary>
         /// PageID (4 bytes)
         /// </summary>
-        public uint PageID;
+        public readonly uint PageID;
 
         /// <summary>
-        /// Index inside page (2 bytes)
+        /// Page Segment index inside page (1 bytes)
         /// </summary>
-        public ushort Index;
+        public readonly byte Index;
 
         /// <summary>
         /// Returns true if this PageAdress is empty value
         /// </summary>
-        public bool IsEmpty => this.PageID == uint.MaxValue && this.Index == ushort.MaxValue;
+        public bool IsEmpty => this.PageID == uint.MaxValue && this.Index == byte.MaxValue;
 
         public override bool Equals(object obj)
         {
@@ -55,7 +57,7 @@ namespace LiteDB.Engine
             }
         }
 
-        public PageAddress(uint pageID, ushort index)
+        public PageAddress(uint pageID, byte index)
         {
             this.PageID = pageID;
             this.Index = index;
@@ -63,7 +65,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return this.IsEmpty ? "(empty)" : this.PageID.ToString() + ":" + this.Index.ToString();
+            return this.IsEmpty ? "(empty)" : this.PageID.ToString().PadLeft(4, '0') + ":" + this.Index.ToString().PadLeft(2, '0');
         }
     }
 }

@@ -20,7 +20,6 @@ namespace LiteDB
         public const int FILE_SIZE_EXCEEDED = 105;
         public const int COLLECTION_LIMIT_EXCEEDED = 106;
         public const int INDEX_DROP_ID = 108;
-        public const int INDEX_LIMIT_EXCEEDED = 109;
         public const int INDEX_DUPLICATE_KEY = 110;
         public const int INVALID_INDEX_KEY = 111;
         public const int INDEX_NOT_FOUND = 112;
@@ -90,7 +89,7 @@ namespace LiteDB
 
         internal static LiteException InvalidDatabase()
         {
-            return new LiteException(INVALID_DATABASE, "Datafile is not a LiteDB database.");
+            return new LiteException(INVALID_DATABASE, "File is not a valid LiteDB database or invalid password.");
         }
 
         internal static LiteException InvalidDatabaseVersion(int version)
@@ -100,7 +99,7 @@ namespace LiteDB
 
         internal static LiteException FileSizeExceeded(long limit)
         {
-            return new LiteException(FILE_SIZE_EXCEEDED, "Database size exceeds limit of {0}.", StorageUnitHelper.FormatFileSize(limit));
+            return new LiteException(FILE_SIZE_EXCEEDED, "Database size exceeds limit of {0}.", FileHelper.FormatFileSize(limit));
         }
 
         internal static LiteException CollectionLimitExceeded(int limit)
@@ -163,11 +162,6 @@ namespace LiteDB
             return new LiteException(INVALID_UPDATE_FIELD, "'{0}' can't be modified in UPDATE command.", field);
         }
 
-        internal static LiteException IndexLimitExceeded(string collection)
-        {
-            return new LiteException(INDEX_LIMIT_EXCEEDED, "Collection '{0}' exceeded the maximum limit of indices: {1}", collection, INDEX_PER_COLLECTION);
-        }
-
         internal static LiteException IndexDuplicateKey(string field, BsonValue key)
         {
             return new LiteException(INDEX_DUPLICATE_KEY, "Cannot insert duplicate key in unique index '{0}'. The duplicate value is '{1}'.", field, key);
@@ -178,9 +172,9 @@ namespace LiteDB
             return new LiteException(INVALID_INDEX_KEY, text);
         }
 
-        internal static LiteException IndexNotFound(string collection, string name)
+        internal static LiteException IndexNotFound(string name)
         {
-            return new LiteException(INDEX_NOT_FOUND, "Index not found on '{0}.{1}'.", collection, name);
+            return new LiteException(INDEX_NOT_FOUND, "Index not found '{0}'.", name);
         }
 
         internal static LiteException LockTimeout(string mode, TimeSpan ts)
@@ -213,19 +207,9 @@ namespace LiteDB
             return new LiteException(INVALID_DBREF, "Invalid value for DbRef in path '{0}'. Value must be document like {{ $ref: \"?\", $id: ? }}", path);
         }
 
-        internal static LiteException InvalidTransactionState(string method, TransactionState state)
-        {
-            return new LiteException(INVALID_TRANSACTION_STATE, "'{0}' are not supported because transaction are in {1} state", method, state);
-        }
-
         internal static LiteException AlreadyExistsTransaction()
         {
             return new LiteException(INVALID_TRANSACTION_STATE, "The current thread already contains an open transaction. Use the Commit/Rollback method to release the previous transaction.");
-        }
-
-        internal static LiteException MissingTransaction(string method)
-        {
-            return new LiteException(INVALID_TRANSACTION_STATE, "'{0}' are not supported because there is no open transaction in current thread.", method);
         }
 
         internal static LiteException CollectionLockerNotFound(string collection)

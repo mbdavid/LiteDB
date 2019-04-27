@@ -25,7 +25,6 @@ namespace LiteDB.Studio.Forms
             txtFilename.Text = cs.Filename;
             chkUTC.Checked = cs.UtcDate;
             chkReadonly.Checked = cs.UtcDate;
-            chkCheckpoint.Checked = cs.CheckpointOnShutdown;
             txtTimeout.Text = cs.Timeout.TotalSeconds.ToString();
             txtInitialSize.Text = (cs.InitialSize / MB).ToString();
             txtLimitSize.Text = cs.LimitSize == long.MaxValue ? "" : (cs.LimitSize / MB).ToString();
@@ -37,7 +36,6 @@ namespace LiteDB.Studio.Forms
             this.ConnectionString.Filename = txtFilename.Text;
             this.ConnectionString.UtcDate = chkUTC.Checked;
             this.ConnectionString.ReadOnly = chkReadonly.Checked;
-            this.ConnectionString.CheckpointOnShutdown = chkCheckpoint.Checked;
 
             if (int.TryParse(txtTimeout.Text, out var timeout))
             {
@@ -66,7 +64,6 @@ namespace LiteDB.Studio.Forms
             {
                 txtFilename.Text = openFileDialog.FileName;
             }
-
         }
     }
 }

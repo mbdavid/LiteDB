@@ -15,14 +15,12 @@ namespace LiteDB.Engine
         protected readonly LiteEngine _engine;
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLoader _loader;
-        protected readonly CursorInfo _cursor;
 
-        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader, CursorInfo cursor)
+        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader)
         {
             _engine = engine;
             _transaction = transaction;
             _loader = loader;
-            _cursor = cursor;
         }
 
         /// <summary>
@@ -30,21 +28,15 @@ namespace LiteDB.Engine
         /// </summary>
         public abstract IEnumerable<BsonDocument> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query);
 
-        // load documents from disk or make a "fake" document using index key only (useful for COUNT/EXISTS)
-        protected IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes, bool indexKeyOnly, string field)
+        // load documents from document loader
+        protected IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes)
         {
-            DEBUG(indexKeyOnly && field == null, "should not be indexOnly = null with no field name");
-
             foreach (var node in nodes)
             {
+                yield return _loader.Load(node);
+
                 // check if transaction all full of pages to clear before continue
                 _transaction.Safepoint();
-
-                // if is indexKeyOnly, load here from IndexNode, otherwise, read from Loader
-
-                yield return indexKeyOnly ?
-                    new BsonDocument { [field] = node.Key, RawId = node.Position } :
-                    _loader.Load(node.DataBlock);
             }
         }
 
@@ -63,7 +55,7 @@ namespace LiteDB.Engine
 
             foreach (var doc in source)
             {
-                foreach (var value in path.Execute(doc, false)
+                foreach (var value in path.Execute(doc)
                                         .Where(x => x.IsDocument)
                                         .Select(x => x.AsDocument)
                                         .ToList())
@@ -85,8 +77,7 @@ namespace LiteDB.Engine
                         indexer = new IndexService(snapshot);
                         data = new DataService(snapshot);
 
-                        //TODO: oferecer suporte a include com campos selecionados!!
-                        loader = new DocumentLoader(data, _engine.UtcDate, null, _cursor);
+                        loader = new DocumentLoader(data, _engine.Settings.UtcDate, null);
 
                         index = snapshot.CollectionPage?.PK;
                     }
@@ -108,7 +99,7 @@ namespace LiteDB.Engine
                         else
                         {
                             // load document based on dataBlock position
-                            var refDoc = loader.Load(node.DataBlock);
+                            var refDoc = loader.Load(node);
 
                             value.Remove("$id");
                             value.Remove("$ref");
@@ -130,7 +121,7 @@ namespace LiteDB.Engine
             foreach(var doc in source)
             {
                 // checks if any result of expression is true
-                var result = expr.Execute(doc, true)
+                var result = expr.Execute(doc)
                     .Where(x => x.IsBoolean && x.AsBoolean == true)
                     .Any();
 

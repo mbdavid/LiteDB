@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LiteDB.Engine
@@ -6,42 +7,42 @@ namespace LiteDB.Engine
     internal class CollectionIndex
     {
         /// <summary>
-        /// Represent slot position on index array on dataBlock/collection indexes - non-persistable
+        /// Slot index [0-255] used in all index nodes
         /// </summary>
-        public int Slot { get; set; }
+        public byte Slot { get; }
 
         /// <summary>
         /// Index name
         /// </summary>
-        public string Name { get; set; } = "";
+        public string Name { get; }
 
         /// <summary>
         /// Get index expression (path or expr)
         /// </summary>
-        public string Expression { get; set; } = "";
+        public string Expression { get; }
+
+        /// <summary>
+        /// Get BsonExpression from Expression
+        /// </summary>
+        public BsonExpression BsonExpr { get; }
 
         /// <summary>
         /// Indicate if this index has distinct values only
         /// </summary>
-        public bool Unique { get; set; }
+        public bool Unique { get; }
 
         /// <summary>
         /// Head page address for this index
         /// </summary>
-        public PageAddress HeadNode { get; set; } = PageAddress.Empty;
+        public PageAddress Head { get; set; }
 
         /// <summary>
         /// A link pointer to tail node
         /// </summary>
-        public PageAddress TailNode { get; set; } = PageAddress.Empty;
+        public PageAddress Tail { get; set; }
 
         /// <summary>
-        /// Get a reference for the free list index page - its private list per collection/index (must be a Field to be used as reference parameter)
-        /// </summary>
-        public uint FreeIndexPageID = uint.MaxValue;
-
-        /// <summary>
-        /// Persist max level used
+        /// Get/Set collection max level
         /// </summary>
         public byte MaxLevel { get; set; } = 1;
 
@@ -69,7 +70,6 @@ namespace LiteDB.Engine
 
                 var density = (double)Math.Min(this.UniqueKeyCount, this.KeyCount) /
                     (double)this.KeyCount;
-                    
 
                 return Math.Round(density, 2);
             }
@@ -83,47 +83,39 @@ namespace LiteDB.Engine
             get { return string.IsNullOrEmpty(this.Name); }
         }
 
-        /// <summary>
-        /// Get a reference for page
-        /// </summary>
-        public CollectionPage Page { get; set; }
-
-        public CollectionIndex()
+        public CollectionIndex(byte slot, string name, string expr, bool unique)
         {
+            this.Slot = slot;
+            this.Name = name;
+            this.Expression = expr;
+            this.Unique = unique;
+
+            this.BsonExpr = BsonExpression.Create(expr);
         }
 
         /// <summary>
-        /// Clear all index information
+        /// Get index collection size used in CollectionPage
         /// </summary>
-        public void Clear()
+        public static int GetLength(CollectionIndex index)
         {
-            this.Name = "";
-            this.Expression = "";
-            this.Unique = false;
-            this.HeadNode = PageAddress.Empty;
-            this.TailNode = PageAddress.Empty;
-            this.FreeIndexPageID = uint.MaxValue;
-            this.MaxLevel = 1;
-            this.KeyCount = 0;
-            this.UniqueKeyCount = 0;
+            return GetLength(index.Name, index.Expression);
         }
 
-        public CollectionIndex Clone(CollectionPage page)
+        /// <summary>
+        /// Get index collection size used in CollectionPage
+        /// </summary>
+        public static int GetLength(string name, string expr)
         {
-            return new CollectionIndex
-            {
-                Page = page,
-                Slot = this.Slot,
-                Name = this.Name,
-                Expression = this.Expression,
-                Unique = this.Unique,
-                HeadNode = this.HeadNode,
-                TailNode = this.TailNode,
-                FreeIndexPageID = this.FreeIndexPageID,
-                MaxLevel = this.MaxLevel,
-                KeyCount = this.KeyCount,
-                UniqueKeyCount = this.UniqueKeyCount
-            };
+            return
+                1 + // Slot
+                Encoding.UTF8.GetByteCount(name) + 1 + // Name + \0
+                Encoding.UTF8.GetByteCount(expr) + 1 + // Expression + \0
+                1 + // Unique
+                PageAddress.SIZE + // Head
+                PageAddress.SIZE + // Tail
+                1 + // MaxLevel
+                4 + // KeyCount
+                4; // UniqueKeyCount
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB.Engine;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -6,28 +7,38 @@ namespace LiteDB
 {
     /// <summary>
     /// Class to call method for convert BsonDocument to/from byte[] - based on http://bsonspec.org/spec.html
+    /// In v5 this class use new BufferRead/Writer to work with byte[] segments. This class are just a shortchut
     /// </summary>
     public class BsonSerializer
     {
+        /// <summary>
+        /// Serialize BsonDocument into a binary array
+        /// </summary>
         public static byte[] Serialize(BsonDocument doc)
         {
             if (doc == null) throw new ArgumentNullException(nameof(doc));
 
-            var writer = new BsonWriter();
+            var buffer = new byte[doc.GetBytesCount()]; 
 
-            return writer.Serialize(doc).ToArray();
+            using (var writer = new BufferWriter(buffer))
+            {
+                writer.WriteDocument(doc);
+            }
+
+            return buffer;
         }
 
         /// <summary>
         /// Deserialize binary data into BsonDocument
         /// </summary>
-        public static BsonDocument Deserialize(byte[] bson, bool utcDate = false, HashSet<string> fields = null)
+        public static BsonDocument Deserialize(byte[] buffer, bool utcDate = false, HashSet<string> fields = null)
         {
-            if (bson == null || bson.Length == 0) throw new ArgumentNullException(nameof(bson));
+            if (buffer == null || buffer.Length == 0) throw new ArgumentNullException(nameof(buffer));
 
-            var reader = new BsonReader(utcDate);
-
-            return reader.Deserialize(new MemoryStream(bson), fields);
+            using (var reader = new BufferReader(buffer, utcDate))
+            {
+                return reader.ReadDocument(fields);
+            }
         }
     }
 }

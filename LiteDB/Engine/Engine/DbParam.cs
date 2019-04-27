@@ -26,47 +26,26 @@ namespace LiteDB.Engine
         public bool DbParam(string parameterName, BsonValue value)
         {
             // check if same value or database are in shutdown mode
-            if (this.DbParam(parameterName) == value || _shutdown) return false;
+            if (this.DbParam(parameterName) == value) return false;
 
-            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("DbParam", TransactionState.Active);
+            if (_locker.IsInTransaction) throw LiteException.AlreadyExistsTransaction();
 
-            // simle "lock (_header)" was modified to enter all database in reserved lock to check database readonly mode
-            _locker.EnterReserved(false);
-
-            try
+            return this.AutoTransaction(transaction =>
             {
-                // clone header to use in writer
-                var header = _header.Clone();
-
                 // set parameter value
                 switch (parameterName.ToUpper())
                 {
                     case DB_PARAM_USERVERSION:
-                        header.UserVersion = value;
+                        transaction.Pages.Commit += (h) =>
+                        {
+                            h.UserVersion = value;
+                        };
                         break;
                     default: throw new LiteException(0, $"Unknow parameter name: {parameterName}");
                 }
 
-                header.TransactionID = ObjectId.NewObjectId();
-                header.IsConfirmed = true;
-                header.IsDirty = true;
-
-                var positions = new Dictionary<uint, PagePosition>();
-
-                _wal.LogFile.WritePages(new[] { header }, positions);
-
-                // create fake transaction with no pages to update (only confirm page)
-                _wal.ConfirmTransaction(header.TransactionID, positions.Values);
-
-                // update header instance
-                _header.UserVersion = value;
-
                 return true;
-            }
-            finally
-            {
-                _locker.ExitReserved(false);
-            }
+            });
         }
     }
 }

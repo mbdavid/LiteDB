@@ -7,6 +7,15 @@ namespace LiteDB.Engine
 {
     internal class DataService
     {
+        /// <summary>
+        /// Get maximum data bytes[] that fit in 1 page = 8149
+        /// </summary>
+        public const int MAX_DATA_BYTES_PER_PAGE =
+            PAGE_SIZE - // 8192
+            PAGE_HEADER_SIZE - // [32 bytes]
+            BasePage.SLOT_SIZE - // [4 bytes]
+            DataBlock.DATA_BLOCK_FIXED_SIZE; // [6 bytes];
+
         private Snapshot _snapshot;
 
         public DataService(Snapshot snapshot)
@@ -15,48 +24,61 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Insert data inside a datapage. Returns dataPageID that indicates the first page
+        /// Insert BsonDocument into new data pages
         /// </summary>
-        public DataBlock Insert(CollectionPage col, ChunkStream data)
+        public PageAddress Insert(BsonDocument doc)
         {
-            // need to extend (data is bigger than 1 page)
-            var extend = (data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > PAGE_AVAILABLE_BYTES;
+            var bytesLeft = doc.GetBytesCount();
 
-            // if extend, just search for a page with BLOCK_SIZE available
-            var dataPage = _snapshot.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : (int)data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
+            if (bytesLeft > MAX_DOCUMENT_SIZE) throw new LiteException(0, "Document size exceed {0} limit", MAX_DOCUMENT_SIZE);
 
-            // create a new block with first empty index on DataPage
-            var block = new DataBlock { Page = dataPage, DocumentLength = (int)data.Length };
+            var firstBlock = PageAddress.Empty;
 
-            // if extend, store all bytes on extended page.
-            if (extend)
+            IEnumerable<BufferSlice> source()
             {
-                var extendPage = _snapshot.NewPage<ExtendPage>();
-                block.ExtendPageID = extendPage.PageID;
-                this.StoreExtendData(extendPage, data);
+                byte dataIndex = 0;
+                DataBlock lastBlock = null;
+
+                while (bytesLeft > 0)
+                {
+                    var bytesToCopy = Math.Min(bytesLeft, MAX_DATA_BYTES_PER_PAGE);
+                    var dataPage = _snapshot.GetFreePage<DataPage>(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE);
+                    var dataBlock = dataPage.InsertBlock(bytesToCopy, dataIndex);
+
+                    dataIndex++;
+
+                    if (lastBlock != null)
+                    {
+                        lastBlock.SetNextBlock(dataBlock.Position);
+                    }
+
+                    if (firstBlock.IsEmpty) firstBlock = dataBlock.Position;
+
+                    yield return dataBlock.Buffer;
+
+                    lastBlock = dataBlock;
+
+                    bytesLeft -= bytesToCopy;
+                }
             }
-            else
+
+            // consume all source bytes to write BsonDocument direct into PageBuffer
+            // must be fastest as possible
+            using (var w = new BufferWriter(source()))
             {
-                block.Data = data.ToArray();
+                w.WriteDocument(doc);
+                w.Consume();
             }
 
-            // add dataBlock to this page
-            dataPage.AddBlock(block);
-
-            // set page as dirty
-            _snapshot.SetDirty(dataPage);
-
-            // add/remove dataPage on freelist if has space
-            _snapshot.AddOrRemoveToFreeList(dataPage.FreeBytes > DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
-
-            return block;
+            return firstBlock;
         }
 
         /// <summary>
         /// Update data inside a datapage. If new data can be used in same datapage, just update. Otherwise, copy content to a new ExtendedPage
         /// </summary>
-        public DataBlock Update(CollectionPage col, PageAddress blockAddress, ChunkStream data)
+        public DataBlock Update(CollectionPage col, PageAddress blockAddress, BsonDocument doc)
         {
+            throw new NotImplementedException(); /*
             // get datapage and mark as dirty
             var dataPage = _snapshot.GetPage<DataPage>(blockAddress.PageID);
             var block = dataPage.GetBlock(blockAddress.Index);
@@ -105,123 +127,78 @@ namespace LiteDB.Engine
             // add/remove dataPage on freelist if has space AND its on/off free list
             _snapshot.AddOrRemoveToFreeList(dataPage.FreeBytes > DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
-            return block;
+            return block;*/
         }
 
         /// <summary>
-        /// Create Stream with chunck data (from ExtendPages) or from datablock Data
+        /// Get all buffer slices that address block contains. Need use BufferReader to read document
         /// </summary>
-        public ChunkStream Read(DataBlock block)
+        public IEnumerable<BufferSlice> Read(PageAddress address)
         {
-            // return new chuckstream based on data source (Data[] or ExtendPage)
-            return new ChunkStream(source(), block.BlockLength);
-
-            // create data source based on byte[] - single Data on DataBlock or multiple pages
-            IEnumerable<byte[]> source()
+            while (address != PageAddress.Empty)
             {
-                if (block.ExtendPageID == uint.MaxValue)
+                var dataPage = _snapshot.GetPage<DataPage>(address.PageID);
+
+                var block = dataPage.GetBlock(address.Index);
+
+                yield return block.Buffer;
+
+                address = block.NextBlock;
+            }
+        }
+
+        /// <summary>
+        /// Delete all datablock that contains a document (can use multiples data blocks)
+        /// </summary>
+        public void Delete(PageAddress blockAddress)
+        {
+            var index = 0;
+
+            // delete all document blocks
+            while(blockAddress != PageAddress.Empty)
+            {
+                var page = _snapshot.GetPage<DataPage>(blockAddress.PageID);
+                var block = page.GetBlock(blockAddress.Index);
+                var slot = BasePage.FreeIndexSlot(page.FreeBytes);
+
+                ENSURE(block.DataIndex == index++, "blocks must be in order");
+
+                // delete block inside page
+                page.DeleteBlock(blockAddress.Index);
+
+                // fix page empty list (or delete page)
+                _snapshot.AddOrRemoveFreeList(page, slot);
+
+                blockAddress = block.NextBlock;
+            }
+        }
+
+        /// <summary>
+        /// Read all documents from current collection with NO index use - read direct from free lists
+        /// There is no document order
+        /// </summary>
+        public IEnumerable<BsonDocument> ReadAll(HashSet<string> fields = null)
+        {
+            for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
+            {
+                var next = _snapshot.CollectionPage.FreeDataPageID[slot];
+
+                while (next != uint.MaxValue)
                 {
-                    yield return block.Data;
-                }
-                else
-                {
-                    foreach (var extendPage in _snapshot.GetSeqPages<ExtendPage>(block.ExtendPageID))
+                    var page = _snapshot.GetPage<DataPage>(next);
+
+                    foreach (var block in page.GetBlocks(true))
                     {
-                        yield return extendPage.GetData();
+                        using (var r = new BufferReader(this.Read(block)))
+                        {
+                            var doc = r.ReadDocument(fields);
+
+                            yield return doc;
+                        }
                     }
+
+                    next = page.NextPageID;
                 }
-            };
-        }
-
-        /// <summary>
-        /// Get a data block from a DataPage using address
-        /// </summary>
-        public DataBlock GetBlock(PageAddress blockAddress)
-        {
-            var page = _snapshot.GetPage<DataPage>(blockAddress.PageID);
-            return page.GetBlock(blockAddress.Index);
-        }
-
-        /// <summary>
-        /// Delete one dataBlock
-        /// </summary>
-        public DataBlock Delete(CollectionPage col, PageAddress blockAddress)
-        {
-            // get page and mark as dirty
-            var page = _snapshot.GetPage<DataPage>(blockAddress.PageID);
-            var block = page.GetBlock(blockAddress.Index);
-
-            // if there a extended page, delete all
-            if (block.ExtendPageID != uint.MaxValue)
-            {
-                _snapshot.DeletePages(block.ExtendPageID);
-            }
-
-            // delete block inside page
-            page.DeleteBlock(block);
-
-            // set page as dirty here
-            _snapshot.SetDirty(page);
-
-            // if there is no more datablocks, lets delete all page
-            if (page.BlocksCount == 0)
-            {
-                // first, remove from free list
-                _snapshot.AddOrRemoveToFreeList(false, page, col, ref col.FreeDataPageID);
-
-                _snapshot.DeletePage(page.PageID);
-            }
-            else
-            {
-                // add or remove to free list
-                _snapshot.AddOrRemoveToFreeList(page.FreeBytes > DATA_RESERVED_BYTES, page, col, ref col.FreeDataPageID);
-            }
-
-            return block;
-        }
-
-        /// <summary>
-        /// Store all bytes in one extended page. If data ir bigger than a page, store in more pages and make all in sequence
-        /// </summary>
-        public void StoreExtendData(ExtendPage page, ChunkStream data)
-        {
-            var bytesLeft = (int)data.Length;
-            var buffer = new byte[PAGE_AVAILABLE_BYTES];
-
-            while (bytesLeft > 0)
-            {
-                var bytesToCopy = Math.Min(bytesLeft, PAGE_AVAILABLE_BYTES);
-
-                data.Read(buffer, 0, bytesToCopy);
-
-                page.SetData(buffer, 0, bytesToCopy);
-
-                bytesLeft -= bytesToCopy;
-
-                // set extend page as dirty
-                _snapshot.SetDirty(page);
-
-                // if has bytes left, let's get a new page
-                if (bytesLeft > 0)
-                {
-                    // if i have a continuous page, get it... or create a new one
-                    page = page.NextPageID != uint.MaxValue ?
-                        _snapshot.GetPage<ExtendPage>(page.NextPageID) :
-                        _snapshot.NewPage<ExtendPage>(page);
-                }
-            }
-
-            // when finish, check if last page has a nextPageId - if have, delete them
-            if (page.NextPageID != uint.MaxValue)
-            {
-                // Delete nextpage and all nexts
-                _snapshot.DeletePages(page.NextPageID);
-
-                // set my page with no NextPageID
-                page.NextPageID = uint.MaxValue;
-
-                // set page as dirty
-                _snapshot.SetDirty(page);
             }
         }
     }

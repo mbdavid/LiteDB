@@ -21,8 +21,7 @@ namespace LiteDB.Studio
         private readonly SynchronizationContext _synchronizationContext;
 
         private LiteDatabase _db = null;
-        private ConnectionString _connectionString = new ConnectionString();
-        private bool _running = true;
+        private ConnectionString _connectionString = null;
         private SqlCodeCompletion _codeCompletion;
 
         public MainForm(string filename)
@@ -36,7 +35,11 @@ namespace LiteDB.Studio
 
             _codeCompletion = new SqlCodeCompletion(txtSql, imgCodeCompletion);
 
-            if (!string.IsNullOrWhiteSpace(filename))
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                this.Disconnect();
+            }
+            else
             {
                 this.Connect(new ConnectionString(filename));
             }
@@ -67,7 +70,6 @@ namespace LiteDB.Studio
 
             _codeCompletion.UpdateCodeCompletion(_db);
 
-            _running = true;
             btnConnect.Text = "Disconnect";
 
             this.UIState(true);
@@ -82,11 +84,6 @@ namespace LiteDB.Studio
 
         private void Disconnect()
         {
-            _db?.Dispose();
-            _db = null;
-
-            _running = false;
-
             btnConnect.Text = "Connect";
 
             this.UIState(false);
@@ -94,7 +91,8 @@ namespace LiteDB.Studio
             foreach (var tab in tabSql.TabPages.Cast<TabPage>().Where(x => x.Name != "+").ToArray())
             {
                 var task = tab.Tag as TaskData;
-                task.Thread.Abort();
+                task.ThreadRunning = false;
+                task.WaitHandle.Set();
             }
 
             // clear all tabs and controls
@@ -107,6 +105,9 @@ namespace LiteDB.Studio
 
             tvwDatabase.Nodes.Clear();
             tvwDatabase.Focus();
+
+            _db?.Dispose();
+            _db = null;
         }
 
         private void UIState(bool enabled)
@@ -155,7 +156,7 @@ namespace LiteDB.Studio
 
         private void ExecuteSql(string sql)
         {
-            if (this.ActiveTask.Running == false)
+            if (this.ActiveTask?.Executing == false)
             {
                 this.ActiveTask.Sql = sql;
                 this.ActiveTask.WaitHandle.Set();
@@ -201,9 +202,11 @@ namespace LiteDB.Studio
 
         private void CreateThread(TaskData task)
         {
-            while(_running)
+            while (true)
             {
-                task.WaitHandle.WaitOne();
+                task.WaitHandle.Wait();
+
+                if (task.ThreadRunning == false) break;
 
                 if (task.Sql.Trim() == "")
                 {
@@ -216,7 +219,7 @@ namespace LiteDB.Studio
 
                 try
                 {
-                    task.Running = true;
+                    task.Executing = true;
                     task.IsGridLoaded = task.IsTextLoaded = task.IsParametersLoaded = false;
 
                     _synchronizationContext.Post(new SendOrPostCallback(o =>
@@ -228,7 +231,7 @@ namespace LiteDB.Studio
 
                     var sql = new StringReader(task.Sql.Trim());
 
-                    while(sql.Peek() >= 0)
+                    while(sql.Peek() >= 0 && _db != null)
                     {
                         using (var reader = _db.Execute(sql, task.Parameters))
                         {
@@ -238,14 +241,14 @@ namespace LiteDB.Studio
 
                     task.Elapsed = sw.Elapsed;
                     task.Exception = null;
-                    task.Running = false;
+                    task.Executing = false;
 
                     // update form button selected
                     _synchronizationContext.Post(new SendOrPostCallback(o =>
                     {
                         var t = o as TaskData;
 
-                        if (this.ActiveTask.Id == t.Id)
+                        if (this.ActiveTask?.Id == t.Id)
                         {
                             this.LoadResult(o as TaskData);
                         }
@@ -254,7 +257,7 @@ namespace LiteDB.Studio
                 }
                 catch (Exception ex)
                 {
-                    task.Running = false;
+                    task.Executing = false;
                     task.Result = null;
                     task.Elapsed = sw.Elapsed;
                     task.Exception = ex;
@@ -263,7 +266,7 @@ namespace LiteDB.Studio
                     {
                         var t = o as TaskData;
 
-                        if (this.ActiveTask.Id == t.Id)
+                        if (this.ActiveTask?.Id == t.Id)
                         {
                             tabResult.SelectedTab = tabText;
                             this.LoadResult(o as TaskData);
@@ -275,13 +278,17 @@ namespace LiteDB.Studio
                 // put thread in wait mode
                 task.WaitHandle.Reset();
             }
+
+            task.WaitHandle.Dispose();
         }
 
         private void LoadResult(TaskData data)
         {
-            btnRun.Enabled = !data.Running;
+            if (data == null) return;
 
-            if (data.Running)
+            btnRun.Enabled = !data.Executing;
+
+            if (data.Executing)
             {
                 grdResult.Clear();
                 txtResult.Clear();
@@ -465,7 +472,7 @@ namespace LiteDB.Studio
             {
                 if (_db == null)
                 {
-                    var dialog = new ConnectionForm(_connectionString);
+                    var dialog = new ConnectionForm(_connectionString ?? new ConnectionString());
 
                     dialog.ShowDialog();
 
@@ -554,7 +561,8 @@ namespace LiteDB.Studio
 
                 if (tab.Tag is TaskData task)
                 {
-                    task.Thread.Abort();
+                    task.ThreadRunning = false;
+                    task.WaitHandle.Set();
                     tabs.Remove(tab);
                 }
             }

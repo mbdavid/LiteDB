@@ -1,3 +1,17 @@
+> branch: vf - Virtual File
+
+I will use this branch to implement new virtual file and new storage processes looking for performance with better memory managment.
+
+The main idea here is:
+- Avoid, at all, re-create byte[] in memory for each use - always re-use same heap memory allocation
+- Create large memory store (extensions) and use slices to read data page
+- Change how BasePage read/write data on page - do not read all page structure (Nodes/DataBlocks) in memory for each page-read
+    - Use same structure as SQL Server (index offset on page footer)
+- All this will speed up read data and changes will be not re-write all page    
+- Back to async write
+
+---
+
 # LiteDB v5
 
 > What's new in v5?

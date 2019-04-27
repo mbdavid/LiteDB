@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -10,8 +11,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexService
     {
-        private Snapshot _snapshot;
-        private Random _rand = new Random();
+        private readonly Random _rand = new Random();
+        private readonly Snapshot _snapshot;
 
         public IndexService(Snapshot snapshot)
         {
@@ -21,40 +22,27 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create a new index and returns head page address (skip list)
         /// </summary>
-        public CollectionIndex CreateIndex(CollectionPage col)
+        public CollectionIndex CreateIndex(string name, string expr, bool unique)
         {
-            // get index slot
-            var index = col.GetFreeIndex();
+            // get how many butes needed fore each head/tail (both has same size)
+            var bytesLength = IndexNode.GetNodeLength(MAX_LEVEL_LENGTH, BsonValue.MinValue);
 
-            // get a new index page for first index page
-            var page = _snapshot.NewPage<IndexPage>();
+            // get a free index page for head note (x2 for head + tail)
+            var indexPage = _snapshot.GetFreePage<IndexPage>(bytesLength * 2);
 
-            // create a empty node with full max level
-            var head = new IndexNode(MAX_LEVEL_LENGTH)
-            {
-                KeyLength = (ushort)BsonValue.MinValue.GetBytesCount(false),
-                Key = BsonValue.MinValue,
-                Slot = (byte)index.Slot,
-                Page = page
-            };
+            // create index ref
+            var index = _snapshot.CollectionPage.InsertCollectionIndex(name, expr, unique);
 
-            // add as first node
-            page.AddNode(head);
+            // insert head/tail nodes
+            var head = indexPage.InsertIndexNode(index.Slot, MAX_LEVEL_LENGTH, BsonValue.MinValue, PageAddress.Empty, bytesLength);
+            var tail = indexPage.InsertIndexNode(index.Slot, MAX_LEVEL_LENGTH, BsonValue.MaxValue, PageAddress.Empty, bytesLength);
 
-            // set index page as dirty
-            _snapshot.SetDirty(index.Page);
+            // link head-to-tail with double link list in first level
+            head.SetNext(0, tail.Position);
+            tail.SetPrev(0, head.Position);
 
-            // add indexPage on freelist if has space
-            _snapshot.AddOrRemoveToFreeList(true, page, index.Page, ref index.FreeIndexPageID);
-
-            // point the head/tail node to this new node position
-            index.HeadNode = head.Position;
-
-            // insert tail node
-            var tail = this.AddNode(index, BsonValue.MaxValue, MAX_LEVEL_LENGTH, null);
-
-            index.TailNode = tail.Position;
-            index.KeyCount = index.UniqueKeyCount = 0; // reset counter
+            index.Head = head.Position;
+            index.Tail = tail.Position;
 
             return index;
         }
@@ -62,7 +50,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Insert a new node index inside an collection index. Flip coin to know level
         /// </summary>
-        public IndexNode AddNode(CollectionIndex index, BsonValue key, IndexNode last)
+        public IndexNode AddNode(CollectionIndex index, BsonValue key, PageAddress dataBlock, IndexNode last)
         {
             // do not accept Min/Max value as index key (only head/tail can have this value)
             if (key.IsMaxValue || key.IsMinValue)
@@ -70,56 +58,45 @@ namespace LiteDB.Engine
                 throw LiteException.InvalidIndexKey($"BsonValue MaxValue/MinValue are not supported as index key");
             }
 
-            // when min/max values, use max level
+            // random level (flip coin mode) - return number between 1-32
             var level = this.FlipCoin();
 
             // set index collection with max-index level
             if (level > index.MaxLevel)
             {
-                index.MaxLevel = level;
-
-                _snapshot.SetDirty(index.Page);
+                // update max level
+                _snapshot.CollectionPage.UpdateCollectionIndex(index.Name).MaxLevel = level;
             }
 
             // call AddNode with key value
-            return this.AddNode(index, key, level, last);
+            return this.AddNode(index, key, dataBlock, level, last);
         }
 
         /// <summary>
         /// Insert a new node index inside an collection index.
         /// </summary>
-        private IndexNode AddNode(CollectionIndex index, BsonValue key, byte level, IndexNode last)
+        private IndexNode AddNode(CollectionIndex index, BsonValue key, PageAddress dataBlock, byte level, IndexNode last)
         {
-            // calc key size
-            var keyLength = key.GetBytesCount(false);
+            var keyLength = IndexNode.GetKeyLength(key);
 
-            // test for index key maxlength
+            // test for index key maxlength (length must fit in 1 byte)
             if (keyLength > MAX_INDEX_KEY_LENGTH) throw LiteException.InvalidIndexKey($"Index key must be less than {MAX_INDEX_KEY_LENGTH} bytes.");
 
-            // creating a new index node
-            var node = new IndexNode(level)
-            {
-                KeyLength = (ushort)keyLength,
-                Key = key,
-                Slot = (byte)index.Slot
-            };
+            // get a free index page for head note
+            var bytesLength = IndexNode.GetNodeLength(level, key);
+            var indexPage = _snapshot.GetFreePage<IndexPage>(bytesLength);
 
-            // get a free page to insert my index node
-            var page = _snapshot.GetFreePage<IndexPage>(index.FreeIndexPageID, node.Length);
-
-            node.Page = page;
-
-            // add index node to page
-            page.AddNode(node);
+            // create node in buffer
+            var node = indexPage.InsertIndexNode(index.Slot, level, key, dataBlock, bytesLength);
 
             // now, let's link my index node on right place
-            var cur = this.GetNode(index.HeadNode);
+            var cur = this.GetNode(index.Head);
 
             // using as cache last
             IndexNode cache = null;
 
             // scan from top left
-            for (var i = index.MaxLevel - 1; i >= 0; i--)
+            for (int i = index.MaxLevel - 1; i >= 0; i--)
             {
                 // get cache for last node
                 cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
@@ -144,63 +121,52 @@ namespace LiteDB.Engine
                     // cur = current (immediately before - prev)
                     // node = new inserted node
                     // next = next node (where cur is pointing)
-                    _snapshot.SetDirty(cur.Page);
 
-                    node.Next[i] = cur.Next[i];
-                    node.Prev[i] = cur.Position;
-                    cur.Next[i] = node.Position;
+                    node.SetNext((byte)i, cur.Next[i]);
+                    node.SetPrev((byte)i, cur.Position);
+                    cur.SetNext((byte)i, node.Position);
 
                     var next = this.GetNode(node.Next[i]);
 
                     if (next != null)
                     {
-                        next.Prev[i] = node.Position;
-                        _snapshot.SetDirty(next.Page);
+                        next.SetPrev((byte)i, node.Position);
                     }
                 }
             }
 
-            // add/remove indexPage on freelist if has space
-            _snapshot.AddOrRemoveToFreeList(page.FreeBytes > INDEX_RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
-
             // if last node exists, create a double link list
             if (last != null)
             {
-                // link new node with last node
-                if (last.NextNode.IsEmpty == false)
-                {
-                    // fix link pointer with has more nodes in list
-                    var next = this.GetNode(last.NextNode);
-                    next.PrevNode = node.Position;
-                    last.NextNode = node.Position;
-                    node.PrevNode = last.Position;
-                    node.NextNode = next.Position;
+                ENSURE(last.NextNode == PageAddress.Empty, "last index node must point to null");
 
-                    _snapshot.SetDirty(next.Page);
-                }
-                else
-                {
-                    last.NextNode = node.Position;
-                    node.PrevNode = last.Position;
-                }
-
-                // set last node page as dirty
-                _snapshot.SetDirty(last.Page);
+                last.SetNextNode(node.Position);
             }
 
             return node;
         }
 
         /// <summary>
+        /// Get a node inside a page using PageAddress - Returns null if address IsEmpty
+        /// </summary>
+        public IndexNode GetNode(PageAddress address)
+        {
+            if (address.PageID == uint.MaxValue) return null;
+
+            var indexPage = _snapshot.GetPage<IndexPage>(address.PageID);
+
+            return indexPage.GetIndexNode(address.Index);
+        }
+
+        /// <summary>
         /// Gets all node list from any index node (go forward and backward)
         /// </summary>
-        public IEnumerable<IndexNode> GetNodeList(IndexNode node, bool includeInitial)
+        public IEnumerable<IndexNode> GetNodeList(IndexNode pkNode, bool includeInitial)
         {
-            var next = node.NextNode;
-            var prev = node.PrevNode;
+            var next = pkNode.NextNode;
 
             // returns some initial node
-            if (includeInitial) yield return node;
+            if (includeInitial) yield return pkNode;
 
             // go forward
             while (next.IsEmpty == false)
@@ -209,128 +175,6 @@ namespace LiteDB.Engine
                 next = n.NextNode;
                 yield return n;
             }
-
-            // go backward
-            while (prev.IsEmpty == false)
-            {
-                var p = this.GetNode(prev);
-                prev = p.PrevNode;
-                yield return p;
-            }
-        }
-
-        /// <summary>
-        /// Deletes an indexNode from a Index and adjust Next/Prev nodes
-        /// </summary>
-        public void Delete(CollectionIndex index, PageAddress nodeAddress)
-        {
-            var node = this.GetNode(nodeAddress);
-            var page = node.Page;
-            var isUniqueKey = false;
-
-            // mark page as dirty here because, if deleted, page type will change
-            _snapshot.SetDirty(page);
-
-            for (int i = node.Prev.Length - 1; i >= 0; i--)
-            {
-                // get previous and next nodes (between my deleted node)
-                var prev = this.GetNode(node.Prev[i]);
-                var next = this.GetNode(node.Next[i]);
-
-                if (prev != null)
-                {
-                    prev.Next[i] = node.Next[i];
-                    _snapshot.SetDirty(prev.Page);
-                }
-                if (next != null)
-                {
-                    next.Prev[i] = node.Prev[i];
-                    _snapshot.SetDirty(next.Page);
-                }
-
-                // in level 0, if any sibling are same value it's not an unique key
-                if (i == 0)
-                {
-                    isUniqueKey = next?.Key == node.Key || prev?.Key == node.Key || false;
-                }
-            }
-
-            page.DeleteNode(node);
-
-            // if there is no more nodes in this page, delete them
-            if (page.NodesCount == 0)
-            {
-                // first, remove from free list
-                _snapshot.AddOrRemoveToFreeList(false, page, index.Page, ref index.FreeIndexPageID);
-
-                _snapshot.DeletePage(page.PageID);
-            }
-            else
-            {
-                // add or remove page from free list
-                _snapshot.AddOrRemoveToFreeList(page.FreeBytes > INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
-            }
-
-            // now remove node from nodelist 
-            var prevNode = this.GetNode(node.PrevNode);
-            var nextNode = this.GetNode(node.NextNode);
-
-            if (prevNode != null)
-            {
-                prevNode.NextNode = node.NextNode;
-                _snapshot.SetDirty(prevNode.Page);
-            }
-            if (nextNode != null)
-            {
-                nextNode.PrevNode = node.PrevNode;
-                _snapshot.SetDirty(nextNode.Page);
-            }
-        }
-
-        /// <summary>
-        /// Drop all indexes pages. Each index use a single page sequence
-        /// </summary>
-        public void DropIndex(CollectionIndex index)
-        {
-            var pages = new HashSet<uint>();
-            var nodes = this.FindAll(index, Query.Ascending);
-
-            // get reference for pageID from all index nodes
-            foreach (var node in nodes)
-            {
-                pages.Add(node.Position.PageID);
-
-                // for each node I need remove from node list datablock reference
-                var prevNode = this.GetNode(node.PrevNode);
-                var nextNode = this.GetNode(node.NextNode);
-
-                if (prevNode != null)
-                {
-                    prevNode.NextNode = node.NextNode;
-                    _snapshot.SetDirty(prevNode.Page);
-                }
-                if (nextNode != null)
-                {
-                    nextNode.PrevNode = node.PrevNode;
-                    _snapshot.SetDirty(nextNode.Page);
-                }
-            }
-
-            // now delete all pages
-            foreach (var pageID in pages)
-            {
-                _snapshot.DeletePage(pageID);
-            }
-        }
-
-        /// <summary>
-        /// Get a node inside a page using PageAddress - Returns null if address IsEmpty
-        /// </summary>
-        public IndexNode GetNode(PageAddress address)
-        {
-            if (address.IsEmpty) return null;
-            var page = _snapshot.GetPage<IndexPage>(address.PageID);
-            return page.GetNode(address.Index);
         }
 
         /// <summary>
@@ -347,21 +191,100 @@ namespace LiteDB.Engine
             return level;
         }
 
-        #region Find
+        /// <summary>
+        /// Deletes all indexes nodes from pkNode
+        /// </summary>
+        public void Delete(PageAddress pkAddress)
+        {
+            var next = pkAddress;
 
+            // get all nodes
+            while(next != PageAddress.Empty)
+            {
+                var node = this.GetNode(next);
+
+                for (int i = node.Level - 1; i >= 0; i--)
+                {
+                    // get previous and next nodes (between my deleted node)
+                    var prevNode = this.GetNode(node.Prev[i]);
+                    var nextNode = this.GetNode(node.Next[i]);
+
+                    if (prevNode != null)
+                    {
+                        prevNode.SetNext((byte)i, node.Next[i]);
+                    }
+                    if (nextNode != null)
+                    {
+                        nextNode.SetPrev((byte)i, node.Prev[i]);
+                    }
+                }
+
+                // get current slot position in free list
+                var slot = BasePage.FreeIndexSlot(node.Page.FreeBytes);
+
+                node.Page.DeleteIndexNode(node.Position.Index);
+
+                // update (if needed) slot position
+                _snapshot.AddOrRemoveFreeList(node.Page, slot);
+
+                // move to next node
+                next = node.NextNode;
+            }
+        }
+
+        /// <summary>
+        /// Delete all index nodes from a specific collection index. Scan over all PK nodes, read all nodes list and remove
+        /// </summary>
+        public void DropIndex(CollectionIndex index)
+        {
+            var slot = index.Slot;
+            var pkIndex = _snapshot.CollectionPage.PK;
+
+            foreach(var pkNode in this.FindAll(pkIndex, Query.Ascending))
+            {
+                var next = pkNode.NextNode;
+                var last = pkNode;
+
+                while (next != PageAddress.Empty)
+                {
+                    var node = this.GetNode(next);
+
+                    if (node.Slot == slot)
+                    {
+                        // delete node from page (mark as dirty)
+                        node.Page.DeleteIndexNode(node.Position.Index);
+
+                        last.SetNextNode(node.NextNode);
+                    }
+                    else
+                    {
+                        last = node;
+                    }
+
+                    next = node.NextNode;
+                }
+            }
+
+            // removing head/tail index nodes
+            this.GetNode(index.Head).Page.DeleteIndexNode(index.Head.Index);
+            this.GetNode(index.Tail).Page.DeleteIndexNode(index.Tail.Index);
+        }
+
+        #region Find
+        
         /// <summary>
         /// Return all index nodes from an index
         /// </summary>
         public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
         {
-            var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
+            var cur = order == Query.Ascending ? this.GetNode(index.Head) : this.GetNode(index.Tail);
 
-            while (!cur.NextPrev(0, order).IsEmpty)
+            while (!cur.GetNextPrev(0, order).IsEmpty)
             {
-                cur = this.GetNode(cur.NextPrev(0, order));
+                cur = this.GetNode(cur.GetNextPrev(0, order));
 
                 // stop if node is head/tail
-                if (cur.IsHeadTail(index)) yield break;
+                if (cur.Key.IsMinValue || cur.Key.IsMaxValue) yield break;
 
                 yield return cur;
             }
@@ -374,19 +297,20 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode Find(CollectionIndex index, BsonValue value, bool sibling, int order)
         {
-            var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
+            var cur = order == Query.Ascending ? this.GetNode(index.Head) : this.GetNode(index.Tail);
 
-            for (var i = index.MaxLevel - 1; i >= 0; i--)
+            for (int i = index.MaxLevel - 1; i >= 0; i--)
             {
-                for (; cur.NextPrev(i, order).IsEmpty == false; cur = this.GetNode(cur.NextPrev(i, order)))
+                for (; cur.GetNextPrev((byte)i, order).IsEmpty == false; cur = this.GetNode(cur.GetNextPrev((byte)i, order)))
                 {
-                    var next = this.GetNode(cur.NextPrev(i, order));
+                    var next = this.GetNode(cur.GetNextPrev((byte)i, order));
                     var diff = next.Key.CompareTo(value);
 
                     if (diff == order && (i > 0 || !sibling)) break;
                     if (diff == order && i == 0 && sibling)
                     {
-                        return next.IsHeadTail(index) ? null : next;
+                        // is head/tail?
+                        return (next.Key.IsMinValue || next.Key.IsMaxValue) ? null : next;
                     }
 
                     // if equals, return index node

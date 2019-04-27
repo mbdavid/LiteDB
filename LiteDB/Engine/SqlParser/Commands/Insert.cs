@@ -43,7 +43,6 @@ namespace LiteDB.Engine
 
                 switch(type.Value.ToUpper())
                 {
-                    case "DATE": return BsonAutoId.DateTime;
                     case "GUID": return BsonAutoId.Guid;
                     case "INT": return BsonAutoId.Int32;
                     case "LONG": return BsonAutoId.Int64;

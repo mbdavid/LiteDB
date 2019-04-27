@@ -17,11 +17,6 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read/Write snapshot with reserved lock
         /// </summary>
-        Write,
-
-        /// <summary>
-        /// Current snap has no read/write lock
-        /// </summary>
-        None 
+        Write
     }
 }

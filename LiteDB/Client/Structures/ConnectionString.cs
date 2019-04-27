@@ -29,6 +29,11 @@ namespace LiteDB
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
+        /// "password": Database password used to encrypt/decypted data pages
+        /// </summary>
+        public string Password { get; set; } = null;
+
+        /// <summary>
         /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: 0 bytes)
         /// Supported in [Local, Shared] connection type
         /// </summary>
@@ -41,22 +46,10 @@ namespace LiteDB
         public long LimitSize { get; set; } = long.MaxValue;
 
         /// <summary>
-        /// "log": Debug messages from engine - (default: Logger.NONE)
-        /// Supported in [Local, Shared] connection type
-        /// </summary>
-        public byte Log { get; set; } = Logger.NONE;
-
-        /// <summary>
         /// "utc": Returns date in UTC timezone from BSON deserialization (default: false - LocalTime)
         /// Supported in [Local, Shared] connection type
         /// </summary>
         public bool UtcDate { get; set; } = false;
-
-        /// <summary>
-        /// "checkpoint": Indicate that engine will do a checkpoint on dispose database (default: true)
-        /// Supported in [Local, Shared] connection type
-        /// </summary>
-        public bool CheckpointOnShutdown { get; set; } = true;
 
         /// <summary>
         /// "readonly": Open datafile in readonly mode (default: false)
@@ -94,13 +87,12 @@ namespace LiteDB
             this.Mode = _values.GetValue("mode", this.Mode);
             this.Filename = _values.GetValue("filename", this.Filename);
 
+            this.Password = _values.GetValue("password", this.Password);
             this.Timeout = _values.GetValue("timeout", this.Timeout);
             this.InitialSize = _values.GetFileSize(@"initial size", this.InitialSize);
             this.LimitSize = _values.GetFileSize(@"limit size", this.LimitSize);
-            this.Log = _values.GetValue("log", this.Log);
             this.UtcDate = _values.GetValue("utc", this.UtcDate);
             this.ReadOnly = _values.GetValue("readonly", this.ReadOnly);
-            this.CheckpointOnShutdown = _values.GetValue("checkpoint", this.CheckpointOnShutdown);
         }
 
         /// <summary>
@@ -116,12 +108,11 @@ namespace LiteDB
             var settings = new EngineSettings
             {
                 Filename = this.Filename,
+                Password = this.Password,
                 InitialSize = this.InitialSize,
                 LimitSize = this.LimitSize,
                 UtcDate = this.UtcDate,
                 Timeout = this.Timeout,
-                LogLevel = this.Log,
-                CheckpointOnShutdown = this.CheckpointOnShutdown,
                 ReadOnly = this.ReadOnly
             };
 

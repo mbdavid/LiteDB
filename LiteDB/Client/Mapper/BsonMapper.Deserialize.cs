@@ -235,10 +235,10 @@ namespace LiteDB
 
         private void DeserializeDictionary(Type K, Type T, IDictionary dict, BsonDocument value)
         {
-            foreach (var key in value.Keys)
+            foreach (var el in value.GetElements())
             {
-                var k = K.GetTypeInfo().IsEnum ? Enum.Parse(K, key) : Convert.ChangeType(key, K);
-                var v = this.Deserialize(T, value[key]);
+                var k = K.GetTypeInfo().IsEnum ? Enum.Parse(K, el.Key) : Convert.ChangeType(el.Key, K);
+                var v = this.Deserialize(T, el.Value);
 
                 dict.Add(k, v);
             }

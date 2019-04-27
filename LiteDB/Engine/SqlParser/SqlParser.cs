@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -24,7 +25,9 @@ namespace LiteDB.Engine
         {
             var first = _tokenizer.ReadToken().Expect(TokenType.Word);
 
-            switch(first.Value.ToUpper())
+            LOG($"execution `{first.Value.ToUpper()}`", "SQL");
+
+            switch (first.Value.ToUpper())
             {
                 case "SELECT": return this.ParseSelect(false);
                 case "EXPLAIN":
@@ -41,6 +44,7 @@ namespace LiteDB.Engine
                 case "CHECKPOINT": return this.ParseCheckpoint();
                 case "SHRINK": return this.ParseShrink();
                 case "VACCUM": return this.ParseVaccum();
+                case "CHECK": return this.ParseCheck();
 
                 case "BEGIN": return this.ParseBegin();
                 case "ROLLBACK": return this.ParseRollback();

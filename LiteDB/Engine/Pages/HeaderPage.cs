@@ -3,17 +3,17 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
+    /// <summary>
+    /// Header page represent first page on datafile. Engine contains a single instance of HeaderPage and all changes
+    /// must be syncornized (using lock).
+    /// </summary>
     internal class HeaderPage : BasePage
     {
-        /// <summary>
-        /// Page type = Header
-        /// </summary>
-        public override PageType PageType { get { return PageType.Header; } }
-
         /// <summary>
         /// Header info the validate that datafile is a LiteDB file (27 bytes)
         /// </summary>
@@ -21,8 +21,25 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Datafile specification version
+        /// This data still at same position as v4 (FILE_VERSION=7)
         /// </summary>
         public const byte FILE_VERSION = 8;
+
+        #region Buffer Field Positions
+
+        private const int P_HEADER_INFO = 32;  // 32-58 (27 bytes)
+        private const int P_FILE_VERSION = 59; // 59-59 (1 byte)
+        private const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63 (4 bytes)
+        private const int P_LAST_PAGE_ID = 64; // 64-67 (4 bytes)
+        private const int P_CREATION_TIME = 68; // 68-75 (8 bytes)
+        private const int P_USER_VERSION = 76; // 76-79 (4 bytes)
+        // reserved 80-95 (16 bytes)
+        private const int P_COLLECTIONS = 96; // 96-8095 (8000 bytes)
+        // reserved 8096-8191 (96 bytes)
+
+        private const int COLLECTIONS_SIZE = 8000; // 250 blocks with 32 bytes each
+
+        #endregion
 
         /// <summary>
         /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page) [4 bytes]
@@ -37,12 +54,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// DateTime when database was created [8 bytes]
         /// </summary>
-        public DateTime CreationTime { get; set; }
-
-        /// <summary>
-        /// DateTime when database run checkpoint [8 bytes]
-        /// </summary>
-        public DateTime LastCheckpoint { get; set; }
+        public DateTime CreationTime { get; }
 
         /// <summary>
         /// UserVersion int - for user get/set database version changes
@@ -50,168 +62,191 @@ namespace LiteDB.Engine
         public int UserVersion { get; set; }
 
         /// <summary>
-        /// Get data strcuture file version. If not equals to FILE_VERSION const (8) must be upgrade 
+        /// All collections names/link pointers are stored inside this document
         /// </summary>
-        public byte FileVersion { get; set; }
+        private BsonDocument _collections;
 
         /// <summary>
-        /// Contains all collection in database using PageID to direct access
+        /// Check if collections was changed
         /// </summary>
-        public ConcurrentDictionary<string, uint> Collections { get; set; }
+        private bool _isCollectionsChanged = false;
 
-        private HeaderPage()
+        /// <summary>
+        /// Create new Header Page
+        /// </summary>
+        public HeaderPage(PageBuffer buffer, uint pageID)
+            : base(buffer, pageID, PageType.Header)
         {
-        }
-
-        public HeaderPage(uint pageID)
-            : base(pageID)
-        {
-            this.ItemCount = 0; // used to store collection names
-            this.FreeBytes = 0; // no free bytes on header
+            // initialize page version
+            this.CreationTime = DateTime.UtcNow;
             this.FreeEmptyPageID = uint.MaxValue;
             this.LastPageID = 0;
-            this.CreationTime = DateTime.Now;
-            this.LastCheckpoint = DateTime.MinValue;
             this.UserVersion = 0;
-            this.FileVersion = FILE_VERSION;
-            this.Collections = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+
+            // writing direct into buffer in Ctor() because there is no change later (write once)
+            _buffer.Write(HEADER_INFO, P_HEADER_INFO);
+            _buffer.Write(FILE_VERSION, P_FILE_VERSION);
+            _buffer.Write(this.CreationTime, P_CREATION_TIME);
+
+            // initialize collections
+            _collections = new BsonDocument();
         }
 
         /// <summary>
-        /// Update header page with new/drop collections
+        /// Load HeaderPage from buffer page
         /// </summary>
-        public void UpdateCollections(TransactionPages transPages)
+        public HeaderPage(PageBuffer buffer)
+            : base(buffer)
         {
-            // remove/add collections based on transPages
-            if (transPages.DeletedCollection != null)
-            {
-                if (this.Collections.TryRemove(transPages.DeletedCollection, out var x) == false)
-                {
-                    throw LiteException.CollectionNotFound(transPages.DeletedCollection);
-                }
-            }
+            if (this.PageType != PageType.Header) throw new LiteException(0, $"Invalid HeaderPage buffer on {PageID}");
 
-            // add all new collections
-            foreach (var p in transPages.NewCollections)
-            {
-                if (this.Collections.TryAdd(p.Key, p.Value) == false)
-                {
-                    throw LiteException.CollectionAlreadyExist(p.Key);
-                }
-            }
+            // CreateTime is readonly
+            this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
 
-            // update header collection count
-            this.ItemCount = this.ItemCount 
-                + transPages.NewCollections.Count
-                - (transPages.DeletedCollection == null ? 0 : 1);
+            this.LoadPage();
         }
 
         /// <summary>
-        /// Check if all new collection names fit on header page with all existing collection
+        /// Load page content based on page buffer
         /// </summary>
-        public void CheckCollectionsSize(string newCollection)
+        private void LoadPage()
         {
-            var sum =
-                this.Collections.Sum(x => x.Key.Length + 8) +
-                (newCollection.Length + 8);
+            var info = _buffer.ReadString(P_HEADER_INFO, HEADER_INFO.Length);
+            var ver = _buffer[P_FILE_VERSION];
 
-            if (sum >= MAX_COLLECTIONS_NAME_SIZE)
-            {
-                throw LiteException.CollectionLimitExceeded(MAX_COLLECTIONS_NAME_SIZE);
-            }
-        }
-
-        #region Read/Write pages
-
-        protected override void ReadContent(BinaryReader reader, bool utcDate)
-        {
-            // this will check for v7 datafile structure
-            if (this.TransactionID.ToByteArray().BinaryCompareTo(V7_TRANSID) == 0)
-            {
-                // must stop read now because this page structure is not compatible with old v7
-                this.FileVersion = 7;
-                return;
-            }
-
-            var start = reader.BaseStream.Position;
-
-            var info = reader.ReadFixedString(HEADER_INFO.Length); // 27
-            var ver = reader.ReadByte(); // 1
-
-            if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
+            if (string.CompareOrdinal(info, HEADER_INFO) != 0) throw LiteException.InvalidDatabase();
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
 
-            this.FreeEmptyPageID = reader.ReadUInt32(); // 4
-            this.LastPageID = reader.ReadUInt32(); // 4
-            this.CreationTime = reader.ReadDateTime(utcDate); // 8
-            this.LastCheckpoint = reader.ReadDateTime(utcDate); // 8
-            this.UserVersion = reader.ReadInt32(); // 4
+            this.FreeEmptyPageID = _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
+            this.LastPageID = _buffer.ReadUInt32(P_LAST_PAGE_ID);
+            this.UserVersion = _buffer.ReadInt32(P_USER_VERSION);
 
-            // read resered bytes (256 - 56 = 200 bytes)
-            var used = reader.BaseStream.Position - start;
-            var reserved = (int)(HEADER_PAGE_FIXED_DATA_SIZE - used);
+            // create new buffer area to store BsonDocument collections
+            var area = _buffer.Slice(P_COLLECTIONS, COLLECTIONS_SIZE);
 
-            reader.ReadBytes(reserved);
-
-            DEBUG(reserved != 200, "For current version, reserved space must return 200 bytes");
-
-            for (var i = 0; i < this.ItemCount; i++)
+            using (var r = new BufferReader(new[] { area }, false))
             {
-                this.Collections.TryAdd(reader.ReadString(), reader.ReadUInt32());
+                _collections = r.ReadDocument();
+            }
+
+            _isCollectionsChanged = false;
+        }
+
+        public override PageBuffer UpdateBuffer()
+        {
+            _buffer.Write(this.FreeEmptyPageID, P_FREE_EMPTY_PAGE_ID);
+            _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
+            _buffer.Write(this.UserVersion, P_USER_VERSION);
+
+            // update collection only if needed
+            if (_isCollectionsChanged)
+            {
+                var area = _buffer.Slice(P_COLLECTIONS, COLLECTIONS_SIZE);
+
+                using (var w = new BufferWriter(area))
+                {
+                    w.WriteDocument(_collections);
+                }
+
+                _isCollectionsChanged = false;
+            }
+
+            return base.UpdateBuffer();
+        }
+
+        /// <summary>
+        /// Create a save point before do any change on header page (execute UpdateBuffer())
+        /// </summary>
+        public PageBuffer Savepoint()
+        {
+            this.UpdateBuffer();
+
+            var savepoint = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
+
+            System.Buffer.BlockCopy(_buffer.Array, _buffer.Offset, savepoint.Array, savepoint.Offset, PAGE_SIZE);
+
+            return savepoint;
+        }
+
+        /// <summary>
+        /// Restore savepoint content and override on page. Must run in lock(_header)
+        /// </summary>
+        public void Restore(PageBuffer savepoint)
+        {
+            System.Buffer.BlockCopy(savepoint.Array, savepoint.Offset, _buffer.Array, _buffer.Offset, PAGE_SIZE);
+
+            this.LoadPage();
+        }
+
+        /// <summary>
+        /// Get collection PageID - return uint.MaxValue if not exists
+        /// </summary>
+        public uint GetCollectionPageID(string collection)
+        {
+            if (_collections.TryGetValue(collection, out var pageID))
+            {
+                return (uint)pageID.AsInt32;
+            }
+
+            return uint.MaxValue;
+        }
+
+        /// <summary>
+        /// Get all collections with pageID
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, uint>> GetCollections()
+        {
+            foreach(var el in _collections.GetElements())
+            {
+                yield return new KeyValuePair<string, uint>(el.Key, (uint)el.Value.AsInt32);
             }
         }
 
-        protected override void WriteContent(BinaryWriter writer)
+        /// <summary>
+        /// Insert new collection in header
+        /// </summary>
+        public void InsertCollection(string name, uint pageID)
         {
-            var start = writer.BaseStream.Position;
+            _collections[name] = (int)pageID;
 
-            writer.WriteFixedString(HEADER_INFO);
-            writer.Write(FILE_VERSION);
-            writer.Write(this.FreeEmptyPageID);
-            writer.Write(this.LastPageID);
-            writer.Write(this.CreationTime);
-            writer.Write(this.LastCheckpoint);
-            writer.Write(this.UserVersion);
-
-            // write resered bytes
-            var used = writer.BaseStream.Position - start;
-            var reserved = HEADER_PAGE_FIXED_DATA_SIZE - used;
-
-            DEBUG(reserved != 200, "For current version, reserved space must return 200 bytes");
-
-            writer.Write(new byte[reserved]);
-
-            foreach (var col in this.Collections)
-            {
-                writer.Write(col.Key);
-                writer.Write(col.Value);
-            }
+            _isCollectionsChanged = true;
         }
 
-        public HeaderPage Clone()
+        /// <summary>
+        /// Remove existing collection reference in header
+        /// </summary>
+        public void DeleteCollection(string name)
         {
-            return new HeaderPage
-            {
-                // base page
-                PageID = this.PageID,
-                PrevPageID = this.PrevPageID,
-                NextPageID = this.NextPageID,
-                ItemCount = this.ItemCount,
-                FreeBytes = this.FreeBytes,
-                ColID = this.ColID,
-                TransactionID = this.TransactionID,
-                IsConfirmed = this.IsConfirmed,
-                // header page
-                FreeEmptyPageID = this.FreeEmptyPageID,
-                LastPageID = this.LastPageID,
-                CreationTime = this.CreationTime,
-                LastCheckpoint = this.LastCheckpoint,
-                UserVersion = this.UserVersion,
-                FileVersion = this.FileVersion,
-                Collections = new ConcurrentDictionary<string, uint>(this.Collections)
-            };
+            _collections.Remove(name);
+
+            _isCollectionsChanged = true;
         }
 
-        #endregion
+        /// <summary>
+        /// Rename collection with new name
+        /// </summary>
+        public void RenameCollection(string oldName, string newName)
+        {
+            var pageID = _collections[oldName];
+
+            _collections.Remove(oldName);
+
+            _collections.Add(newName, pageID);
+
+            _isCollectionsChanged = true;
+        }
+
+        /// <summary>
+        /// Get how many bytes are avaiable in collection to store new collections
+        /// </summary>
+        public int GetAvaiableCollectionSpace()
+        {
+            return COLLECTIONS_SIZE -
+                _collections.GetBytesCount() -
+                1 + // for int32 type (0x10)
+                1 + // for new CString ('\0')
+                4 + // for PageID (int32)
+                8; // reserved
+        }
     }
 }

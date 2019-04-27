@@ -321,7 +321,7 @@ namespace LiteDB
 
             // read key value
             var keys = new List<Expression>();
-            var values = new List<Expression>();
+            var values = new List<BsonExpression>();
             var source = new StringBuilder();
             var isImmutable = true;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -372,7 +372,7 @@ namespace LiteDB
 
                 // add key and value to parameter list (as an expression)
                 keys.Add(Expression.Constant(key));
-                values.Add(value.Expression);
+                values.Add(value);
 
                 // include value source in current source
                 source.Append(value.Source);
@@ -386,14 +386,15 @@ namespace LiteDB
             }
 
             var arrKeys = Expression.NewArrayInit(typeof(string), keys.ToArray());
-            var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.ToArray());
+            var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.Select(x => x.Expression).ToArray());
+            var arrSources = Expression.NewArrayInit(typeof(string), values.Select(x => Expression.Constant(x.Source)).ToArray());
 
             return new BsonExpression
             {
                 Type = BsonExpressionType.Document,
                 IsImmutable = isImmutable,
                 Fields = fields,
-                Expression = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues }),
+                Expression = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues, arrSources }),
                 Source = source.ToString()
             };
         }

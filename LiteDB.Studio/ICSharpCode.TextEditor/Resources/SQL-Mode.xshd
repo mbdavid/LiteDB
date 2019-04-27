@@ -79,6 +79,7 @@ http://minisqlquery.codeplex.com/license
         <Key word="VALUES" />
         <Key word="SELECT" />
         <Key word="ALL" />
+        <Key word="FULL" />
         <Key word="FROM" />
         <Key word="WHERE" />
         <Key word="INCLUDE" />
@@ -97,6 +98,8 @@ http://minisqlquery.codeplex.com/license
         <Key word="UPDATE" />
         <Key word="REPLACE" />
         <Key word="VACCUM" />
+        <Key word="CHECK" />
+        <Key word="INTEGRITY" />
       </KeyWords>
       
       <KeyWords name="SqlMethods" bold="false" italic="false" color="Fuchsia">

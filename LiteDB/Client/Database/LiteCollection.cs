@@ -42,7 +42,6 @@ namespace LiteDB
                         _id.DataType == typeof(Int32) || _id.DataType == typeof(Int32?) ? BsonAutoId.Int32 :
                         _id.DataType == typeof(Int64) || _id.DataType == typeof(Int64?) ? BsonAutoId.Int64 :
                         _id.DataType == typeof(Guid) || _id.DataType == typeof(Guid?) ? BsonAutoId.Guid :
-                        _id.DataType == typeof(DateTime) || _id.DataType == typeof(DateTime?) ? BsonAutoId.DateTime :
                         BsonAutoId.ObjectId;
                 }
             }

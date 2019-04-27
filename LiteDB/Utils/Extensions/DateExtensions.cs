@@ -19,6 +19,31 @@ namespace LiteDB
                 dt.Kind);
         }
 
+        /// <summary>
+        /// Cache time zone difference (in timespan)
+        /// </summary>
+        private static TimeSpan _timeZoneDiff = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now);
+
+        /// <summary>
+        /// Fastest way to convert Local time in UTC time
+        /// </summary>
+        public static DateTime ToUtc(this DateTime dt)
+        {
+            if (dt.Kind == DateTimeKind.Utc || dt == DateTime.MinValue || dt == DateTime.MaxValue) return dt;
+
+            return dt.Subtract(_timeZoneDiff);
+        }
+
+        /// <summary>
+        /// Fastest way to convert UTC time in Local time
+        /// </summary>
+        public static DateTime ToLocal(this DateTime dt)
+        {
+            if (dt.Kind == DateTimeKind.Local || dt == DateTime.MinValue || dt == DateTime.MaxValue) return dt;
+
+            return dt.Add(_timeZoneDiff);
+        }
+
         public static int MonthDifference(this DateTime startDate, DateTime endDate)
         {
             // https://stackoverflow.com/a/1526116/3286260

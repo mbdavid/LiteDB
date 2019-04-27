@@ -2,26 +2,24 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
-        private ConcurrentDictionary<ObjectId, TransactionService> _transactions = new ConcurrentDictionary<ObjectId, TransactionService>();
+        private readonly ConcurrentDictionary<uint, TransactionService> _transactions = new ConcurrentDictionary<uint, TransactionService>();
         private LocalDataStoreSlot _slot = Thread.GetNamedDataSlot(Guid.NewGuid().ToString("n"));
 
         internal TransactionService GetTransaction(bool create, out bool isNew)
         {
-            // if engine are disposing, do not accept any transaction/operation
-            if (_shutdown) throw LiteException.DatabaseShutdown();
-
             var transaction = Thread.GetData(_slot) as TransactionService;
 
             if (create && transaction == null)
             {
                 isNew = true;
 
-                transaction = new TransactionService(_header, _locker, _dataFile, _wal, _log, (id) =>
+                transaction = new TransactionService(_header, _locker, _disk, _walIndex, _settings.MaxTransactionSize, (id) =>
                 {
                     Thread.SetData(_slot, null);
 
@@ -49,6 +47,10 @@ namespace LiteDB.Engine
         {
             var transacion = this.GetTransaction(true, out var isNew);
 
+            transacion.ExplicitTransaction = true;
+
+            if (transacion.OpenCursors > 0) throw new LiteException(0, "This thread contains an open cursors/query. Close cursors before Begin()");
+
             return isNew;
         }
 
@@ -61,6 +63,9 @@ namespace LiteDB.Engine
 
             if (transaction != null)
             {
+                // do not accept explicit commit transaction when contains open cursors running
+                if (transaction.OpenCursors > 0) throw new LiteException(0, "This thread contains an open query/cursor. Close cursors before run Commit()");
+
                 return transaction.Commit();
             }
             else
@@ -98,7 +103,7 @@ namespace LiteDB.Engine
                 var result = fn(transaction);
 
                 // if this transaction was auto-created for this operation, commit & dispose now
-                if (isNew)
+                if (isNew && transaction.OpenCursors == 0)
                 {
                     transaction.Commit();
                 }
@@ -107,7 +112,7 @@ namespace LiteDB.Engine
             }
             catch(Exception ex)
             {
-                _log.Error(ex);
+                LOG(ex.Message, "ERROR");
 
                 transaction.Rollback();
 

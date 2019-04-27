@@ -48,7 +48,7 @@ namespace LiteDB
         {
             this.Visit(expr);
 
-            DEBUG(_nodes.Count > 0, "node stack must be empty when finish expression resolve");
+            ENSURE(_nodes.Count == 0, "node stack must be empty when finish expression resolve");
 
             var expression = _builder.ToString();
 
@@ -230,7 +230,7 @@ namespace LiteDB
                 _nodes.Pop();
             }
 
-            DEBUG(_nodes.Count > 0, "counter stack must be zero to eval all properties/field over object");
+            ENSURE(_nodes.Count == 0, "counter stack must be zero to eval all properties/field over object");
 
             var parameter = "p" + (_paramIndex++);
 

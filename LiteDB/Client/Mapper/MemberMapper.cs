@@ -6,9 +6,7 @@ namespace LiteDB
     /// <summary>
     /// Internal representation for a .NET member mapped to BsonDocument
     /// </summary>
-    public class 
-        
-        MemberMapper
+    public class MemberMapper
     {
         /// <summary>
         /// If member is Id, indicate that are AutoId

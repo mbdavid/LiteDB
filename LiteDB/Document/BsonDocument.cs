@@ -49,6 +49,8 @@ namespace LiteDB
             }
             set
             {
+                this.Length = null; // reset GetBytesLength()
+
                 this.RawValue[name] = value ?? BsonValue.Null;
             }
         }
@@ -58,11 +60,11 @@ namespace LiteDB
         /// <summary>
         /// Get an IEnumerable of values from a json-like path inside document. Use BsonExpression to parse this path
         /// </summary>
-        public IEnumerable<BsonValue> Get(string path, bool includeNullIfEmpty = false)
+        public IEnumerable<BsonValue> Get(string pathExpression)
         {
-            var expr = BsonExpression.Create(path);
+            var expr = BsonExpression.Create(pathExpression);
 
-            return expr.Execute(this, includeNullIfEmpty);
+            return expr.Execute(this);
         }
 
         /// <summary>
@@ -77,6 +79,8 @@ namespace LiteDB
             {
                 myDict[key] = otherDict[key];
             }
+
+            this.Length = null; // reset GetBytesLength()
 
             return this;
         }
@@ -109,6 +113,7 @@ namespace LiteDB
 
             // test keys length to check which is bigger
             if (i == thisLength) return i == otherLength ? 0 : -1;
+
             return 1;
         }
 
@@ -121,77 +126,68 @@ namespace LiteDB
 
         #region IDictionary
 
-        public ICollection<string> Keys
-        {
-            get
-            {
-                return this.RawValue.Keys
-                    .OrderBy(x => x == "_id" ? 1 : 2)
-                    .ToList();
-            }
-        }
+        public ICollection<string> Keys => this.RawValue.Keys;
 
-        public ICollection<BsonValue> Values
-        {
-            get
-            {
-                return this.RawValue.Values;
-            }
-        }
+        public ICollection<BsonValue> Values => this.RawValue.Values;
 
-        public int Count
-        {
-            get
-            {
-                return this.RawValue.Count;
-            }
-        }
+        public int Count => this.RawValue.Count;
 
-        public bool IsReadOnly
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public bool IsReadOnly => false;
 
-        public bool ContainsKey(string key)
+        public bool ContainsKey(string key) => this.RawValue.ContainsKey(key);
+
+        /// <summary>
+        /// Get all document elements - Return "_id" as first of all (if exists)
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, BsonValue>> GetElements()
         {
-            return this.RawValue.ContainsKey(key);
+            if(this.RawValue.TryGetValue("_id", out var id))
+            {
+                yield return new KeyValuePair<string, BsonValue>("_id", id);
+            }
+
+            foreach(var item in this.RawValue.Where(x => x.Key != "_id"))
+            {
+                yield return item;
+            }
         }
 
         public void Add(string key, BsonValue value)
         {
+            this.Length = null; // reset GetBytesLength()
+
             this[key] = value;
         }
 
         public bool Remove(string key)
         {
+            this.Length = null; // reset GetBytesLength()
+
             return this.RawValue.Remove(key);
         }
 
-        public bool TryGetValue(string key, out BsonValue value)
-        {
-            return this.RawValue.TryGetValue(key, out value);
-        }
+        public bool TryGetValue(string key, out BsonValue value) => this.RawValue.TryGetValue(key, out value);
 
         public void Add(KeyValuePair<string, BsonValue> item)
         {
+            this.Length = null; // reset GetBytesLength()
+
             this[item.Key] = item.Value;
         }
 
         public void Clear()
         {
+            this.Length = null; // reset GetBytesLength()
+
             this.RawValue.Clear();
         }
 
-        public bool Contains(KeyValuePair<string, BsonValue> item)
-        {
-            return this.RawValue.Contains(item);
-        }
+        public bool Contains(KeyValuePair<string, BsonValue> item) => this.RawValue.Contains(item);
 
         public void CopyTo(KeyValuePair<string, BsonValue>[] array, int arrayIndex)
         {
+            this.Length = null; // reset GetBytesLength()
+
             ((ICollection<KeyValuePair<string, BsonValue>>)this.RawValue).CopyTo(array, arrayIndex);
         }
 
@@ -208,18 +204,14 @@ namespace LiteDB
 
         public bool Remove(KeyValuePair<string, BsonValue> item)
         {
+            this.Length = null; // reset GetBytesLength()
+
             return this.RawValue.Remove(item.Key);
         }
 
-        public IEnumerator<KeyValuePair<string, BsonValue>> GetEnumerator()
-        {
-            return this.RawValue.GetEnumerator();
-        }
+        public IEnumerator<KeyValuePair<string, BsonValue>> GetEnumerator() => this.RawValue.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.RawValue.GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => this.RawValue.GetEnumerator();
 
         #endregion
     }

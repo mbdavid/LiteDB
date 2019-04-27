@@ -13,8 +13,6 @@ namespace LiteDB.Engine
     interface IFileReader
     {
         DateTime CreationTime { get; }
-        uint CommitCounter { get; }
-        DateTime LastCommit { get; }
         int UserVersion { get; }
 
         IEnumerable<string> GetCollections();

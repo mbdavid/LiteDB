@@ -23,7 +23,6 @@ namespace LiteDB.Tests.Query
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"LiteDB.Tests.Sql.Scripts.{name}.sql");
             var reader = new StreamReader(stream);
-            var sql = reader.ReadToEnd();
 
             var par = new BsonDocument();
 
@@ -33,20 +32,21 @@ namespace LiteDB.Tests.Query
 
                 try
                 {
-                    using (var data = db.Execute(sql, par))
+                    while(!reader.EndOfStream)
                     {
-                        while (data.NextResult()) ;
+                        var data = db.Execute(reader, par);
                     }
                 }
                 catch(LiteException ex) when (ex.ErrorCode == LiteException.UNEXPECTED_TOKEN)
                 {
-                    var p = (int)ex.Position;
-                    var start = (int)Math.Max(p - 30, 1) - 1;
-                    var end = Math.Min(p + 15, sql.Length);
-                    var length = end - start;
-                    var str = sql.Substring(start, length).Replace('\n', ' ').Replace('\r', ' ');
-
-                    Assert.Fail($"{ex.Message} - {str}");
+                    //var p = (int)ex.Position;
+                    //var start = (int)Math.Max(p - 30, 1) - 1;
+                    //var end = Math.Min(p + 15, sql.Length);
+                    //var length = end - start;
+                    //var str = sql.Substring(start, length).Replace('\n', ' ').Replace('\r', ' ');
+                    //
+                    //Assert.Fail($"{ex.Message} - {str}");
+                    throw;
                 }
             }
 

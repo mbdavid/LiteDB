@@ -13,8 +13,6 @@ namespace LiteDB.Engine
         /// </summary>
         public long Shrink()
         {
-            _log.Info("shrink datafile");
-
             return this.Shrink(new FileReaderV8(this, _header));
         }
 
@@ -23,6 +21,7 @@ namespace LiteDB.Engine
         /// </summary>
         private long Shrink(IFileReader reader)
         {
+            throw new NotImplementedException(); /*
             var originalSize = _dataFile.Length;
 
             // shrink can only run with no transaction
@@ -119,7 +118,7 @@ namespace LiteDB.Engine
             finally
             {
                 _locker.ExitReserved(true);
-            }
+            }*/
         }
     }
 }

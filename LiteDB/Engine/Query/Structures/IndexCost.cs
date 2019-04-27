@@ -11,7 +11,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexCost
     {
-        public long Cost { get; set; }
+        public uint Cost { get; set; }
 
         /// <summary>
         /// Get filtered expression: "$._id = 10"
@@ -39,7 +39,7 @@ namespace LiteDB.Engine
             // create index instance
             this.Index = value.Execute().Select(x => this.CreateIndex(expr.Type, index.Name, x)).FirstOrDefault();
 
-            DEBUG(this.Index == null, "index must be not null");
+            ENSURE(this.Index != null, "index must be not null");
 
             // calcs index cost
             this.Cost = this.Index.GetCost(index);

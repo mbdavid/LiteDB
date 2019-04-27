@@ -15,8 +15,6 @@ namespace LiteDB.Engine
         private BinaryReader _reader;
 
         public DateTime CreationTime { get; set; } = DateTime.Now;
-        public uint CommitCounter { get; set; } = 0;
-        public DateTime LastCommit { get; set; } = DateTime.MinValue;
         public int UserVersion { get; set; }
 
         public FileReaderV7(Stream stream)
@@ -256,7 +254,7 @@ namespace LiteDB.Engine
 
                     var length = _reader.ReadUInt16();
 
-                    block["data"] = _reader.ReadBinary(length);
+                    block["data"] = _reader.ReadBytes(length);
 
                     page["blocks"].AsArray.Add(block);
                 }

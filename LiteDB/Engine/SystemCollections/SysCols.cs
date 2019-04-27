@@ -10,11 +10,11 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysCols()
         {
-            foreach (var name in _header.Collections.Keys)
+            foreach (var col in _header.GetCollections())
             {
                 yield return new BsonDocument
                 {
-                    ["name"] = name,
+                    ["name"] = col.Key,
                     ["type"] = "user"
                 };
             }

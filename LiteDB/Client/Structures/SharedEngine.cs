@@ -24,7 +24,7 @@ namespace LiteDB
         {
             if (Interlocked.Increment(ref _counter) == 1)
             {
-                DEBUG(_engine != null, "engine here must be null");
+                ENSURE(_engine == null, "engine here must be null");
 
                 _engine = new LiteEngine(_settings);
             }
@@ -57,13 +57,13 @@ namespace LiteDB
             }
         }
 
-        public int Checkpoint()
+        public void Checkpoint()
         {
             this.OpenShared();
 
             try
             {
-                return _engine.Checkpoint();
+                _engine.Checkpoint();
             }
             finally
             {
@@ -223,34 +223,6 @@ namespace LiteDB
 
         #region EnsureIndex/DropIndex/Drop/Rename
 
-        public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
-        {
-            this.OpenShared();
-
-            try
-            {
-                return _engine.EnsureIndex(collection, name, expression, unique);
-            }
-            finally
-            {
-                this.CloseShared();
-            }
-        }
-
-        public bool DropIndex(string collection, string name)
-        {
-            this.OpenShared();
-
-            try
-            {
-                return _engine.DropIndex(collection, name);
-            }
-            finally
-            {
-                this.CloseShared();
-            }
-        }
-
         public bool DropCollection(string collection)
         {
             this.OpenShared();
@@ -272,6 +244,34 @@ namespace LiteDB
             try
             {
                 return _engine.RenameCollection(collection, newName);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.EnsureIndex(collection, name, expression, unique);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        public bool DropIndex(string collection, string name)
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.DropIndex(collection, name);
             }
             finally
             {
@@ -317,6 +317,11 @@ namespace LiteDB
         {
             _engine?.Dispose();
             _engine = null;
+        }
+
+        public DatabaseReport CheckIntegrity()
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -77,7 +77,7 @@ namespace ICSharpCode.TextEditor.Document
 		
 		public void Replace(int offset, int length, string text)
 		{
-			Debug.WriteLine("Replace offset="+offset+" length="+length+" text.Length="+text.Length);
+			//Debug.WriteLine("Replace offset="+offset+" length="+length+" text.Length="+text.Length);
 			int lineStart = GetLineNumberForOffset(offset);
 			int oldNumberOfLines = this.TotalNumberOfLines;
 			DeferredEventList deferredEventList = new DeferredEventList();

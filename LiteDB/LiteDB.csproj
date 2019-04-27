@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard20</TargetFrameworks>
     <PackageId>LiteDB</PackageId>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
     <FileVersion>5.0.0</FileVersion>
@@ -26,7 +26,7 @@
     <NoWarn>1701;1702;1705;1591;0618</NoWarn>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LiteDB.xml</DocumentationFile>
     <SignAssembly Condition="'$(OS)'=='Windows_NT'">true</SignAssembly>
-    <AssemblyOriginatorKeyFile>LiteDB.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile Condition="'$(Configuration)' == 'Release'">LiteDB.snk</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   
@@ -51,35 +51,125 @@
     <DefineConstants>NETSTANDARD20;HAVE_TYPE_INFO;HAVE_TASK_DELAY;</DefineConstants>
   </PropertyGroup>
 
+  <!-- Begin References -->
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <Reference Include="System" />
+    <Reference Include="System.Runtime" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard20'">
     <PackageReference Include="System.Reflection" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
-    <PackageReference Include="System.Threading.Thread" Version="4.0.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.1" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
   </ItemGroup>
+  
+  <!-- End References -->
 
   <ItemGroup>
-    <Compile Remove="Client\Repository\**" />
+    <Compile Remove="Client\**" />
     <Compile Remove="Database\**" />
+    <Compile Remove="Engine\Engine\**" />
+    <Compile Remove="Engine\Services\**" />
     <Compile Remove="Mapper\**" />
     <Compile Remove="Repository\**" />
     <Compile Remove="Shell\**" />
     <Compile Remove="Storage\**" />
-    <EmbeddedResource Remove="Client\Repository\**" />
+    <EmbeddedResource Remove="Client\**" />
     <EmbeddedResource Remove="Database\**" />
+    <EmbeddedResource Remove="Engine\Engine\**" />
+    <EmbeddedResource Remove="Engine\Services\**" />
     <EmbeddedResource Remove="Mapper\**" />
     <EmbeddedResource Remove="Repository\**" />
     <EmbeddedResource Remove="Shell\**" />
     <EmbeddedResource Remove="Storage\**" />
-    <None Remove="Client\Repository\**" />
+    <None Remove="Client\**" />
     <None Remove="Database\**" />
+    <None Remove="Engine\Engine\**" />
+    <None Remove="Engine\Services\**" />
     <None Remove="Mapper\**" />
     <None Remove="Repository\**" />
     <None Remove="Shell\**" />
     <None Remove="Storage\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Client\Database\Collections\Aggregate.cs" />
+    <Compile Include="Client\Database\Collections\Delete.cs" />
+    <Compile Include="Client\Database\Collections\Find.cs" />
+    <Compile Include="Client\Database\Collections\Include.cs" />
+    <Compile Include="Client\Database\Collections\Index.cs" />
+    <Compile Include="Client\Database\Collections\Insert.cs" />
+    <Compile Include="Client\Database\Collections\Update.cs" />
+    <Compile Include="Client\Database\Collections\Upsert.cs" />
+    <Compile Include="Client\Database\ILiteQueryable.cs" />
+    <Compile Include="Client\Database\LiteCollection.cs" />
+    <Compile Include="Client\Database\LiteDatabase.cs" />
+    <Compile Include="Client\Database\LiteQueryable.cs" />
+    <Compile Include="Client\Database\LiteRepository.cs" />
+    <Compile Include="Client\Mapper\Attributes\BsonFieldAttribute.cs" />
+    <Compile Include="Client\Mapper\Attributes\BsonIdAttribute.cs" />
+    <Compile Include="Client\Mapper\Attributes\BsonIgnoreAttribute.cs" />
+    <Compile Include="Client\Mapper\Attributes\BsonRefAttribute.cs" />
+    <Compile Include="Client\Mapper\BsonMapper.cs" />
+    <Compile Include="Client\Mapper\BsonMapper.Deserialize.cs" />
+    <Compile Include="Client\Mapper\BsonMapper.Serialize.cs" />
+    <Compile Include="Client\Mapper\EntityBuilder.cs" />
+    <Compile Include="Client\Mapper\EntityMapper.cs" />
+    <Compile Include="Client\Mapper\Linq\LinqExpressionVisitor.cs" />
+    <Compile Include="Client\Mapper\Linq\ParameterExpressionVisitor.cs" />
+    <Compile Include="Client\Mapper\Linq\Sql.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\BsonValueResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\ConvertResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\DateTimeResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\EnumerableResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\GuidResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\ITypeResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\MathResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\NumberResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\ObjectIdResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\SqlResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\StringResolver.cs" />
+    <Compile Include="Client\Mapper\MemberMapper.cs" />
+    <Compile Include="Client\Mapper\Reflection\Reflection.cs" />
+    <Compile Include="Client\Mapper\Reflection\Reflection.Expression.cs" />
+    <Compile Include="Client\Storage\LiteFileInfo.cs" />
+    <Compile Include="Client\Storage\LiteFileStream.cs" />
+    <Compile Include="Client\Storage\LiteFileStream.Read.cs" />
+    <Compile Include="Client\Storage\LiteFileStream.Write.cs" />
+    <Compile Include="Client\Storage\LiteStorage.cs" />
+    <Compile Include="Client\Structures\ConnectionString.cs" />
+    <Compile Include="Client\Structures\ConnectionType.cs" />
+    <Compile Include="Client\Structures\Query.cs" />
+    <Compile Include="Client\Structures\SharedBsonDataReader.cs" />
+    <Compile Include="Client\Structures\SharedEngine.cs" />
+    <Compile Include="Engine\Engine\Analyze.cs" />
+    <Compile Include="Engine\Engine\CheckIntegrity.cs" />
+    <Compile Include="Engine\Engine\Collection.cs" />
+    <Compile Include="Engine\Engine\DbParam.cs" />
+    <Compile Include="Engine\Engine\Delete.cs" />
+    <Compile Include="Engine\Engine\Index.cs" />
+    <Compile Include="Engine\Engine\Sequence.cs" />
+    <Compile Include="Engine\Engine\Insert.cs" />
+    <Compile Include="Engine\Engine\Query.cs" />
+    <Compile Include="Engine\Engine\Shrink.cs" />
+    <Compile Include="Engine\Engine\SystemCollections.cs" />
+    <Compile Include="Engine\Engine\Transaction.cs" />
+    <Compile Include="Engine\Engine\Update.cs" />
+    <Compile Include="Engine\Engine\Upgrade.cs" />
+    <Compile Include="Engine\Engine\Upsert.cs" />
+    <Compile Include="Engine\Engine\Vaccum.cs" />
+    <Compile Include="Engine\Services\CollectionService.cs" />
+    <Compile Include="Engine\Services\DataService.cs" />
+    <Compile Include="Engine\Services\IndexService.cs" />
+    <Compile Include="Engine\Services\LockService.cs" />
+    <Compile Include="Engine\Services\SnapShot.cs" />
+    <Compile Include="Engine\Services\TransactionService.cs" />
+    <Compile Include="Engine\Services\WalIndexService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

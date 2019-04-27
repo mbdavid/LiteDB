@@ -45,8 +45,8 @@ namespace LiteDB.Engine
 
             // find first indexNode (or get from head/tail if Min/Max value)
             var first = 
-                start.Type == BsonType.MinValue ? indexer.GetNode(index.HeadNode) :
-                start.Type == BsonType.MaxValue ? indexer.GetNode(index.TailNode) :
+                start.Type == BsonType.MinValue ? indexer.GetNode(index.Head) :
+                start.Type == BsonType.MaxValue ? indexer.GetNode(index.Tail) :
                 indexer.Find(index, start, true, this.Order);
 
             var node = first;
@@ -55,9 +55,9 @@ namespace LiteDB.Engine
             if (startEquals && node != null)
             {
                 // going backward in same value list to get first value
-                while (!node.NextPrev(0, -this.Order).IsEmpty && ((node = indexer.GetNode(node.NextPrev(0, -this.Order))).Key.CompareTo(start) == 0))
+                while (!node.GetNextPrev(0, -this.Order).IsEmpty && ((node = indexer.GetNode(node.GetNextPrev(0, -this.Order))).Key.CompareTo(start) == 0))
                 {
-                    if (node.IsHeadTail(index)) yield break;
+                    if (node.Key.IsMinValue || node.Key.IsMaxValue) break;
 
                     yield return node;
                 }
@@ -73,12 +73,12 @@ namespace LiteDB.Engine
                 // if current value are not equals start, go out this loop
                 if (diff != 0) break;
 
-                if (startEquals && !node.IsHeadTail(index))
+                if (startEquals && !(node.Key.IsMinValue || node.Key.IsMaxValue))
                 {
                     yield return node;
                 }
 
-                node = indexer.GetNode(node.NextPrev(0, this.Order));
+                node = indexer.GetNode(node.GetNextPrev(0, this.Order));
             }
 
             // navigate using next[0] do next node - if less or equals returns
@@ -86,11 +86,11 @@ namespace LiteDB.Engine
             {
                 var diff = node.Key.CompareTo(end);
 
-                if (endEquals && diff == 0 && !node.IsHeadTail(index))
+                if (endEquals && diff == 0 && !(node.Key.IsMinValue || node.Key.IsMaxValue))
                 {
                     yield return node;
                 }
-                else if (diff == -this.Order && !node.IsHeadTail(index))
+                else if (diff == -this.Order && !(node.Key.IsMinValue || node.Key.IsMaxValue))
                 {
                     yield return node;
                 }
@@ -99,7 +99,7 @@ namespace LiteDB.Engine
                     break;
                 }
 
-                node = indexer.GetNode(node.NextPrev(0, this.Order));
+                node = indexer.GetNode(node.GetNextPrev(0, this.Order));
             }
         }
 

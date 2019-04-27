@@ -9,8 +9,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class QueryPipe : BasePipe
     {
-        public QueryPipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader, CursorInfo cursor)
-            : base(engine, transaction, loader, cursor)
+        public QueryPipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader)
+            : base(engine, transaction, loader)
         {
         }
 
@@ -28,7 +28,7 @@ namespace LiteDB.Engine
         public override IEnumerable<BsonDocument> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
         {
             // starts pipe loading document
-            var source = this.LoadDocument(nodes, query.IsIndexKeyOnly, query.Fields.FirstOrDefault());
+            var source = this.LoadDocument(nodes);
 
             // do includes in result before filter
             foreach (var path in query.IncludeBefore)
@@ -94,7 +94,7 @@ namespace LiteDB.Engine
 
                 foreach (var doc in source)
                 {
-                    var result = select.Execute(doc, true);
+                    var result = select.Execute(doc);
 
                     foreach (var value in result)
                     {
@@ -117,7 +117,7 @@ namespace LiteDB.Engine
         private IEnumerable<BsonDocument> SelectAll(IEnumerable<BsonDocument> source, BsonExpression select)
         {
             var defaultName = select.DefaultFieldName();
-            var result = select.Execute(source, true);
+            var result = select.Execute(source);
 
             foreach (var value in result)
             {

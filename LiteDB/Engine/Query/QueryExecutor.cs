@@ -44,6 +44,8 @@ namespace LiteDB.Engine
         {
             var transaction = _engine.GetTransaction(true, out var isNew);
 
+            transaction.OpenCursors++;
+
             try
             {
                 // encapsulate all execution to catch any error
@@ -59,28 +61,18 @@ namespace LiteDB.Engine
             IEnumerable<BsonDocument> RunQuery()
             {
                 var snapshot = transaction.CreateSnapshot(_queryDefinition.ForUpdate ? LockMode.Write : LockMode.Read, _collection, false);
-                var cursor = _engine.NewCursor(transaction, snapshot);
-
-                // if query will run over external data source, create fake collection page from virtual index
-                if (_source != null)
-                {
-                    snapshot.CollectionPage = IndexVirtual.CreateCollectionPage(_collection);
-                }
-
-                cursor.Start();
 
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);
 
                 // no collection, no documents
-                if (snapshot.CollectionPage == null)
+                if (snapshot.CollectionPage == null && _source == null)
                 {
-                    cursor.Finish();
-
-                    if (isNew)
+                    if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
                     {
-                        transaction.Release();
+                        transaction.Commit();
                     }
+
                     yield break;
                 }
 
@@ -95,13 +87,11 @@ namespace LiteDB.Engine
                 // if execution is just to get explan plan, return as single document result
                 if (executionPlan)
                 {
-                    cursor.Timer.Stop();
-
                     yield return queryPlan.GetExecutionPlan();
 
-                    if (isNew)
+                    if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
                     {
-                        transaction.Release();
+                        transaction.Commit();
                     }
 
                     yield break;
@@ -116,7 +106,7 @@ namespace LiteDB.Engine
                     }
                     else
                     {
-                        loader = new CachedDocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor);
+                        loader = new DocumentLoader(data, _engine.Settings.UtcDate, queryPlan.Fields);
                     }
                 }
 
@@ -125,34 +115,22 @@ namespace LiteDB.Engine
 
                 // get current query pipe: normal or groupby pipe
                 using (var pipe = queryPlan.GroupBy != null ?
-                    new GroupByPipe(_engine, transaction, loader, cursor) :
-                    (BasePipe)new QueryPipe(_engine, transaction, loader, cursor))
+                    new GroupByPipe(_engine, transaction, loader) :
+                    (BasePipe)new QueryPipe(_engine, transaction, loader))
                 {
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>
                     {
-                        if (isNew)
+                        if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
                         {
-                            //TODO: this was .Commit() before, but I don't remember why... if is a new transaction, just release
-                            transaction.Release();
+                            transaction.Commit();
                         }
-
-                        // finish timer and mark cursor as done
-                        cursor.Done = true;
-                        cursor.Timer.Stop();
                     };
 
                     // call safepoint just before return each document
                     foreach (var doc in pipe.Pipe(nodes, queryPlan))
                     {
-                        // stop timer and increase counter
-                        cursor.Timer.Stop();
-                        cursor.DocumentCount++;
-
                         yield return doc;
-
-                        // start timer again
-                        cursor.Timer.Start();
                     }
                 }
             };
@@ -180,9 +158,9 @@ namespace LiteDB.Engine
             if (into.StartsWith("$"))
             {
                 SqlParser.ParseCollection(new Tokenizer(into), out var name, out var options);
-
+            
                 var sys = _engine.GetSystemCollection(name);
-
+            
                 result = sys.Output(getResultset(), options);
             }
             // otherwise insert as normal collection
