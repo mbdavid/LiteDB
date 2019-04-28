@@ -13,12 +13,4 @@ namespace LiteDB
     internal class VolatileAttribute: Attribute
     {
     }
-
-    /// <summary>
-    /// When a method are decorated with this attributes means that intput parameter support multiple values
-    /// Methods return a single value
-    /// </summary>
-    internal class AggregateAttribute : Attribute
-    {
-    }
 }

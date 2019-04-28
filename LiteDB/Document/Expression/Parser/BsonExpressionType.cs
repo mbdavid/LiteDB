@@ -40,6 +40,8 @@ namespace LiteDB
         In = 24,
 
         Or = 25,
-        And = 26
+        And = 26,
+
+        Source = 27
     }
 }

@@ -1,6 +1,7 @@
 ﻿using LiteDB;
 using LiteDB.Engine;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
@@ -17,30 +18,45 @@ namespace LiteDB.Demo
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("LITE DB v5-VF");
+            Console.WriteLine("LITE DB v5");
             Console.WriteLine("===========================================================");
 
-            for (var i = 1; i <= 1; i++)
+            //var json = "{a:1, nome: 'Jose', arr: [1, 2, 3, 4], items: [ { id:1, precos: [10,20] }, { id:2, precos:[40] } ]}";
+            var json = "{id: 1, nomes:['jose','maria','carlos']}";
+
+            var doc = JsonSerializer.Deserialize(json).AsDocument;
+
+            var source = new List<BsonDocument>
             {
-                var sw = new Stopwatch();
+                JsonSerializer.Deserialize("{id: 1, nomes:['jose','maria','carlos']}").AsDocument,
+                JsonSerializer.Deserialize("{id: 2, nomes:['maria']}").AsDocument,
+                JsonSerializer.Deserialize("{id: 3, nomes:['jose','maria']}").AsDocument,
+                JsonSerializer.Deserialize("{id: 4, nomes:['carlos']}").AsDocument,
+            };
 
-                //TestBasePage.Run(sw);
-                //TestMemoryFile.Run(sw);
-                //TestAesEncryption.CreateEncryptedFile(sw);
-                //TestAesEncryption.ReadEncryptedFile(sw);
-                //TestDataPage.Run(sw);
-                //TestInsertEngine.Run(sw);
-                //TestScript.Run(sw);
+            var e = BsonExpression.Create("*");
 
-                TestFullEngine.Run(sw);
+            //e.Parameters["aa"] = 1234;
 
-                Console.WriteLine($">>> ({i}) - Elapsed: [[[ {sw.ElapsedMilliseconds} ]]]");
+            //var s = e.ExecuteScalar(doc);
+            var r = e.Execute(source).ToArray();
 
-            }
+            //Console.WriteLine(r);
 
             Console.WriteLine("===========================================================");
             Console.WriteLine("End");
             Console.ReadKey();
         }
     }
+
+    public class User
+    {
+        public int Id { get; set; }
+        public string City { get; set; }
+        public string Name { get; set; }
+        public List<User> Children { get; set; }
+    }
+
+
+
 }

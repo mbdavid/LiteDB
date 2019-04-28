@@ -76,11 +76,11 @@ namespace LiteDB.Engine
                     yield break;
                 }
 
+                // check if query definition are ok
+                _queryDefinition.Validate();
+
                 // execute optimization before run query (will fill missing _query properties instance)
                 var optimizer = new QueryOptimization(snapshot, _queryDefinition, _source);
-
-                // check if query definition rules are ok
-                optimizer.Validate();
 
                 var queryPlan = optimizer.ProcessQuery();
 

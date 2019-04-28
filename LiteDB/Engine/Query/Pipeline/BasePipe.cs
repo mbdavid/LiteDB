@@ -121,12 +121,9 @@ namespace LiteDB.Engine
             foreach(var doc in source)
             {
                 // checks if any result of expression is true
-                var result = expr.Execute(doc)
-                    .Where(x => x.IsBoolean && x.AsBoolean == true)
-                    .Any();
+                var result = expr.ExecuteScalar(doc);
 
-                // expression must return an boolean and be true to return document
-                if (result)
+                if(result.IsBoolean && result.AsBoolean)
                 {
                     yield return doc;
                 }

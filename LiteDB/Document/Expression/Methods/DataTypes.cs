@@ -16,63 +16,42 @@ namespace LiteDB
         /// <summary>
         /// Return a new instance of MINVALUE
         /// </summary>
-        public static IEnumerable<BsonValue> MINVALUE()
-        {
-            yield return BsonValue.MinValue;
-        }
+        public static BsonValue MINVALUE() =>  BsonValue.MinValue;
 
         /// <summary>
         /// Create a new OBJECTID value
         /// </summary>
         [Volatile]
-        public static IEnumerable<BsonValue> OBJECTID()
-        {
-            yield return ObjectId.NewObjectId();
-        }
+        public static BsonValue OBJECTID() => ObjectId.NewObjectId();
 
         /// <summary>
         /// Create a new GUID value
         /// </summary>
         [Volatile]
-        public static IEnumerable<BsonValue> GUID()
-        {
-            yield return Guid.NewGuid();
-        }
+        public static BsonValue GUID() =>  Guid.NewGuid();
 
         /// <summary>
         /// Return a new DATETIME (Now)
         /// </summary>
         [Volatile]
-        public static IEnumerable<BsonValue> NOW()
-        {
-            yield return DateTime.Now;
-        }
+        public static BsonValue NOW() => DateTime.Now;
 
         /// <summary>
         /// Return a new DATETIME (UtcNow)
         /// </summary>
         [Volatile]
-        public static IEnumerable<BsonValue> NOW_UTC()
-        {
-            yield return DateTime.UtcNow;
-        }
+        public static BsonValue NOW_UTC() => DateTime.UtcNow;
 
         /// <summary>
         /// Return a new DATETIME (Today)
         /// </summary>
         [Volatile]
-        public static IEnumerable<BsonValue> TODAY()
-        {
-            yield return DateTime.Today;
-        }
+        public static BsonValue TODAY() =>  DateTime.Today;
 
         /// <summary>
         /// Return a new instance of MAXVALUE
         /// </summary>
-        public static IEnumerable<BsonValue> MAXVALUE()
-        {
-            yield return BsonValue.MaxValue;
-        }
+        public static BsonValue MAXVALUE() => BsonValue.MaxValue;
 
         #endregion
 
@@ -84,142 +63,133 @@ namespace LiteDB
         /// <summary>
         /// Convert values into INT32. Returns empty if not possible to convert
         /// </summary>
-        public static IEnumerable<BsonValue> INT32(IEnumerable<BsonValue> values)
+        public static BsonValue INT32(BsonValue value)
         {
-            foreach (var value in values)
+            if (value.IsNumber)
             {
-                if (value.IsNumber)
+                return value.AsInt32;
+            }
+            else
+            {
+                if (Int32.TryParse(value.AsString, out var val))
                 {
-                    yield return value.AsInt32;
-                }
-                else
-                {
-                    if (Int32.TryParse(value.AsString, out var val))
-                    {
-                        yield return val;
-                    }
+                    return val;
                 }
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into INT64. Returns empty if not possible to convert
         /// </summary>
-        public static IEnumerable<BsonValue> INT64(IEnumerable<BsonValue> values)
+        public static BsonValue INT64(BsonValue value)
         {
-            foreach (var value in values)
+            if (value.IsNumber)
             {
-                if (value.IsNumber)
+                return value.AsInt64;
+            }
+            else
+            {
+                if (Int64.TryParse(value.AsString, out var val))
                 {
-                    yield return value.AsInt64;
-                }
-                else
-                {
-                    if (Int64.TryParse(value.AsString, out var val))
-                    {
-                        yield return val;
-                    }
+                    return val;
                 }
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into DOUBLE. Returns empty if not possible to convert
         /// </summary>
-        public static IEnumerable<BsonValue> DOUBLE(IEnumerable<BsonValue> values)
+        public static BsonValue DOUBLE(BsonValue value)
         {
-            foreach (var value in values)
+            if (value.IsNumber)
             {
-                if (value.IsNumber)
+                return value.AsDouble;
+            }
+            else
+            {
+                if (Double.TryParse(value.AsString, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var val))
                 {
-                    yield return value.AsDouble;
-                }
-                else
-                {
-                    if (Double.TryParse(value.AsString, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var val))
-                    {
-                        yield return val;
-                    }
+                    return val;
                 }
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into DOUBLE. Returns empty if not possible to convert
         /// </summary>
-        public static IEnumerable<BsonValue> DOUBLE(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture)
+        public static BsonValue DOUBLE(BsonValue value, BsonValue culture)
         {
-            var c = CultureInfo.GetCultureInfo(culture.FirstOrDefault()?.AsString ?? "en-US");
+            var c = CultureInfo.GetCultureInfo(culture.AsString ?? "en-US");
 
-            foreach (var value in values)
+            if (value.IsNumber)
             {
-                if (value.IsNumber)
+                return value.AsDouble;
+            }
+            else
+            {
+                if (Double.TryParse(value.AsString, NumberStyles.Any, c.NumberFormat, out var val))
                 {
-                    yield return value.AsDouble;
-                }
-                else
-                {
-                    if (Double.TryParse(value.AsString, NumberStyles.Any, c.NumberFormat, out var val))
-                    {
-                        yield return val;
-                    }
+                    return val;
                 }
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into DECIMAL. Returns empty if not possible to convert
         /// </summary>
-        public static IEnumerable<BsonValue> DECIMAL(IEnumerable<BsonValue> values)
+        public static BsonValue DECIMAL(BsonValue value)
         {
-            foreach (var value in values)
+            if (value.IsNumber)
             {
-                if (value.IsNumber)
+                return value.AsDecimal;
+            }
+            else
+            {
+                if (Decimal.TryParse(value.AsString, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var val))
                 {
-                    yield return value.AsDecimal;
-                }
-                else
-                {
-                    if (Decimal.TryParse(value.AsString, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var val))
-                    {
-                        yield return val;
-                    }
+                    return val;
                 }
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into DECIMAL. Returns empty if not possible to convert
         /// </summary>
-        public static IEnumerable<BsonValue> DECIMAL(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture)
+        public static BsonValue DECIMAL(BsonValue value, BsonValue culture)
         {
-            var c = CultureInfo.GetCultureInfo(culture.FirstOrDefault()?.AsString ?? "en-US");
+            var c = CultureInfo.GetCultureInfo(culture.AsString ?? "en-US");
 
-            foreach (var value in values)
+            if (value.IsNumber)
             {
-                if (value.IsNumber)
+                return value.AsDecimal;
+            }
+            else
+            {
+                if (Decimal.TryParse(value.AsString, NumberStyles.Any, c.NumberFormat, out var val))
                 {
-                    yield return value.AsDecimal;
-                }
-                else
-                {
-                    if (Decimal.TryParse(value.AsString, NumberStyles.Any, c.NumberFormat, out var val))
-                    {
-                        yield return val;
-                    }
+                    return val;
                 }
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into STRING
         /// </summary>
-        public static IEnumerable<BsonValue> STRING(IEnumerable<BsonValue> values)
+        public static BsonValue STRING(BsonValue value)
         {
-            foreach (var value in values)
-            {
-                yield return value.AsString;
-            }
+            return value.AsString;
         }
 
         // ==> there is no convert to BsonDocument, must use { .. } syntax 
@@ -227,245 +197,235 @@ namespace LiteDB
         /// <summary>
         /// Return an array from list of values. Support multiple values but returns a single value
         /// </summary>
-        public static IEnumerable<BsonValue> ARRAY(IEnumerable<BsonValue> values)
+        public static BsonValue ARRAY(IEnumerable<BsonValue> values)
         {
-            yield return new BsonArray(values);
+            return new BsonArray(values);
         }
 
         /// <summary>
         /// Return an binary from string (base64) values
         /// </summary>
-        public static IEnumerable<BsonValue> BINARY(IEnumerable<BsonValue> values)
+        public static BsonValue BINARY(BsonValue value)
         {
-            foreach(var value in values)
+            if (value.IsBinary)
             {
-                if (value.IsBinary)
-                {
-                    yield return value;
-                }
-                else if (value.IsString)
-                {
-                    byte[] data = null;
-                    var isBase64 = false;
-
-                    try
-                    {
-                        data = Convert.FromBase64String(value.AsString);
-                        isBase64 = true;
-                    }
-                    catch (FormatException)
-                    {
-                    }
-
-                    if (isBase64) yield return data;
-                }
+                return value;
             }
+            else if (value.IsString)
+            {
+                byte[] data = null;
+                var isBase64 = false;
+
+                try
+                {
+                    data = Convert.FromBase64String(value.AsString);
+                    isBase64 = true;
+                }
+                catch (FormatException)
+                {
+                }
+
+                if (isBase64) return data;
+            }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into OBJECTID. Returns empty if not possible to convert
         /// </summary>
-        public static IEnumerable<BsonValue> OBJECTID(IEnumerable<BsonValue> values)
+        public static BsonValue OBJECTID(BsonValue value)
         {
-            foreach (var value in values)
+            if (value.IsObjectId)
             {
-                if (value.IsObjectId)
-                {
-                    yield return value.AsObjectId;
-                }
-                else
-                {
-                    ObjectId val = null;
-                    var isObjectId = false;
-
-                    try
-                    {
-                        val = new ObjectId(value.AsString);
-                        isObjectId = true;
-                    }
-                    catch
-                    {
-                    }
-
-                    if (isObjectId) yield return val;
-                }
+                return value.AsObjectId;
             }
+            else
+            {
+                ObjectId val = null;
+                var isObjectId = false;
+
+                try
+                {
+                    val = new ObjectId(value.AsString);
+                    isObjectId = true;
+                }
+                catch
+                {
+                }
+
+                if (isObjectId) return val;
+            }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into GUID. Returns empty if not possible to convert
         /// </summary>
-        public static IEnumerable<BsonValue> GUID(IEnumerable<BsonValue> values)
+        public static BsonValue GUID(BsonValue value)
         {
-            foreach (var value in values)
+            if (value.IsGuid)
             {
-                if (value.IsGuid)
-                {
-                    yield return value.AsGuid;
-                }
-                else
-                {
-                    var val = Guid.Empty;
-                    var isGuid = false;
-
-                    try
-                    {
-                        val = new Guid(value.AsString);
-                        isGuid = true;
-                    }
-                    catch
-                    {
-                    }
-
-                    if (isGuid) yield return val;
-                }
+                return value.AsGuid;
             }
+            else
+            {
+                var val = Guid.Empty;
+                var isGuid = false;
+
+                try
+                {
+                    val = new Guid(value.AsString);
+                    isGuid = true;
+                }
+                catch
+                {
+                }
+
+                if (isGuid) return val;
+            }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Return converted value into BOOLEAN value
         /// </summary>
-        public static IEnumerable<BsonValue> BOOLEAN(IEnumerable<BsonValue> values)
+        public static BsonValue BOOLEAN(BsonValue value)
         {
-            foreach (var value in values)
+            if (value.IsBoolean)
             {
-                if (value.IsBoolean)
-                {
-                    yield return value.AsBoolean;
-                }
-                else
-                {
-                    var val = false;
-                    var isBool = false;
-
-                    try
-                    {
-                        val = Convert.ToBoolean(value.AsString);
-                        isBool = true;
-                    }
-                    catch
-                    {
-                    }
-
-                    if (isBool) yield return val;
-                }
+                return value.AsBoolean;
             }
+            else
+            {
+                var val = false;
+                var isBool = false;
+
+                try
+                {
+                    val = Convert.ToBoolean(value.AsString);
+                    isBool = true;
+                }
+                catch
+                {
+                }
+
+                if (isBool) return val;
+            }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into DATETIME. Returns empty if not possible to convert
         /// </summary>
-        public static IEnumerable<BsonValue> DATETIME(IEnumerable<BsonValue> values)
+        public static BsonValue DATETIME(BsonValue value)
         {
-            foreach (var value in values)
+            if (value.IsDateTime)
             {
-                if (value.IsDateTime)
+                return value.AsDateTime;
+            }
+            else
+            {
+                if (DateTime.TryParse(value.AsString, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.None, out var val))
                 {
-                    yield return value.AsDateTime;
-                }
-                else
-                {
-                    if (DateTime.TryParse(value.AsString, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.None, out var val))
-                    {
-                        yield return val;
-                    }
+                    return val;
                 }
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into DATETIME. Returns empty if not possible to convert. Support custom culture info
         /// </summary>
-        public static IEnumerable<BsonValue> DATETIME(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture)
+        public static BsonValue DATETIME(BsonValue value, BsonValue culture)
         {
-            var c = CultureInfo.GetCultureInfo(culture.FirstOrDefault()?.AsString ?? "en-US");
+            var c = CultureInfo.GetCultureInfo(culture.AsString ?? "en-US");
 
-            foreach (var value in values)
+            if (value.IsDateTime)
             {
-                if (value.IsDateTime)
+                return value.AsDateTime;
+            }
+            else
+            {
+                if (DateTime.TryParse(value.AsString, c.DateTimeFormat, DateTimeStyles.None, out var val))
                 {
-                    yield return value.AsDateTime;
-                }
-                else
-                {
-                    if (DateTime.TryParse(value.AsString, c.DateTimeFormat, DateTimeStyles.None, out var val))
-                    {
-                        yield return val;
-                    }
+                    return val;
                 }
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into DATETIME. Returns empty if not possible to convert
         /// </summary>
-        public static IEnumerable<BsonValue> DATETIME_UTC(IEnumerable<BsonValue> values)
+        public static BsonValue DATETIME_UTC(BsonValue value)
         {
-            foreach (var value in values)
+            if (value.IsDateTime)
             {
-                if (value.IsDateTime)
+                return value.AsDateTime;
+            }
+            else
+            {
+                if (DateTime.TryParse(value.AsString, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.AssumeUniversal, out var val))
                 {
-                    yield return value.AsDateTime;
-                }
-                else
-                {
-                    if (DateTime.TryParse(value.AsString, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.AssumeUniversal, out var val))
-                    {
-                        yield return val;
-                    }
+                    return val;
                 }
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Convert values into DATETIME. Returns empty if not possible to convert
         /// </summary>
-        public static IEnumerable<BsonValue> DATETIME_UTC(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture)
+        public static BsonValue DATETIME_UTC(BsonValue value, BsonValue culture)
         {
-            var c = CultureInfo.GetCultureInfo(culture.FirstOrDefault()?.AsString ?? "en-US");
+            var c = CultureInfo.GetCultureInfo(culture.AsString ?? "en-US");
 
-            foreach (var value in values)
+            if (value.IsDateTime)
             {
-                if (value.IsDateTime)
+                return value.AsDateTime;
+            }
+            else
+            {
+                if (DateTime.TryParse(value.AsString, c.DateTimeFormat, DateTimeStyles.AssumeUniversal, out var val))
                 {
-                    yield return value.AsDateTime;
-                }
-                else
-                {
-                    if (DateTime.TryParse(value.AsString, c.DateTimeFormat, DateTimeStyles.AssumeUniversal, out var val))
-                    {
-                        yield return val;
-                    }
+                    return val;
                 }
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Create a new instance of DATETIME based on year, month, day (local time)
         /// </summary>
-        public static IEnumerable<BsonValue> DATETIME(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day)
+        public static BsonValue DATETIME(BsonValue year, BsonValue month, BsonValue day)
         {
-            foreach (var value in ZipValues(year, month, day))
+            if (year.IsNumber && month.IsNumber && day.IsNumber)
             {
-                if (value.First.IsNumber && value.Second.IsNumber && value.Third.IsNumber)
-                {
-                    yield return new DateTime(value.First.AsInt32, value.Second.AsInt32, value.Third.AsInt32);
-                }
+                return new DateTime(year.AsInt32, month.AsInt32, day.AsInt32);
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Create a new instance of DATETIME based on year, month, day (UTC)
         /// </summary>
-        public static IEnumerable<BsonValue> DATETIME_UTC(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day)
+        public static BsonValue DATETIME_UTC(BsonValue year, BsonValue month, BsonValue day)
         {
-            foreach (var value in ZipValues(year, month, day))
+            if (year.IsNumber && month.IsNumber && day.IsNumber)
             {
-                if (value.First.IsNumber && value.Second.IsNumber && value.Third.IsNumber)
-                {
-                    yield return new DateTime(value.First.AsInt32, value.Second.AsInt32, value.Third.AsInt32, 0, 0, 0, DateTimeKind.Utc);
-                }
+                return new DateTime(year.AsInt32, month.AsInt32, day.AsInt32, 0, 0, 0, DateTimeKind.Utc);
             }
+
+            return BsonValue.Null;
         }
 
         #endregion
@@ -475,178 +435,82 @@ namespace LiteDB
         /// <summary>
         /// Return true if value is MINVALUE
         /// </summary>
-        public static IEnumerable<BsonValue> IS_MINVALUE(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsMinValue;
-            }
-        }
+        public static BsonValue IS_MINVALUE(BsonValue value) => value.IsMinValue;
 
         /// <summary>
         /// Return true if value is NULL
         /// </summary>
-        public static IEnumerable<BsonValue> IS_NULL(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsNull;
-            }
-        }
+        public static BsonValue IS_NULL(BsonValue value) => value.IsNull;
 
         /// <summary>
         /// Return true if value is INT32
         /// </summary>
-        public static IEnumerable<BsonValue> IS_INT32(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.AsInt32;
-            }
-        }
+        public static BsonValue IS_INT32(BsonValue value) => value.AsInt32;
 
         /// <summary>
         /// Return true if value is INT64
         /// </summary>
-        public static IEnumerable<BsonValue> IS_INT64(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsInt64;
-            }
-        }
+        public static BsonValue IS_INT64(BsonValue value) => value.IsInt64;
 
         /// <summary>
         /// Return true if value is DOUBLE
         /// </summary>
-        public static IEnumerable<BsonValue> IS_DOUBLE(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsDouble;
-            }
-        }
+        public static BsonValue IS_DOUBLE(BsonValue value) => value.IsDouble;
 
         /// <summary>
         /// Return true if value is DECIMAL
         /// </summary>
-        public static IEnumerable<BsonValue> IS_DECIMAL(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsDecimal;
-            }
-        }
+        public static BsonValue IS_DECIMAL(BsonValue value) => value.IsDecimal;
         
         /// <summary>
         /// Return true if value is NUMBER (int, double, decimal)
         /// </summary>
-        public static IEnumerable<BsonValue> IS_NUMBER(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsNumber;
-            }
-        }
+        public static BsonValue IS_NUMBER(BsonValue value) => value.IsNumber;
 
         /// <summary>
         /// Return true if value is STRING
         /// </summary>
-        public static IEnumerable<BsonValue> IS_STRING(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsString;
-            }
-        }
+        public static BsonValue IS_STRING(BsonValue value) => value.IsString;
 
         /// <summary>
         /// Return true if value is DOCUMENT
         /// </summary>
-        public static IEnumerable<BsonValue> IS_DOCUMENT(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsDocument;
-            }
-        }
+        public static BsonValue IS_DOCUMENT(BsonValue value) => value.IsDocument;
 
         /// <summary>
         /// Return true if value is ARRAY
         /// </summary>
-        public static IEnumerable<BsonValue> IS_ARRAY(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsArray;
-            }
-        }
+        public static BsonValue IS_ARRAY(BsonValue value) => value.IsArray;
 
         /// <summary>
         /// Return true if value is BINARY
         /// </summary>
-        public static IEnumerable<BsonValue> IS_BINARY(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsBinary;
-            }
-        }
+        public static BsonValue IS_BINARY(BsonValue value) => value.IsBinary;
 
         /// <summary>
         /// Return true if value is OBJECTID
         /// </summary>
-        public static IEnumerable<BsonValue> IS_OBJECTID(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsObjectId;
-            }
-        }
+        public static BsonValue IS_OBJECTID(BsonValue value) =>  value.IsObjectId;
 
         /// <summary>
         /// Return true if value is GUID
         /// </summary>
-        public static IEnumerable<BsonValue> IS_GUID(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsGuid;
-            }
-        }
+        public static BsonValue IS_GUID(BsonValue value) => value.IsGuid;
 
         /// <summary>
         /// Return true if value is BOOLEAN
         /// </summary>
-        public static IEnumerable<BsonValue> IS_BOOLEAN(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsBoolean;
-            }
-        }
+        public static BsonValue IS_BOOLEAN(BsonValue value) => value.IsBoolean;
 
         /// <summary>
         /// Return true if value is DATETIME
         /// </summary>
-        public static IEnumerable<BsonValue> IS_DATETIME(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsDateTime;
-            }
-        }
+        public static BsonValue IS_DATETIME(BsonValue value) => value.IsDateTime;
 
         /// <summary>
         /// Return true if value is DATE (alias to DATETIME)
         /// </summary>
-        public static IEnumerable<BsonValue> IS_MAXVALUE(IEnumerable<BsonValue> values)
-        {
-            foreach (var value in values)
-            {
-                yield return value.IsMaxValue;
-            }
-        }
+        public static BsonValue IS_MAXVALUE(BsonValue value) => value.IsMaxValue;
 
         #endregion
 
@@ -655,48 +519,48 @@ namespace LiteDB
         /// <summary>
         /// Alias to INT32(values)
         /// </summary>
-        public static IEnumerable<BsonValue> INT(IEnumerable<BsonValue> values) => INT32(values);
+        public static BsonValue INT(BsonValue value) => INT32(value);
 
         /// <summary>
         /// Alias to INT64(values)
         /// </summary>
-        public static IEnumerable<BsonValue> LONG(IEnumerable<BsonValue> values) => INT64(values);
+        public static BsonValue LONG(BsonValue value) => INT64(value);
 
         /// <summary>
         /// Alias to BOOLEAN(values)
         /// </summary>
-        public static IEnumerable<BsonValue> BOOL(IEnumerable<BsonValue> values) => BOOLEAN(values);
+        public static BsonValue BOOL(BsonValue value) => BOOLEAN(value);
 
         /// <summary>
         /// Alias to DATETIME(values) and DATETIME_UTC(values)
         /// </summary>
-        public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> values) => DATETIME(values);
-        public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture) => DATETIME(values, culture);
-        public static IEnumerable<BsonValue> DATE_UTC(IEnumerable<BsonValue> values) => DATETIME_UTC(values);
-        public static IEnumerable<BsonValue> DATE_UTC(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture) => DATETIME_UTC(values, culture);
+        public static BsonValue DATE(BsonValue value) => DATETIME(value);
+        public static BsonValue DATE(BsonValue values, BsonValue culture) => DATETIME(values, culture);
+        public static BsonValue DATE_UTC(BsonValue value) => DATETIME_UTC(value);
+        public static BsonValue DATE_UTC(BsonValue values, BsonValue culture) => DATETIME_UTC(values, culture);
 
-        public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => DATETIME(year, month, day);
-        public static IEnumerable<BsonValue> DATE_UTC(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => DATETIME_UTC(year, month, day);
+        public static BsonValue DATE(BsonValue year, BsonValue month, BsonValue day) => DATETIME(year, month, day);
+        public static BsonValue DATE_UTC(BsonValue year, BsonValue month, BsonValue day) => DATETIME_UTC(year, month, day);
 
         /// <summary>
         /// Alias to IS_INT32(values)
         /// </summary>
-        public static IEnumerable<BsonValue> IS_INT(IEnumerable<BsonValue> values) => IS_INT32(values);
+        public static BsonValue IS_INT(BsonValue value) => IS_INT32(value);
 
         /// <summary>
         /// Alias to IS_INT64(values)
         /// </summary>
-        public static IEnumerable<BsonValue> IS_LONG(IEnumerable<BsonValue> values) => IS_INT64(values);
+        public static BsonValue IS_LONG(BsonValue value) => IS_INT64(value);
 
         /// <summary>
         /// Alias to IS_BOOLEAN(values)
         /// </summary>
-        public static IEnumerable<BsonValue> IS_BOOL(IEnumerable<BsonValue> values) => IS_BOOLEAN(values);
+        public static BsonValue IS_BOOL(BsonValue value) => IS_BOOLEAN(value);
 
         /// <summary>
         /// Alias to IS_DATE(values)
         /// </summary>
-        public static IEnumerable<BsonValue> IS_DATE(IEnumerable<BsonValue> values) => IS_DATETIME(values);
+        public static BsonValue IS_DATE(BsonValue value) => IS_DATETIME(value);
 
         #endregion
     }

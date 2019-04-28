@@ -13,52 +13,50 @@ namespace LiteDB
         /// <summary>
         /// Apply absolute value (ABS) method in all number values
         /// </summary>
-        public static IEnumerable<BsonValue> ABS(IEnumerable<BsonValue> values)
+        public static BsonValue ABS(BsonValue value)
         {
-            foreach (var value in values.Where(x => x.IsNumber))
+            switch (value.Type)
             {
-                switch (value.Type)
-                {
-                    case BsonType.Int32: yield return Math.Abs(value.AsInt32); break;
-                    case BsonType.Int64: yield return Math.Abs(value.AsInt64); break;
-                    case BsonType.Double: yield return Math.Abs(value.AsDouble); break;
-                    case BsonType.Decimal: yield return Math.Abs(value.AsDecimal); break;
-                }
+                case BsonType.Int32: return Math.Abs(value.AsInt32); break;
+                case BsonType.Int64: return Math.Abs(value.AsInt64); break;
+                case BsonType.Double: return Math.Abs(value.AsDouble); break;
+                case BsonType.Decimal: return Math.Abs(value.AsDecimal); break;
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Round number method in all number values
         /// </summary>
-        public static IEnumerable<BsonValue> ROUND(IEnumerable<BsonValue> values, IEnumerable<BsonValue> digits)
+        public static BsonValue ROUND(BsonValue value, BsonValue digits)
         {
-            foreach (var value in ZipValues(values, digits))
+            if (digits.IsNumber)
             {
-                if (!value.First.IsNumber) continue;
-                if (!value.Second.IsNumber) continue;
-
-                switch (value.First.Type)
+                switch (value.Type)
                 {
-                    case BsonType.Int32: yield return value.First.AsInt32; break;
-                    case BsonType.Int64: yield return value.First.AsInt64; break;
-                    case BsonType.Double: yield return Math.Round(value.First.AsDouble, value.Second.AsInt32); break;
-                    case BsonType.Decimal: yield return Math.Round(value.First.AsDecimal, value.Second.AsInt32); break;
+                    case BsonType.Int32: return value.AsInt32;
+                    case BsonType.Int64: return value.AsInt64;
+                    case BsonType.Double: return Math.Round(value.AsDouble, value.AsInt32);
+                    case BsonType.Decimal: return Math.Round(value.AsDecimal, value.AsInt32);
                 }
+
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Implement POWER (x and y)
         /// </summary>
-        public static IEnumerable<BsonValue> POW(IEnumerable<BsonValue> x, IEnumerable<BsonValue> y)
+        public static BsonValue POW(BsonValue x, BsonValue y)
         {
-            foreach (var value in ZipValues(x, y))
+            if (x.IsNumber && y.IsNumber)
             {
-                if (!value.First.IsNumber) continue;
-                if (!value.Second.IsNumber) continue;
-
-                yield return Math.Pow(value.First.AsDouble, value.Second.AsDouble);
+                return Math.Pow(x.AsDouble, y.AsDouble);
             }
+
+            return BsonValue.Null;
         }
     }
 }

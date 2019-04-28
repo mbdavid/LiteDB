@@ -19,14 +19,13 @@ namespace LiteDB.Engine
         /// - LoadDocument
         /// - IncludeBefore
         /// - Filter
-        /// - IncludeAfter
-        /// - OrderBy to GroupBy
-        /// - GroupBy
-        /// - SelectGroupBy
-        /// - Having
-        /// - OrderBy
+        /// - OrderBy (to GroupBy)
         /// - OffSet
         /// - Limit
+        /// - IncludeAfter
+        /// - GroupBy
+        /// - Having
+        /// - SelectGroupBy
         /// </summary>
         public override IEnumerable<BsonDocument> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
         {
@@ -45,50 +44,43 @@ namespace LiteDB.Engine
                 source = this.Filter(source, expr);
             }
 
+            // pipe: orderBy used in GroupBy
+            if (query.OrderBy != null)
+            {
+                source = this.OrderBy(source, query.OrderBy.Expression, query.OrderBy.Order, 0, int.MaxValue);
+            }
+            else
+            {
+                // pipe: apply offset (no orderby)
+                if (query.Offset > 0) source = source.Skip(query.Offset);
+
+                // pipe: apply limit (no orderby)
+                if (query.Limit < int.MaxValue) source = source.Take(query.Limit);
+            }
+
             // do includes in result after filter
             foreach (var path in query.IncludeAfter)
             {
                 source = this.Include(source, path);
             }
 
-            // pipe: if groupBy order is 0, do not need sort (already sorted by index)
-            if (query.GroupBy.Order != 0)
-            {
-                source = this.OrderBy(source, query.GroupBy.Expression, query.GroupBy.Order, 0, int.MaxValue);
-            }
-
             // apply groupby
-            var groups = this.GroupBy(source, query.GroupBy.Expression);
-
-            // now, get only first document from each group
-            source = this.SelectGroupBy(groups, query.GroupBy.Select);
+            var groups = this.GroupBy(source, query.GroupBy);
 
             // if contains having clause, run after select group by
             if (query.GroupBy.Having != null)
             {
-                source = this.Having(source, query.GroupBy.Having);
+                groups = this.Having(groups, query.GroupBy.Having);
             }
 
-            // pipe: if groupBy order is 0, do not need sort (already sorted by index)
-            if (query.OrderBy.Order != 0)
-            {
-                source = this.OrderBy(source, query.GroupBy.Expression, query.GroupBy.Order, 0, int.MaxValue);
-            }
-
-            // pipe: apply offset (no orderby)
-            if (query.Offset > 0) source = source.Skip(query.Offset);
-
-            // pipe: apply limit (no orderby)
-            if (query.Limit < int.MaxValue) source = source.Take(query.Limit);
-
-            // return document pipe
-            return source;
+            // now, get only first document from each group
+            return this.SelectGroupBy(groups, query.GroupBy.Select);
         }
 
         /// <summary>
         /// Apply groupBy expression and transform results
         /// </summary>
-        private IEnumerable<IEnumerable<BsonDocument>> GroupBy(IEnumerable<BsonDocument> source, BsonExpression expr)
+        private IEnumerable<IEnumerable<BsonDocument>> GroupBy(IEnumerable<BsonDocument> source, GroupBy groupBy)
         {
             using (var enumerator = source.GetEnumerator())
             {
@@ -96,23 +88,26 @@ namespace LiteDB.Engine
 
                 while (done.Running)
                 {
-                    var group = YieldDocuments(enumerator, expr, done);
+                    var group = YieldDocuments(enumerator, groupBy, done);
 
                     yield return new DocumentEnumerable(group);
                 }
             }
         }
 
-        private IEnumerable<BsonDocument> YieldDocuments(IEnumerator<BsonDocument> source, BsonExpression expr, Done done)
+        private IEnumerable<BsonDocument> YieldDocuments(IEnumerator<BsonDocument> source, GroupBy groupBy, Done done)
         {
-            //TODO: não deveria usar aqui o ExecuteScalar???
-            var current = expr.Execute(source.Current).First();
+            var current = groupBy.Expression.ExecuteScalar(source.Current);
+
+            groupBy.Select.Parameters["key"] = current;
 
             yield return source.Current;
 
             while (done.Running = source.MoveNext())
             {
-                var key = expr.Execute(source.Current).First();
+                var key = groupBy.Expression.ExecuteScalar(source.Current);
+
+                groupBy.Select.Parameters["key"] = current;
 
                 if (key == current)
                 {
@@ -130,32 +125,20 @@ namespace LiteDB.Engine
         /// </summary>
         private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<IEnumerable<BsonDocument>> groups, BsonExpression select)
         {
+            var defaultName = select.DefaultFieldName();
+
             foreach (DocumentEnumerable group in groups)
             {
                 // transfom group result if contains select expression
-                if (select != null)
+                var value = select.ExecuteScalar(group);
+
+                if (value.IsDocument)
                 {
-                    //TODO: deveria usar Scalar??
-                    var result = select.Execute(group);
-
-                    // each group result must return a single value after run expression
-                    var value = result.First();
-
-                    if (value.IsDocument)
-                    {
-                        yield return value.AsDocument;
-                    }
-                    else
-                    {
-                        yield return new BsonDocument { ["expr"] = value };
-                    }
+                    yield return value.AsDocument;
                 }
                 else
                 {
-                    // get first document BUT with full source scan (get from DocumentEnumerable)
-                    var doc = group.FirstOrDefault();
-
-                    yield return doc;
+                    yield return new BsonDocument { [defaultName] = value };
                 }
 
                 group.Dispose();
@@ -165,16 +148,15 @@ namespace LiteDB.Engine
         /// <summary>
         /// Pipe: Filter source using having bool expression to skip or include on final resultset
         /// </summary>
-        protected IEnumerable<BsonDocument> Having(IEnumerable<BsonDocument> source, BsonExpression having)
+        protected IEnumerable<IEnumerable<BsonDocument>> Having(IEnumerable<IEnumerable<BsonDocument>> groups, BsonExpression having)
         {
-            foreach (var doc in source)
+            foreach(var source in groups)
             {
-                //TODO: não deveria usar scalar?
-                var result = having.Execute(doc).First();
+                var result = having.ExecuteScalar(source);
 
                 if (result.IsBoolean && result.AsBoolean)
                 {
-                    yield return doc;
+                    yield return source;
                 }
             }
         }

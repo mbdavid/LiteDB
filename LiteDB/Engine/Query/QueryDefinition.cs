@@ -32,5 +32,24 @@ namespace LiteDB.Engine
         public BsonAutoId IntoAutoId { get; set; } = BsonAutoId.ObjectId;
 
         public bool ExplainPlan { get; set; }
+
+        /// <summary>
+        /// Check some rules if query contains concise rules
+        /// </summary>
+        internal void Validate()
+        {
+            if (this.SelectAll && this.GroupBy != null)
+            {
+                throw new LiteException(0, "Select ALL has no support for GROUP BY expression");
+            }
+            if (this.Having != null && this.GroupBy == null)
+            {
+                throw new LiteException(0, "HAVING require GROUP BY expression");
+            }
+            if (this.GroupBy != null && this.OrderBy != null)
+            {
+                throw new LiteException(0, "GROUP BY has no support for ORDER BY");
+            }
+        }
     }
 }

@@ -123,24 +123,45 @@ namespace LiteDB.Engine
                     (BsonValue)new BsonArray(this.Fields.Select(x => new BsonValue(x))),
             };
 
-            doc["includeBefore"] = this.IncludeBefore.Count == 0 ?
-                BsonValue.Null :
-                new BsonArray(this.IncludeBefore.Select(x => new BsonValue(x.Source)));
+            if (this.IncludeBefore.Count > 0)
+            {
+                doc["includeBefore"] = new BsonArray(this.IncludeBefore.Select(x => new BsonValue(x.Source)));
+            }
 
-            doc["filters"] = this.Filters.Count == 0 ?
-                BsonValue.Null :
-                new BsonArray(this.Filters.Select(x => new BsonValue(x.Source)));
+            if (this.Filters.Count > 0)
+            {
+                doc["filters"] = new BsonArray(this.Filters.Select(x => new BsonValue(x.Source)));
+            }
 
-            doc["includeAfter"] = this.IncludeAfter.Count == 0 ?
-                BsonValue.Null :
-                new BsonArray(this.IncludeAfter.Select(x => new BsonValue(x.Source)));
+            if (this.OrderBy != null)
+            {
+                doc["orderBy"] = new BsonDocument
+                {
+                    ["expr"] = this.OrderBy.Expression.Source,
+                    ["order"] = this.OrderBy.Order,
+                };
+            }
+
+            if (this.Limit != int.MaxValue)
+            {
+                doc["limit"] = this.Limit;
+            }
+
+            if (this.Offset != 0)
+            {
+                doc["offset"] = this.Offset;
+            }
+
+            if (this.IncludeAfter.Count > 0)
+            {
+                doc["includeAfter"] = new BsonArray(this.IncludeAfter.Select(x => new BsonValue(x.Source)));
+            }
 
             if (this.GroupBy != null)
             {
                 doc["groupBy"] = new BsonDocument
                 {
                     ["expr"] = this.GroupBy.Expression.Source,
-                    ["order"] = this.GroupBy.Order, // order = 0 means no sorted by GroupBy (used from index order)
                     ["having"] = this.GroupBy.Having?.Source,
                     ["select"] = this.GroupBy.Select?.Source
                 };
@@ -153,17 +174,6 @@ namespace LiteDB.Engine
                     ["all"] = this.Select.All
                 };
             }
-
-            doc["orderBy"] = this.OrderBy == null ?
-                BsonValue.Null :
-                new BsonDocument
-                {
-                    ["expr"] = this.OrderBy.Expression.Source,
-                    ["order"] = this.OrderBy.Order,
-                };
-
-            doc["limit"] = this.Limit;
-            doc["offset"] = this.Offset;
 
             return doc;
         }

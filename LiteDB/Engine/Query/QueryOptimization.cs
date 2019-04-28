@@ -24,30 +24,11 @@ namespace LiteDB.Engine
             {
                 // define index only if source are external collection
                 Index = source != null ? new IndexVirtual(source) : null,
-                Select = new Select(queryDefinition.Select, queryDefinition.SelectAll),
+                Select = new Select(queryDefinition.Select ?? BsonExpression.Empty, queryDefinition.SelectAll),
                 ForUpdate = queryDefinition.ForUpdate,
                 Limit = queryDefinition.Limit,
                 Offset = queryDefinition.Offset
             };
-        }
-
-        /// <summary>
-        /// Check some rules if query contains concise rules
-        /// </summary>
-        public void Validate()
-        {
-            if (_queryDefinition.SelectAll && _queryDefinition.Select == null)
-            {
-                throw new LiteException(0, "Select ALL require SELECT expression");
-            }
-            if (_queryDefinition.SelectAll && _queryDefinition.GroupBy != null)
-            {
-                throw new LiteException(0, "Select ALL has no support for GROUP BY expression");
-            }
-            if (_queryDefinition.Having != null && _queryDefinition.GroupBy == null)
-            {
-                throw new LiteException(0, "HAVING require GROUP BY expression");
-            }
         }
 
         /// <summary>
@@ -196,7 +177,7 @@ namespace LiteDB.Engine
             }
 
             // fill filter using all expressions (remove selected term used in Index)
-            _query.Filters.AddRange(_terms.Where(x => x != selected));
+            _query.Filters.AddRange(_terms.Where(x => x != selected && x.IsAll == false));
         }
 
         /// <summary>
@@ -276,13 +257,6 @@ namespace LiteDB.Engine
             // if index expression are same as orderBy, use index to sort - just update index order
             if (orderBy.Expression.Source == _query.IndexExpression)
             {
-                // TODO: analyze SELECT expression to avoid wrong re-use of index
-                // here, optimization need detect if there any SELECT that transform data
-                // remember: order by runs AFTER select, so same field in SELECT transform could be not same
-                // as in original collection
-                // eg: SELECT { _id: name } FROM zip ORDER BY _id;
-                // in this example, "OrderBy _id" need order "by name" because _id was override
-
                 // re-use index order and no not run OrderBy
                 // update index order to be same as required in OrderBy
                 _query.Index.Order = orderBy.Order;
@@ -302,23 +276,22 @@ namespace LiteDB.Engine
         {
             if (_queryDefinition.GroupBy == null) return;
 
-            var groupBy = new GroupBy(_queryDefinition.GroupBy, _queryDefinition.Select, _queryDefinition.Having);
+            var groupBy = new GroupBy(_queryDefinition.GroupBy, _query.Select.Expression, _queryDefinition.Having);
+            OrderBy orderBy = null;
 
             // if groupBy use same expression in index, set group by order to MaxValue to not run
             if (groupBy.Expression.Source == _query.IndexExpression)
             {
-                // here there is no problem as in OrderBy because GroupBy order occurs BEFORE select transform
-
-                // do not sort when run groupBy (already sorted by index)
-                groupBy.Order = 0; // 0 means "none"
+                // great - group by expression are same used in index - no changes here
             }
             else
             {
-                // by default, groupBy sort as ASC only
-                groupBy.Order = Query.Ascending;
+                // create orderBy expression
+                orderBy = new OrderBy(groupBy.Expression, Query.Ascending);
             }
 
             _query.GroupBy = groupBy;
+            _query.OrderBy = orderBy;
         }
 
         #endregion
@@ -340,7 +313,9 @@ namespace LiteDB.Engine
                 {
                     _query.IncludeBefore.Add(include);
                 }
-                else
+
+                // in case of using OrderBy this can eliminate IncludeBefre - this need be added in After
+                if (!used || _query.OrderBy != null)
                 {
                     _query.IncludeAfter.Add(include);
                 }

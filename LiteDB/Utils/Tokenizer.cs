@@ -38,6 +38,8 @@ namespace LiteDB
         Til,
         /// <summary> . </summary>
         Period,
+        /// <summary> &amp; </summary>
+        Ampersand,
         /// <summary> $ </summary>
         Dollar,
         /// <summary> ! </summary>
@@ -89,7 +91,14 @@ namespace LiteDB
     /// </summary>
     internal class Token
     {
-        private static HashSet<string> _keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BETWEEN", "LIKE", "IN", "AND", "OR" };
+        private static readonly HashSet<string> _keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "BETWEEN",
+            "LIKE",
+            "IN",
+            "AND",
+            "OR"
+        };
 
         public Token(TokenType tokenType, string value, long position)
         {
@@ -101,20 +110,6 @@ namespace LiteDB
         public TokenType Type { get; private set; }
         public string Value { get; private set; }
         public long Position { get; private set; }
-
-        public bool IsOperand =>
-            this.Type == TokenType.Percent ||
-            this.Type == TokenType.Slash ||
-            this.Type == TokenType.Asterisk ||
-            this.Type == TokenType.Plus ||
-            this.Type == TokenType.Minus ||
-            this.Type == TokenType.Equals ||
-            this.Type == TokenType.Greater ||
-            this.Type == TokenType.GreaterOrEquals ||
-            this.Type == TokenType.Less ||
-            this.Type == TokenType.LessOrEquals ||
-            this.Type == TokenType.NotEquals ||
-            (this.Type == TokenType.Word && _keywords.Contains(this.Value));
 
         /// <summary>
         /// Expect if token is type (if not, throw UnexpectedToken)
@@ -171,6 +166,20 @@ namespace LiteDB
                 this.Type == TokenType.Word &&
                 value.Equals(this.Value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
+
+        public bool IsOperand =>
+            this.Type == TokenType.Percent ||
+            this.Type == TokenType.Slash ||
+            this.Type == TokenType.Asterisk ||
+            this.Type == TokenType.Plus ||
+            this.Type == TokenType.Minus ||
+            this.Type == TokenType.Equals ||
+            this.Type == TokenType.Greater ||
+            this.Type == TokenType.GreaterOrEquals ||
+            this.Type == TokenType.Less ||
+            this.Type == TokenType.LessOrEquals ||
+            this.Type == TokenType.NotEquals ||
+            (this.Type == TokenType.Word && _keywords.Contains(this.Value));
 
         public override string ToString()
         {
@@ -373,6 +382,11 @@ namespace LiteDB
 
                 case '.':
                     token = new Token(TokenType.Period, ".", this.Position);
+                    this.ReadChar();
+                    break;
+
+                case '&':
+                    token = new Token(TokenType.Ampersand, "&", this.Position);
                     this.ReadChar();
                     break;
 

@@ -13,189 +13,203 @@ namespace LiteDB
         /// <summary>
         /// Return lower case from string value
         /// </summary>
-        public static IEnumerable<BsonValue> LOWER(IEnumerable<BsonValue> values)
+        public static BsonValue LOWER(BsonValue value)
         {
-            foreach (var value in values.Where(x => x.IsString).Select(x => x.AsString))
+            if (value.IsString)
             {
-                yield return value.ToLowerInvariant();
+                return value.AsString.ToLowerInvariant();
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Return UPPER case from string value
         /// </summary>
-        public static IEnumerable<BsonValue> UPPER(IEnumerable<BsonValue> values)
+        public static BsonValue UPPER(BsonValue value)
         {
-            foreach (var value in values.Where(x => x.IsString).Select(x => x.AsString))
+            if (value.IsString)
             {
-                yield return value.ToUpperInvariant();
+                return value.AsString.ToUpperInvariant();
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Apply Left TRIM (start) from string value
         /// </summary>
-        public static IEnumerable<BsonValue> LTRIM(IEnumerable<BsonValue> values)
+        public static BsonValue LTRIM(BsonValue value)
         {
-            foreach (var value in values.Where(x => x.IsString).Select(x => x.AsString))
+            if (value.IsString)
             {
-                yield return value.TrimStart();
+                return value.AsString.TrimStart();
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Apply Right TRIM (end) from string value
         /// </summary>
-        public static IEnumerable<BsonValue> RTRIM(IEnumerable<BsonValue> values)
+        public static BsonValue RTRIM(BsonValue value)
         {
-            foreach (var value in values.Where(x => x.IsString).Select(x => x.AsString))
+            if (value.IsString)
             {
-                yield return value.TrimEnd();
+                return value.AsString.TrimEnd();
             }
+
+            return BsonValue.Null;
+
         }
 
         /// <summary>
         /// Apply TRIM from string value
         /// </summary>
-        public static IEnumerable<BsonValue> TRIM(IEnumerable<BsonValue> values)
+        public static BsonValue TRIM(BsonValue value)
         {
-            foreach (var value in values.Where(x => x.IsString).Select(x => x.AsString))
+            if (value.IsString)
             {
-                yield return value.Trim();
+                return value.AsString.Trim();
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Reports the zero-based index of the first occurrence of the specified string in this instance
         /// </summary>
-        public static IEnumerable<BsonValue> INDEXOF(IEnumerable<BsonValue> values, IEnumerable<BsonValue> search)
+        public static BsonValue INDEXOF(BsonValue value, BsonValue search)
         {
-            foreach (var value in ZipValues(values, search))
+            if (value.IsString && search.IsString)
             {
-                if (!value.First.IsString) continue;
-                if (!value.Second.IsString) continue;
-
-                yield return value.First.AsString.IndexOf(value.Second.AsString);
+                return value.AsString.IndexOf(search.AsString);
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Reports the zero-based index of the first occurrence of the specified string in this instance
         /// </summary>
-        public static IEnumerable<BsonValue> INDEXOF(IEnumerable<BsonValue> values, IEnumerable<BsonValue> search, IEnumerable<BsonValue> startIndex)
+        public static BsonValue INDEXOF(BsonValue value, BsonValue search, BsonValue startIndex)
         {
-            foreach (var value in ZipValues(values, search, startIndex))
+            if (value.IsString && search.IsString && startIndex.IsNumber)
             {
-                if (!value.First.IsString) continue;
-                if (!value.Second.IsString) continue;
-                if (!value.Third.IsNumber) continue;
-
-                yield return value.First.AsString.IndexOf(value.Second.AsString, value.Third.AsInt32);
+                return value.AsString.IndexOf(search.AsString, startIndex.AsInt32);
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Returns substring from string value using index and length (zero-based)
         /// </summary>
-        public static IEnumerable<BsonValue> SUBSTRING(IEnumerable<BsonValue> values, IEnumerable<BsonValue> index)
+        public static BsonValue SUBSTRING(BsonValue value, BsonValue startIndex)
         {
-            foreach (var value in ZipValues(values, index))
+            if (value.IsString && startIndex.IsNumber)
             {
-                if (!value.First.IsString) continue;
-                if (!value.Second.IsNumber) continue;
-
-                yield return value.First.AsString.Substring(value.Second.AsInt32);
+                return value.AsString.Substring(startIndex.AsInt32);
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Returns substring from string value using index and length (zero-based)
         /// </summary>
-        public static IEnumerable<BsonValue> SUBSTRING(IEnumerable<BsonValue> values, IEnumerable<BsonValue> index, IEnumerable<BsonValue> length)
+        public static BsonValue SUBSTRING(BsonValue value, BsonValue startIndex, BsonValue length)
         {
-            foreach (var value in ZipValues(values, index, length))
+            if (value.IsString && startIndex.IsNumber && length.IsNumber)
             {
-                if (!value.First.IsString) continue;
-                if (!value.Second.IsNumber) continue;
-                if (!value.Third.IsNumber) continue;
-
-                yield return value.First.AsString.Substring(value.Second.AsInt32, value.Third.AsInt32);
+                return value.AsString.Substring(startIndex.AsInt32, length.AsInt32);
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Returns replaced string changing oldValue with newValue
         /// </summary>
-        public static IEnumerable<BsonValue> REPLACE(IEnumerable<BsonValue> values, IEnumerable<BsonValue> oldValues, IEnumerable<BsonValue> newValues)
+        public static BsonValue REPLACE(BsonValue value, BsonValue oldValue, BsonValue newValue)
         {
-            foreach (var value in ZipValues(values, oldValues, newValues))
+            if (value.IsString && oldValue.IsString && newValue.IsString)
             {
-                if (!value.First.IsString) continue;
-                if (!value.Second.IsString) continue;
-                if (!value.Third.IsString) continue;
-
-                yield return value.First.AsString.Replace(value.Second.AsString, value.Third.AsString);
+                return value.AsString.Replace(oldValue.AsString, newValue.AsString);
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Return value string with left padding
         /// </summary>
-        public static IEnumerable<BsonValue> LPAD(IEnumerable<BsonValue> values, IEnumerable<BsonValue> totalWidth, IEnumerable<BsonValue> paddingChar)
+        public static BsonValue LPAD(BsonValue value, BsonValue totalWidth, BsonValue paddingChar)
         {
-            foreach (var value in ZipValues(values, totalWidth, paddingChar))
+            if (value.IsString && totalWidth.IsNumber && paddingChar.IsString)
             {
-                if (!value.Second.IsNumber) continue;
-                if (!value.Third.IsString) continue;
+                var c = paddingChar.AsString;
 
-                yield return value.First.AsString.PadLeft(value.Second.AsInt32, value.Third.AsString.ToCharArray()[0]);
+                if (string.IsNullOrEmpty(c)) throw new ArgumentOutOfRangeException(nameof(paddingChar));
+
+                return value.AsString.PadLeft(totalWidth.AsInt32, c[0]);
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Return value string with right padding
         /// </summary>
-        public static IEnumerable<BsonValue> RPAD(IEnumerable<BsonValue> values, IEnumerable<BsonValue> totalWidth, IEnumerable<BsonValue> paddingChar)
+        public static BsonValue RPAD(BsonValue value, BsonValue totalWidth, BsonValue paddingChar)
         {
-            foreach (var value in ZipValues(values, totalWidth, paddingChar))
+            if (value.IsString && totalWidth.IsNumber && paddingChar.IsString)
             {
-                if (!value.Second.IsNumber) continue;
-                if (!value.Third.IsString) continue;
+                var c = paddingChar.AsString;
 
-                yield return value.First.AsString.PadRight(value.Second.AsInt32, value.Third.AsString.ToCharArray()[0]);
+                if (string.IsNullOrEmpty(c)) throw new ArgumentOutOfRangeException(nameof(paddingChar));
+
+                return value.AsString.PadRight(totalWidth.AsInt32, c[0]);
             }
-        }
 
-        /// <summary>
-        /// Split string value into enumerate of items
-        /// </summary>
-        public static IEnumerable<BsonValue> SPLIT(IEnumerable<BsonValue> values, IEnumerable<BsonValue> delimiter)
-        {
-            foreach (var value in ZipValues(values, delimiter))
-            {
-                if (!value.First.IsString) continue;
-                if (!value.Second.IsString) continue;
-
-                var items = value.First.AsString.Split(value.Second.AsString[0]);
-
-                foreach(var item in items)
-                {
-                    yield return item;
-                }
-            }
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Return format value string using format definition (same as String.Format("{0:~}", values)).
         /// </summary>
-        public static IEnumerable<BsonValue> FORMAT(IEnumerable<BsonValue> values, IEnumerable<BsonValue> format)
+        public static BsonValue FORMAT(BsonValue value, BsonValue format)
         {
-            foreach (var value in ZipValues(values, format))
+            if (format.IsString)
             {
-                if (!value.Second.IsString) continue;
-
-                yield return string.Format("{0:" + value.Second.AsString + "}", value.First.RawValue);
+                return string.Format("{0:" +  format.AsString + "}", value.RawValue);
             }
+
+            return BsonValue.Null;
+        }
+
+        /// <summary>
+        /// Join all values into a single string with ',' separator.
+        /// </summary>
+        public static BsonValue JOIN(IEnumerable<BsonValue> values)
+        {
+            return JOIN(values, "");
+        }
+
+        /// <summary>
+        /// Join all values into a single string with a string separator
+        /// </summary>
+        public static BsonValue JOIN(IEnumerable<BsonValue> values, BsonValue separator)
+        {
+            if (separator.IsString)
+            {
+                return string.Join(
+                    separator.AsString,
+                    values.Select(x => x.AsString).ToArray()
+                );
+            }
+
+            return BsonValue.Null;
         }
     }
 }

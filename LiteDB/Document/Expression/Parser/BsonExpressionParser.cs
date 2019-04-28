@@ -21,7 +21,7 @@ namespace LiteDB
         /// <summary>
         /// Operation definition by methods with defined expression type (operators are in precedence order)
         /// </summary>
-        private static Dictionary<string, Tuple<MethodInfo, BsonExpressionType>> _operators = new Dictionary<string, Tuple<MethodInfo, BsonExpressionType>>
+        private static readonly Dictionary<string, Tuple<MethodInfo, BsonExpressionType>> _operators = new Dictionary<string, Tuple<MethodInfo, BsonExpressionType>>
         {
             // arithmetic
             ["%"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("MOD"), BsonExpressionType.Modulo),
@@ -43,26 +43,53 @@ namespace LiteDB
             ["!="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("NEQ"), BsonExpressionType.NotEqual),
             ["="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("EQ"), BsonExpressionType.Equal),
 
+            ["ANY LIKE"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LIKE_ANY"), BsonExpressionType.Like),
+            ["ANY BETWEEN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("BETWEEN_ANY"), BsonExpressionType.Between),
+            ["ANY IN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("IN_ANY"), BsonExpressionType.In),
+
+            ["ANY >"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GT_ANY"), BsonExpressionType.GreaterThan),
+            ["ANY >="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GTE_ANY"), BsonExpressionType.GreaterThanOrEqual),
+            ["ANY <"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LT_ANY"), BsonExpressionType.LessThan),
+            ["ANY <="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LTE_ANY"), BsonExpressionType.LessThanOrEqual),
+
+            ["ANY !="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("NEQ_ANY"), BsonExpressionType.NotEqual),
+            ["ANY ="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("EQ_ANY"), BsonExpressionType.Equal),
+
+            ["ALL LIKE"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LIKE_ALL"), BsonExpressionType.Like),
+            ["ALL BETWEEN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("BETWEEN_ALL"), BsonExpressionType.Between),
+            ["ALL IN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("IN_ALL"), BsonExpressionType.In),
+
+            ["ALL >"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GT_ALL"), BsonExpressionType.GreaterThan),
+            ["ALL >="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GTE_ALL"), BsonExpressionType.GreaterThanOrEqual),
+            ["ALL <"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LT_ALL"), BsonExpressionType.LessThan),
+            ["ALL <="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LTE_ALL"), BsonExpressionType.LessThanOrEqual),
+
+            ["ALL !="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("NEQ_ALL"), BsonExpressionType.NotEqual),
+            ["ALL ="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("EQ_ALL"), BsonExpressionType.Equal),
+
             // logic
             ["AND"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("AND"), BsonExpressionType.And),
             ["OR"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("OR"), BsonExpressionType.Or)
         };
 
-        private static MethodInfo _parameterPathMethod = typeof(BsonExpressionOperators).GetMethod("PARAMETER_PATH");
-        private static MethodInfo _memberPathMethod = typeof(BsonExpressionOperators).GetMethod("MEMBER_PATH");
-        private static MethodInfo _arrayPathMethod = typeof(BsonExpressionOperators).GetMethod("ARRAY_PATH");
+        private static readonly MethodInfo _parameterPathMethod = typeof(BsonExpressionOperators).GetMethod("PARAMETER_PATH");
+        private static readonly MethodInfo _memberPathMethod = typeof(BsonExpressionOperators).GetMethod("MEMBER_PATH");
+        private static readonly MethodInfo _arrayIndexMethod = typeof(BsonExpressionOperators).GetMethod("ARRAY_INDEX");
+        private static readonly MethodInfo _arrayFilterMethod = typeof(BsonExpressionOperators).GetMethod("ARRAY_FILTER");
 
-        private static MethodInfo _documentInitMethod = typeof(BsonExpressionOperators).GetMethod("DOCUMENT_INIT");
-        private static MethodInfo _arrayInitMethod = typeof(BsonExpressionOperators).GetMethod("ARRAY_INIT");
+        private static readonly MethodInfo _mapMethod = typeof(BsonExpressionOperators).GetMethod("MAP");
+
+        private static readonly MethodInfo _documentInitMethod = typeof(BsonExpressionOperators).GetMethod("DOCUMENT_INIT");
+        private static readonly MethodInfo _arrayInitMethod = typeof(BsonExpressionOperators).GetMethod("ARRAY_INIT");
 
         #endregion
 
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        public static BsonExpression ParseFullExpression(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        public static BsonExpression ParseFullExpression(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
-            var first = ParseSingleExpression(tokenizer, root, current, parameters, isRoot);
+            var first = ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot);
             var values = new List<BsonExpression> { first };
             var ops = new List<string>();
 
@@ -70,28 +97,25 @@ namespace LiteDB
             while (!tokenizer.EOF)
             {
                 // read operator between expressions
-                var op = tokenizer.LookAhead(true);
+                var op = ReadOperant(tokenizer);
 
-                // if no valid operator, stop reading string
-                if (op.IsOperand == false) break;
+                if (op == null) break;
 
-                tokenizer.ReadToken(); // consume _ahead
-
-                var expr = ParseSingleExpression(tokenizer, root, current, parameters, isRoot);
+                var expr = ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot);
 
                 // special BETWEEN "AND" read
-                if (op.Is("BETWEEN"))
+                if (op.EndsWith("BETWEEN", StringComparison.OrdinalIgnoreCase))
                 {
                     var and = tokenizer.ReadToken(true).Expect("AND");
 
-                    var expr2 = ParseSingleExpression(tokenizer, root, current, parameters, isRoot);
+                    var expr2 = ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot);
 
                     // convert expr and expr2 into an array with 2 values
                     expr = NewArray(expr, expr2);
                 }
 
                 values.Add(expr);
-                ops.Add(op.Value.ToUpper());
+                ops.Add(op.ToUpper());
             }
 
             var order = 0;
@@ -119,16 +143,25 @@ namespace LiteDB
                         if (!(right.IsPredicate || right.Type == BsonExpressionType.And || right.Type == BsonExpressionType.Or)) throw LiteException.InvalidExpressionTypePredicate(right);
                     }
 
+                    // test left/right scalar
+                    var isLeftEnum = op.Key.StartsWith("ALL") || op.Key.StartsWith("ANY");
+
+                    if (isLeftEnum && left.IsScalar) throw new LiteException(0, $"Left expression `{left.Source}` must return multiples values");
+                    if (!isLeftEnum && !right.IsScalar) throw new LiteException(0, $"Left expression `{right.Source}` must return a single value");
+                    if (right.IsScalar == false) throw new LiteException(0, $"Right expression `{right.Source}` must return a single value");
+
                     // process result in a single value
                     var result = new BsonExpression
                     {
                         Type = op.Value.Item2,
                         IsImmutable = left.IsImmutable && right.IsImmutable,
+                        IsScalar = true,
+                        IsAll = op.Key.StartsWith("ALL"),
                         Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
                         Expression = Expression.Call(op.Value.Item1, left.Expression, right.Expression),
                         Left = left,
                         Right = right,
-                        Source = left.Source + (op.Key.IsWord() ? (" " + op.Key + " ") : op.Key) + right.Source
+                        Source = left.Source + (" " + op.Key + " ") + right.Source
                     };
 
                     // remove left+right and insert result
@@ -146,7 +179,7 @@ namespace LiteDB
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        private static BsonExpression ParseSingleExpression(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        public static BsonExpression ParseSingleExpression(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             // read next token and test with all expression parts
             var token = tokenizer.ReadToken();
@@ -157,12 +190,14 @@ namespace LiteDB
                 TryParseBool(tokenizer) ??
                 TryParseNull(tokenizer) ??
                 TryParseString(tokenizer) ??
-                TryParseDocument(tokenizer, root, current, parameters, isRoot) ??
-                TryParseArray(tokenizer, root, current, parameters, isRoot) ??
-                TryParseParameter(tokenizer, root, current, parameters, isRoot) ??
-                TryParseInnerExpression(tokenizer, root, current, parameters, isRoot) ??
-                TryParseMethodCall(tokenizer, root, current, parameters, isRoot) ??
-                TryParsePath(tokenizer, root, current, parameters, isRoot) ??
+                TryParseSource(tokenizer, source) ??
+                TryParseDocument(tokenizer, source, root, current, parameters, isRoot) ??
+                TryParseArray(tokenizer, source, root, current, parameters, isRoot) ??
+                TryParseParameter(tokenizer, source, root, current, parameters, isRoot) ??
+                TryParseInnerExpression(tokenizer, source, root, current, parameters, isRoot) ??
+                TryParseMap(tokenizer, source, root, current, parameters, isRoot) ??
+                TryParseMethodCall(tokenizer, source, root, current, parameters, isRoot) ??
+                TryParsePath(tokenizer, source, root, current, parameters, isRoot) ??
                 throw LiteException.UnexpectedToken(token);
         }
 
@@ -196,8 +231,9 @@ namespace LiteDB
                 {
                     Type = BsonExpressionType.Double,
                     IsImmutable = true,
+                    IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-                    Expression = Expression.NewArrayInit(typeof(BsonValue), constant),
+                    Expression = constant,
                     Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
                 };
             }
@@ -235,8 +271,9 @@ namespace LiteDB
                 {
                     Type = BsonExpressionType.Int,
                     IsImmutable = true,
+                    IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-                    Expression = Expression.NewArrayInit(typeof(BsonValue), constant),
+                    Expression = constant,
                     Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
                 };
             }
@@ -252,14 +289,15 @@ namespace LiteDB
             if (tokenizer.Current.Type == TokenType.Word && (tokenizer.Current.Is("true") || tokenizer.Current.Is("false")))
             {
                 var boolean = Convert.ToBoolean(tokenizer.Current.Value);
-                var value = Expression.Constant(new BsonValue(boolean));
+                var constant = Expression.Constant(new BsonValue(boolean));
 
                 return new BsonExpression
                 {
                     Type = BsonExpressionType.Boolean,
                     IsImmutable = true,
+                    IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-                    Expression = Expression.NewArrayInit(typeof(BsonValue), value),
+                    Expression = constant,
                     Source = boolean.ToString().ToLower()
                 };
             }
@@ -274,14 +312,15 @@ namespace LiteDB
         {
             if (tokenizer.Current.Type == TokenType.Word && tokenizer.Current.Is("null"))
             {
-                var value = Expression.Constant(BsonValue.Null);
+                var constant = Expression.Constant(BsonValue.Null);
 
                 return new BsonExpression
                 {
                     Type = BsonExpressionType.Null,
                     IsImmutable = true,
+                    IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-                    Expression = Expression.NewArrayInit(typeof(BsonValue), value),
+                    Expression = constant,
                     Source = "null"
                 };
             }
@@ -297,14 +336,15 @@ namespace LiteDB
             if (tokenizer.Current.Type == TokenType.String)
             {
                 var bstr = new BsonValue(tokenizer.Current.Value);
-                var value = Expression.Constant(bstr);
+                var constant = Expression.Constant(bstr);
 
                 return new BsonExpression
                 {
                     Type = BsonExpressionType.String,
                     IsImmutable = true,
+                    IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-                    Expression = Expression.NewArrayInit(typeof(BsonValue), value),
+                    Expression = constant,
                     Source = JsonSerializer.Serialize(bstr)
                 };
             }
@@ -315,55 +355,59 @@ namespace LiteDB
         /// <summary>
         /// Try parse json document - return null if not document token
         /// </summary>
-        private static BsonExpression TryParseDocument(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParseDocument(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             if (tokenizer.Current.Type != TokenType.OpenBrace) return null;
 
             // read key value
             var keys = new List<Expression>();
-            var values = new List<BsonExpression>();
-            var source = new StringBuilder();
+            var values = new List<Expression>();
+            var src = new StringBuilder();
             var isImmutable = true;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            source.Append("{");
+            src.Append("{");
 
             while (!tokenizer.CheckEOF())
             {
                 // read simple or complex document key name
-                var src = new StringBuilder(); // use another builder to re-use in simplified notation
-                var key = ReadKey(tokenizer, src);
+                var innerSrc = new StringBuilder(); // use another builder to re-use in simplified notation
+                var key = ReadKey(tokenizer, innerSrc);
 
-                source.Append(src);
+                src.Append(innerSrc);
 
                 tokenizer.ReadToken(); // update s.Current 
 
-                source.Append(":");
+                src.Append(":");
 
                 BsonExpression value;
 
                 // test normal notation { a: 1 }
                 if (tokenizer.Current.Type == TokenType.Colon)
                 {
-                    value = ParseFullExpression(tokenizer, root, current, parameters, isRoot);
+                    value = ParseFullExpression(tokenizer, source, root, current, parameters, isRoot);
 
                     // read next token here (, or }) because simplified version already did
                     tokenizer.ReadToken();
                 }
                 else
                 {
-                    var fname = src.ToString();
+                    var fname = innerSrc.ToString();
 
                     // support for simplified notation { a, b, c } == { a: $.a, b: $.b, c: $.c }
                     value = new BsonExpression
                     {
                         Type = BsonExpressionType.Path,
                         IsImmutable = isImmutable,
+                        IsScalar = true,
                         Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(new string[] { key }),
                         Expression = Expression.Call(_memberPathMethod, root, Expression.Constant(key)) as Expression,
                         Source = "$." + (fname.IsWord() ? fname : "[" + fname + "]")
                     };
                 }
+
+                // document value must be a scalar value
+                if (value.IsScalar == false) throw new LiteException(0, $"Document value `{value.Source}` must be a scalar expression");
 
                 // update isImmutable only when came false
                 if (value.IsImmutable == false) isImmutable = false;
@@ -372,53 +416,71 @@ namespace LiteDB
 
                 // add key and value to parameter list (as an expression)
                 keys.Add(Expression.Constant(key));
-                values.Add(value);
+                values.Add(value.Expression);
 
                 // include value source in current source
-                source.Append(value.Source);
+                src.Append(value.Source);
 
                 // test next token for , (continue) or } (break)
                 tokenizer.Current.Expect(TokenType.Comma, TokenType.CloseBrace);
 
-                source.Append(tokenizer.Current.Value);
+                src.Append(tokenizer.Current.Value);
 
                 if (tokenizer.Current.Type == TokenType.Comma) continue; else break;
             }
 
             var arrKeys = Expression.NewArrayInit(typeof(string), keys.ToArray());
-            var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.Select(x => x.Expression).ToArray());
-            var arrSources = Expression.NewArrayInit(typeof(string), values.Select(x => Expression.Constant(x.Source)).ToArray());
+            var arrValues = Expression.NewArrayInit(typeof(BsonValue), values.ToArray());
 
             return new BsonExpression
             {
                 Type = BsonExpressionType.Document,
                 IsImmutable = isImmutable,
+                IsScalar = true,
                 Fields = fields,
-                Expression = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues, arrSources }),
-                Source = source.ToString()
+                Expression = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues }),
+                Source = src.ToString()
+            };
+        }
+
+        /// <summary>
+        /// Try parse source documents (when passed) * - return null if not array token
+        /// </summary>
+        private static BsonExpression TryParseSource(Tokenizer tokenizer, ParameterExpression source)
+        {
+            if (tokenizer.Current.Type != TokenType.Asterisk) return null;
+
+            return new BsonExpression
+            {
+                Type = BsonExpressionType.Source,
+                IsImmutable = true,
+                IsScalar = false,
+                Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+                Expression = source,
+                Source = "*"
             };
         }
 
         /// <summary>
         /// Try parse array - return null if not array token
         /// </summary>
-        private static BsonExpression TryParseArray(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParseArray(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             if (tokenizer.Current.Type != TokenType.OpenBracket) return null;
 
             var values = new List<Expression>();
-            var source = new StringBuilder();
+            var src = new StringBuilder();
             var isImmutable = true;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            source.Append("[");
+            src.Append("[");
 
             while (!tokenizer.CheckEOF())
             {
                 // read value expression
-                var value = ParseFullExpression(tokenizer, root, current, parameters, isRoot);
+                var value = ParseFullExpression(tokenizer, source, root, current, parameters, isRoot);
 
-                source.Append(value.Source);
+                src.Append(value.Source);
 
                 // update isImmutable only when came false
                 if (value.IsImmutable == false) isImmutable = false;
@@ -431,27 +493,28 @@ namespace LiteDB
                 var next = tokenizer.ReadToken()
                     .Expect(TokenType.Comma, TokenType.CloseBracket);
 
-                source.Append(next.Value);
+                src.Append(next.Value);
 
                 if (next.Type == TokenType.Comma) continue; else break;
             }
 
-            var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.ToArray());
+            var arrValues = Expression.NewArrayInit(typeof(BsonValue), values.ToArray());
 
             return new BsonExpression
             {
                 Type = BsonExpressionType.Array,
                 IsImmutable = isImmutable,
+                IsScalar = true,
                 Fields = fields,
-                Expression = Expression.Call(_arrayInitMethod, new Expression[] { arrValues }),
-                Source = source.ToString()
+                Expression = Expression.Call(_arrayInitMethod, arrValues),
+                Source = src.ToString()
             };
         }
 
         /// <summary>
         /// Try parse parameter - return null if not parameter token
         /// </summary>
-        private static BsonExpression TryParseParameter(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParseParameter(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             if (tokenizer.Current.Type != TokenType.At) return null;
 
@@ -466,6 +529,7 @@ namespace LiteDB
                 {
                     Type = BsonExpressionType.Parameter,
                     IsImmutable = false,
+                    IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = Expression.Call(_parameterPathMethod, parameters, name),
                     Source = "@" + parameterName
@@ -480,12 +544,12 @@ namespace LiteDB
         /// <summary>
         /// Try parse inner expression - return null if not bracket token
         /// </summary>
-        private static BsonExpression TryParseInnerExpression(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParseInnerExpression(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             if (tokenizer.Current.Type != TokenType.OpenParenthesis) return null;
 
             // read a inner expression inside ( and )
-            var inner = ParseFullExpression(tokenizer, root, current, parameters, isRoot);
+            var inner = ParseFullExpression(tokenizer, source, root, current, parameters, isRoot);
 
             // read close )
             tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
@@ -494,6 +558,7 @@ namespace LiteDB
             {
                 Type = inner.Type,
                 IsImmutable = inner.IsImmutable,
+                IsScalar = inner.IsScalar,
                 Fields = inner.Fields,
                 Expression = inner.Expression,
                 Left = inner.Left,
@@ -503,9 +568,62 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Try parse MAP function - return null if not method call
+        /// </summary>
+        private static BsonExpression TryParseMap(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        {
+            if (!tokenizer.Current.Is("MAP")) return null;
+            if (tokenizer.LookAhead().Type != TokenType.OpenParenthesis) return null;
+
+            // read (
+            tokenizer.ReadToken();
+
+            var src = new StringBuilder("MAP(");
+            var isImmutable = true;
+            var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // read enumerable expression
+            var input = ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot);
+
+            if (input.IsScalar) throw new LiteException(0, $"MAP function require an input enumerable expression");
+
+            tokenizer.ReadToken().Expect(TokenType.Equals); // read =
+            tokenizer.ReadToken().Expect(TokenType.Greater); // read >
+
+            src.Append(input.Source);
+            src.Append("=>");
+
+            var output = BsonExpression.Parse(tokenizer, false);
+
+            if (output == null) throw LiteException.UnexpectedToken(tokenizer.Current);
+
+            // read last )
+            tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
+
+            if (input.IsImmutable == false) isImmutable = false;
+            if (output.IsImmutable == false) isImmutable = false;
+
+            fields.AddRange(input.Fields);
+            fields.AddRange(output.Fields);
+
+            src.Append(output.Source);
+            src.Append(")");
+
+            return new BsonExpression
+            {
+                Type = BsonExpressionType.Call,
+                IsImmutable = isImmutable,
+                IsScalar = false,
+                Fields = fields,
+                Expression = Expression.Call(_mapMethod, input.Expression, Expression.Constant(output), root, parameters),
+                Source = src.ToString()
+            };
+        }
+
+        /// <summary>
         /// Try parse method call - return null if not method call
         /// </summary>
-        private static BsonExpression TryParseMethodCall(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParseMethodCall(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             var token = tokenizer.Current;
 
@@ -516,23 +634,23 @@ namespace LiteDB
             tokenizer.ReadToken();
 
             // get static method from this class
-            var pars = new List<Expression>();
-            var source = new StringBuilder();
+            var pars = new List<BsonExpression>();
+            var src = new StringBuilder();
             var isImmutable = true;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            source.Append(token.Value.ToUpper() + "(");
+            src.Append(token.Value.ToUpper() + "(");
 
             // method call with no parameters
             if (tokenizer.LookAhead().Type == TokenType.CloseParenthesis)
             {
-                source.Append(tokenizer.ReadToken().Value); // read )
+                src.Append(tokenizer.ReadToken().Value); // read )
             }
             else
             {
                 while (!tokenizer.CheckEOF())
                 {
-                    var parameter = ParseFullExpression(tokenizer, root, current, parameters, isRoot);
+                    var parameter = ParseFullExpression(tokenizer, source, root, current, parameters, isRoot);
 
                     // update isImmutable only when came false
                     if (parameter.IsImmutable == false) isImmutable = false;
@@ -540,16 +658,16 @@ namespace LiteDB
                     // add fields from each parameters
                     fields.AddRange(parameter.Fields);
 
-                    pars.Add(parameter.Expression);
+                    pars.Add(parameter);
 
                     // append source string
-                    source.Append(parameter.Source);
+                    src.Append(parameter.Source);
 
                     // read , or )
                     var next = tokenizer.ReadToken()
                         .Expect(TokenType.Comma, TokenType.CloseParenthesis);
 
-                    source.Append(next.Value);
+                    src.Append(next.Value);
 
                     if (next.Type == TokenType.Comma) continue; else break;
                 }
@@ -565,20 +683,34 @@ namespace LiteDB
                 isImmutable = false;
             }
 
+            // test parameters Scalar vs IEnumerable
+            foreach (var z in method.GetParameters().Zip(pars, (l, r) => new { l, r }))
+            {
+                if (z.l.ParameterType.IsEnumerable() && z.r.IsScalar)
+                {
+                    throw new LiteException(0, $"Parameter `{z.l.Name}` in method `{method.Name}` must be an enumerable value");
+                }
+                if (z.l.ParameterType.IsEnumerable() == false && z.r.IsScalar == false)
+                {
+                    throw new LiteException(0, $"Parameter `{z.l.Name}` in method `{method.Name}` must be a scalar value");
+                }
+            }
+
             return new BsonExpression
             {
                 Type = BsonExpressionType.Call,
                 IsImmutable = isImmutable,
+                IsScalar = method.ReturnType.IsEnumerable() == false,
                 Fields = fields,
-                Expression = Expression.Call(method, pars.ToArray()),
-                Source = source.ToString()
+                Expression = Expression.Call(method, pars.Select(x => x.Expression).ToArray()),
+                Source = src.ToString()
             };
         }
 
         /// <summary>
         /// Parse JSON-Path - return null if not method call
         /// </summary>
-        private static BsonExpression TryParsePath(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParsePath(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             // test $ or @ or WORD
             if (tokenizer.Current.Type != TokenType.At && tokenizer.Current.Type != TokenType.Dollar && tokenizer.Current.Type != TokenType.Word) return null;
@@ -598,14 +730,15 @@ namespace LiteDB
                 }
             }
 
-            var source = new StringBuilder();
+            var src = new StringBuilder();
             var isImmutable = true;
+            var isScalar = true;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            source.Append(scope == TokenType.Dollar ? "$" : "@");
+            src.Append(scope == TokenType.Dollar ? "$" : "@");
 
             // read field name (or "" if root)
-            var field = ReadField(tokenizer, source);
+            var field = ReadField(tokenizer, src);
             var name = Expression.Constant(field);
             var expr = Expression.Call(_memberPathMethod, scope == TokenType.Dollar ? root : current, name) as Expression;
 
@@ -618,8 +751,15 @@ namespace LiteDB
             // parse the rest of path
             while (!tokenizer.EOF)
             {
-                var result = ParsePath(tokenizer, expr, root, parameters, fields, ref isImmutable, source);
+                var result = ParsePath(tokenizer, expr, source, root, parameters, fields, ref isImmutable, ref isScalar, src);
 
+                if (isScalar == false)
+                {
+                    expr = result;
+                    break;
+                }
+
+                // filter method must exit
                 if (result == null) break;
 
                 expr = result;
@@ -629,16 +769,17 @@ namespace LiteDB
             {
                 Type = BsonExpressionType.Path,
                 IsImmutable = isImmutable,
+                IsScalar = isScalar,
                 Fields = fields,
                 Expression = expr,
-                Source = source.ToString()
+                Source = src.ToString()
             };
         }
 
         /// <summary>
         /// Implement a JSON-Path like navigation on BsonDocument. Support a simple range of paths
         /// </summary>
-        private static Expression ParsePath(Tokenizer tokenizer, Expression expr, ParameterExpression root, ParameterExpression parameters, HashSet<string> fields, ref bool isImmutable, StringBuilder source)
+        private static Expression ParsePath(Tokenizer tokenizer, Expression expr, ParameterExpression source, ParameterExpression root, ParameterExpression parameters, HashSet<string> fields, ref bool isImmutable, ref bool isScalar, StringBuilder src)
         {
             var ahead = tokenizer.LookAhead(false);
 
@@ -647,16 +788,15 @@ namespace LiteDB
                 tokenizer.ReadToken(); // read .
                 tokenizer.ReadToken(false); //
 
-                var field = ReadField(tokenizer, source);
+                var field = ReadField(tokenizer, src);
 
                 var name = Expression.Constant(field);
 
                 return Expression.Call(_memberPathMethod, expr, name);
-
             }
             else if (ahead.Type == TokenType.OpenBracket) // array 
             {
-                source.Append("[");
+                src.Append("[");
 
                 tokenizer.ReadToken(); // read [
 
@@ -664,23 +804,27 @@ namespace LiteDB
 
                 var index = int.MaxValue;
                 var inner = BsonExpression.Empty;
+                var method = _arrayIndexMethod;
 
                 if (ahead.Type == TokenType.Int)
                 {
                     // fixed index
-                    source.Append(tokenizer.ReadToken().Value);
+                    src.Append(tokenizer.ReadToken().Value);
                     index = Convert.ToInt32(tokenizer.Current.Value);
                 }
                 else if (ahead.Type == TokenType.Minus)
                 {
                     // fixed negative index
-                    source.Append(tokenizer.ReadToken().Value + tokenizer.ReadToken().Expect(TokenType.Int).Value);
+                    src.Append(tokenizer.ReadToken().Value + tokenizer.ReadToken().Expect(TokenType.Int).Value);
                     index = -Convert.ToInt32(tokenizer.Current.Value);
                 }
                 else if (ahead.Type == TokenType.Asterisk)
                 {
-                    // read all items (index = int.MaxValue)
-                    source.Append(tokenizer.ReadToken().Value);
+                    // all items * (index = MaxValue)
+                    method = _arrayFilterMethod;
+                    isScalar = false;
+
+                    src.Append(tokenizer.ReadToken().Value);
                 }
                 else
                 {
@@ -692,18 +836,26 @@ namespace LiteDB
                     // if array filter is not immutable, update ref (update only when false)
                     if (inner.IsImmutable == false) isImmutable = false;
 
+                    // if inner expression returns a single parameter, still Scalar
+                    // otherwise it's an operand filter expression (enumerable)
+                    if (inner.Type != BsonExpressionType.Parameter)
+                    {
+                        method = _arrayFilterMethod;
+                        isScalar = false;
+                    }
+
                     // add inner fields (can contains root call)
                     fields.AddRange(inner.Fields);
 
-                    source.Append(inner.Source);
+                    src.Append(inner.Source);
                 }
 
                 // read ]
                 tokenizer.ReadToken().Expect(TokenType.CloseBracket);
 
-                source.Append("]");
+                src.Append("]");
 
-                return Expression.Call(_arrayPathMethod, expr, Expression.Constant(index), Expression.Constant(inner), root, parameters);
+                return Expression.Call(method, expr, Expression.Constant(index), Expression.Constant(inner), root, parameters);
             }
 
             return null;
@@ -717,12 +869,17 @@ namespace LiteDB
             var values = new Expression[] { item0.Expression, item1.Expression };
             var isImmutable = item0.IsImmutable && item1.IsImmutable;
 
-            var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.ToArray());
+            // both values must be scalar expressions
+            if (item0.IsScalar == false) throw new LiteException(0, $"Expression `{item0.Source}` must be a scalar expression");
+            if (item1.IsScalar == false) throw new LiteException(0, $"Expression `{item0.Source}` must be a scalar expression");
+
+            var arrValues = Expression.NewArrayInit(typeof(BsonValue), values.ToArray());
 
             return new BsonExpression
             {
                 Type = BsonExpressionType.Array,
                 IsImmutable = isImmutable,
+                IsScalar = true,
                 Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(item0.Fields).AddRange(item1.Fields),
                 Expression = Expression.Call(_arrayInitMethod, new Expression[] { arrValues }),
                 Source = item0.Source + " AND " + item1.Source
@@ -739,6 +896,7 @@ namespace LiteDB
             {
                 Type = _operators[op].Item2,
                 IsImmutable = left.IsImmutable && right.IsImmutable,
+                IsScalar = left.IsScalar && right.IsScalar,
                 Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
                 Expression = Expression.Call(_operators[op].Item1, left.Expression, right.Expression),
                 Left = left,
@@ -818,6 +976,35 @@ namespace LiteDB
             }
 
             return key;
+        }
+
+        /// <summary>
+        /// Read next token as Operant with ANY|ALL keyword before - returns null if next token are not an operant
+        /// </summary>
+        private static string ReadOperant(Tokenizer tokenizer)
+        {
+            var token = tokenizer.LookAhead(true);
+
+            if (token.IsOperand)
+            {
+                tokenizer.ReadToken(); // consume operant
+                return token.Value;
+            }
+
+            if (token.Is("ALL") || token.Is("ANY"))
+            {
+                var key = token.Value.ToUpper();
+
+                tokenizer.ReadToken(); // consume operant
+
+                token = tokenizer.ReadToken();
+
+                if (token.IsOperand == false) throw LiteException.UnexpectedToken("Expected valid operant", token);
+
+                return key + " " + token.Value;
+            }
+
+            return null;
         }
     }
 }
