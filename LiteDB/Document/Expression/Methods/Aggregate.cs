@@ -109,27 +109,12 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return "true" only if all values are true
-        /// ALL($.items[*] > 0)
-        /// </summary>
-        public static BsonValue ALL(IEnumerable<BsonValue> values)
-        {
-            return values
-                .Where(x => x.IsBoolean)
-                .Select(x => x.AsBoolean)
-                .All(x => x == true);
-        }
-
-        /// <summary>
-        /// Return "true" if any values are true. Run over all results
-        /// ANY($._id = ITEMS([1, 2, 3, 4]))
+        /// Return "true" if inner collection contains any result
+        /// ANY($.items[*])
         /// </summary>
         public static BsonValue ANY(IEnumerable<BsonValue> values)
         {
-            return values
-                .Where(x => x.IsBoolean)
-                .Select(x => x.AsBoolean)
-                .Any(x => x == true);
+            return values.Any(); 
         }
     }
 }

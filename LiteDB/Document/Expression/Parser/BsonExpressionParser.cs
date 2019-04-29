@@ -147,6 +147,7 @@ namespace LiteDB
                     var isLeftEnum = op.Key.StartsWith("ALL") || op.Key.StartsWith("ANY");
 
                     if (isLeftEnum && left.IsScalar) throw new LiteException(0, $"Left expression `{left.Source}` must return multiples values");
+                    if (!isLeftEnum && !left.IsScalar) throw new LiteException(0, $"Left expression `{left.Source}` returns more than one result. Try use ANY or ALL before operant.");
                     if (!isLeftEnum && !right.IsScalar) throw new LiteException(0, $"Left expression `{right.Source}` must return a single value");
                     if (right.IsScalar == false) throw new LiteException(0, $"Right expression `{right.Source}` must return a single value");
 
@@ -156,7 +157,7 @@ namespace LiteDB
                         Type = op.Value.Item2,
                         IsImmutable = left.IsImmutable && right.IsImmutable,
                         IsScalar = true,
-                        IsAll = op.Key.StartsWith("ALL"),
+                        IsAllOperator = op.Key.StartsWith("ALL"),
                         Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
                         Expression = Expression.Call(op.Value.Item1, left.Expression, right.Expression),
                         Left = left,
@@ -175,6 +176,8 @@ namespace LiteDB
 
             return values.Single();
         }
+
+        #region Constants
 
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
@@ -231,6 +234,7 @@ namespace LiteDB
                 {
                     Type = BsonExpressionType.Double,
                     IsImmutable = true,
+                    UseSource = false,
                     IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = constant,
@@ -271,6 +275,7 @@ namespace LiteDB
                 {
                     Type = BsonExpressionType.Int,
                     IsImmutable = true,
+                    UseSource = false,
                     IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = constant,
@@ -295,6 +300,7 @@ namespace LiteDB
                 {
                     Type = BsonExpressionType.Boolean,
                     IsImmutable = true,
+                    UseSource = false,
                     IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = constant,
@@ -318,6 +324,7 @@ namespace LiteDB
                 {
                     Type = BsonExpressionType.Null,
                     IsImmutable = true,
+                    UseSource = false,
                     IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = constant,
@@ -342,6 +349,7 @@ namespace LiteDB
                 {
                     Type = BsonExpressionType.String,
                     IsImmutable = true,
+                    UseSource = false,
                     IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = constant,
@@ -351,6 +359,8 @@ namespace LiteDB
 
             return null;
         }
+
+        #endregion
 
         /// <summary>
         /// Try parse json document - return null if not document token
@@ -364,6 +374,7 @@ namespace LiteDB
             var values = new List<Expression>();
             var src = new StringBuilder();
             var isImmutable = true;
+            var useSource = false;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             src.Append("{");
@@ -399,6 +410,7 @@ namespace LiteDB
                     {
                         Type = BsonExpressionType.Path,
                         IsImmutable = isImmutable,
+                        UseSource = false,
                         IsScalar = true,
                         Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(new string[] { key }),
                         Expression = Expression.Call(_memberPathMethod, root, Expression.Constant(key)) as Expression,
@@ -411,6 +423,7 @@ namespace LiteDB
 
                 // update isImmutable only when came false
                 if (value.IsImmutable == false) isImmutable = false;
+                if (value.UseSource) useSource = true;
 
                 fields.AddRange(value.Fields);
 
@@ -436,6 +449,7 @@ namespace LiteDB
             {
                 Type = BsonExpressionType.Document,
                 IsImmutable = isImmutable,
+                UseSource = useSource,
                 IsScalar = true,
                 Fields = fields,
                 Expression = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues }),
@@ -454,6 +468,7 @@ namespace LiteDB
             {
                 Type = BsonExpressionType.Source,
                 IsImmutable = true,
+                UseSource = true,
                 IsScalar = false,
                 Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                 Expression = source,
@@ -471,6 +486,7 @@ namespace LiteDB
             var values = new List<Expression>();
             var src = new StringBuilder();
             var isImmutable = true;
+            var useSource = false;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             src.Append("[");
@@ -480,10 +496,14 @@ namespace LiteDB
                 // read value expression
                 var value = ParseFullExpression(tokenizer, source, root, current, parameters, isRoot);
 
+                // document value must be a scalar value
+                if (value.IsScalar == false) throw new LiteException(0, $"Array item `{value.Source}` must be a scalar expression");
+
                 src.Append(value.Source);
 
                 // update isImmutable only when came false
                 if (value.IsImmutable == false) isImmutable = false;
+                if (value.UseSource) useSource = true;
 
                 fields.AddRange(value.Fields);
 
@@ -504,6 +524,7 @@ namespace LiteDB
             {
                 Type = BsonExpressionType.Array,
                 IsImmutable = isImmutable,
+                UseSource = useSource,
                 IsScalar = true,
                 Fields = fields,
                 Expression = Expression.Call(_arrayInitMethod, arrValues),
@@ -529,6 +550,7 @@ namespace LiteDB
                 {
                     Type = BsonExpressionType.Parameter,
                     IsImmutable = false,
+                    UseSource = false,
                     IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = Expression.Call(_parameterPathMethod, parameters, name),
@@ -558,6 +580,7 @@ namespace LiteDB
             {
                 Type = inner.Type,
                 IsImmutable = inner.IsImmutable,
+                UseSource = inner.UseSource,
                 IsScalar = inner.IsScalar,
                 Fields = inner.Fields,
                 Expression = inner.Expression,
@@ -580,6 +603,7 @@ namespace LiteDB
 
             var src = new StringBuilder("MAP(");
             var isImmutable = true;
+            var useSource = false;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             // read enumerable expression
@@ -600,8 +624,8 @@ namespace LiteDB
             // read last )
             tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
 
-            if (input.IsImmutable == false) isImmutable = false;
-            if (output.IsImmutable == false) isImmutable = false;
+            if (input.IsImmutable == false || output.IsImmutable == false) isImmutable = false;
+            if (input.UseSource || output.UseSource) useSource = true;
 
             fields.AddRange(input.Fields);
             fields.AddRange(output.Fields);
@@ -613,6 +637,7 @@ namespace LiteDB
             {
                 Type = BsonExpressionType.Call,
                 IsImmutable = isImmutable,
+                UseSource = useSource,
                 IsScalar = false,
                 Fields = fields,
                 Expression = Expression.Call(_mapMethod, input.Expression, Expression.Constant(output), root, parameters),
@@ -637,6 +662,7 @@ namespace LiteDB
             var pars = new List<BsonExpression>();
             var src = new StringBuilder();
             var isImmutable = true;
+            var useSource = false;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             src.Append(token.Value.ToUpper() + "(");
@@ -654,6 +680,7 @@ namespace LiteDB
 
                     // update isImmutable only when came false
                     if (parameter.IsImmutable == false) isImmutable = false;
+                    if (parameter.UseSource) useSource = true;
 
                     // add fields from each parameters
                     fields.AddRange(parameter.Fields);
@@ -700,6 +727,7 @@ namespace LiteDB
             {
                 Type = BsonExpressionType.Call,
                 IsImmutable = isImmutable,
+                UseSource = useSource,
                 IsScalar = method.ReturnType.IsEnumerable() == false,
                 Fields = fields,
                 Expression = Expression.Call(method, pars.Select(x => x.Expression).ToArray()),
@@ -732,6 +760,7 @@ namespace LiteDB
 
             var src = new StringBuilder();
             var isImmutable = true;
+            var useSource = false;
             var isScalar = true;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -751,7 +780,7 @@ namespace LiteDB
             // parse the rest of path
             while (!tokenizer.EOF)
             {
-                var result = ParsePath(tokenizer, expr, source, root, parameters, fields, ref isImmutable, ref isScalar, src);
+                var result = ParsePath(tokenizer, expr, source, root, parameters, fields, ref isImmutable, ref useSource, ref isScalar, src);
 
                 if (isScalar == false)
                 {
@@ -769,6 +798,7 @@ namespace LiteDB
             {
                 Type = BsonExpressionType.Path,
                 IsImmutable = isImmutable,
+                UseSource = useSource,
                 IsScalar = isScalar,
                 Fields = fields,
                 Expression = expr,
@@ -779,7 +809,7 @@ namespace LiteDB
         /// <summary>
         /// Implement a JSON-Path like navigation on BsonDocument. Support a simple range of paths
         /// </summary>
-        private static Expression ParsePath(Tokenizer tokenizer, Expression expr, ParameterExpression source, ParameterExpression root, ParameterExpression parameters, HashSet<string> fields, ref bool isImmutable, ref bool isScalar, StringBuilder src)
+        private static Expression ParsePath(Tokenizer tokenizer, Expression expr, ParameterExpression source, ParameterExpression root, ParameterExpression parameters, HashSet<string> fields, ref bool isImmutable, ref bool useSource, ref bool isScalar, StringBuilder src)
         {
             var ahead = tokenizer.LookAhead(false);
 
@@ -835,6 +865,7 @@ namespace LiteDB
 
                     // if array filter is not immutable, update ref (update only when false)
                     if (inner.IsImmutable == false) isImmutable = false;
+                    if (inner.UseSource) useSource = true;
 
                     // if inner expression returns a single parameter, still Scalar
                     // otherwise it's an operand filter expression (enumerable)
@@ -868,6 +899,7 @@ namespace LiteDB
         {
             var values = new Expression[] { item0.Expression, item1.Expression };
             var isImmutable = item0.IsImmutable && item1.IsImmutable;
+            var useSource = item0.UseSource || item1.UseSource;
 
             // both values must be scalar expressions
             if (item0.IsScalar == false) throw new LiteException(0, $"Expression `{item0.Source}` must be a scalar expression");
@@ -879,6 +911,7 @@ namespace LiteDB
             {
                 Type = BsonExpressionType.Array,
                 IsImmutable = isImmutable,
+                UseSource = useSource,
                 IsScalar = true,
                 Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(item0.Fields).AddRange(item1.Fields),
                 Expression = Expression.Call(_arrayInitMethod, new Expression[] { arrValues }),
@@ -896,6 +929,7 @@ namespace LiteDB
             {
                 Type = _operators[op].Item2,
                 IsImmutable = left.IsImmutable && right.IsImmutable,
+                UseSource = left.UseSource || right.UseSource,
                 IsScalar = left.IsScalar && right.IsScalar,
                 Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
                 Expression = Expression.Call(_operators[op].Item1, left.Expression, right.Expression),

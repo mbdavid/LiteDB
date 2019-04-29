@@ -20,11 +20,13 @@ namespace LiteDB.Engine
             _snapshot = snapshot;
             _queryDefinition = queryDefinition;
 
+            var select = queryDefinition.Select ?? BsonExpression.Empty;
+
             _query = new QueryPlan(snapshot.CollectionName)
             {
                 // define index only if source are external collection
                 Index = source != null ? new IndexVirtual(source) : null,
-                Select = new Select(queryDefinition.Select ?? BsonExpression.Empty, queryDefinition.SelectAll),
+                Select = new Select(select, select.UseSource),
                 ForUpdate = queryDefinition.ForUpdate,
                 Limit = queryDefinition.Limit,
                 Offset = queryDefinition.Offset
@@ -120,6 +122,13 @@ namespace LiteDB.Engine
             fields.AddRange(_queryDefinition.Having?.Fields);
             fields.AddRange(_queryDefinition.OrderBy?.Fields);
 
+            // if SELECT/HAVING are using * means $ (all documents)
+            if ((_queryDefinition.Select != null && _queryDefinition.Select.UseSource) ||
+                (_queryDefinition.Having != null && _queryDefinition.Having.UseSource))
+            {
+                fields.Add("$");
+            }
+
             // if contains $, all fields must be deserialized
             if (fields.Contains("$"))
             {
@@ -176,8 +185,16 @@ namespace LiteDB.Engine
                 _query.IsIndexKeyOnly = true;
             }
 
-            // fill filter using all expressions (remove selected term used in Index)
-            _query.Filters.AddRange(_terms.Where(x => x != selected && x.IsAll == false));
+            if (selected != null && selected.IsAllOperator)
+            {
+                // if selected term use ALL operant, do not remove from filter because INDEX conver only ANY
+                _query.Filters.AddRange(_terms);
+            }
+            else
+            {
+                // fill filter using all expressions (remove selected term used in Index)
+                _query.Filters.AddRange(_terms.Where(x => x != selected));
+            }
         }
 
         /// <summary>

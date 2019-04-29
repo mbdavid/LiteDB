@@ -34,15 +34,6 @@ namespace LiteDB.Engine
         {
             var name = _tokenizer.ReadToken(false).Expect(TokenType.Word).Value;
             var token = _tokenizer.LookAhead(false);
-            var isArray = false;
-
-            // checks if result must be read as array `SET @var[] = ...`
-            if (token.Type == TokenType.OpenBracket)
-            {
-                _tokenizer.ReadToken();
-                _tokenizer.ReadToken(false).Expect(TokenType.CloseBracket);
-                isArray = true;
-            }
 
             // read `=`
             _tokenizer.ReadToken().Expect(TokenType.Equals);
@@ -52,21 +43,7 @@ namespace LiteDB.Engine
             // execute
             using (var result = this.Execute())
             {
-                if (isArray)
-                {
-                    var array = new BsonArray();
-
-                    while (result.Read())
-                    {
-                        array.Add(result.Current);
-                    }
-
-                    value = array;
-                }
-                else
-                {
-                    value = result.Current ?? BsonValue.Null;
-                }
+                value = result.Current ?? BsonValue.Null;
             }
 
             _parameters[name] = value;

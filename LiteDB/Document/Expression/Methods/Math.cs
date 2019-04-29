@@ -17,10 +17,10 @@ namespace LiteDB
         {
             switch (value.Type)
             {
-                case BsonType.Int32: return Math.Abs(value.AsInt32); break;
-                case BsonType.Int64: return Math.Abs(value.AsInt64); break;
-                case BsonType.Double: return Math.Abs(value.AsDouble); break;
-                case BsonType.Decimal: return Math.Abs(value.AsDecimal); break;
+                case BsonType.Int32: return Math.Abs(value.AsInt32); 
+                case BsonType.Int64: return Math.Abs(value.AsInt64); 
+                case BsonType.Double: return Math.Abs(value.AsDouble); 
+                case BsonType.Decimal: return Math.Abs(value.AsDecimal); 
             }
 
             return BsonValue.Null;

@@ -16,7 +16,6 @@ namespace LiteDB
         private readonly BsonMapper _mapper;
         private readonly string _collection;
         private readonly QueryDefinition _query;
-        private readonly string _uniqueField;
 
         // indicate that T type are simple and result are inside first document fields (query always return a BsonDocument)
         private readonly bool _isSimpleType = typeof(T).IsValueType || typeof(T) == typeof(string);
@@ -27,7 +26,6 @@ namespace LiteDB
             _mapper = mapper;
             _collection = collection;
             _query = query;
-            _uniqueField = collection.StartsWith("$") ? "$" : "_id"; // used in Count/Exists/Any - system collection has no _id field
         }
 
         #region Includes
@@ -198,30 +196,6 @@ namespace LiteDB
             return new LiteQueryable<K>(_engine, _mapper, _collection, _query);
         }
 
-        /// <summary>
-        /// Project each document of resultset into a new document/value based on selector expression
-        /// Apply expression function over all results and will output a single result
-        /// </summary>
-        public ILiteQueryableSelected<BsonDocument> SelectAll(BsonExpression selector)
-        {
-            _query.Select = selector;
-            _query.SelectAll = true;
-
-            return new LiteQueryable<BsonDocument>(_engine, _mapper, _collection, _query);
-        }
-
-        /// <summary>
-        /// Project each document of resultset into a new document/value based on selector expression
-        /// Apply expression function over all results and will output a single result
-        /// </summary>
-        public ILiteQueryableSelected<K> SelectAll<K>(Expression<Func<T, K>> selector)
-        {
-            _query.Select = _mapper.GetExpression(selector);
-            _query.SelectAll = true;
-
-            return new LiteQueryable<K>(_engine, _mapper, _collection, _query);
-        }
-
         #endregion
 
         #region Offset/Limit/ForUpdate
@@ -378,7 +352,7 @@ namespace LiteDB
         /// </summary>
         public int Count()
         {
-            this.SelectAll($"{{ count: COUNT({_uniqueField}) }}");
+            this.Select($"{{ count: COUNT(*) }}");
 
             return this.ToDocuments().Single()["count"].AsInt32;
         }
@@ -388,7 +362,7 @@ namespace LiteDB
         /// </summary>
         public long LongCount()
         {
-            this.SelectAll($"{{ count: COUNT({_uniqueField}) }}");
+            this.Select($"{{ count: COUNT(*) }}");
 
             return this.ToDocuments().Single()["count"].AsInt64;
         }
@@ -398,7 +372,7 @@ namespace LiteDB
         /// </summary>
         public bool Exists()
         {
-            this.SelectAll($"{{ exists: ANY({_uniqueField} != null) }}");
+            this.Select($"{{ exists: ANY(*) }}");
 
             return this.ToDocuments().Single()["exists"].AsBoolean;
         }

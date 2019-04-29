@@ -8,10 +8,6 @@ namespace LiteDB.Engine
 {
     public class QueryDefinition
     {
-        public QueryDefinition()
-        {
-        }
-
         public List<BsonExpression> Where { get; set; } = new List<BsonExpression>();
         public List<BsonExpression> Includes { get; set; } = new List<BsonExpression>();
 
@@ -22,7 +18,6 @@ namespace LiteDB.Engine
         public BsonExpression Having { get; set; } = null;
 
         public BsonExpression Select { get; set; } = null;
-        public bool SelectAll { get; set; } = false;
 
         public int Offset { get; set; } = 0;
         public int Limit { get; set; } = int.MaxValue;
@@ -38,10 +33,6 @@ namespace LiteDB.Engine
         /// </summary>
         internal void Validate()
         {
-            if (this.SelectAll && this.GroupBy != null)
-            {
-                throw new LiteException(0, "Select ALL has no support for GROUP BY expression");
-            }
             if (this.Having != null && this.GroupBy == null)
             {
                 throw new LiteException(0, "HAVING require GROUP BY expression");
@@ -49,6 +40,14 @@ namespace LiteDB.Engine
             if (this.GroupBy != null && this.OrderBy != null)
             {
                 throw new LiteException(0, "GROUP BY has no support for ORDER BY");
+            }
+            if (this.GroupBy != null && this.GroupBy.IsScalar == false)
+            {
+                throw new LiteException(0, "GROUP BY expression must be a scalar expression");
+            }
+            if (this.OrderBy != null && this.OrderBy.IsScalar == false)
+            {
+                throw new LiteException(0, "ORDER BY expression must be a scalar expression");
             }
         }
     }

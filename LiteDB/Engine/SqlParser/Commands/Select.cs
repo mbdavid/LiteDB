@@ -9,7 +9,7 @@ namespace LiteDB.Engine
     {
         /// <summary>
         /// [ EXPLAIN ]
-        ///    SELECT [ ALL ] {selectExpr}
+        ///    SELECT {selectExpr}
         ///    [ INTO {newcollection|FILE} [ : {autoId} ] ]
         ///    [ FROM {collection|FILE} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
@@ -27,12 +27,6 @@ namespace LiteDB.Engine
             var query = new QueryDefinition { ExplainPlan = explain };
 
             var token = _tokenizer.LookAhead();
-
-            if (token.Is("ALL"))
-            {
-                query.SelectAll = true;
-                _tokenizer.ReadToken();
-            }
 
             // read required SELECT <expr>
             query.Select = BsonExpression.Create(_tokenizer, _parameters);

@@ -49,7 +49,12 @@ namespace LiteDB
         /// <summary>
         /// Set if this expression are an ALL operator (used to not remove in Filter)
         /// </summary>
-        internal bool IsAll { get; set; }
+        internal bool IsAllOperator { get; set; }
+
+        /// <summary>
+        /// Get/Set this expression (or any inner expression) use global Source (*)
+        /// </summary>
+        internal bool UseSource { get; set; }
 
         /// <summary>
         /// Get transformed LINQ expression
@@ -297,12 +302,14 @@ namespace LiteDB
             {
                 Expression = expr.Expression,
                 IsImmutable = expr.IsImmutable,
+                UseSource = expr.UseSource,
                 IsScalar = expr.IsScalar,
                 Fields = expr.Fields,
                 Left = expr.Left,
                 Right = expr.Right,
                 Source = expr.Source,
                 Type = expr.Type,
+                IsAllOperator = expr.IsAllOperator,
                 _func = expr._func,
                 _funcScalar = expr._funcScalar
             };
@@ -349,6 +356,7 @@ namespace LiteDB
             {
                 Expression = expr.Expression,
                 IsImmutable = expr.IsImmutable,
+                UseSource = expr.UseSource,
                 IsScalar = expr.IsScalar,
                 Parameters = parameters ?? new BsonDocument(),
                 Fields = expr.Fields,
@@ -356,6 +364,7 @@ namespace LiteDB
                 Right = expr.Right,
                 Source = expr.Source,
                 Type = expr.Type,
+                IsAllOperator = expr.IsAllOperator,
                 _func = expr._func,
                 _funcScalar = expr._funcScalar
             };
