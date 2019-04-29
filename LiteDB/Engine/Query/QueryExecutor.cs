@@ -12,14 +12,14 @@ namespace LiteDB.Engine
     {
         private readonly LiteEngine _engine;
         private readonly string _collection;
-        private readonly QueryDefinition _queryDefinition;
+        private readonly Query _query;
         private readonly IEnumerable<BsonDocument> _source;
 
-        public QueryExecutor(LiteEngine engine, string collection, QueryDefinition query, IEnumerable<BsonDocument> source)
+        public QueryExecutor(LiteEngine engine, string collection, Query query, IEnumerable<BsonDocument> source)
         {
             _engine = engine;
             _collection = collection;
-            _queryDefinition = query;
+            _query = query;
 
             // source will be != null when query will run over external data source, like system collections or files (not user collection)
             _source = source;
@@ -27,13 +27,13 @@ namespace LiteDB.Engine
 
         public BsonDataReader ExecuteQuery()
         {
-            if (_queryDefinition.Into == null)
+            if (_query.Into == null)
             {
-                return this.ExecuteQuery(_queryDefinition.ExplainPlan);
+                return this.ExecuteQuery(_query.ExplainPlan);
             }
             else
             {
-                return this.ExecuteQueryInto(_queryDefinition.Into, _queryDefinition.IntoAutoId);
+                return this.ExecuteQueryInto(_query.Into, _query.IntoAutoId);
             }
         }
 
@@ -60,7 +60,7 @@ namespace LiteDB.Engine
 
             IEnumerable<BsonDocument> RunQuery()
             {
-                var snapshot = transaction.CreateSnapshot(_queryDefinition.ForUpdate ? LockMode.Write : LockMode.Read, _collection, false);
+                var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? LockMode.Write : LockMode.Read, _collection, false);
 
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);
@@ -76,11 +76,8 @@ namespace LiteDB.Engine
                     yield break;
                 }
 
-                // check if query definition are ok
-                _queryDefinition.Validate();
-
                 // execute optimization before run query (will fill missing _query properties instance)
-                var optimizer = new QueryOptimization(snapshot, _queryDefinition, _source);
+                var optimizer = new QueryOptimization(snapshot, _query, _source);
 
                 var queryPlan = optimizer.ProcessQuery();
 

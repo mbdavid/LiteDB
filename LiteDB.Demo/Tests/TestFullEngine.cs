@@ -29,7 +29,7 @@ namespace LiteDB.Demo
                 Filename = PATH
             };
 
-            var query = new QueryDefinition();
+            var query = new Query();
             var expr = BsonExpression.Create("_id = @p0");
             query.Where.Add(expr);
 

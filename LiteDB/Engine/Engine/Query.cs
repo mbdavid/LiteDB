@@ -11,7 +11,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Run query over collection using a query definition
         /// </summary>
-        public IBsonDataReader Query(string collection, QueryDefinition query)
+        public IBsonDataReader Query(string collection, Query query)
         {
             if (string.IsNullOrWhiteSpace(collection)) throw new ArgumentNullException(nameof(collection));
             if (query == null) throw new ArgumentNullException(nameof(query));

@@ -122,7 +122,7 @@ namespace LiteDB
 
         #region Query
 
-        public IBsonDataReader Query(string collection, QueryDefinition query)
+        public IBsonDataReader Query(string collection, Query query)
         {
             this.OpenShared();
 

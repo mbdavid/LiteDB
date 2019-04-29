@@ -72,7 +72,7 @@ namespace LiteDB.Engine
                 {
                     IEnumerable<BsonValue> getIds()
                     {
-                        var query = new QueryDefinition { Select = "_id" };
+                        var query = new Query { Select = "_id" };
 
                         query.Where.Add(predicate);
 

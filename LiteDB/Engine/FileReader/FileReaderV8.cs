@@ -38,7 +38,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<IndexInfo> GetIndexes()
         {
-            using(var reader = _engine.Query("$indexes", new QueryDefinition()))
+            using(var reader = _engine.Query("$indexes", new Query()))
             {
                 while(reader.Read())
                 {
@@ -59,7 +59,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<BsonDocument> GetDocuments(IndexInfo index)
         {
-            using (var reader = _engine.Query(index.Collection, new QueryDefinition()))
+            using (var reader = _engine.Query(index.Collection, new Query()))
             {
                 while(reader.Read())
                 {

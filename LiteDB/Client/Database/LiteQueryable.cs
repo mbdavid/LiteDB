@@ -15,12 +15,12 @@ namespace LiteDB
         private readonly ILiteEngine _engine;
         private readonly BsonMapper _mapper;
         private readonly string _collection;
-        private readonly QueryDefinition _query;
+        private readonly Query _query;
 
         // indicate that T type are simple and result are inside first document fields (query always return a BsonDocument)
         private readonly bool _isSimpleType = typeof(T).IsValueType || typeof(T) == typeof(string);
 
-        internal LiteQueryable(ILiteEngine engine, BsonMapper mapper, string collection, QueryDefinition query)
+        internal LiteQueryable(ILiteEngine engine, BsonMapper mapper, string collection, Query query)
         {
             _engine = engine;
             _mapper = mapper;

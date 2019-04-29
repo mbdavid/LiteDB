@@ -13,7 +13,7 @@ namespace LiteDB
         /// </summary>
         public ILiteQueryableWithIncludes<T> Query()
         {
-            return new LiteQueryable<T>(_engine.Value, _mapper, _collection, new QueryDefinition());
+            return new LiteQueryable<T>(_engine.Value, _mapper, _collection, new Query());
         }
 
         #region Find

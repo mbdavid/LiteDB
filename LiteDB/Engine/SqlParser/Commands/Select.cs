@@ -24,7 +24,7 @@ namespace LiteDB.Engine
         private IBsonDataReader ParseSelect(bool explain)
         {
             // initialize query definition
-            var query = new QueryDefinition { ExplainPlan = explain };
+            var query = new Query { ExplainPlan = explain };
 
             var token = _tokenizer.LookAhead();
 
