@@ -293,8 +293,10 @@ namespace LiteDB.Engine
         {
             if (_query.GroupBy == null) return;
 
+            if (_query.OrderBy != null) throw new LiteException(0, "GROUP BY expression do not support ORDER BY");
+
             var groupBy = new GroupBy(_query.GroupBy, _queryPlan.Select.Expression, _query.Having);
-            OrderBy orderBy = null;
+            var orderBy = (OrderBy)null;
 
             // if groupBy use same expression in index, set group by order to MaxValue to not run
             if (groupBy.Expression.Source == _queryPlan.IndexExpression)

@@ -275,9 +275,17 @@ namespace LiteDB
         private static ConcurrentDictionary<string, BsonExpression> _cache = new ConcurrentDictionary<string, BsonExpression>();
 
         /// <summary>
-        /// Create an empty expression - Return same doc (similar to "$")
+        /// Create an empty expression - Return same input
         /// </summary>
-        public static BsonExpression Empty => new BsonExpression { Type = BsonExpressionType.Empty };
+        public static BsonExpression Empty => new BsonExpression
+        {
+            Type = BsonExpressionType.Empty,
+            IsImmutable = true,
+            IsScalar = true,
+            UseSource = false,
+            Fields = new HashSet<string>(),
+            Source = "<empty>"
+        };
 
         /// <summary>
         /// Parse string and create new instance of BsonExpression - can be cached

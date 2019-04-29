@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Idx = LiteDB.Engine.Index;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -11,22 +12,22 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexCost
     {
-        public uint Cost { get; set; }
+        public uint Cost { get; }
 
         /// <summary>
         /// Get filtered expression: "$._id = 10"
         /// </summary>
-        public BsonExpression Expression { get; private set; }
+        public BsonExpression Expression { get; }
 
         /// <summary>
         /// Get index expression only: "$._id"
         /// </summary>
-        public string IndexExpression { get; private set; }
+        public string IndexExpression { get; }
 
         /// <summary>
         /// Get created Index instance used on query
         /// </summary>
-        public Index Index { get; private set; }
+        public Index Index { get; }
 
         public IndexCost(CollectionIndex index, BsonExpression expr, BsonExpression value)
         {
@@ -60,15 +61,15 @@ namespace LiteDB.Engine
         private Index CreateIndex(BsonExpressionType type, string name, BsonValue value)
         {
             return
-                type == BsonExpressionType.Equal ? LiteDB.Engine.Index.EQ(name, value) :
-                type == BsonExpressionType.Between ? LiteDB.Engine.Index.Between(name, value.AsArray[0], value.AsArray[1]) :
-                type == BsonExpressionType.Like ? LiteDB.Engine.Index.Like(name, value.AsString) :
-                type == BsonExpressionType.GreaterThan ? LiteDB.Engine.Index.GT(name, value) :
-                type == BsonExpressionType.GreaterThanOrEqual ? LiteDB.Engine.Index.GTE(name, value) :
-                type == BsonExpressionType.LessThan ? LiteDB.Engine.Index.LT(name, value) :
-                type == BsonExpressionType.LessThanOrEqual ? LiteDB.Engine.Index.LTE(name, value) :
-                type == BsonExpressionType.NotEqual ? LiteDB.Engine.Index.Not(name, value) :
-                type == BsonExpressionType.In ? (value.IsArray ? LiteDB.Engine.Index.In(name, value.AsArray) : LiteDB.Engine.Index.EQ(name, value)) : 
+                type == BsonExpressionType.Equal ? Idx.EQ(name, value) :
+                type == BsonExpressionType.Between ? Idx.Between(name, value.AsArray[0], value.AsArray[1]) :
+                type == BsonExpressionType.Like ? Idx.Like(name, value.AsString) :
+                type == BsonExpressionType.GreaterThan ? Idx.GT(name, value) :
+                type == BsonExpressionType.GreaterThanOrEqual ? Idx.GTE(name, value) :
+                type == BsonExpressionType.LessThan ? Idx.LT(name, value) :
+                type == BsonExpressionType.LessThanOrEqual ? Idx.LTE(name, value) :
+                type == BsonExpressionType.NotEqual ? Idx.Not(name, value) :
+                type == BsonExpressionType.In ? (value.IsArray ? Idx.In(name, value.AsArray) : Idx.EQ(name, value)) : 
                 null;
         }
     }
