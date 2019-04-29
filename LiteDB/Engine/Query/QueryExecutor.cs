@@ -95,15 +95,16 @@ namespace LiteDB.Engine
                 }
 
                 // define document loader
-                if (!(queryPlan.Index is IDocumentLoader loader)) // use index as document loader (virtual collection)
+                // if index are VirtualIndex - it's also lookup document
+                if (!(queryPlan.Index is IDocumentLookup lookup))
                 {
                     if (queryPlan.IsIndexKeyOnly)
                     {
-                        loader = new IndexKeyLoader(indexer, queryPlan.Fields.Single());
+                        lookup = new IndexLookup(indexer, queryPlan.Fields.Single());
                     }
                     else
                     {
-                        loader = new DocumentLoader(data, _engine.Settings.UtcDate, queryPlan.Fields);
+                        lookup = new DatafileLookup(data, _engine.Settings.UtcDate, queryPlan.Fields);
                     }
                 }
 
@@ -112,8 +113,8 @@ namespace LiteDB.Engine
 
                 // get current query pipe: normal or groupby pipe
                 using (var pipe = queryPlan.GroupBy != null ?
-                    new GroupByPipe(_engine, transaction, loader) :
-                    (BasePipe)new QueryPipe(_engine, transaction, loader))
+                    new GroupByPipe(_engine, transaction, lookup) :
+                    (BasePipe)new QueryPipe(_engine, transaction, lookup))
                 {
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>

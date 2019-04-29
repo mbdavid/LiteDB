@@ -9,7 +9,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal class GroupByPipe : BasePipe
     {
-        public GroupByPipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader)
+        public GroupByPipe(LiteEngine engine, TransactionService transaction, IDocumentLookup loader)
             : base(engine, transaction, loader)
         {
         }

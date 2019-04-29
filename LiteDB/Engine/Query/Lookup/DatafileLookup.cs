@@ -6,13 +6,13 @@ namespace LiteDB.Engine
     /// <summary>
     /// Implement basic document loader based on data service/bson reader
     /// </summary>
-    internal class DocumentLoader : IDocumentLoader
+    internal class DatafileLookup : IDocumentLookup
     {
         protected readonly DataService _data;
         protected readonly bool _utcDate;
         protected readonly HashSet<string> _fields;
 
-        public DocumentLoader(DataService data, bool utcDate, HashSet<string> fields)
+        public DatafileLookup(DataService data, bool utcDate, HashSet<string> fields)
         {
             _data = data;
             _utcDate = utcDate;
@@ -23,11 +23,16 @@ namespace LiteDB.Engine
         {
             ENSURE(node.DataBlock != PageAddress.Empty, "data block must be a valid block address");
 
-            using (var reader = new BufferReader(_data.Read(node.DataBlock), _utcDate))
+            return this.Load(node.DataBlock);
+        }
+
+        public virtual BsonDocument Load(PageAddress rawId)
+        {
+            using (var reader = new BufferReader(_data.Read(rawId), _utcDate))
             {
                 var doc = reader.ReadDocument(_fields);
 
-                doc.RawId = node.DataBlock;
+                doc.RawId = rawId;
 
                 return doc;
             }

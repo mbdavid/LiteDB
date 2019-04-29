@@ -14,9 +14,9 @@ namespace LiteDB.Engine
 
         protected readonly LiteEngine _engine;
         protected readonly TransactionService _transaction;
-        protected readonly IDocumentLoader _loader;
+        protected readonly IDocumentLookup _loader;
 
-        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader)
+        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLookup loader)
         {
             _engine = engine;
             _transaction = transaction;
@@ -51,7 +51,7 @@ namespace LiteDB.Engine
             IndexService indexer = null;
             DataService data = null;
             CollectionIndex index = null;
-            IDocumentLoader loader = null;
+            IDocumentLookup lookup = null;
 
             foreach (var doc in source)
             {
@@ -77,7 +77,7 @@ namespace LiteDB.Engine
                         indexer = new IndexService(snapshot);
                         data = new DataService(snapshot);
 
-                        loader = new DocumentLoader(data, _engine.Settings.UtcDate, null);
+                        lookup = new DatafileLookup(data, _engine.Settings.UtcDate, null);
 
                         index = snapshot.CollectionPage?.PK;
                     }
@@ -99,7 +99,7 @@ namespace LiteDB.Engine
                         else
                         {
                             // load document based on dataBlock position
-                            var refDoc = loader.Load(node);
+                            var refDoc = lookup.Load(node);
 
                             value.Remove("$id");
                             value.Remove("$ref");
@@ -137,7 +137,7 @@ namespace LiteDB.Engine
         {
             //TODO: temp in-memory orderby implementation
             var query = source
-                .Select(x => new { order = expr.Execute(x).First(), doc = x });
+                .Select(x => new { order = expr.ExecuteScalar(x), doc = x });
 
             if (order == Query.Ascending)
             {

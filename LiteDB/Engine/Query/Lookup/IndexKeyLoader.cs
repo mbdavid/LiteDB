@@ -4,14 +4,14 @@ using static LiteDB.Constants;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Implement loader based only in index Key
+    /// Implement lookup based only in index Key
     /// </summary>
-    internal class IndexKeyLoader : IDocumentLoader
+    internal class IndexLookup : IDocumentLookup
     {
         private readonly IndexService _indexer;
         private readonly string _name;
 
-        public IndexKeyLoader(IndexService indexer, string name)
+        public IndexLookup(IndexService indexer, string name)
         {
             _indexer = indexer;
             _name = name;
@@ -29,6 +29,13 @@ namespace LiteDB.Engine
             doc.RawId = node.DataBlock;
 
             return doc;
+        }
+
+        public BsonDocument Load(PageAddress rawId)
+        {
+            var node = _indexer.GetNode(rawId);
+
+            return this.Load(node);
         }
     }
 }
