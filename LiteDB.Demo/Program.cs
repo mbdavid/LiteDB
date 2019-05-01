@@ -21,8 +21,8 @@ namespace LiteDB.Demo
             Console.WriteLine("LITE DB v5");
             Console.WriteLine("===========================================================");
 
-            //var json = "{a:1, nome: 'Jose', arr: [1, 2, 3, 4], items: [ { id:1, precos: [10,20] }, { id:2, precos:[40] } ]}";
-            var json = "{id: 1, nomes:['jose','maria','carlos']}";
+            var json = "{a:1, nome: 'Jose', arr: [1, 2, 3, 4], items: [ { id:1, precos: [10,20] }, { id:2, precos:[40] } ]}";
+            //var json = "{id: 1, nomes:['jose','maria','carlos']}";
 
             var doc = JsonSerializer.Deserialize(json).AsDocument;
 
@@ -34,12 +34,12 @@ namespace LiteDB.Demo
                 JsonSerializer.Deserialize("{id: 4, nomes:['carlos']}").AsDocument,
             };
 
-            var e = BsonExpression.Create("$");
+            var e = BsonExpression.Create("(arr[*] => @ + 10) any = 11");
 
             //e.Parameters["aa"] = 1234;
 
             //var s = e.ExecuteScalar(doc);
-            var r = e.ExecuteScalar(doc);
+            var r = e.Execute(doc).ToArray();
 
             //Console.WriteLine(r);
 

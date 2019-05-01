@@ -82,7 +82,6 @@ http://minisqlquery.codeplex.com/license
         <Key word="FULL" />
         <Key word="FROM" />
         <Key word="WHERE" />
-        <Key word="MAP" />
         <Key word="INCLUDE" />
         <Key word="GROUP" />
         <Key word="ORDER" />

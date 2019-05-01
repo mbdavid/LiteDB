@@ -42,6 +42,7 @@ namespace LiteDB
         Or = 25,
         And = 26,
 
-        Source = 27
+        Map = 27,
+        Source = 28
     }
 }
