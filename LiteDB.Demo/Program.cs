@@ -34,12 +34,12 @@ namespace LiteDB.Demo
                 JsonSerializer.Deserialize("{id: 4, nomes:['carlos']}").AsDocument,
             };
 
-            var e = BsonExpression.Create("*");
+            var e = BsonExpression.Create("$");
 
             //e.Parameters["aa"] = 1234;
 
             //var s = e.ExecuteScalar(doc);
-            var r = e.Execute(source).ToArray();
+            var r = e.ExecuteScalar(doc);
 
             //Console.WriteLine(r);
 

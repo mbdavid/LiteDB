@@ -156,6 +156,7 @@ namespace LiteDB
                     {
                         Type = op.Value.Item2,
                         IsImmutable = left.IsImmutable && right.IsImmutable,
+                        UseSource = left.UseSource || right.UseSource,
                         IsScalar = true,
                         IsAllOperator = op.Key.StartsWith("ALL"),
                         Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
@@ -458,7 +459,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Try parse source documents (when passed) * - return null if not array token
+        /// Try parse source documents (when passed) * - return null if not source token
         /// </summary>
         private static BsonExpression TryParseSource(Tokenizer tokenizer, ParameterExpression source)
         {

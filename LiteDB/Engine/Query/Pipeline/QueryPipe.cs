@@ -104,6 +104,9 @@ namespace LiteDB.Engine
             var defaultName = select.DefaultFieldName();
             var result = select.Execute(source);
 
+            //TODO: pode ter algum tipo de CACHE caso a expressão contenha mais de 1 "UseSource"... 
+            // evita executar todo pipe -- pior dos casos dá um ToArray() (ou usa um DocumentGroup)
+
             foreach (var value in result)
             {
                 if (value.IsDocument)

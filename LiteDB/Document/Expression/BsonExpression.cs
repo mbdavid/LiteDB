@@ -248,7 +248,7 @@ namespace LiteDB
             }
             else if (this.IsScalar)
             {
-                return _funcScalar(source.ToArray(), root, current, this.Parameters);
+                return _funcScalar(source, root, current, this.Parameters);
             }
             else
             {
@@ -269,8 +269,8 @@ namespace LiteDB
         {
             Type = BsonExpressionType.Empty,
             IsImmutable = true,
-            IsScalar = true,
             UseSource = false,
+            IsScalar = true,
             Fields = new HashSet<string>(),
             Source = "<empty>"
         };
