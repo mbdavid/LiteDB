@@ -86,6 +86,7 @@ http://minisqlquery.codeplex.com/license
         <Key word="GROUP" />
         <Key word="ORDER" />
         <Key word="BY" />
+        <Key word="AS" />
         <Key word="ASC" />
         <Key word="DESC" />
         <Key word="HAVING" />

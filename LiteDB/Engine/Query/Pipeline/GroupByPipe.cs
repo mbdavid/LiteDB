@@ -67,9 +67,13 @@ namespace LiteDB.Engine
 
                 while (done.Running)
                 {
-                    var group = YieldDocuments(enumerator, groupBy, done);
+                    var key = groupBy.Expression.ExecuteScalar(enumerator.Current);
 
-                    yield return new DocumentGroup(groupBy.Select.Parameters["key"], enumerator.Current, group, _lookup);
+                    groupBy.Select.Parameters["key"] = key;
+
+                    var group = YieldDocuments(key, enumerator, groupBy, done);
+
+                    yield return new DocumentGroup(key, enumerator.Current, group, _lookup);
                 }
             }
         }
@@ -77,17 +81,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// YieldDocuments will run over all key-ordered source and returns groups of source
         /// </summary>
-        private IEnumerable<BsonDocument> YieldDocuments(IEnumerator<BsonDocument> enumerator, GroupBy groupBy, Done done)
+        private IEnumerable<BsonDocument> YieldDocuments(BsonValue key, IEnumerator<BsonDocument> enumerator, GroupBy groupBy, Done done)
         {
-            var current = groupBy.Expression.ExecuteScalar(enumerator.Current);
-
-            groupBy.Select.Parameters["key"] = current;
-
             yield return enumerator.Current;
 
             while (done.Running = enumerator.MoveNext())
             {
-                var key = groupBy.Expression.ExecuteScalar(enumerator.Current);
+                var current = groupBy.Expression.ExecuteScalar(enumerator.Current);
 
                 if (key == current)
                 {
@@ -96,6 +96,8 @@ namespace LiteDB.Engine
                 }
                 else
                 {
+                    groupBy.Select.Parameters["key"] = current;
+
                     // stop current sequence
                     yield break;
                 }

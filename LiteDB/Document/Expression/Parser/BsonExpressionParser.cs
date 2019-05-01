@@ -220,7 +220,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Parse a document builder syntax used in SELECT statment
+        /// Parse a document builder syntax used in SELECT statment: {expr0} [AS] [{alias}], {expr1} [AS] [{alias}], ...
         /// </summary>
         public static BsonExpression ParseDocumentBuilder(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters)
         {
@@ -234,6 +234,8 @@ namespace LiteDB
                 if (names.Contains(alias)) alias += counter++;
 
                 names.Add(alias);
+
+                if (expr.IsScalar == false) throw new LiteException(0, $"Document value `{expr.Source}` must be a scalar expression");
 
                 fields.Add(new KeyValuePair<string, BsonExpression>(alias, expr));
             };
@@ -285,16 +287,13 @@ namespace LiteDB
 
             var first = fields[0].Value;
 
-            // if just $ or * return empty BsonExpression
-            if (fields.Count == 1 && first.Type == BsonExpressionType.Path && first.Source == "$")
+            if (fields.Count == 1)
             {
-                return BsonExpression.Empty;
-            }
+                // if just $ return empty BsonExpression
+                if (first.Type == BsonExpressionType.Path && first.Source == "$") return BsonExpression.Empty;
 
-            // if single field already a document, return this as document expression 
-            if (fields.Count == 1 && first.Type == BsonExpressionType.Document)
-            {
-                return first;
+                // if single field already a document
+                if (fields.Count == 1 && first.Type == BsonExpressionType.Document) return first;
             }
 
             var arrKeys = Expression.NewArrayInit(typeof(string), fields.Select(x => Expression.Constant(x.Key)).ToArray());
