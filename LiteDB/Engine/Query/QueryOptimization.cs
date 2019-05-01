@@ -162,10 +162,12 @@ namespace LiteDB.Engine
                 }
                 else
                 {
-                    // if no index found, use FULL COLLECTION SCAN (has no data order)
-                    var data = new DataService(_snapshot);
+                    // if has no index to use, use full scan over _id
+                    var pk = _snapshot.CollectionPage.PK;
 
-                    _queryPlan.Index = new IndexVirtual(data.ReadAll(_queryPlan.Fields));
+                    _queryPlan.Index = new IndexAll("_id", Query.Ascending);
+                    _queryPlan.IndexCost = _queryPlan.Index.GetCost(pk);
+                    _queryPlan.IndexExpression = "$._id";
                 }
 
                 // get selected expression used as index

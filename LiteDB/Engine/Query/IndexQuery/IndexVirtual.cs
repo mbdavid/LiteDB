@@ -12,7 +12,7 @@ namespace LiteDB.Engine
     {
         private readonly IEnumerable<BsonDocument> _source;
 
-        private Dictionary<uint, BsonDocument> _cache = null;
+        private Dictionary<uint, BsonDocument> _cache = new Dictionary<uint, BsonDocument>();
 
         public IndexVirtual(IEnumerable<BsonDocument> source)
             : base(null, 0)
@@ -37,10 +37,18 @@ namespace LiteDB.Engine
 
             foreach(var doc in _source)
             {
+                rawId++;
+
                 // create fake rawId for document source
                 doc.RawId = new PageAddress(rawId, 0);
 
-                rawId++;
+                // create cache until reach 1000 document - after this, delete cache and remove support
+                if (_cache != null)
+                {
+                    _cache[rawId] = doc;
+
+                    if (_cache.Count > VIRTUAL_INDEX_MAX_CACHE) _cache = null;
+                }
 
                 // return an fake indexNode
                 yield return new IndexNode(doc);
@@ -54,14 +62,7 @@ namespace LiteDB.Engine
 
         public BsonDocument Load(PageAddress rawId)
         {
-            // if this method need to be used, let's add all documents in cache
-            if (_cache == null)
-            {
-                //TODO: migrate do in disk cache
-                _cache = this.Run(null, null)
-                    .Select(x => x.Key.AsDocument)
-                    .ToDictionary(x => x.RawId.PageID);
-            }
+            if (_cache == null) throw new LiteException(0, $"OrderBy/GroupBy operation are supported only in virtual collection with less than {VIRTUAL_INDEX_MAX_CACHE} documents");
 
             return _cache[rawId.PageID];
         }

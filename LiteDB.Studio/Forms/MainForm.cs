@@ -178,7 +178,7 @@ namespace LiteDB.Studio
             var sc = _db.GetCollection("$cols")
                 .Query()
                 .Where("type = 'system'")
-                .OrderBy("name")
+                //.OrderBy("name")
                 .ToDocuments();
 
             foreach (var doc in sc)

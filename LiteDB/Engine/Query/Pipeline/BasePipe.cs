@@ -14,13 +14,13 @@ namespace LiteDB.Engine
 
         protected readonly LiteEngine _engine;
         protected readonly TransactionService _transaction;
-        protected readonly IDocumentLookup _loader;
+        protected readonly IDocumentLookup _lookup;
 
-        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLookup loader)
+        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLookup lookup)
         {
             _engine = engine;
             _transaction = transaction;
-            _loader = loader;
+            _lookup = lookup;
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace LiteDB.Engine
         {
             foreach (var node in nodes)
             {
-                yield return _loader.Load(node);
+                yield return _lookup.Load(node);
 
                 // check if transaction all full of pages to clear before continue
                 _transaction.Safepoint();
@@ -137,7 +137,7 @@ namespace LiteDB.Engine
         {
             //TODO: temp in-memory orderby implementation
             var query = source
-                .Select(x => new { order = expr.ExecuteScalar(x), doc = x });
+                .Select(x => new { order = expr.ExecuteScalar(x), rawId = x.RawId });
 
             if (order == Query.Ascending)
             {
@@ -148,10 +148,12 @@ namespace LiteDB.Engine
                 query = query.OrderByDescending(x => x.order);
             }
 
-            return query
-                .Select(x => x.doc)
-                .Skip(offset)
-                .Take(limit);
+            foreach(var rec in query.Skip(offset).Take(limit))
+            {
+                var doc = _lookup.Load(rec.rawId);
+
+                yield return doc;
+            }
         }
 
         public void Dispose()
