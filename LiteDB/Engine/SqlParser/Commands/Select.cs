@@ -28,8 +28,8 @@ namespace LiteDB.Engine
 
             var token = _tokenizer.LookAhead();
 
-            // read required SELECT <expr>
-            query.Select = BsonExpression.Create(_tokenizer, _parameters);
+            // read required SELECT <expr> and convert into single expression
+            query.Select = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Document);
 
             // read FROM|INTO
             var from = _tokenizer.ReadToken();
@@ -78,7 +78,7 @@ namespace LiteDB.Engine
                 // read WHERE keyword
                 _tokenizer.ReadToken();
 
-                var where = BsonExpression.Create(_tokenizer, _parameters);
+                var where = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                 query.Where.Add(where);
             }
@@ -91,7 +91,7 @@ namespace LiteDB.Engine
                 _tokenizer.ReadToken();
                 _tokenizer.ReadToken().Expect("BY");
 
-                var groupBy = BsonExpression.Create(_tokenizer, _parameters);
+                var groupBy = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                 query.GroupBy = groupBy;
 
@@ -102,7 +102,7 @@ namespace LiteDB.Engine
                     // read HAVING keyword
                     _tokenizer.ReadToken();
 
-                    var having = BsonExpression.Create(_tokenizer, _parameters);
+                    var having = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                     query.Having = having;
                 }
@@ -116,7 +116,7 @@ namespace LiteDB.Engine
                 _tokenizer.ReadToken();
                 _tokenizer.ReadToken().Expect("BY");
 
-                var orderBy = BsonExpression.Create(_tokenizer, _parameters);
+                var orderBy = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                 var orderByOrder = Query.Ascending;
                 var orderByToken = _tokenizer.LookAhead();

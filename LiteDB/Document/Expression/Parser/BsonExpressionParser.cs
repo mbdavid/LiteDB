@@ -11,6 +11,8 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
+    internal enum BsonExpressionParserMode { Full, Single, Document }
+
     /// <summary>
     /// Compile and execute simple expressions using BsonDocuments. Used in indexes and updates operations. See https://github.com/mbdavid/LiteDB/wiki/Expressions
     /// </summary>
@@ -193,8 +195,6 @@ namespace LiteDB
             return values.Single();
         }
 
-        #region Constants
-
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
@@ -218,6 +218,102 @@ namespace LiteDB
                 TryParsePath(tokenizer, source, root, current, parameters, isRoot) ??
                 throw LiteException.UnexpectedToken(token);
         }
+
+        /// <summary>
+        /// Parse a document builder syntax used in SELECT statment
+        /// </summary>
+        public static BsonExpression ParseDocumentBuilder(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters)
+        {
+            // creating unique field names
+            var fields = new List<KeyValuePair<string, BsonExpression>>();
+            var names = new HashSet<string>();
+            var counter = 1;
+
+            void Add(string alias, BsonExpression expr)
+            {
+                if (names.Contains(alias)) alias += counter++;
+
+                names.Add(alias);
+
+                fields.Add(new KeyValuePair<string, BsonExpression>(alias, expr));
+            };
+
+            while (true)
+            {
+                var expr = ParseFullExpression(tokenizer, source, root, current, parameters, true);
+
+                var next = tokenizer.LookAhead();
+
+                // finish reading
+                if (next.Is("FROM") || next.Type == TokenType.EOF || next.Type == TokenType.SemiColon)
+                {
+                    Add(expr.DefaultFieldName(), expr);
+
+                    break;
+                }
+                // field with no alias
+                if (next.Type == TokenType.Comma)
+                {
+                    tokenizer.ReadToken(); // consume ,
+
+                    Add(expr.DefaultFieldName(), expr);
+                }
+                // using alias
+                else
+                {
+                    if (next.Is("AS"))
+                    {
+                        tokenizer.ReadToken(); // consume "AS"
+                    }
+
+                    var alias = tokenizer.ReadToken().Expect(TokenType.Word);
+
+                    Add(alias.Value, expr);
+
+                    // go ahead to next token to see if last field
+                    next = tokenizer.LookAhead();
+
+                    if (next.Is("FROM") || next.Type == TokenType.EOF || next.Type == TokenType.SemiColon)
+                    {
+                        break;
+                    }
+
+                    // consume ,
+                    tokenizer.ReadToken().Expect(TokenType.Comma);
+                }
+            }
+
+            var first = fields[0].Value;
+
+            // if just $ or * return empty BsonExpression
+            if (fields.Count == 1 && first.Type == BsonExpressionType.Path && first.Source == "$")
+            {
+                return BsonExpression.Empty;
+            }
+
+            // if single field already a document, return this as document expression 
+            if (fields.Count == 1 && first.Type == BsonExpressionType.Document)
+            {
+                return first;
+            }
+
+            var arrKeys = Expression.NewArrayInit(typeof(string), fields.Select(x => Expression.Constant(x.Key)).ToArray());
+            var arrValues = Expression.NewArrayInit(typeof(BsonValue), fields.Select(x => x.Value.Expression).ToArray());
+
+            return new BsonExpression
+            {
+                Type = BsonExpressionType.Document,
+                IsImmutable = fields.All(x => x.Value.IsImmutable),
+                UseSource = fields.Any(x => x.Value.UseSource),
+                IsScalar = true,
+                Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(fields.SelectMany(x => x.Value.Fields)),
+                Expression = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues }),
+                Source = "{" + string.Join(",", fields.Select(x => x.Key + ":" + x.Value.Source)) + "}"
+            };
+
+        }
+
+        #region Constants
 
         /// <summary>
         /// Try parse double number - return null if not double token
@@ -495,7 +591,7 @@ namespace LiteDB
             {
                 tokenizer.ReadToken();
 
-                var pathExpr = BsonExpression.Parse(tokenizer, false, false);
+                var pathExpr = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Single, false);
 
                 if (pathExpr == null) throw LiteException.UnexpectedToken(tokenizer.Current);
 
@@ -844,7 +940,7 @@ namespace LiteDB
                 else
                 {
                     // inner expression
-                    inner = BsonExpression.Parse(tokenizer, true, false);
+                    inner = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
 
                     if (inner == null) throw LiteException.UnexpectedToken(tokenizer.Current);
 
@@ -884,7 +980,7 @@ namespace LiteDB
         {
             if (left.IsScalar) throw new LiteException(0, $"Left side `{left.Source}` map function must be an enumerable expression");
 
-            var right = BsonExpression.Parse(tokenizer, true, false);
+            var right = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
 
             if (right == null) throw LiteException.UnexpectedToken(tokenizer.Current);
 
@@ -992,7 +1088,7 @@ namespace LiteDB
         /// <summary>
         /// Read key in document definition with single word or "comp-lex"
         /// </summary>
-        private static string ReadKey(Tokenizer tokenizer, StringBuilder source)
+        public static string ReadKey(Tokenizer tokenizer, StringBuilder source)
         {
             var token = tokenizer.ReadToken();
             var key = "";
@@ -1055,5 +1151,6 @@ namespace LiteDB
 
             return null;
         }
+
     }
 }

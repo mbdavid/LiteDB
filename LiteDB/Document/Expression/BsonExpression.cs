@@ -116,9 +116,9 @@ namespace LiteDB
         /// </summary>
         internal string DefaultFieldName()
         {
-            if (this.Fields == null || this.Fields.Count == 0) return "expr";
+            var name = string.Join("_", this.Fields.Where(x => x != "$"));
 
-            return string.Join("_", this.Fields);
+            return string.IsNullOrEmpty(name) ? "expr" : name;
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace LiteDB
 
             if (!_cache.TryGetValue(expression, out var expr))
             {
-                expr = Parse(new Tokenizer(expression), true, true);
+                expr = Parse(new Tokenizer(expression), BsonExpressionParserMode.Full, true);
 
                 // if passed string expression are different from formatted expression, try add in cache "unformatted" expression too
                 if (expression != expr.Source)
@@ -341,11 +341,11 @@ namespace LiteDB
         /// <summary>
         /// Parse tokenizer and create new instance of BsonExpression - for now, do not use cache
         /// </summary>
-        internal static BsonExpression Create(Tokenizer tokenizer, BsonDocument parameters)
+        internal static BsonExpression Create(Tokenizer tokenizer, BsonDocument parameters, BsonExpressionParserMode mode)
         {
             if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
 
-            var expr = Parse(tokenizer, true, true);
+            var expr = Parse(tokenizer, mode, true);
 
             // return a copy from cache using new Parameters
             return new BsonExpression
@@ -369,7 +369,7 @@ namespace LiteDB
         /// <summary>
         /// Parse and compile string expression and return BsonExpression
         /// </summary>
-        internal static BsonExpression Parse(Tokenizer tokenizer, bool fullExpression, bool isRoot)
+        internal static BsonExpression Parse(Tokenizer tokenizer, BsonExpressionParserMode mode, bool isRoot)
         {
             if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
 
@@ -378,9 +378,13 @@ namespace LiteDB
             var current = Expression.Parameter(typeof(BsonValue), "current");
             var parameters = Expression.Parameter(typeof(BsonDocument), "parameters");
 
-            var expr = fullExpression ?
-                BsonExpressionParser.ParseFullExpression(tokenizer, source, root, current, parameters, isRoot) :
-                BsonExpressionParser.ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot);
+            var expr =
+                mode == BsonExpressionParserMode.Full ? BsonExpressionParser.ParseFullExpression(tokenizer, source, root, current, parameters, isRoot) :
+                mode == BsonExpressionParserMode.Single ? BsonExpressionParser.ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot) :
+                BsonExpressionParser.ParseDocumentBuilder(tokenizer, source, root, current, parameters);
+
+            // do not compile/cache empty expression
+            if (expr.Type == BsonExpressionType.Empty) return expr;
 
             // before compile try find in cache if this source already has in cache (already compiled)
             var cached = _cache.GetOrAdd(expr.Source, (s) =>
@@ -408,7 +412,6 @@ namespace LiteDB
 
                 expr._func = lambda.Compile();
             }
-
 
             // compile child expressions (left/right)
             if (expr.Left != null) Compile(expr.Left, source, root, current, parameters);
