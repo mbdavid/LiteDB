@@ -30,36 +30,6 @@ namespace LiteDB.Engine
 
         private bool _disposed = false;
 
-        #region TempDB
-
-        private LiteEngine _tempdb = null;
-        private bool _disposeTempdb = false;
-
-        /// <summary>
-        /// Get/Set temporary engine database used to sort data
-        /// </summary>
-        public LiteEngine TempDB
-        {
-            get
-            {
-                if (_tempdb == null)
-                {
-                    _tempdb = new LiteEngine(new EngineSettings { Filename = ":temp:" });
-                }
-
-                return _tempdb;
-            }
-            set
-            {
-                if (_tempdb != null) throw LiteException.TempEngineAlreadyDefined();
-
-                _tempdb = value;
-                _disposeTempdb = false;
-            }
-        }
-
-        #endregion
-
         /// <summary>
         /// Get database initialize settings (used for Debug/UnitTest only)
         /// </summary>
@@ -170,11 +140,6 @@ namespace LiteDB.Engine
 
                 // dispose lockers
                 _locker?.Dispose();
-
-                if (_disposeTempdb)
-                {
-                    _tempdb?.Dispose(disposing);
-                }
             }
 
             _disposed = true;

@@ -238,18 +238,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute scalar expression over document collection and return a single value (or BsonNull when empty). Throws exception if expression are not scalar expression
-        /// </summary>
-        public BsonValue ExecuteScalar(IEnumerable<BsonDocument> source)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-
-            var root = source.FirstOrDefault();
-
-            return this.ExecuteScalar(source, root, root);
-        }
-
-        /// <summary>
         /// Execute expression and returns IEnumerable values - returns NULL if no elements
         /// </summary>
         internal BsonValue ExecuteScalar(IEnumerable<BsonDocument> source, BsonDocument root, BsonValue current)
@@ -260,7 +248,7 @@ namespace LiteDB
             }
             else if (this.IsScalar)
             {
-                return _funcScalar(source, root, current, this.Parameters);
+                return _funcScalar(source.ToArray(), root, current, this.Parameters);
             }
             else
             {

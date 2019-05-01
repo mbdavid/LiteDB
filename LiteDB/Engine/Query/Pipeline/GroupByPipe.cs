@@ -20,12 +20,11 @@ namespace LiteDB.Engine
         /// - IncludeBefore
         /// - Filter
         /// - OrderBy (to GroupBy)
-        /// - OffSet
-        /// - Limit
         /// - IncludeAfter
         /// - GroupBy
-        /// - Having
-        /// - SelectGroupBy
+        /// - HavingSelectGroupBy
+        /// - OffSet
+        /// - Limit
         /// </summary>
         public override IEnumerable<BsonDocument> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
         {
@@ -49,14 +48,6 @@ namespace LiteDB.Engine
             {
                 source = this.OrderBy(source, query.OrderBy.Expression, query.OrderBy.Order, 0, int.MaxValue);
             }
-            else
-            {
-                // pipe: apply offset (no orderby)
-                if (query.Offset > 0) source = source.Skip(query.Offset);
-
-                // pipe: apply limit (no orderby)
-                if (query.Limit < int.MaxValue) source = source.Take(query.Limit);
-            }
 
             // do includes in result after filter
             foreach (var path in query.IncludeAfter)
@@ -67,14 +58,16 @@ namespace LiteDB.Engine
             // apply groupby
             var groups = this.GroupBy(source, query.GroupBy);
 
-            // if contains having clause, run after select group by
-            if (query.GroupBy.Having != null)
-            {
-                groups = this.Having(groups, query.GroupBy.Having);
-            }
-
             // now, get only first document from each group
-            return this.SelectGroupBy(groups, query.GroupBy.Select);
+            var result = this.SelectGroupBy(groups, query.GroupBy);
+
+            // pipe: apply offset
+            if (query.Offset > 0) result = result.Skip(query.Offset);
+
+            // pipe: apply limit
+            if (query.Limit < int.MaxValue) result = result.Take(query.Limit);
+
+            return result;
         }
 
         /// <summary>
@@ -90,47 +83,67 @@ namespace LiteDB.Engine
                 {
                     var group = YieldDocuments(enumerator, groupBy, done);
 
-                    yield return new DocumentEnumerable(group);
-                }
-            }
-        }
-
-        private IEnumerable<BsonDocument> YieldDocuments(IEnumerator<BsonDocument> source, GroupBy groupBy, Done done)
-        {
-            var current = groupBy.Expression.ExecuteScalar(source.Current);
-
-            groupBy.Select.Parameters["key"] = current;
-
-            yield return source.Current;
-
-            while (done.Running = source.MoveNext())
-            {
-                var key = groupBy.Expression.ExecuteScalar(source.Current);
-
-                groupBy.Select.Parameters["key"] = current;
-
-                if (key == current)
-                {
-                    yield return source.Current;
-                }
-                else
-                {
-                    break;
+                    yield return new DocumentGroup(groupBy.Select.Parameters["key"], enumerator.Current, group, _lookup);
                 }
             }
         }
 
         /// <summary>
-        /// Transform groups of documents into single documents enumerable and apply select expression into group or return first document from each group
+        /// YieldDocuments will run over all key-ordered source and returns groups of source
         /// </summary>
-        private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<IEnumerable<BsonDocument>> groups, BsonExpression select)
+        private IEnumerable<BsonDocument> YieldDocuments(IEnumerator<BsonDocument> enumerator, GroupBy groupBy, Done done)
         {
-            var defaultName = select.DefaultFieldName();
+            var current = groupBy.Expression.ExecuteScalar(enumerator.Current);
 
-            foreach (DocumentEnumerable group in groups)
+            groupBy.Select.Parameters["key"] = current;
+
+            yield return enumerator.Current;
+
+            while (done.Running = enumerator.MoveNext())
+            {
+                var key = groupBy.Expression.ExecuteScalar(enumerator.Current);
+
+                if (key == current)
+                {
+                    // yield return document in same key (group)
+                    yield return enumerator.Current;
+                }
+                else
+                {
+                    // stop current sequence
+                    yield break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Run Select expression over a group source - each group will return a single value
+        /// If contains Having expression, test if result = true before run Select
+        /// </summary>
+        private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<IEnumerable<BsonDocument>> groups, GroupBy groupBy)
+        {
+            var defaultName = groupBy.Select.DefaultFieldName();
+
+            foreach (DocumentGroup group in groups)
             {
                 // transfom group result if contains select expression
-                var value = select.ExecuteScalar(group);
+                BsonValue value;
+
+                try
+                {
+                    if (groupBy.Having != null)
+                    {
+                        var filter = groupBy.Having.ExecuteScalar(group, group.Root, group.Root);
+
+                        if (!filter.IsBoolean || !filter.AsBoolean) continue;
+                    }
+
+                    value = groupBy.Select.ExecuteScalar(group, group.Root, group.Root);
+                }
+                finally
+                {
+                    group.Dispose();
+                }
 
                 if (value.IsDocument)
                 {
@@ -140,26 +153,9 @@ namespace LiteDB.Engine
                 {
                     yield return new BsonDocument { [defaultName] = value };
                 }
-
-                group.Dispose();
             }
         }
 
-        /// <summary>
-        /// Pipe: Filter source using having bool expression to skip or include on final resultset
-        /// </summary>
-        protected IEnumerable<IEnumerable<BsonDocument>> Having(IEnumerable<IEnumerable<BsonDocument>> groups, BsonExpression having)
-        {
-            foreach(var source in groups)
-            {
-                var result = having.ExecuteScalar(source);
-
-                if (result.IsBoolean && result.AsBoolean)
-                {
-                    yield return source;
-                }
-            }
-        }
         /// <summary>
         /// Bool inside a class to be used as "ref" parameter on ienumerable
         /// </summary>

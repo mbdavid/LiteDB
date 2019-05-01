@@ -135,20 +135,20 @@ namespace LiteDB.Engine
         /// </summary>
         protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
         {
-            //TODO: temp in-memory orderby implementation
+            // in-memory sort (will consume lot of memory and will be done rigth only in RC version)
             var query = source
-                .Select(x => new { order = expr.ExecuteScalar(x), rawId = x.RawId });
+                .Select(x => new { key = expr.ExecuteScalar(x), rawId = x.RawId });
 
             if (order == Query.Ascending)
             {
-                query = query.OrderBy(x => x.order);
+                query = query.OrderBy(x => x.key);
             }
-            else if(order == Query.Descending)
+            else if (order == Query.Descending)
             {
-                query = query.OrderByDescending(x => x.order);
+                query = query.OrderByDescending(x => x.key);
             }
 
-            foreach(var rec in query.Skip(offset).Take(limit))
+            foreach (var rec in query.Skip(offset).Take(limit))
             {
                 var doc = _lookup.Load(rec.rawId);
 

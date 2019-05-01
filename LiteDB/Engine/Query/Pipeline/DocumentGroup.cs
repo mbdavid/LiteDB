@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -10,16 +12,23 @@ namespace LiteDB.Engine
     /// Implement an IEnumerable document cache that read data first time and store in memory/disk cache
     /// Used in GroupBy operation and MUST read all IEnumerable source before dispose because are need be linear from main resultset
     /// </summary>
-    internal class DocumentEnumerable : IEnumerable<BsonDocument>, IDisposable
+    internal class DocumentGroup : IEnumerable<BsonDocument>, IDisposable
     {
         private IEnumerator<BsonDocument> _enumerator;
 
-        //TODO: should be a virtual/temp disk?
-        private List<BsonDocument> _cache = new List<BsonDocument>();
+        private readonly List<PageAddress> _cache = new List<PageAddress>();
+        private readonly IDocumentLookup _lookup;
+        private readonly BsonValue _key;
 
-        public DocumentEnumerable(IEnumerable<BsonDocument> source)
+        public BsonDocument Root { get; }
+
+        public DocumentGroup(BsonValue key, BsonDocument root, IEnumerable<BsonDocument> source, IDocumentLookup lookup)
         {
+            this.Root = root;
+
+            _key = key;
             _enumerator = source.GetEnumerator();
+            _lookup = lookup;
         }
 
         public void Dispose()
@@ -40,12 +49,16 @@ namespace LiteDB.Engine
             // the index of the current item in the cache.
             var index = 0;
 
+#if DEBUG
+            if (_cache.Count > 0) LOG($"document enumerable cache request (key: {_key}, size: {_cache.Count})", "GROUPBY");
+#endif
+
             // enumerate the _cache first
             for (; index < _cache.Count; index++)
             {
-                var doc = _cache[index];
+                var rawId = _cache[index];
 
-                yield return doc;
+                yield return _lookup.Load(rawId);
             }
 
             // continue enumeration of the original _enumerator, until it is finished. 
@@ -53,7 +66,11 @@ namespace LiteDB.Engine
             for (; _enumerator != null && _enumerator.MoveNext(); index++)
             {
                 var current = _enumerator.Current;
-                _cache.Add(current);
+
+                ENSURE(current.RawId.IsEmpty == false, "rawId must have a valid value");
+
+                _cache.Add(current.RawId);
+
                 yield return current;
             }
 
@@ -63,13 +80,13 @@ namespace LiteDB.Engine
                 _enumerator = null;
             }
 
-            // some other users of the same instance of DocumentEnumerable
+            // other users of the same instance of DocumentEnumerable
             // can add more items to the cache, so we need to enumerate them as well
             for (; index < _cache.Count; index++)
             {
-                var doc = _cache[index];
+                var rawId = _cache[index];
             
-                yield return doc;
+                yield return _lookup.Load(rawId);
             }
         }
 

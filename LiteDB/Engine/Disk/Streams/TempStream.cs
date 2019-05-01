@@ -12,9 +12,9 @@ namespace LiteDB.Engine
     {
         private Stream _stream = new MemoryStream();
         private string _filename = null;
-        private long _maxMemoryUsage;
+        private readonly long _maxMemoryUsage;
 
-        public TempStream(long maxMemoryUsage = 10485760 /* 10MB */, string filename = null)
+        public TempStream(string filename = null, long maxMemoryUsage = 10485760 /* 10MB */)
         {
             _maxMemoryUsage = maxMemoryUsage;
             _filename = filename;
