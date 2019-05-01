@@ -12,15 +12,15 @@ namespace LiteDB.Engine
     {
         public event EventHandler Disposing = null;
 
-        protected readonly LiteEngine _engine;
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLookup _lookup;
+        protected readonly bool _utcDate;
 
-        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLookup lookup)
+        public BasePipe(TransactionService transaction, IDocumentLookup lookup, bool utcDate)
         {
-            _engine = engine;
             _transaction = transaction;
             _lookup = lookup;
+            _utcDate = utcDate;
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Pipe: Do include in result document according path expression
+        /// INCLUDE: Do include in result document according path expression - Works only with DocumentLookup
         /// </summary>
         protected IEnumerable<BsonDocument> Include(IEnumerable<BsonDocument> source, BsonExpression path)
         {
@@ -77,7 +77,7 @@ namespace LiteDB.Engine
                         indexer = new IndexService(snapshot);
                         data = new DataService(snapshot);
 
-                        lookup = new DatafileLookup(data, _engine.Settings.UtcDate, null);
+                        lookup = new DatafileLookup(data, _utcDate, null);
 
                         index = snapshot.CollectionPage?.PK;
                     }
@@ -114,7 +114,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Pipe: Filter document according expression. Expression must be an Bool result
+        /// WHERE: Filter document according expression. Expression must be an Bool result
         /// </summary>
         protected IEnumerable<BsonDocument> Filter(IEnumerable<BsonDocument> source, BsonExpression expr)
         {
@@ -131,7 +131,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Pipe: OrderBy documents according orderby expression/order
+        /// ORDER BY: Sort documents according orderby expression and order asc/desc - can be optimzed with offset/limit
         /// </summary>
         protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
         {

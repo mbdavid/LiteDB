@@ -11,8 +11,8 @@ namespace LiteDB
     /// </summary>
     public partial class Query
     {
-        public List<BsonExpression> Where { get; set; } = new List<BsonExpression>();
-        public List<BsonExpression> Includes { get; set; } = new List<BsonExpression>();
+        public List<BsonExpression> Where { get; } = new List<BsonExpression>();
+        public List<BsonExpression> Includes { get; } = new List<BsonExpression>();
 
         public BsonExpression OrderBy { get; set; } = null;
         public int Order { get; set; } = Query.Ascending;
@@ -20,7 +20,7 @@ namespace LiteDB
         public BsonExpression GroupBy { get; set; } = null;
         public BsonExpression Having { get; set; } = null;
 
-        public BsonExpression Select { get; set; } = null;
+        public BsonExpression Select { get; set; } = BsonExpression.Empty;
 
         public int Offset { get; set; } = 0;
         public int Limit { get; set; } = int.MaxValue;

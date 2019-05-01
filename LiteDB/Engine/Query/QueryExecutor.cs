@@ -62,9 +62,6 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? LockMode.Write : LockMode.Read, _collection, false);
 
-                var data = new DataService(snapshot);
-                var indexer = new IndexService(snapshot);
-
                 // no collection, no documents
                 if (snapshot.CollectionPage == null && _source == null)
                 {
@@ -94,27 +91,11 @@ namespace LiteDB.Engine
                     yield break;
                 }
 
-                // define document loader
-                // if index are VirtualIndex - it's also lookup document
-                if (!(queryPlan.Index is IDocumentLookup lookup))
-                {
-                    if (queryPlan.IsIndexKeyOnly)
-                    {
-                        lookup = new IndexLookup(indexer, queryPlan.Fields.Single());
-                    }
-                    else
-                    {
-                        lookup = new DatafileLookup(data, _engine.Settings.UtcDate, queryPlan.Fields);
-                    }
-                }
-
                 // get node list from query - distinct by dataBlock (avoid duplicate)
-                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, indexer);
+                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot));
 
                 // get current query pipe: normal or groupby pipe
-                using (var pipe = queryPlan.GroupBy != null ?
-                    new GroupByPipe(_engine, transaction, lookup) :
-                    (BasePipe)new QueryPipe(_engine, transaction, lookup))
+                using (var pipe = queryPlan.GetPipe(transaction, snapshot, _engine.Settings.UtcDate))
                 {
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>

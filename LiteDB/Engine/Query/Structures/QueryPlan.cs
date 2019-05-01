@@ -92,6 +92,50 @@ namespace LiteDB.Engine
         /// </summary>
         public bool ForUpdate { get; set; } = false;
 
+        #region Get Query Pipeline and document lookup implementation
+
+        /// <summary>
+        /// Select corrent pipe
+        /// </summary>
+        public BasePipe GetPipe(TransactionService transaction, Snapshot snapshot, bool utcDate)
+        {
+            if (this.GroupBy == null)
+            {
+                return new QueryPipe(transaction, this.GetLookup(snapshot, utcDate), utcDate);
+            }
+            else
+            {
+                return new GroupByPipe(transaction, this.GetLookup(snapshot, utcDate), utcDate);
+            }
+        }
+
+        /// <summary>
+        /// Get corrent IDocumentLookup
+        /// </summary>
+        public IDocumentLookup GetLookup(Snapshot snapshot, bool utcDate)
+        {
+            var data = new DataService(snapshot);
+            var indexer = new IndexService(snapshot);
+
+            // define document loader
+            // if index are VirtualIndex - it's also lookup document
+            if (!(this.Index is IDocumentLookup lookup))
+            {
+                if (this.IsIndexKeyOnly)
+                {
+                    lookup = new IndexLookup(indexer, this.Fields.Single());
+                }
+                else
+                {
+                    lookup = new DatafileLookup(data, utcDate, this.Fields);
+                }
+            }
+
+            return lookup;
+        }
+
+        #endregion  
+
         #region Execution Plan
 
         /// <summary>

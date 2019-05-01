@@ -17,16 +17,16 @@ namespace LiteDB.Engine
 
         public QueryOptimization(Snapshot snapshot, Query query, IEnumerable<BsonDocument> source)
         {
+            if (query.Select == null) throw new ArgumentNullException(nameof(query.Select));
+
             _snapshot = snapshot;
             _query = query;
-
-            var select = query.Select ?? BsonExpression.Empty;
 
             _queryPlan = new QueryPlan(snapshot.CollectionName)
             {
                 // define index only if source are external collection
                 Index = source != null ? new IndexVirtual(source) : null,
-                Select = new Select(select, select.UseSource),
+                Select = new Select(_query.Select, _query.Select.UseSource),
                 ForUpdate = query.ForUpdate,
                 Limit = query.Limit,
                 Offset = query.Offset
@@ -295,7 +295,8 @@ namespace LiteDB.Engine
         {
             if (_query.GroupBy == null) return;
 
-            if (_query.OrderBy != null) throw new LiteException(0, "GROUP BY expression do not support ORDER BY");
+            if (_query.OrderBy != null) throw new NotSupportedException("GROUP BY expression do not support ORDER BY");
+            if (_query.Includes.Count > 0) throw new NotSupportedException("GROUP BY expression do not support INCLUDE");
 
             var groupBy = new GroupBy(_query.GroupBy, _queryPlan.Select.Expression, _query.Having);
             var orderBy = (OrderBy)null;

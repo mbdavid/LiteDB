@@ -50,7 +50,7 @@ namespace LiteDB.Engine
             var index = 0;
 
 #if DEBUG
-            if (_cache.Count > 0) LOG($"document enumerable cache request (key: {_key}, size: {_cache.Count})", "GROUPBY");
+            if (_cache.Count > 0) LOG($"document group cache request (key: {_key}, size: {_cache.Count})", "GROUPBY");
 #endif
 
             // enumerate the _cache first

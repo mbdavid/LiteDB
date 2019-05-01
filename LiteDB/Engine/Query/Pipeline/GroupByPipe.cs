@@ -9,18 +9,16 @@ namespace LiteDB.Engine
     /// </summary>
     internal class GroupByPipe : BasePipe
     {
-        public GroupByPipe(LiteEngine engine, TransactionService transaction, IDocumentLookup loader)
-            : base(engine, transaction, loader)
+        public GroupByPipe(TransactionService transaction, IDocumentLookup loader, bool utcDate)
+            : base(transaction, loader, utcDate)
         {
         }
 
         /// <summary>
         /// GroupBy Pipe Order
         /// - LoadDocument
-        /// - IncludeBefore
         /// - Filter
         /// - OrderBy (to GroupBy)
-        /// - IncludeAfter
         /// - GroupBy
         /// - HavingSelectGroupBy
         /// - OffSet
@@ -31,49 +29,37 @@ namespace LiteDB.Engine
             // starts pipe loading document
             var source = this.LoadDocument(nodes);
 
-            // do includes in result before filter
-            foreach (var path in query.IncludeBefore)
-            {
-                source = this.Include(source, path);
-            }
-
-            // filter results according expressions
+            // filter results according filter expressions
             foreach (var expr in query.Filters)
             {
                 source = this.Filter(source, expr);
             }
 
-            // pipe: orderBy used in GroupBy
+            // run orderBy used in GroupBy (if not already ordered by index)
             if (query.OrderBy != null)
             {
                 source = this.OrderBy(source, query.OrderBy.Expression, query.OrderBy.Order, 0, int.MaxValue);
             }
 
-            // do includes in result after filter
-            foreach (var path in query.IncludeAfter)
-            {
-                source = this.Include(source, path);
-            }
-
             // apply groupby
             var groups = this.GroupBy(source, query.GroupBy);
 
-            // now, get only first document from each group
+            // apply group filter and transform result
             var result = this.SelectGroupBy(groups, query.GroupBy);
 
-            // pipe: apply offset
+            // apply offset
             if (query.Offset > 0) result = result.Skip(query.Offset);
 
-            // pipe: apply limit
+            // apply limit
             if (query.Limit < int.MaxValue) result = result.Take(query.Limit);
 
             return result;
         }
 
         /// <summary>
-        /// Apply groupBy expression and transform results
+        /// GROUP BY: Apply groupBy expression and aggregate results in DocumentGroup
         /// </summary>
-        private IEnumerable<IEnumerable<BsonDocument>> GroupBy(IEnumerable<BsonDocument> source, GroupBy groupBy)
+        private IEnumerable<DocumentGroup> GroupBy(IEnumerable<BsonDocument> source, GroupBy groupBy)
         {
             using (var enumerator = source.GetEnumerator())
             {
@@ -120,11 +106,11 @@ namespace LiteDB.Engine
         /// Run Select expression over a group source - each group will return a single value
         /// If contains Having expression, test if result = true before run Select
         /// </summary>
-        private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<IEnumerable<BsonDocument>> groups, GroupBy groupBy)
+        private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<DocumentGroup> groups, GroupBy groupBy)
         {
             var defaultName = groupBy.Select.DefaultFieldName();
 
-            foreach (DocumentGroup group in groups)
+            foreach (var group in groups)
             {
                 // transfom group result if contains select expression
                 BsonValue value;
