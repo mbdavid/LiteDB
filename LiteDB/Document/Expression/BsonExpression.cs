@@ -284,7 +284,7 @@ namespace LiteDB
 
             if (!_cache.TryGetValue(expression, out var expr))
             {
-                expr = Parse(new Tokenizer(expression), true);
+                expr = Parse(new Tokenizer(expression), true, true);
 
                 // if passed string expression are different from formatted expression, try add in cache "unformatted" expression too
                 if (expression != expr.Source)
@@ -345,7 +345,7 @@ namespace LiteDB
         {
             if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
 
-            var expr = Parse(tokenizer, true);
+            var expr = Parse(tokenizer, true, true);
 
             // return a copy from cache using new Parameters
             return new BsonExpression
@@ -369,7 +369,7 @@ namespace LiteDB
         /// <summary>
         /// Parse and compile string expression and return BsonExpression
         /// </summary>
-        internal static BsonExpression Parse(Tokenizer tokenizer, bool isRoot)
+        internal static BsonExpression Parse(Tokenizer tokenizer, bool fullExpression, bool isRoot)
         {
             if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
 
@@ -378,7 +378,9 @@ namespace LiteDB
             var current = Expression.Parameter(typeof(BsonValue), "current");
             var parameters = Expression.Parameter(typeof(BsonDocument), "parameters");
 
-            var expr = BsonExpressionParser.ParseFullExpression(tokenizer, source, root, current, parameters, isRoot);
+            var expr = fullExpression ?
+                BsonExpressionParser.ParseFullExpression(tokenizer, source, root, current, parameters, isRoot) :
+                BsonExpressionParser.ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot);
 
             // before compile try find in cache if this source already has in cache (already compiled)
             var cached = _cache.GetOrAdd(expr.Source, (s) =>
@@ -443,7 +445,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return $"{this.Source} ({this.Type})";
+            return $"`{this.Source}` [{this.Type}]";
         }
     }
 }

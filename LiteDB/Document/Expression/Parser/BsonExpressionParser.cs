@@ -209,7 +209,7 @@ namespace LiteDB
                 TryParseBool(tokenizer) ??
                 TryParseNull(tokenizer) ??
                 TryParseString(tokenizer) ??
-                TryParseSource(tokenizer, source) ??
+                TryParseSource(tokenizer, source, root, current, parameters, isRoot) ??
                 TryParseDocument(tokenizer, source, root, current, parameters, isRoot) ??
                 TryParseArray(tokenizer, source, root, current, parameters, isRoot) ??
                 TryParseParameter(tokenizer, source, root, current, parameters, isRoot) ??
@@ -475,11 +475,11 @@ namespace LiteDB
         /// <summary>
         /// Try parse source documents (when passed) * - return null if not source token
         /// </summary>
-        private static BsonExpression TryParseSource(Tokenizer tokenizer, ParameterExpression source)
+        private static BsonExpression TryParseSource(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             if (tokenizer.Current.Type != TokenType.Asterisk) return null;
 
-            return new BsonExpression
+            var sourceExpr = new BsonExpression
             {
                 Type = BsonExpressionType.Source,
                 IsImmutable = true,
@@ -489,6 +489,31 @@ namespace LiteDB
                 Expression = source,
                 Source = "*"
             };
+
+            // checks if next token is "." to shortcut from "*.Name" as "(* => @.Name)"
+            if (tokenizer.LookAhead(false).Type == TokenType.Period)
+            {
+                tokenizer.ReadToken();
+
+                var pathExpr = BsonExpression.Parse(tokenizer, false, false);
+
+                if (pathExpr == null) throw LiteException.UnexpectedToken(tokenizer.Current);
+
+                return new BsonExpression
+                {
+                    Type = BsonExpressionType.Map,
+                    IsImmutable = pathExpr.IsImmutable,
+                    UseSource = true,
+                    IsScalar = false,
+                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(pathExpr.Fields),
+                    Expression = Expression.Call(_mapMethod, sourceExpr.Expression, Expression.Constant(pathExpr), root, parameters),
+                    Source = "(*=>" + pathExpr.Source + ")"
+                };
+            }
+            else
+            {
+                return sourceExpr;
+            }
         }
 
         /// <summary>
@@ -675,11 +700,11 @@ namespace LiteDB
             {
                 if (z.l.ParameterType.IsEnumerable() && z.r.IsScalar)
                 {
-                    throw new LiteException(0, $"Parameter `{z.l.Name}` in method `{method.Name}` must be an enumerable value");
+                    throw new LiteException(0, $"Parameter `{z.l.Name}` in method `{method.Name}` requires an enumerable value");
                 }
                 if (z.l.ParameterType.IsEnumerable() == false && z.r.IsScalar == false)
                 {
-                    throw new LiteException(0, $"Parameter `{z.l.Name}` in method `{method.Name}` must be a scalar value");
+                    throw new LiteException(0, $"Parameter `{z.l.Name}` in method `{method.Name}` requires a scalar value");
                 }
             }
 
@@ -819,7 +844,7 @@ namespace LiteDB
                 else
                 {
                     // inner expression
-                    inner = BsonExpression.Parse(tokenizer, false);
+                    inner = BsonExpression.Parse(tokenizer, true, false);
 
                     if (inner == null) throw LiteException.UnexpectedToken(tokenizer.Current);
 
@@ -857,9 +882,9 @@ namespace LiteDB
         /// </summary>
         private static BsonExpression ParseMap(BsonExpression left, Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
-            if (left.IsScalar) throw new LiteException(0, $"Left side map function must be a enumerable expression");
+            if (left.IsScalar) throw new LiteException(0, $"Left side `{left.Source}` map function must be an enumerable expression");
 
-            var right = BsonExpression.Parse(tokenizer, false);
+            var right = BsonExpression.Parse(tokenizer, true, false);
 
             if (right == null) throw LiteException.UnexpectedToken(tokenizer.Current);
 
