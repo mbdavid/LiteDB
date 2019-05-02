@@ -44,9 +44,13 @@ namespace LiteDB
         {
             if (source.IsDocument && extend.IsDocument)
             {
-                extend.AsDocument.CopyTo(source.AsDocument);
+                // make a copy of source document
+                var newDoc = new BsonDocument();
 
-                return source.AsDocument;
+                source.AsDocument.CopyTo(newDoc);
+                extend.AsDocument.CopyTo(newDoc);
+
+                return newDoc;
             }
 
             return BsonValue.Null;

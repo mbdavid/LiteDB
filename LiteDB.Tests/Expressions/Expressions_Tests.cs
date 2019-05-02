@@ -66,11 +66,8 @@ namespace LiteDB.Tests.Expressions
             // with no root in array
             F("Items[0].Type = Age").ExpectValues("Items", "Age");
 
-            // with root and MAP :: ($.Items[$.Root = 1] => @.Type = @.Age)
-            F("Items[$.Root = 1].Type = Age").ExpectValues("Items", "Root");
-
-            // with root and MAP :: ($.Items[$.Root = 1] => @.Type = $.Age)
-            F("Items[$.Root = 1].Type = $.Age").ExpectValues("Items", "Root", "Age");
+            // with root and MAP :: ($.Items[$.Root = 1] => @.Type) = $.Age
+            F("Items[$.Root = 1].Type all = Age").ExpectValues("Items", "Root", "Age");
 
             // predicate + method
             F("_id = Age + YEAR(DATETIME(2000, 1, DAY(NewField))) AND UPPER(TRIM(Name)) = @0")
@@ -92,6 +89,55 @@ namespace LiteDB.Tests.Expressions
             I("r + 10 > 10 AND GUID() = true").ExpectValue(false);
             I("r + 10 > 10 AND Name LIKE OBJECTID() + '%'").ExpectValue(false);
             I("_id > @0").ExpectValue(false);
+        }
+
+        [TestMethod]
+        public void Expression_Format()
+        {
+            string F(string s) { return BsonExpression.Create(s).Source; };
+
+            F("_id").ExpectValue("$._id");
+
+            // Expression format
+            F("_id").ExpectValue("$._id");
+            F("a.b").ExpectValue("$.a.b");
+            F("a[ @ + 1 = @ + 2].b").ExpectValue("($.a[@+1=@+2]=>@.b)");
+            F("a.['a-b']").ExpectValue("$.a.[\"a-b\"]");
+            F("'single \"quote\\\' string'").ExpectValue("\"single \\\"quote' string\"");
+            F("\"double 'quote\\\" string\"").ExpectValue("\"double 'quote\\\" string\"");
+            F("{'a-b':1, \"x + 1\": 2, 'y': 3}").ExpectValue("{\"a-b\":1,\"x + 1\":2,y:3}");
+            F("[1, 2 ,  { $guid : \"826944a6-72ec-4fc0-a1bc-9fd9f846c266\" }]")
+                .ExpectValue("[1,2,{$guid:\"826944a6-72ec-4fc0-a1bc-9fd9f846c266\"}]");
+
+            // And/Or
+            F("1 =  true   and false > \"A\"").ExpectValue("1=true AND false>\"A\"");
+            F("1 < 1 or \"two\" = \"two\" or three > three").ExpectValue("1<1 OR \"two\"=\"two\" OR $.three>$.three");
+            F("( 1 + 2) = 3    and X  +  y = 9").ExpectValue("(1+2)=3 AND $.X+$.y=9");
+
+            // Methods
+            F("SUBSTRING( \"lite\" + \"db\", -4, 1 + 9 )").ExpectValue("SUBSTRING(\"lite\"+\"db\",-4,1+9)");
+
+            // Array
+            F("[a,b, 1, true , [ null, { \"x\" : 99 }] ]").ExpectValue("[$.a,$.b,1,true,[null,{x:99}]]");
+
+            // Inner
+            F("(10 * (1 + 2) - 5)").ExpectValue("(10*(1+2)-5)");
+
+            // Map
+            F("names[length(@) > 10] => upper(@)").ExpectValue("$.names[LENGTH(@)>10]=>UPPER(@)");
+
+            // Path/Source-Map
+            F("items[*].id").ExpectValue("($.items[*]=>@.id)");
+            F("items[*].products[*].price").ExpectValue("($.items[*]=>(@.products[*]=>@.price))");
+            F("sum(items[*].price  ) + 3").ExpectValue("SUM(($.items[*]=>@.price))+3");
+
+            // any/all
+            F("items[*].id any=5").ExpectValue("($.items[*]=>@.id) ANY=5");
+            F("items[id > 99].id all between 5 and  'go'").ExpectValue("($.items[@.id>99]=>@.id) ALL BETWEEN 5 AND \"go\"");
+
+            // parameters
+            F("items[ @0 ].price = 9").ExpectValue("$.items[@0].price=9");
+
         }
     }
 }

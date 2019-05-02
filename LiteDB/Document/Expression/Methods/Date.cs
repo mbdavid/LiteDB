@@ -37,7 +37,7 @@ namespace LiteDB
         /// </summary>
         public static BsonValue DAY(BsonValue value)
         {
-            if (value.IsDateTime) return value.AsDateTime.Date;
+            if (value.IsDateTime) return value.AsDateTime.Day;
 
             return BsonValue.Null;
 

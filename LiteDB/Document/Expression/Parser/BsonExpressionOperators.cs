@@ -173,14 +173,14 @@ namespace LiteDB
         {
             if (!right.IsArray) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
 
-            var arr = left.AsArray;
+            var arr = right.AsArray;
 
             if (arr.Count != 2) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
 
             var start = arr[0];
             var end = arr[1];
 
-            return left >= start && right <= end;
+            return left >= start && left <= end;
         }
 
         public static BsonValue BETWEEN_ANY(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => BETWEEN(x, right));

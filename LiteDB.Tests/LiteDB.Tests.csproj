@@ -22,23 +22,17 @@
   <ItemGroup>
     <None Remove="Sql\Scripts\All_Sql.sql" />
     <None Remove="Expressions\ExprTests\Aggregate.txt" />
-    <None Remove="Expressions\ExprTests\Format.txt" />
     <None Remove="Expressions\ExprTests\Method.txt" />
-    <None Remove="Expressions\ExprTests\Operator.txt" />
     <None Remove="Expressions\ExprTests\Parameter.txt" />
-    <None Remove="Expressions\ExprTests\Path.txt" />
     <None Remove="Utils\Json\person.json" />
     <None Remove="Utils\Json\zip.json" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Sql\Scripts\All_Sql.sql" />
-    <EmbeddedResource Include="Expressions\ExprTests\Format.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Aggregate.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Parameter.txt" />
-    <EmbeddedResource Include="Expressions\ExprTests\Operator.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Method.txt" />
-    <EmbeddedResource Include="Expressions\ExprTests\Path.txt" />
     <EmbeddedResource Include="Utils\Json\person.json" />
     <EmbeddedResource Include="Utils\Json\zip.json" />
   </ItemGroup>

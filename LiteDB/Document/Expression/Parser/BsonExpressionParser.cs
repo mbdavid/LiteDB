@@ -51,25 +51,25 @@ namespace LiteDB
             ["ANY BETWEEN"] = Tuple.Create(" ANY BETWEEN ", M("BETWEEN_ANY"), BsonExpressionType.Between),
             ["ANY IN"] = Tuple.Create(" ANY IN ", M("IN_ANY"), BsonExpressionType.In),
 
-            ["ANY >"] = Tuple.Create(" ANY >", M("GT_ANY"), BsonExpressionType.GreaterThan),
-            ["ANY >="] = Tuple.Create(" ANY >=", M("GTE_ANY"), BsonExpressionType.GreaterThanOrEqual),
-            ["ANY <"] = Tuple.Create(" ANY <", M("LT_ANY"), BsonExpressionType.LessThan),
-            ["ANY <="] = Tuple.Create(" ANY <=", M("LTE_ANY"), BsonExpressionType.LessThanOrEqual),
+            ["ANY >"] = Tuple.Create(" ANY>", M("GT_ANY"), BsonExpressionType.GreaterThan),
+            ["ANY >="] = Tuple.Create(" ANY>=", M("GTE_ANY"), BsonExpressionType.GreaterThanOrEqual),
+            ["ANY <"] = Tuple.Create(" ANY<", M("LT_ANY"), BsonExpressionType.LessThan),
+            ["ANY <="] = Tuple.Create(" ANY<=", M("LTE_ANY"), BsonExpressionType.LessThanOrEqual),
 
-            ["ANY !="] = Tuple.Create(" ANY !=", M("NEQ_ANY"), BsonExpressionType.NotEqual),
-            ["ANY ="] = Tuple.Create(" ANY =", M("EQ_ANY"), BsonExpressionType.Equal),
+            ["ANY !="] = Tuple.Create(" ANY!=", M("NEQ_ANY"), BsonExpressionType.NotEqual),
+            ["ANY ="] = Tuple.Create(" ANY=", M("EQ_ANY"), BsonExpressionType.Equal),
 
             ["ALL LIKE"] = Tuple.Create(" ALL LIKE ", M("LIKE_ALL"), BsonExpressionType.Like),
             ["ALL BETWEEN"] = Tuple.Create(" ALL BETWEEN ", M("BETWEEN_ALL"), BsonExpressionType.Between),
             ["ALL IN"] = Tuple.Create(" ALL IN ", M("IN_ALL"), BsonExpressionType.In),
 
-            ["ALL >"] = Tuple.Create(" ALL >", M("GT_ALL"), BsonExpressionType.GreaterThan),
-            ["ALL >="] = Tuple.Create(" ALL >=", M("GTE_ALL"), BsonExpressionType.GreaterThanOrEqual),
-            ["ALL <"] = Tuple.Create(" ALL <", M("LT_ALL"), BsonExpressionType.LessThan),
-            ["ALL <="] = Tuple.Create(" ALL <=", M("LTE_ALL"), BsonExpressionType.LessThanOrEqual),
+            ["ALL >"] = Tuple.Create(" ALL>", M("GT_ALL"), BsonExpressionType.GreaterThan),
+            ["ALL >="] = Tuple.Create(" ALL>=", M("GTE_ALL"), BsonExpressionType.GreaterThanOrEqual),
+            ["ALL <"] = Tuple.Create(" ALL<", M("LT_ALL"), BsonExpressionType.LessThan),
+            ["ALL <="] = Tuple.Create(" ALL<=", M("LTE_ALL"), BsonExpressionType.LessThanOrEqual),
 
-            ["ALL !="] = Tuple.Create(" ALL !=", M("NEQ_ALL"), BsonExpressionType.NotEqual),
-            ["ALL ="] = Tuple.Create(" ALL =", M("EQ_ALL"), BsonExpressionType.Equal),
+            ["ALL !="] = Tuple.Create(" ALL!=", M("NEQ_ALL"), BsonExpressionType.NotEqual),
+            ["ALL ="] = Tuple.Create(" ALL=", M("EQ_ALL"), BsonExpressionType.Equal),
 
             // logic
             ["AND"] = Tuple.Create(" AND ", M("AND"), BsonExpressionType.And),
@@ -597,7 +597,7 @@ namespace LiteDB
             {
                 tokenizer.ReadToken(); // consume .
 
-                var pathExpr = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
+                var pathExpr = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Single, false);
 
                 if (pathExpr == null) throw LiteException.UnexpectedToken(tokenizer.Current);
 
@@ -905,7 +905,7 @@ namespace LiteDB
             {
                 tokenizer.ReadToken(); // consume .
 
-                var mapExpr = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
+                var mapExpr = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Single, false);
 
                 if (mapExpr == null) throw LiteException.UnexpectedToken(tokenizer.Current);
 
