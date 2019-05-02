@@ -5,27 +5,21 @@
 { a: 5, b: 10, c: "Last", arr: [1, 5, 5] }
 
 # Run over each
-> SUM(a)
-= 1
-= 2
-= 5
+> SUM(arr[*])
+= 3
+= 18
+= 11
 
 # Run over all (aggregate)
->> SUM(a)
+>> SUM(*.a)
 = 8
->> SUM(a*2)
+>> SUM(*.a*2)
 = 16
->> MAX(b)
+>> MAX(*.b)
 = 15
->> MAX(c)
+>> MAX(*.c)
 = "Second"
 >> a
-= 1
-
-# Run over each in array
-> SUM(arr[0])
-= 1
-= 1
 = 1
 
 > SUM(arr[@=5])
@@ -34,7 +28,7 @@
 = 10
 
 # Run over all in array (aggregate)
->> SUM(arr[0])
+>> SUM(ITEMS([arr[0]]))
 = 3
 
 >> SUM(arr[@=5])

@@ -20,69 +20,71 @@ namespace LiteDB
     {
         #region Operators quick access
 
+        private static MethodInfo M(string s) => typeof(BsonExpressionOperators).GetMethod(s);
+
         /// <summary>
         /// Operation definition by methods with defined expression type (operators are in precedence order)
         /// </summary>
-        private static readonly Dictionary<string, Tuple<MethodInfo, BsonExpressionType>> _operators = new Dictionary<string, Tuple<MethodInfo, BsonExpressionType>>
+        private static readonly Dictionary<string, Tuple<string, MethodInfo, BsonExpressionType>> _operators = new Dictionary<string, Tuple<string, MethodInfo, BsonExpressionType>>
         {
             // arithmetic
-            ["%"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("MOD"), BsonExpressionType.Modulo),
-            ["/"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("DIVIDE"), BsonExpressionType.Divide),
-            ["*"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("MULTIPLY"), BsonExpressionType.Multiply),
-            ["+"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("ADD"), BsonExpressionType.Add),
-            ["-"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("MINUS"), BsonExpressionType.Subtract),
+            ["%"] = Tuple.Create("%", M("MOD"), BsonExpressionType.Modulo),
+            ["/"] = Tuple.Create("/", M("DIVIDE"), BsonExpressionType.Divide),
+            ["*"] = Tuple.Create("*", M("MULTIPLY"), BsonExpressionType.Multiply),
+            ["+"] = Tuple.Create("+", M("ADD"), BsonExpressionType.Add),
+            ["-"] = Tuple.Create("-", M("MINUS"), BsonExpressionType.Subtract),
 
             // predicate
-            ["LIKE"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LIKE"), BsonExpressionType.Like),
-            ["BETWEEN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("BETWEEN"), BsonExpressionType.Between),
-            ["IN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("IN"), BsonExpressionType.In),
+            ["LIKE"] = Tuple.Create(" LIKE ", M("LIKE"), BsonExpressionType.Like),
+            ["BETWEEN"] = Tuple.Create(" BETWEEN ", M("BETWEEN"), BsonExpressionType.Between),
+            ["IN"] = Tuple.Create(" IN ", M("IN"), BsonExpressionType.In),
 
-            [">"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GT"), BsonExpressionType.GreaterThan),
-            [">="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GTE"), BsonExpressionType.GreaterThanOrEqual),
-            ["<"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LT"), BsonExpressionType.LessThan),
-            ["<="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LTE"), BsonExpressionType.LessThanOrEqual),
+            [">"] = Tuple.Create(">", M("GT"), BsonExpressionType.GreaterThan),
+            [">="] = Tuple.Create(">=", M("GTE"), BsonExpressionType.GreaterThanOrEqual),
+            ["<"] = Tuple.Create("<", M("LT"), BsonExpressionType.LessThan),
+            ["<="] = Tuple.Create("<=", M("LTE"), BsonExpressionType.LessThanOrEqual),
 
-            ["!="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("NEQ"), BsonExpressionType.NotEqual),
-            ["="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("EQ"), BsonExpressionType.Equal),
+            ["!="] = Tuple.Create("!=", M("NEQ"), BsonExpressionType.NotEqual),
+            ["="] = Tuple.Create("=", M("EQ"), BsonExpressionType.Equal),
 
-            ["ANY LIKE"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LIKE_ANY"), BsonExpressionType.Like),
-            ["ANY BETWEEN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("BETWEEN_ANY"), BsonExpressionType.Between),
-            ["ANY IN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("IN_ANY"), BsonExpressionType.In),
+            ["ANY LIKE"] = Tuple.Create(" ANY LIKE ", M("LIKE_ANY"), BsonExpressionType.Like),
+            ["ANY BETWEEN"] = Tuple.Create(" ANY BETWEEN ", M("BETWEEN_ANY"), BsonExpressionType.Between),
+            ["ANY IN"] = Tuple.Create(" ANY IN ", M("IN_ANY"), BsonExpressionType.In),
 
-            ["ANY >"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GT_ANY"), BsonExpressionType.GreaterThan),
-            ["ANY >="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GTE_ANY"), BsonExpressionType.GreaterThanOrEqual),
-            ["ANY <"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LT_ANY"), BsonExpressionType.LessThan),
-            ["ANY <="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LTE_ANY"), BsonExpressionType.LessThanOrEqual),
+            ["ANY >"] = Tuple.Create(" ANY >", M("GT_ANY"), BsonExpressionType.GreaterThan),
+            ["ANY >="] = Tuple.Create(" ANY >=", M("GTE_ANY"), BsonExpressionType.GreaterThanOrEqual),
+            ["ANY <"] = Tuple.Create(" ANY <", M("LT_ANY"), BsonExpressionType.LessThan),
+            ["ANY <="] = Tuple.Create(" ANY <=", M("LTE_ANY"), BsonExpressionType.LessThanOrEqual),
 
-            ["ANY !="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("NEQ_ANY"), BsonExpressionType.NotEqual),
-            ["ANY ="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("EQ_ANY"), BsonExpressionType.Equal),
+            ["ANY !="] = Tuple.Create(" ANY !=", M("NEQ_ANY"), BsonExpressionType.NotEqual),
+            ["ANY ="] = Tuple.Create(" ANY =", M("EQ_ANY"), BsonExpressionType.Equal),
 
-            ["ALL LIKE"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LIKE_ALL"), BsonExpressionType.Like),
-            ["ALL BETWEEN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("BETWEEN_ALL"), BsonExpressionType.Between),
-            ["ALL IN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("IN_ALL"), BsonExpressionType.In),
+            ["ALL LIKE"] = Tuple.Create(" ALL LIKE ", M("LIKE_ALL"), BsonExpressionType.Like),
+            ["ALL BETWEEN"] = Tuple.Create(" ALL BETWEEN ", M("BETWEEN_ALL"), BsonExpressionType.Between),
+            ["ALL IN"] = Tuple.Create(" ALL IN ", M("IN_ALL"), BsonExpressionType.In),
 
-            ["ALL >"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GT_ALL"), BsonExpressionType.GreaterThan),
-            ["ALL >="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GTE_ALL"), BsonExpressionType.GreaterThanOrEqual),
-            ["ALL <"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LT_ALL"), BsonExpressionType.LessThan),
-            ["ALL <="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LTE_ALL"), BsonExpressionType.LessThanOrEqual),
+            ["ALL >"] = Tuple.Create(" ALL >", M("GT_ALL"), BsonExpressionType.GreaterThan),
+            ["ALL >="] = Tuple.Create(" ALL >=", M("GTE_ALL"), BsonExpressionType.GreaterThanOrEqual),
+            ["ALL <"] = Tuple.Create(" ALL <", M("LT_ALL"), BsonExpressionType.LessThan),
+            ["ALL <="] = Tuple.Create(" ALL <=", M("LTE_ALL"), BsonExpressionType.LessThanOrEqual),
 
-            ["ALL !="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("NEQ_ALL"), BsonExpressionType.NotEqual),
-            ["ALL ="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("EQ_ALL"), BsonExpressionType.Equal),
+            ["ALL !="] = Tuple.Create(" ALL !=", M("NEQ_ALL"), BsonExpressionType.NotEqual),
+            ["ALL ="] = Tuple.Create(" ALL =", M("EQ_ALL"), BsonExpressionType.Equal),
 
             // logic
-            ["AND"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("AND"), BsonExpressionType.And),
-            ["OR"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("OR"), BsonExpressionType.Or)
+            ["AND"] = Tuple.Create(" AND ", M("AND"), BsonExpressionType.And),
+            ["OR"] = Tuple.Create(" OR ", M("OR"), BsonExpressionType.Or)
         };
 
-        private static readonly MethodInfo _parameterPathMethod = typeof(BsonExpressionOperators).GetMethod("PARAMETER_PATH");
-        private static readonly MethodInfo _memberPathMethod = typeof(BsonExpressionOperators).GetMethod("MEMBER_PATH");
-        private static readonly MethodInfo _arrayIndexMethod = typeof(BsonExpressionOperators).GetMethod("ARRAY_INDEX");
-        private static readonly MethodInfo _arrayFilterMethod = typeof(BsonExpressionOperators).GetMethod("ARRAY_FILTER");
+        private static readonly MethodInfo _parameterPathMethod = M("PARAMETER_PATH");
+        private static readonly MethodInfo _memberPathMethod = M("MEMBER_PATH");
+        private static readonly MethodInfo _arrayIndexMethod = M("ARRAY_INDEX");
+        private static readonly MethodInfo _arrayFilterMethod = M("ARRAY_FILTER");
 
-        private static readonly MethodInfo _mapMethod = typeof(BsonExpressionOperators).GetMethod("MAP");
+        private static readonly MethodInfo _mapMethod = M("MAP");
 
-        private static readonly MethodInfo _documentInitMethod = typeof(BsonExpressionOperators).GetMethod("DOCUMENT_INIT");
-        private static readonly MethodInfo _arrayInitMethod = typeof(BsonExpressionOperators).GetMethod("ARRAY_INIT");
+        private static readonly MethodInfo _documentInitMethod = M("DOCUMENT_INIT");
+        private static readonly MethodInfo _arrayInitMethod = M("ARRAY_INIT");
 
         #endregion
 
@@ -153,8 +155,13 @@ namespace LiteDB
                     var left = values.ElementAt(n);
                     var right = values.ElementAt(n + 1);
 
+                    var src = op.Value.Item1;
+                    var method = op.Value.Item2;
+                    var type = op.Value.Item3;
+
+
                     // when operation is AND/OR, test if both sides are predicates (or and/or)
-                    if (op.Value.Item2 == BsonExpressionType.And || op.Value.Item2 == BsonExpressionType.Or)
+                    if (type == BsonExpressionType.And || type == BsonExpressionType.Or)
                     {
                         if (!(left.IsPredicate || left.Type == BsonExpressionType.And || left.Type == BsonExpressionType.Or)) throw LiteException.InvalidExpressionTypePredicate(left);
                         if (!(right.IsPredicate || right.Type == BsonExpressionType.And || right.Type == BsonExpressionType.Or)) throw LiteException.InvalidExpressionTypePredicate(right);
@@ -171,16 +178,16 @@ namespace LiteDB
                     // process result in a single value
                     var result = new BsonExpression
                     {
-                        Type = op.Value.Item2,
+                        Type = type,
                         IsImmutable = left.IsImmutable && right.IsImmutable,
                         UseSource = left.UseSource || right.UseSource,
                         IsScalar = true,
                         IsAllOperator = op.Key.StartsWith("ALL"),
                         Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
-                        Expression = Expression.Call(op.Value.Item1, left.Expression, right.Expression),
+                        Expression = Expression.Call(method, left.Expression, right.Expression),
                         Left = left,
                         Right = right,
-                        Source = left.Source + (" " + op.Key + " ") + right.Source
+                        Source = left.Source + src + right.Source
                     };
 
                     // remove left+right and insert result
@@ -588,7 +595,7 @@ namespace LiteDB
             // checks if next token is "." to shortcut from "*.Name" as "(* => @.Name)"
             if (tokenizer.LookAhead(false).Type == TokenType.Period)
             {
-                tokenizer.ReadToken();
+                tokenizer.ReadToken(); // consume .
 
                 var pathExpr = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
 
@@ -1050,18 +1057,23 @@ namespace LiteDB
         /// </summary>
         internal static BsonExpression CreateBinaryExpression(string op, BsonExpression left, BsonExpression right)
         {
+            var item = _operators[op];
+            var src = item.Item1;
+            var method = item.Item2;
+            var type = item.Item3;
+
             // create new binary expression based in 2 other expressions
             var result = new BsonExpression
             {
-                Type = _operators[op].Item2,
+                Type = type,
                 IsImmutable = left.IsImmutable && right.IsImmutable,
                 UseSource = left.UseSource || right.UseSource,
                 IsScalar = left.IsScalar && right.IsScalar,
                 Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
-                Expression = Expression.Call(_operators[op].Item1, left.Expression, right.Expression),
+                Expression = Expression.Call(method, left.Expression, right.Expression),
                 Left = left,
                 Right = right,
-                Source = left.Source + op + right.Source
+                Source = left.Source + type + right.Source
             };
 
             // copy their parameters into result
