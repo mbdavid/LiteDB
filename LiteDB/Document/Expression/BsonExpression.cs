@@ -186,14 +186,7 @@ namespace LiteDB
         /// </summary>
         internal IEnumerable<BsonValue> Execute(IEnumerable<BsonDocument> source, BsonDocument root, BsonValue current)
         {
-            if (this.Type == BsonExpressionType.Empty)
-            {
-                foreach(var doc in source)
-                {
-                    yield return doc;
-                }
-            }
-            else if (this.IsScalar)
+            if (this.IsScalar)
             {
                 var value = _funcScalar(source, root, current, this.Parameters);
 
@@ -242,11 +235,7 @@ namespace LiteDB
         /// </summary>
         internal BsonValue ExecuteScalar(IEnumerable<BsonDocument> source, BsonDocument root, BsonValue current)
         {
-            if (this.Type == BsonExpressionType.Empty)
-            {
-                return root;
-            }
-            else if (this.IsScalar)
+            if (this.IsScalar)
             {
                 return _funcScalar(source, root, current, this.Parameters);
             }
@@ -261,19 +250,6 @@ namespace LiteDB
         #region Static method
 
         private static ConcurrentDictionary<string, BsonExpression> _cache = new ConcurrentDictionary<string, BsonExpression>();
-
-        /// <summary>
-        /// Create an empty expression - Return same input
-        /// </summary>
-        public static BsonExpression Empty => new BsonExpression
-        {
-            Type = BsonExpressionType.Empty,
-            IsImmutable = true,
-            UseSource = false,
-            IsScalar = true,
-            Fields = new HashSet<string>() { "$" },
-            Source = "<empty>"
-        };
 
         /// <summary>
         /// Parse string and create new instance of BsonExpression - can be cached
@@ -383,9 +359,6 @@ namespace LiteDB
                 mode == BsonExpressionParserMode.Single ? BsonExpressionParser.ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot) :
                 BsonExpressionParser.ParseDocumentBuilder(tokenizer, source, root, current, parameters);
 
-            // do not compile/cache empty expression
-            if (expr.Type == BsonExpressionType.Empty) return expr;
-
             // before compile try find in cache if this source already has in cache (already compiled)
             var cached = _cache.GetOrAdd(expr.Source, (s) =>
             {
@@ -417,6 +390,11 @@ namespace LiteDB
             if (expr.Left != null) Compile(expr.Left, source, root, current, parameters);
             if (expr.Right != null) Compile(expr.Right, source, root, current, parameters);
         }
+
+        /// <summary>
+        /// Get root document $ expression
+        /// </summary>
+        public static BsonExpression Root = Create("$");
 
         #endregion
 

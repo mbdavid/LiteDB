@@ -9,8 +9,6 @@ namespace LiteDB
 {
     public enum BsonExpressionType : byte
     {
-        Empty = 0,
-
         Double = 1,
         Int = 2,
         String = 3,

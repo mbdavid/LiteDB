@@ -37,8 +37,8 @@ namespace LiteDB.Internals
             Assert.AreEqual(0, page.FragmentedBytes);
             Assert.AreEqual(100, page.UsedBytes);
             Assert.AreEqual(32 + 100, page.NextFreePosition);
-            Assert.AreEqual(1 + (4 * 4), page.FooterSize);
-            Assert.AreEqual(8192 - 32 - 100 - (1 + (4 * 4)), page.FreeBytes);
+            Assert.AreEqual(4 * 4, page.FooterSize);
+            Assert.AreEqual(8192 - 32 - 100 - (4 * 4), page.FreeBytes);
 
             Assert.IsTrue(page.Get(index0).All(1));
             Assert.IsTrue(page.Get(index1).All(2));
@@ -134,7 +134,7 @@ namespace LiteDB.Internals
             Assert.AreEqual(3, page.ItemsCount);
             Assert.AreEqual(600, page.UsedBytes);
             Assert.AreEqual(32 + 600, page.NextFreePosition);
-            Assert.AreEqual(8192 - 32 - 13 - 600, page.FreeBytes); // page size - header - footer - used
+            Assert.AreEqual(8192 - 32 - 12 - 600, page.FreeBytes); // page size - header - footer - used
             Assert.AreEqual(0, page.FragmentedBytes);
 
             // deleting 300b (end of page)
@@ -144,7 +144,7 @@ namespace LiteDB.Internals
             Assert.AreEqual(2, page.ItemsCount);
             Assert.AreEqual(300, page.UsedBytes);
             Assert.AreEqual(32 + 300, page.NextFreePosition);
-            Assert.AreEqual(8192 - 32 - 9 - 300, page.FreeBytes);
+            Assert.AreEqual(8192 - 32 - 8 - 300, page.FreeBytes);
             Assert.AreEqual(0, page.FragmentedBytes);
 
             // deleting 100b (middle of page) - create data fragment
@@ -154,7 +154,7 @@ namespace LiteDB.Internals
             Assert.AreEqual(1, page.ItemsCount);
             Assert.AreEqual(200, page.UsedBytes);
             Assert.AreEqual(32 + 300, page.NextFreePosition); // 200 + 100 (fragmented)
-            Assert.AreEqual(8192 - 32 - 9 - 200, page.FreeBytes);
+            Assert.AreEqual(8192 - 32 - 8 - 200, page.FreeBytes);
             Assert.AreEqual(100, page.FragmentedBytes);
 
             // delete 200b - last item
@@ -166,7 +166,7 @@ namespace LiteDB.Internals
             Assert.AreEqual(0, page.ItemsCount);
             Assert.AreEqual(0, page.UsedBytes);
             Assert.AreEqual(32, page.NextFreePosition);
-            Assert.AreEqual(8192 - 32 - 1, page.FreeBytes);
+            Assert.AreEqual(8192 - 32, page.FreeBytes);
             Assert.AreEqual(0, page.FragmentedBytes);
 
             buffer.ShareCounter = 0;

@@ -236,6 +236,9 @@ namespace LiteDB
             var names = new HashSet<string>();
             var counter = 1;
 
+            // define when next token means finish reading document builder
+            bool stop(Token t) => t.Is("FROM") || t.Is("INTO") || t.Type == TokenType.EOF || t.Type == TokenType.SemiColon;
+
             void Add(string alias, BsonExpression expr)
             {
                 if (names.Contains(alias)) alias += counter++;
@@ -254,7 +257,7 @@ namespace LiteDB
                 var next = tokenizer.LookAhead();
 
                 // finish reading
-                if (next.Is("FROM") || next.Type == TokenType.EOF || next.Type == TokenType.SemiColon)
+                if (stop(next))
                 {
                     Add(expr.DefaultFieldName(), expr);
 
@@ -282,7 +285,7 @@ namespace LiteDB
                     // go ahead to next token to see if last field
                     next = tokenizer.LookAhead();
 
-                    if (next.Is("FROM") || next.Type == TokenType.EOF || next.Type == TokenType.SemiColon)
+                    if (stop(next))
                     {
                         break;
                     }
@@ -297,7 +300,7 @@ namespace LiteDB
             if (fields.Count == 1)
             {
                 // if just $ return empty BsonExpression
-                if (first.Type == BsonExpressionType.Path && first.Source == "$") return BsonExpression.Empty;
+                if (first.Type == BsonExpressionType.Path && first.Source == "$") return BsonExpression.Root;
 
                 // if single field already a document
                 if (fields.Count == 1 && first.Type == BsonExpressionType.Document) return first;
@@ -595,7 +598,7 @@ namespace LiteDB
                 IsImmutable = true,
                 UseSource = true,
                 IsScalar = false,
-                Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+                Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "$" },
                 Expression = source,
                 Source = "*"
             };
@@ -615,7 +618,7 @@ namespace LiteDB
                     IsImmutable = pathExpr.IsImmutable,
                     UseSource = true,
                     IsScalar = false,
-                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(pathExpr.Fields),
+                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(sourceExpr.Fields).AddRange(pathExpr.Fields),
                     Expression = Expression.Call(_mapMethod, sourceExpr.Expression, Expression.Constant(pathExpr), root, parameters),
                     Source = "(*=>" + pathExpr.Source + ")"
                 };
@@ -960,8 +963,8 @@ namespace LiteDB
 
                 ahead = tokenizer.LookAhead(); // look for "index" or "expression"
 
-                var index = int.MaxValue;
-                var inner = BsonExpression.Empty;
+                var index = 0;
+                var inner = new BsonExpression();
                 var method = _arrayIndexMethod;
 
                 if (ahead.Type == TokenType.Int)
@@ -981,6 +984,7 @@ namespace LiteDB
                     // all items * (index = MaxValue)
                     method = _arrayFilterMethod;
                     isScalar = false;
+                    index = int.MaxValue;
 
                     src.Append(tokenizer.ReadToken().Value);
                 }

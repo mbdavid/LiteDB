@@ -37,7 +37,6 @@ namespace LiteDB.Tests.Expressions
         {
             IEnumerable<string> F(string s) { return BsonExpression.Create(s).Fields; };
 
-
             // simple case
             F("$.Name").ExpectValues("Name");
 
@@ -78,10 +77,10 @@ namespace LiteDB.Tests.Expressions
             F("$").ExpectValues("$");
             F("$ + _id").ExpectValues("$", "_id");
 
-            // fields when using source
-            F("*").ExpectCount(0);
-            F("*._id").ExpectValues("_id");
-            F("(* => @._id)").ExpectValues("_id");
+            // fields when using source (do simplify, when use * is same as $)
+            F("*").ExpectValues("$");
+            F("*._id").ExpectValues("$");
+            F("FIRST(* => @._id + $.name) + _id)").ExpectValues("$", "name", "_id");
         }
 
         [TestMethod]

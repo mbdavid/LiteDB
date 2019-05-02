@@ -73,6 +73,12 @@ namespace LiteDB.Engine
         {
             void add(BsonExpression predicate)
             {
+                // do not accept source * in WHERE
+                if (predicate.UseSource)
+                {
+                    throw new LiteException(0, $"WHERE filter can not use `*` expression in `{predicate.Source}");
+                }
+
                 // add expression in where list breaking AND statments
                 if (predicate.IsPredicate || predicate.Type == BsonExpressionType.Or)
                 {
@@ -121,13 +127,6 @@ namespace LiteDB.Engine
             fields.AddRange(_query.GroupBy?.Fields);
             fields.AddRange(_query.Having?.Fields);
             fields.AddRange(_query.OrderBy?.Fields);
-
-            // if SELECT/HAVING are using * means $ (all documents)
-            if ((_query.Select != null && _query.Select.UseSource) ||
-                (_query.Having != null && _query.Having.UseSource))
-            {
-                fields.Add("$");
-            }
 
             // if contains $, all fields must be deserialized
             if (fields.Contains("$"))

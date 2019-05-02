@@ -276,6 +276,10 @@ namespace LiteDB
             return BsonValue.Null;
         }
 
+        #endregion
+
+        #region Array Index/Filter
+
         /// <summary>
         /// Returns a single value from array according index or expression parameter
         /// </summary>
@@ -323,8 +327,19 @@ namespace LiteDB
 
             var arr = value.AsArray;
 
+            // [*] - index are all values
+            if (index == int.MaxValue)
+            {
+                foreach (var item in arr)
+                {
+                    // fill destroy action to remove value from parent array
+                    item.Destroy = () => arr.Remove(item);
+
+                    yield return item;
+                }
+            }
             // [<expr>] - index are an expression
-            if (filterExpr.Type != BsonExpressionType.Empty && filterExpr.Type != BsonExpressionType.Parameter)
+            else
             {
                 // update parameters in expression
                 parameters.CopyTo(filterExpr.Parameters);
@@ -341,17 +356,6 @@ namespace LiteDB
 
                         yield return item;
                     }
-                }
-            }
-            // [*] - index are all values
-            else if (index == int.MaxValue)
-            {
-                foreach (var item in arr)
-                {
-                    // fill destroy action to remove value from parent array
-                    item.Destroy = () => arr.Remove(item);
-
-                    yield return item;
                 }
             }
         }

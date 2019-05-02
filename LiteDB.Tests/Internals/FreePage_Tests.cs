@@ -42,7 +42,7 @@ namespace LiteDB.Internals
                 var indexPage = s.LocalPages.FirstOrDefault(x => x.PageType == PageType.Index);
 
                 // test dataPage free space
-                Assert.AreEqual(7927, dataPage.FreeBytes);
+                Assert.AreEqual(7928, dataPage.FreeBytes);
 
                 // page sloud be in Slot #0 (7344 - 8160 free bytes)
                 CollectionAssert.AreEqual(new uint[] { dataPage.PageID, uint.MaxValue, uint.MaxValue, uint.MaxValue, uint.MaxValue },
@@ -51,7 +51,7 @@ namespace LiteDB.Internals
                 // adding 1 more document into same page
                 e.Insert("col1", new BsonDocument[] { new BsonDocument { ["n"] = new byte[600] } }, BsonAutoId.Int32);
 
-                Assert.AreEqual(7295, dataPage.FreeBytes);
+                Assert.AreEqual(7296, dataPage.FreeBytes);
 
                 // page should me moved into Slot #1 (6120 - 7343 free bytes) 
                 CollectionAssert.AreEqual(new uint[] { uint.MaxValue, dataPage.PageID, uint.MaxValue, uint.MaxValue, uint.MaxValue },
@@ -60,7 +60,7 @@ namespace LiteDB.Internals
                 // adding 1 big document to move this page into last page
                 e.Insert("col1", new BsonDocument[] { new BsonDocument { ["n"] = new byte[6000] } }, BsonAutoId.Int32);
 
-                Assert.AreEqual(1263, dataPage.FreeBytes);
+                Assert.AreEqual(1264, dataPage.FreeBytes);
 
                 // now this page should me moved into last Slot (#4) - next document will use another data page (even a very small document)
                 CollectionAssert.AreEqual(new uint[] { uint.MaxValue, uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage.PageID },
@@ -70,11 +70,11 @@ namespace LiteDB.Internals
                 e.Insert("col1", new BsonDocument[] { new BsonDocument { ["n"] = new byte[10] } }, BsonAutoId.Int32);
 
                 // no changes in dataPage... but new page as created
-                Assert.AreEqual(1263, dataPage.FreeBytes);
+                Assert.AreEqual(1264, dataPage.FreeBytes);
 
                 var dataPage2 = s.LocalPages.FirstOrDefault(x => x.PageType == PageType.Data && x.PageID != dataPage.PageID);
 
-                Assert.AreEqual(8117, dataPage2.FreeBytes);
+                Assert.AreEqual(8118, dataPage2.FreeBytes);
 
                 // test slots (#0 for dataPage2 and #4 for dataPage1)
                 CollectionAssert.AreEqual(new uint[] { dataPage2.PageID, uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage.PageID },
@@ -130,8 +130,8 @@ namespace LiteDB.Internals
                 var dataPage2 = s.LocalPages.FirstOrDefault(x => x.PageType == PageType.Data && x.PageID != dataPage1.PageID);
 
                 // test dataPage free space
-                Assert.AreEqual(2063, dataPage1.FreeBytes);
-                Assert.AreEqual(2063, dataPage2.FreeBytes);
+                Assert.AreEqual(2064, dataPage1.FreeBytes);
+                Assert.AreEqual(2064, dataPage2.FreeBytes);
 
                 CollectionAssert.AreEqual(new uint[] { uint.MaxValue, uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage2.PageID },
                     colPage.FreeDataPageID);
@@ -140,7 +140,7 @@ namespace LiteDB.Internals
                 e.Delete("col1", new BsonValue[] { 2 });
 
                 // test again dataPage
-                Assert.AreEqual(4091, dataPage1.FreeBytes);
+                Assert.AreEqual(4092, dataPage1.FreeBytes);
 
                 CollectionAssert.AreEqual(new uint[] { uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage1.PageID, dataPage2.PageID },
                     colPage.FreeDataPageID);
@@ -153,7 +153,7 @@ namespace LiteDB.Internals
 
                 Assert.AreEqual(PageType.Empty, emptyPage.PageType);
                 Assert.AreEqual(0, emptyPage.ItemsCount);
-                Assert.AreEqual(8159, emptyPage.FreeBytes);
+                Assert.AreEqual(8160, emptyPage.FreeBytes);
 
                 Assert.AreEqual(1, t.Pages.DeletedPages);
                 Assert.AreEqual(emptyPage.PageID, t.Pages.FirstDeletedPageID);
