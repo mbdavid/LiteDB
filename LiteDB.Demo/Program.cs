@@ -34,9 +34,9 @@ namespace LiteDB.Demo
                 JsonSerializer.Deserialize("{id: 4, nomes:['carlos']}").AsDocument,
             };
 
-            var e = BsonExpression.Create("(*.id => @ + 100) any < 10");
+            var e = BsonExpression.Create("($.items[*].id + 4) any = 5");
 
-            var result = e.Execute(source).ToArray();
+            var result = e.Execute(doc).ToArray();
 
             //e.Parameters["aa"] = 1234;
 

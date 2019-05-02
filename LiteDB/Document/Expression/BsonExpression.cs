@@ -271,7 +271,7 @@ namespace LiteDB
             IsImmutable = true,
             UseSource = false,
             IsScalar = true,
-            Fields = new HashSet<string>(),
+            Fields = new HashSet<string>() { "$" },
             Source = "<empty>"
         };
 

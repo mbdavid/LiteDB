@@ -590,7 +590,7 @@ namespace LiteDB
             {
                 tokenizer.ReadToken();
 
-                var pathExpr = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Single, false);
+                var pathExpr = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
 
                 if (pathExpr == null) throw LiteException.UnexpectedToken(tokenizer.Current);
 
@@ -874,7 +874,7 @@ namespace LiteDB
                 expr = result;
             }
 
-            return new BsonExpression
+            var pathExpr = new BsonExpression
             {
                 Type = BsonExpressionType.Path,
                 IsImmutable = isImmutable,
@@ -884,6 +884,31 @@ namespace LiteDB
                 Expression = expr,
                 Source = src.ToString()
             };
+
+            // if expr is enumerable and next token is . translate do MAP
+            if (isScalar == false && tokenizer.LookAhead(false).Type == TokenType.Period)
+            {
+                tokenizer.ReadToken(); // consume .
+
+                var mapExpr = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
+
+                if (mapExpr == null) throw LiteException.UnexpectedToken(tokenizer.Current);
+
+                return new BsonExpression
+                {
+                    Type = BsonExpressionType.Map,
+                    IsImmutable = pathExpr.IsImmutable && mapExpr.IsImmutable,
+                    UseSource = pathExpr.UseSource || mapExpr.UseSource,
+                    IsScalar = false,
+                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(pathExpr.Fields),
+                    Expression = Expression.Call(_mapMethod, pathExpr.Expression, Expression.Constant(mapExpr), root, parameters),
+                    Source = "(" + pathExpr.Source + "=>" + mapExpr.Source + ")"
+                };
+            }
+            else
+            {
+                return pathExpr;
+            }
         }
 
         /// <summary>

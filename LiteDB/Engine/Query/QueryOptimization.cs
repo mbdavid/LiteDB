@@ -115,7 +115,7 @@ namespace LiteDB.Engine
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             // include all fields detected in all used expressions
-            fields.AddRange(_query.Select?.Fields ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "$" });
+            fields.AddRange(_query.Select.Fields);
             fields.AddRange(_terms.SelectMany(x => x.Fields));
             fields.AddRange(_query.Includes.SelectMany(x => x.Fields));
             fields.AddRange(_query.GroupBy?.Fields);
@@ -328,8 +328,9 @@ namespace LiteDB.Engine
                 // includes always has one single field
                 var field = include.Fields.Single();
 
-                // test if field are using in any filter
-                var used = _queryPlan.Filters.Any(x => x.Fields.Contains(field));
+                // test if field are using in any filter or orderBy
+                var used = _queryPlan.Filters.Any(x => x.Fields.Contains(field)) ||
+                    (_queryPlan.OrderBy?.Expression.Fields.Contains(field) ?? false);
 
                 if (used)
                 {
