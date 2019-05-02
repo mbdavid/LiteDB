@@ -35,6 +35,12 @@ namespace LiteDB.Tests
         }
 
         [DebuggerHidden]
+        public static void ExpectValues(this IEnumerable<BsonValue> values, params BsonValue[] expectValues)
+        {
+            CollectionAssert.AreEqual(expectValues, values.ToArray());
+        }
+
+        [DebuggerHidden]
         public static void ExpectValues<T>(this IEnumerable<T> values, params T[] expectValues)
         {
             CollectionAssert.AreEqual(expectValues, values.ToArray());

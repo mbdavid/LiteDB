@@ -496,67 +496,75 @@ namespace LiteDB
 
             src.Append("{");
 
-            while (!tokenizer.CheckEOF())
+            // test for empty array
+            if (tokenizer.LookAhead().Type == TokenType.CloseBrace)
             {
-                // read simple or complex document key name
-                var innerSrc = new StringBuilder(); // use another builder to re-use in simplified notation
-                var key = ReadKey(tokenizer, innerSrc);
-
-                src.Append(innerSrc);
-
-                tokenizer.ReadToken(); // update s.Current 
-
-                src.Append(":");
-
-                BsonExpression value;
-
-                // test normal notation { a: 1 }
-                if (tokenizer.Current.Type == TokenType.Colon)
+                src.Append(tokenizer.ReadToken().Value); // read }
+            }
+            else
+            {
+                while (!tokenizer.CheckEOF())
                 {
-                    value = ParseFullExpression(tokenizer, source, root, current, parameters, isRoot);
+                    // read simple or complex document key name
+                    var innerSrc = new StringBuilder(); // use another builder to re-use in simplified notation
+                    var key = ReadKey(tokenizer, innerSrc);
 
-                    // read next token here (, or }) because simplified version already did
-                    tokenizer.ReadToken();
-                }
-                else
-                {
-                    var fname = innerSrc.ToString();
+                    src.Append(innerSrc);
 
-                    // support for simplified notation { a, b, c } == { a: $.a, b: $.b, c: $.c }
-                    value = new BsonExpression
+                    tokenizer.ReadToken(); // update s.Current 
+
+                    src.Append(":");
+
+                    BsonExpression value;
+
+                    // test normal notation { a: 1 }
+                    if (tokenizer.Current.Type == TokenType.Colon)
                     {
-                        Type = BsonExpressionType.Path,
-                        IsImmutable = isImmutable,
-                        UseSource = useSource,
-                        IsScalar = true,
-                        Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(new string[] { key }),
-                        Expression = Expression.Call(_memberPathMethod, root, Expression.Constant(key)) as Expression,
-                        Source = "$." + (fname.IsWord() ? fname : "[" + fname + "]")
-                    };
+                        value = ParseFullExpression(tokenizer, source, root, current, parameters, isRoot);
+
+                        // read next token here (, or }) because simplified version already did
+                        tokenizer.ReadToken();
+                    }
+                    else
+                    {
+                        var fname = innerSrc.ToString();
+
+                        // support for simplified notation { a, b, c } == { a: $.a, b: $.b, c: $.c }
+                        value = new BsonExpression
+                        {
+                            Type = BsonExpressionType.Path,
+                            IsImmutable = isImmutable,
+                            UseSource = useSource,
+                            IsScalar = true,
+                            Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(new string[] { key }),
+                            Expression = Expression.Call(_memberPathMethod, root, Expression.Constant(key)) as Expression,
+                            Source = "$." + (fname.IsWord() ? fname : "[" + fname + "]")
+                        };
+                    }
+
+                    // document value must be a scalar value
+                    if (value.IsScalar == false) throw new LiteException(0, $"Document value `{value.Source}` must be a scalar expression");
+
+                    // update isImmutable only when came false
+                    if (value.IsImmutable == false) isImmutable = false;
+                    if (value.UseSource) useSource = true;
+
+                    fields.AddRange(value.Fields);
+
+                    // add key and value to parameter list (as an expression)
+                    keys.Add(Expression.Constant(key));
+                    values.Add(value.Expression);
+
+                    // include value source in current source
+                    src.Append(value.Source);
+
+                    // test next token for , (continue) or } (break)
+                    tokenizer.Current.Expect(TokenType.Comma, TokenType.CloseBrace);
+
+                    src.Append(tokenizer.Current.Value);
+
+                    if (tokenizer.Current.Type == TokenType.Comma) continue; else break;
                 }
-
-                // document value must be a scalar value
-                if (value.IsScalar == false) throw new LiteException(0, $"Document value `{value.Source}` must be a scalar expression");
-
-                // update isImmutable only when came false
-                if (value.IsImmutable == false) isImmutable = false;
-                if (value.UseSource) useSource = true;
-
-                fields.AddRange(value.Fields);
-
-                // add key and value to parameter list (as an expression)
-                keys.Add(Expression.Constant(key));
-                values.Add(value.Expression);
-
-                // include value source in current source
-                src.Append(value.Source);
-
-                // test next token for , (continue) or } (break)
-                tokenizer.Current.Expect(TokenType.Comma, TokenType.CloseBrace);
-
-                src.Append(tokenizer.Current.Value);
-
-                if (tokenizer.Current.Type == TokenType.Comma) continue; else break;
             }
 
             var arrKeys = Expression.NewArrayInit(typeof(string), keys.ToArray());

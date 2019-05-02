@@ -210,7 +210,7 @@ namespace LiteDB.Tests.Expressions
             S("DATEADD('d', 1, $.mydate)").ExpectValue(DateTime.Parse("2018-05-02T15:30:45Z"));
             S("DATEADD('d', -1, $.mydate)").ExpectValue(DateTime.Parse("2018-04-30T15:30:45Z"));
             S("DATEADD('M', 12, $.mydate)").ExpectValue(DateTime.Parse("2019-05-01T15:30:45Z"));
-            
+
 
             S("DATEDIFF('M', $.mydate, DATE_UTC(2018, 6, 1))").ExpectValue(1);
             S("DATEDIFF('M', $.mydate, DATE_UTC(2018, 4, 1))").ExpectValue(-1);
@@ -227,5 +227,54 @@ namespace LiteDB.Tests.Expressions
             S("LENGTH($)").ExpectValue(5);
 
         }
+
+        [TestMethod]
+        public void Expressions_Scalar_Parameters()
+        {
+            BsonDocument doc;
+            BsonValue P(string s, params BsonValue[] args) { return BsonExpression.Create(s, args).ExecuteScalar(doc); };
+
+            doc = J("{ arr: [1, 2, 3, 4, 5 ] }");
+
+            P("@0", 10).ExpectValue(10);
+            P("@0 + 15", 10).ExpectValue(25);
+            P("UPPER(@0 + @1)", "lite", "db").ExpectValue("LITEDB");
+
+            // parameter only filter = fixed index
+            P("arr[@0]", 0).ExpectValue(1);
+
+            // any other case: filter query
+            P("ARRAY(arr[@ > @0])", 3).ExpectArray(4, 5);
+
+            // using map
+            P("ARRAY(ITEMS(@0) => @ + @1)", new BsonArray(new BsonValue[] { 10, 11, 12 }), 5)
+                .ExpectArray(15, 16, 17);
+        }
+
+        [TestMethod]
+        public void Expressions_Enumerable_Expr()
+        {
+            List<BsonDocument> docs;
+            IEnumerable<BsonValue> A(string s, params BsonValue[] args) { return BsonExpression.Create(s, args).Execute(docs); };
+
+            docs = new List<BsonDocument>()
+            {
+                J("{ a: 1, b: 5, c: \"First\", arr: [1,2] }"),
+                J("{ a: 2, b: 15, c: \"Second\", arr: [1, 3, 5, 9] }"),
+                J("{ a: 5, b: 10, c: \"Last\", arr: [1, 5, 5] }")
+            };
+
+            A("SUM(*.a)").ExpectValues(8);
+            A("*.b").ExpectValues(5, 15, 10);
+            A("*.c => UPPER(@)", "FIRST", "SECOND", "LAST");
+
+            A("SUM(*.arr[*])").ExpectValues(32);
+            A("SUM(*.arr[@ < 2]) + 7").ExpectValues(10);
+
+            // flaten
+            A("*.arr[*]").ExpectValues(1, 2, 1, 3, 5, 9, 1, 5, 5);
+
+        }
+
     }
 }

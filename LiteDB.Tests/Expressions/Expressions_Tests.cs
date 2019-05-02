@@ -37,6 +37,7 @@ namespace LiteDB.Tests.Expressions
         {
             IEnumerable<string> F(string s) { return BsonExpression.Create(s).Fields; };
 
+
             // simple case
             F("$.Name").ExpectValues("Name");
 
@@ -72,6 +73,15 @@ namespace LiteDB.Tests.Expressions
             // predicate + method
             F("_id = Age + YEAR(DATETIME(2000, 1, DAY(NewField))) AND UPPER(TRIM(Name)) = @0")
                 .ExpectValues("_id", "Age", "NewField", "Name");
+
+            // using root document
+            F("$").ExpectValues("$");
+            F("$ + _id").ExpectValues("$", "_id");
+
+            // fields when using source
+            F("*").ExpectCount(0);
+            F("*._id").ExpectValues("_id");
+            F("(* => @._id)").ExpectValues("_id");
         }
 
         [TestMethod]
@@ -89,6 +99,60 @@ namespace LiteDB.Tests.Expressions
             I("r + 10 > 10 AND GUID() = true").ExpectValue(false);
             I("r + 10 > 10 AND Name LIKE OBJECTID() + '%'").ExpectValue(false);
             I("_id > @0").ExpectValue(false);
+        }
+
+        [TestMethod]
+        public void Expression_Type()
+        {
+            BsonExpressionType T(string s) { return BsonExpression.Create(s).Type; };
+
+            T("1").ExpectValue(BsonExpressionType.Int);
+            T("-1").ExpectValue(BsonExpressionType.Int);
+            T("1.1").ExpectValue(BsonExpressionType.Double);
+            T("-1.1").ExpectValue(BsonExpressionType.Double);
+            T("''").ExpectValue(BsonExpressionType.String);
+            T("null").ExpectValue(BsonExpressionType.Null);
+            T("[ ]").ExpectValue(BsonExpressionType.Array);
+            T("{ }").ExpectValue(BsonExpressionType.Document);
+            T("true").ExpectValue(BsonExpressionType.Boolean);
+            T("false").ExpectValue(BsonExpressionType.Boolean);
+
+            T("@p0").ExpectValue(BsonExpressionType.Parameter);
+            T("UPPER(@p0)").ExpectValue(BsonExpressionType.Call);
+
+            T("1 + 1").ExpectValue(BsonExpressionType.Add);
+            T("1 - 1").ExpectValue(BsonExpressionType.Subtract);
+            T("1 * 1").ExpectValue(BsonExpressionType.Multiply);
+            T("1 / 1").ExpectValue(BsonExpressionType.Divide);
+
+            // math order
+            T("1 + 1 / 3").ExpectValue(BsonExpressionType.Add);
+            T("(1 + 1) / 3").ExpectValue(BsonExpressionType.Divide);
+
+            // predicate
+            T("1 = 1").ExpectValue(BsonExpressionType.Equal);
+            T("1 > 1").ExpectValue(BsonExpressionType.GreaterThan);
+            T("1 >= 1").ExpectValue(BsonExpressionType.GreaterThanOrEqual);
+            T("1 < 1").ExpectValue(BsonExpressionType.LessThan);
+            T("1 <= 1").ExpectValue(BsonExpressionType.LessThanOrEqual);
+            T("'JOHN' LIKE 'J%'").ExpectValue(BsonExpressionType.Like);
+            T("1 BETWEEN 0 AND 1").ExpectValue(BsonExpressionType.Between);
+            T("1 IN [1,2]").ExpectValue(BsonExpressionType.In);
+            T("1 != 1").ExpectValue(BsonExpressionType.NotEqual);
+
+            T("1=1 OR 1=2").ExpectValue(BsonExpressionType.Or);
+            T("2=1 AND 1=2").ExpectValue(BsonExpressionType.And);
+
+            T("*").ExpectValue(BsonExpressionType.Source);
+
+            // maps
+            T("arr[*] => @").ExpectValue(BsonExpressionType.Map);
+            T("el.arr[*] => @").ExpectValue(BsonExpressionType.Map);
+            T("el.arr[*] => @ + 10 + UPPER(@)").ExpectValue(BsonExpressionType.Map);
+
+            // shortcut
+            T("arr[*].price").ExpectValue(BsonExpressionType.Map);
+            T("*._id").ExpectValue(BsonExpressionType.Map);
         }
 
         [TestMethod]
