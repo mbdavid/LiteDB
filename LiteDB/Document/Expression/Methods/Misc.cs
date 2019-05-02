@@ -130,6 +130,7 @@ namespace LiteDB
             else if (value.IsBinary) return value.AsBinary.Length;
             else if (value.IsArray) return value.AsArray.Count;
             else if (value.IsDocument) return value.AsDocument.Keys.Count;
+            else if (value.IsNull) return 0;
 
             return BsonValue.Null;
         }

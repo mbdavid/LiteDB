@@ -33,8 +33,8 @@ namespace LiteDB
                 case "ToString": return "#";
 
                 // static methods
-                case "IsNullOrEmpty": return "(@0 = null OR LENGTH(@0) = 0)";
-                case "IsNullOrWhiteSpace": return "(@0 = null OR LENGTH(TRIM(@0)) = 0)";
+                case "IsNullOrEmpty": return "(LENGTH(@0) = 0)";
+                case "IsNullOrWhiteSpace": return "(LENGTH(TRIM(@0)) = 0)";
                 case "Format": throw new NotImplementedException(); //TODO implement format
                 case "Join": throw new NotImplementedException(); //TODO implement join
             };

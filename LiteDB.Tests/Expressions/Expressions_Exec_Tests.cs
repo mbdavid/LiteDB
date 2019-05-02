@@ -271,10 +271,13 @@ namespace LiteDB.Tests.Expressions
             A("SUM(*.arr[*])").ExpectValues(32);
             A("SUM(*.arr[@ < 2]) + 7").ExpectValues(10);
 
+            A("JOIN(*.c, '#')").ExpectValues("First#Second#Last");
+
+            // when use $ over multiple values, only first result are used
+            A("JOIN($.arr[*] => @ + 1, '-')").ExpectValues("2-3");
+
             // flaten
             A("*.arr[*]").ExpectValues(1, 2, 1, 3, 5, 9, 1, 5, 5);
-
         }
-
     }
 }
