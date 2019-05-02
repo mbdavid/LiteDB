@@ -11,196 +11,87 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Tests.Expressions
 {
-    /// <summary>
-    /// BsonExpression unit test from external text file 
-    /// File format:
-    /// "#" new comment used in next tests
-    /// "{" new document to be used in next tests (support many)
-    /// ">" indicate new expression to test (execute over each input document)
-    /// ">>" indicate new expression to test in aggregate mode (execute over all input document)
-    /// "~" expect expression formatted (Source)
-    /// "-" expect used fields (comma separated) (Fields)
-    /// "@" expect parameter value  
-    /// "=" expect result (support multilines per test)
-    /// </summary>
-
     [TestClass]
     public class Expressions_Tests
     {
         [TestMethod]
-        public void Expressions_Aggregate() => this.RunTest("Aggregate.txt");
-
-        [TestMethod]
-        public void Expressions_Path() => this.RunTest("Path.txt");
-
-        [TestMethod]
-        public void Expressions_Format() => this.RunTest("Format.txt");
-
-        [TestMethod]
-        public void Expressions_Operator() => this.RunTest("Operator.txt");
-
-        [TestMethod]
-        public void Expressions_Method() => this.RunTest("Method.txt");
-
-        [TestMethod]
-        public void Expressions_Parameter() => this.RunTest("Parameter.txt");
-
-        public static IEnumerable<BsonValue> PLUS_ONE(IEnumerable<BsonValue> values)
+        public void Expressions_Constants()
         {
-            return values.Select(x => new BsonValue(x.AsInt32 + 1));
+            BsonValue K(string s) { return BsonExpression.Create(s).ExecuteScalar(); };
+
+            K(@"123").ExpectValue(123);
+            K(@"null").ExpectValue(BsonValue.Null);
+            K(@"15.9").ExpectValue(15.9);
+            K(@"true").ExpectValue(true);
+            K(@"false").ExpectValue(false);
+            K(@"'my string'").ExpectValue("my string");
+            K(@"""my string""").ExpectValue("my string");
+            K(@"[1,2]").ExpectArray(1, 2);
+            K(@"[]").ExpectJson("[]");
+            K(@"{a:1}").ExpectJson("{a:1}");
+            K(@"{a:true,i:0}").ExpectJson("{a:true,i:0}");
         }
 
-        public void RunTest(string filename)
+        [TestMethod]
+        public void Expression_Fields()
         {
-            var tests = this.ReadTests("LiteDB.Tests.Expressions.ExprTests." + filename);
+            IEnumerable<string> F(string s) { return BsonExpression.Create(s).Fields; };
 
-            foreach(var test in tests)
-            {
-                var expr = BsonExpression.Create(test.Expression);
-                
-                // test formatted source
-                if (test.Formatted != null)
-                {
-                    Assert.AreEqual(test.Formatted, expr.Source, "Invalid formatted in " + test.Expression + " (" + filename + ")");
-                }
+            // simple case
+            F("$.Name").ExpectValues("Name");
 
-                // test fields
-                if (test.Fields != null)
-                {
-                    var areEquivalent = 
-                        (expr.Fields.Count == test.Fields.Length) && 
-                        !expr.Fields.Except(test.Fields).Any();
+            F("JustName").ExpectValues("JustName");
+            F("$.[\"My First Name\"]").ExpectValues("My First Name");
 
-                    Assert.IsTrue(areEquivalent, "Invalid Fields");
-                }
+            // only root field
+            F("$.Name.First").ExpectValues("Name");
+            F("$.Items[*].Type").ExpectValues("Items");
 
-                if (test.Results.Count == 0) continue;
+            // inside new document/array
+            F("{ Active, _id }").ExpectValues("Active", "_id");
+            F("{ Active, _id: 1 }").ExpectValues("Active");
+            F("[ Active, _id, null, UPPER(Name.First)]").ExpectValues("Active", "_id", "Name");
 
-                expr.Parameters.Clear();
-                test.Parameters.CopyTo(expr.Parameters);
+            // no fields
+            F("{ Active: 1, _id: 2 }").ExpectCount(0);
+            F("123").ExpectCount(0);
+            F("UPPER(@p0) = 'JOHN' OR YEAR(NOW()) = 2018").ExpectCount(0);
 
-                // test result
-                var inputs = new List<BsonDocument>();
+            // duplicate 
+            F("{ Active: active, NewActive: active, Root: $ }").ExpectValues("active", "$");
 
-                if (test.Documents.Count == 0)
-                {
-                    inputs.Add(new BsonDocument());
-                }
-                else
-                {
-                    foreach (var d in test.Documents)
-                    {
-                        inputs.Add(JsonSerializer.Deserialize(d) as BsonDocument);
-                    }
-                }
+            // case insensitive (only first field is return)
+            F("{ Active: active, NewActive: ACTIVE }").ExpectValues("active");
 
-                var results = new List<BsonValue>();
+            // with no root in array
+            F("Items[0].Type = Age").ExpectValues("Items", "Age");
 
-                if (test.Aggregate)
-                {
-                    results.Add(expr.Execute(inputs).First());
-                }
-                else
-                {
-                    foreach(var doc in inputs)
-                    {
-                        var r = expr.Execute(doc);
+            // with root and MAP :: ($.Items[$.Root = 1] => @.Type = @.Age)
+            F("Items[$.Root = 1].Type = Age").ExpectValues("Items", "Root");
 
-                        results.AddRange(r);
-                    }
-                }
+            // with root and MAP :: ($.Items[$.Root = 1] => @.Type = $.Age)
+            F("Items[$.Root = 1].Type = $.Age").ExpectValues("Items", "Root", "Age");
 
-                var jsonResult = JsonSerializer.Serialize(new BsonArray(results));
-                var jsonExpect = JsonSerializer.Serialize(new BsonArray(test.Results));
-
-                if (jsonResult != jsonExpect)
-                {
-                    Assert.AreEqual(string.Join("; ", test.Results.Select(x => x?.ToString() ?? "<null>")),
-                        string.Join("; ", results.Select(x => x?.ToString() ?? "<null>")),
-                        test.Comment + " : " + test.Expression + " (" + filename + ")");
-                }
-            }
+            // predicate + method
+            F("_id = Age + YEAR(DATETIME(2000, 1, DAY(NewField))) AND UPPER(TRIM(Name)) = @0")
+                .ExpectValues("_id", "Age", "NewField", "Name");
         }
 
-        public List<ExprTest> ReadTests(string name)
+        [TestMethod]
+        public void Expression_Immutable()
         {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
-            var tests = new List<ExprTest>();
+            bool I(string s) { return BsonExpression.Create(s).IsImmutable; };
 
-            using (var reader = new StreamReader(stream))
-            {
-                var lines = reader.ReadToEnd().Trim().Split('\n').Select(x => x.Trim()).ToArray();
+            // some immutable expression
+            I("_id").ExpectValue(true);
+            I("{ a: 1, n: UPPER(name) }").ExpectValue(true);
+            I("GUID('00000000-0000-0000-0000-000000000000')").ExpectValue(true);
 
-                var docs = new List<string>();
-                var clearDocs = true;
-                ExprTest test = null;
-                var comment = "";
-
-                foreach(var line in lines)
-                {
-                    if (line.StartsWith(@">")) // new test
-                    {
-                        test = new ExprTest
-                        {
-                            Aggregate = line.StartsWith(">>"),
-                            Documents = new List<string>(docs),
-                            Expression = line.Substring(line.IndexOf(' ')).Trim(),
-                            Comment = comment
-                        };
-                        tests.Add(test);
-                        clearDocs = true;
-                    }
-                    else if (line.StartsWith("=")) // new result
-                    {
-                        var res = line.Substring(1).Trim();
-                        test.Results.Add(JsonSerializer.Deserialize(res));
-                    }
-                    else if (line.StartsWith("~")) // expected format
-                    {
-                        test.Formatted = line.Substring(1).Trim();
-                    }
-                    else if (line.StartsWith("-")) // expected fields
-                    {
-                        var f = line.Substring(1).Trim();
-
-                        test.Fields = f.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
-                    }
-                    else if (line.StartsWith("@")) // expected parameter
-                    {
-                        var pname = line.Substring(1, line.IndexOf(' ')).Trim();
-                        var pvalue = line.Substring(line.IndexOf(' ') + 1).Trim();
-
-                        test.Parameters[pname] = JsonSerializer.Deserialize(pvalue);
-                    }
-                    else if (line.StartsWith("#")) // comment in test
-                    {
-                        comment = line.Substring(1).Trim();
-                    }
-                    else if (line.StartsWith(@"{")) // new doc
-                    {
-                        if (clearDocs) docs.Clear();
-
-                        docs.Add(line);
-
-                        clearDocs = false;
-                    }
-                }
-            }
-
-            return tests;
+            // using method that are not immutable 
+            I("_id + DAY(NOW())").ExpectValue(false);
+            I("r + 10 > 10 AND GUID() = true").ExpectValue(false);
+            I("r + 10 > 10 AND Name LIKE OBJECTID() + '%'").ExpectValue(false);
+            I("_id > @0").ExpectValue(false);
         }
-
-    }
-
-    public class ExprTest
-    {
-        public List<string> Documents { get; set; }
-        public string Expression { get; set; }
-        public string Formatted { get; set; }
-        public bool Aggregate { get; set; }
-        public string[] Fields { get; set; }
-        public List<BsonValue> Results { get; set; } = new List<BsonValue>();
-        public BsonDocument Parameters { get; set; } = new BsonDocument();
-        public string Comment { get; set; }
     }
 }

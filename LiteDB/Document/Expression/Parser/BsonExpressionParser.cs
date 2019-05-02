@@ -633,31 +633,39 @@ namespace LiteDB
 
             src.Append("[");
 
-            while (!tokenizer.CheckEOF())
+            // test for empty array
+            if (tokenizer.LookAhead().Type == TokenType.CloseBracket)
             {
-                // read value expression
-                var value = ParseFullExpression(tokenizer, source, root, current, parameters, isRoot);
+                src.Append(tokenizer.ReadToken().Value); // read ]
+            }
+            else
+            {
+                while (!tokenizer.CheckEOF())
+                {
+                    // read value expression
+                    var value = ParseFullExpression(tokenizer, source, root, current, parameters, isRoot);
 
-                // document value must be a scalar value
-                if (value.IsScalar == false) throw new LiteException(0, $"Array item `{value.Source}` must be a scalar expression");
+                    // document value must be a scalar value
+                    if (value.IsScalar == false) throw new LiteException(0, $"Array item `{value.Source}` must be a scalar expression");
 
-                src.Append(value.Source);
+                    src.Append(value.Source);
 
-                // update isImmutable only when came false
-                if (value.IsImmutable == false) isImmutable = false;
-                if (value.UseSource) useSource = true;
+                    // update isImmutable only when came false
+                    if (value.IsImmutable == false) isImmutable = false;
+                    if (value.UseSource) useSource = true;
 
-                fields.AddRange(value.Fields);
+                    fields.AddRange(value.Fields);
 
-                // include value source in current source
-                values.Add(value.Expression);
+                    // include value source in current source
+                    values.Add(value.Expression);
 
-                var next = tokenizer.ReadToken()
-                    .Expect(TokenType.Comma, TokenType.CloseBracket);
+                    var next = tokenizer.ReadToken()
+                        .Expect(TokenType.Comma, TokenType.CloseBracket);
 
-                src.Append(next.Value);
+                    src.Append(next.Value);
 
-                if (next.Type == TokenType.Comma) continue; else break;
+                    if (next.Type == TokenType.Comma) continue; else break;
+                }
             }
 
             var arrValues = Expression.NewArrayInit(typeof(BsonValue), values.ToArray());
@@ -907,7 +915,7 @@ namespace LiteDB
                     IsImmutable = pathExpr.IsImmutable && mapExpr.IsImmutable,
                     UseSource = pathExpr.UseSource || mapExpr.UseSource,
                     IsScalar = false,
-                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(pathExpr.Fields),
+                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(pathExpr.Fields).AddRange(mapExpr.Fields),
                     Expression = Expression.Call(_mapMethod, pathExpr.Expression, Expression.Constant(mapExpr), root, parameters),
                     Source = "(" + pathExpr.Source + "=>" + mapExpr.Source + ")"
                 };
