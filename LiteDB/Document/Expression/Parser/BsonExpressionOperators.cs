@@ -18,10 +18,15 @@ namespace LiteDB
         /// </summary>
         public static BsonValue ADD(BsonValue left, BsonValue right)
         {
-            // if any side are string, concat
-            if (left.IsString || right.IsString)
+            // if both sides are string, concat
+            if (left.IsString && right.IsString)
             {
-                return left.RawValue?.ToString() + right.RawValue?.ToString();
+                return left.AsString + right.AsString;
+            }
+            // if any sides are string, concat casting both to string
+            else if (left.IsString || right.IsString)
+            {
+                return left.ToString() + right.ToString();
             }
             // if any side are DateTime and another is number, add days in date
             else if (left.IsDateTime && right.IsNumber)
@@ -153,7 +158,7 @@ namespace LiteDB
         /// </summary>
         public static BsonValue LIKE(BsonValue left, BsonValue right)
         {
-            if (left.IsString && left.IsString)
+            if (left.IsString && right.IsString)
             {
                 return left.AsString.SqlLike(right.AsString);
             }
@@ -240,9 +245,6 @@ namespace LiteDB
 
             if (doc.TryGetValue(name, out BsonValue item))
             {
-                // fill destroy action to remove value from root
-                item.Destroy = () => doc.Remove(name);
-
                 return item;
             }
             else
@@ -266,9 +268,6 @@ namespace LiteDB
 
                 if (doc.TryGetValue(name, out BsonValue item))
                 {
-                    // fill destroy action to remove value from parent document
-                    item.Destroy = () => doc.Remove(name);
-
                     return item;
                 }
             }
@@ -307,12 +306,7 @@ namespace LiteDB
 
             if (arr.Count > idx)
             {
-                var item = arr[idx];
-
-                // fill destroy action to remove value from parent array
-                item.Destroy = () => arr.Remove(item);
-
-                return item;
+                return arr[idx];
             }
 
             return BsonValue.Null;
@@ -332,9 +326,6 @@ namespace LiteDB
             {
                 foreach (var item in arr)
                 {
-                    // fill destroy action to remove value from parent array
-                    item.Destroy = () => arr.Remove(item);
-
                     yield return item;
                 }
             }
@@ -351,9 +342,6 @@ namespace LiteDB
 
                     if (c.IsBoolean && c.AsBoolean == true)
                     {
-                        // fill destroy action to remove value from parent array
-                        item.Destroy = () => arr.Remove(item);
-
                         yield return item;
                     }
                 }

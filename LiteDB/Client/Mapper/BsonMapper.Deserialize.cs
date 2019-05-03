@@ -89,7 +89,7 @@ namespace LiteDB
             // check if your type is already a BsonValue/BsonDocument/BsonArray
             if (type == typeof(BsonValue))
             {
-                return new BsonValue(value);
+                return value;
             }
             else if (type == typeof(BsonDocument))
             {
@@ -115,7 +115,7 @@ namespace LiteDB
             // special cast to UInt64 to Int64
             else if (type == typeof(UInt64))
             {
-                return unchecked((UInt64)((Int64)value.RawValue));
+                return unchecked((UInt64)value.AsInt64);
             }
 
             // enum value is an int
@@ -160,7 +160,7 @@ namespace LiteDB
                 var doc = value.AsDocument;
 
                 // test if value is object and has _type
-                if (doc.RawValue.TryGetValue("_type", out var typeField))
+                if (doc.TryGetValue("_type", out var typeField))
                 {
                     type = Type.GetType(typeField.AsString);
 

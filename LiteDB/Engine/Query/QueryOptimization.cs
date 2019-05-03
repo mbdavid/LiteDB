@@ -89,8 +89,8 @@ namespace LiteDB.Engine
                     var left = predicate.Left;
                     var right = predicate.Right;
 
-                    left.Parameters.Extend(predicate.Parameters);
-                    right.Parameters.Extend(predicate.Parameters);
+                    predicate.Parameters.CopyTo(left.Parameters);
+                    predicate.Parameters.CopyTo(right.Parameters);
 
                     add(left);
                     add(right);

@@ -5,72 +5,47 @@ using System.Linq;
 
 namespace LiteDB
 {
-    public static class BsonArrayExtensions
-    {
-        /// <summary>
-        /// Convert an IEnumerable of BsonValues into a single BsonArray with all elements
-        /// </summary>
-        public static BsonArray ToBsonArray(this IEnumerable<BsonValue> values)
-        {
-            return new BsonArray(values);
-        }
-    }
-
     public class BsonArray : BsonValue, IList<BsonValue>
     {
         public BsonArray()
-            : base(new List<BsonValue>())
+            : base(BsonType.Array, new List<BsonValue>())
         {
         }
 
         public BsonArray(List<BsonValue> array)
-            : base(array)
+            : this()
         {
             if (array == null) throw new ArgumentNullException(nameof(array));
+
+            this.AddRange(array);
         }
 
         public BsonArray(BsonValue[] array)
-            : base(new List<BsonValue>(array))
+            : this()
         {
             if (array == null) throw new ArgumentNullException(nameof(array));
+
+            this.AddRange(array);
         }
 
         public BsonArray(IEnumerable<BsonValue> items)
             : this()
         {
-            this.AddRange<BsonValue>(items);
+            if (items == null) throw new ArgumentNullException(nameof(items));
+
+            this.AddRange(items);
         }
 
-        public BsonArray(IEnumerable<BsonArray> items)
-            : this()
-        {
-            this.AddRange<BsonArray>(items);
-        }
-
-        public BsonArray(IEnumerable<BsonDocument> items)
-            : this()
-        {
-            this.AddRange<BsonDocument>(items);
-        }
-
-        public new List<BsonValue> RawValue
-        {
-            get
-            {
-                return (List<BsonValue>)base.RawValue;
-            }
-        }
+        internal new IList<BsonValue> RawValue => base.RawValue as List<BsonValue>;
 
         public override BsonValue this[int index]
         {
             get
             {
-                return this.RawValue.ElementAt(index);
+                return this.RawValue[index];
             }
             set
             {
-                this.Length = null; // reset GetBytesLength()
-
                 this.RawValue[index] = value ?? BsonValue.Null;
             }
         }
@@ -79,77 +54,39 @@ namespace LiteDB
 
         public bool IsReadOnly => false;
 
-        public void Add(BsonValue item)
+        public void Add(BsonValue item) => this.RawValue.Add(item ?? BsonValue.Null);
+
+        public void AddRange(IEnumerable<BsonValue> items)
         {
-            this.RawValue.Add(item ?? BsonValue.Null);
-        }
+            if (items == null) throw new ArgumentNullException(nameof(items));
 
-        public virtual void AddRange<T>(IEnumerable<T> array)
-            where T : BsonValue
-        {
-            if (array == null) throw new ArgumentNullException(nameof(array));
-
-            this.Length = null; // reset GetBytesLength()
-
-            foreach (var item in array)
+            foreach (var item in items)
             {
-                this.Add(item ?? BsonValue.Null);
+                this.Add(item);
             }
         }
 
-        public void Clear()
-        {
-            this.Length = null; // reset GetBytesLength()
+        public void Clear() => this.RawValue.Clear();
 
-            this.RawValue.Clear();
-        }
+        public bool Contains(BsonValue item) => this.RawValue.Contains(item ?? BsonValue.Null);
 
-        public bool Contains(BsonValue item)
-        {
-            return this.RawValue.Contains(item);
-        }
+        public void CopyTo(BsonValue[] array, int arrayIndex) => this.RawValue.CopyTo(array, arrayIndex);
 
-        public void CopyTo(BsonValue[] array, int arrayIndex)
-        {
-            this.RawValue.CopyTo(array, arrayIndex);
-        }
+        public IEnumerator<BsonValue> GetEnumerator() => this.RawValue.GetEnumerator();
 
-        public IEnumerator<BsonValue> GetEnumerator()
-        {
-            return this.RawValue.GetEnumerator();
-        }
+        public int IndexOf(BsonValue item) => this.RawValue.IndexOf(item ?? BsonValue.Null);
 
-        public int IndexOf(BsonValue item)
-        {
-            return this.RawValue.IndexOf(item);
-        }
+        public void Insert(int index, BsonValue item) => this.RawValue.Insert(index, item ?? BsonValue.Null);
 
-        public void Insert(int index, BsonValue item)
-        {
-            this.Length = null; // reset GetBytesLength()
+        public bool Remove(BsonValue item) => this.RawValue.Remove(item);
 
-            this.RawValue.Insert(index, item);
-        }
-
-        public bool Remove(BsonValue item)
-        {
-            this.Length = null; // reset GetBytesLength()
-
-            return this.RawValue.Remove(item);
-        }
-
-        public void RemoveAt(int index)
-        {
-            this.Length = null; // reset GetBytesLength()
-
-            this.RawValue.RemoveAt(index);
-        }
+        public void RemoveAt(int index) => this.RawValue.RemoveAt(index);
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             foreach (var value in this.RawValue)
             {
-                yield return new BsonValue(value);
+                yield return value;
             }
         }
 
@@ -176,6 +113,19 @@ namespace LiteDB
         public override string ToString()
         {
             return JsonSerializer.Serialize(this);
+        }
+
+        public override int GetBytesCount()
+        {
+            var length = 5;
+            var array = this.RawValue;
+            
+            for (var i = 0; i < array.Count; i++)
+            {
+                length += this.GetBytesCountElement(i.ToString(), array[i]);
+            }
+
+            return length;
         }
     }
 }

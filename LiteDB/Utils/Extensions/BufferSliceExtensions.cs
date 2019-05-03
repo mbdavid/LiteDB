@@ -247,13 +247,13 @@ namespace LiteDB
                 case BsonType.MaxValue:
                     break;
 
-                case BsonType.Int32: buffer.Write((Int32)value.RawValue, offset); break;
-                case BsonType.Int64: buffer.Write((Int64)value.RawValue, offset); break;
-                case BsonType.Double: buffer.Write((Double)value.RawValue, offset); break;
-                case BsonType.Decimal: buffer.Write((Decimal)value.RawValue, offset); break;
+                case BsonType.Int32: buffer.Write(value.AsInt32, offset); break;
+                case BsonType.Int64: buffer.Write(value.AsInt64, offset); break;
+                case BsonType.Double: buffer.Write(value.AsDouble, offset); break;
+                case BsonType.Decimal: buffer.Write(value.AsDecimal, offset); break;
 
                 case BsonType.String:
-                    var str = (string)value.RawValue;
+                    var str = value.AsString;
                     var strLength = (byte)Encoding.UTF8.GetByteCount(str);
                     buffer[offset++] = strLength;
                     buffer.Write(str, offset);
@@ -275,15 +275,15 @@ namespace LiteDB
                     break;
 
                 case BsonType.Binary:
-                    var arr = (Byte[])value.RawValue;
+                    var arr = value.AsBinary;
                     buffer[offset++] = (byte)arr.Length;
                     buffer.Write(arr, offset);
                     break;
-                case BsonType.ObjectId: buffer.Write((ObjectId)value.RawValue, offset); break;
-                case BsonType.Guid: buffer.Write((Guid)value.RawValue, offset); break;
+                case BsonType.ObjectId: buffer.Write(value.AsObjectId, offset); break;
+                case BsonType.Guid: buffer.Write(value.AsGuid, offset); break;
 
-                case BsonType.Boolean: buffer[offset] = ((Boolean)value.RawValue) ? (byte)1 : (byte)0; break;
-                case BsonType.DateTime: buffer.Write((DateTime)value.RawValue, offset); break;
+                case BsonType.Boolean: buffer[offset] = (value.AsBoolean) ? (byte)1 : (byte)0; break;
+                case BsonType.DateTime: buffer.Write(value.AsDateTime, offset); break;
 
                 default: throw new NotImplementedException();
             }

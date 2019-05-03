@@ -185,11 +185,11 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert values into STRING
+        /// Convert value into STRING
         /// </summary>
         public static BsonValue STRING(BsonValue value)
         {
-            return value.AsString;
+            return value.ToString();
         }
 
         // ==> there is no convert to BsonDocument, must use { .. } syntax 

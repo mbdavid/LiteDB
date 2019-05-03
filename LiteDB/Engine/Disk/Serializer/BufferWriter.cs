@@ -335,7 +335,7 @@ namespace LiteDB.Engine
 
             for (var i = 0; i < value.Count; i++)
             {
-                this.WriteElement(i.ToString(), value[i] ?? BsonValue.Null);
+                this.WriteElement(i.ToString(), value[i]);
             }
 
             this.Write((byte)0x00);
@@ -350,7 +350,7 @@ namespace LiteDB.Engine
 
             foreach (var el in value.GetElements())
             {
-                this.WriteElement(el.Key, el.Value ?? BsonValue.Null);
+                this.WriteElement(el.Key, el.Value);
             }
 
             this.Write((byte)0x00);
@@ -364,31 +364,31 @@ namespace LiteDB.Engine
                 case BsonType.Double:
                     this.Write((byte)0x01);
                     this.WriteCString(key);
-                    this.Write((Double)value.RawValue);
+                    this.Write(value.AsDouble);
                     break;
 
                 case BsonType.String:
                     this.Write((byte)0x02);
                     this.WriteCString(key);
-                    this.WriteString((String)value.RawValue, true); // true = BSON Specs (add LENGTH at begin + \0 at end)
+                    this.WriteString(value.AsString, true); // true = BSON Specs (add LENGTH at begin + \0 at end)
                     break;
 
                 case BsonType.Document:
                     this.Write((byte)0x03);
                     this.WriteCString(key);
-                    this.WriteDocument(new BsonDocument((Dictionary<string, BsonValue>)value.RawValue));
+                    this.WriteDocument(value.AsDocument);
                     break;
 
                 case BsonType.Array:
                     this.Write((byte)0x04);
                     this.WriteCString(key);
-                    this.WriteArray(new BsonArray((List<BsonValue>)value.RawValue));
+                    this.WriteArray(value.AsArray);
                     break;
 
                 case BsonType.Binary:
                     this.Write((byte)0x05);
                     this.WriteCString(key);
-                    var bytes = (byte[])value.RawValue;
+                    var bytes = value.AsBinary;
                     this.Write(bytes.Length);
                     this.Write((byte)0x00); // subtype 00 - Generic binary subtype
                     this.Write(bytes, 0, bytes.Length);
@@ -397,7 +397,7 @@ namespace LiteDB.Engine
                 case BsonType.Guid:
                     this.Write((byte)0x05);
                     this.WriteCString(key);
-                    var guid = (Guid)value.RawValue;
+                    var guid = value.AsGuid;
                     this.Write(16);
                     this.Write((byte)0x04); // UUID
                     this.Write(guid);
@@ -406,19 +406,19 @@ namespace LiteDB.Engine
                 case BsonType.ObjectId:
                     this.Write((byte)0x07);
                     this.WriteCString(key);
-                    this.Write((ObjectId)value.RawValue);
+                    this.Write(value.AsObjectId);
                     break;
 
                 case BsonType.Boolean:
                     this.Write((byte)0x08);
                     this.WriteCString(key);
-                    this.Write((byte)(((Boolean)value.RawValue) ? 0x01 : 0x00));
+                    this.Write((byte)(value.AsBoolean ? 0x01 : 0x00));
                     break;
 
                 case BsonType.DateTime:
                     this.Write((byte)0x09);
                     this.WriteCString(key);
-                    var date = (DateTime)value.RawValue;
+                    var date = value.AsDateTime;
                     // do not convert to UTC min/max date values - #19
                     var utc = (date == DateTime.MinValue || date == DateTime.MaxValue) ? date : date.ToUtc();
                     var ts = utc - BsonValue.UnixEpoch;
@@ -433,19 +433,19 @@ namespace LiteDB.Engine
                 case BsonType.Int32:
                     this.Write((byte)0x10);
                     this.WriteCString(key);
-                    this.Write((Int32)value.RawValue);
+                    this.Write(value.AsInt32);
                     break;
 
                 case BsonType.Int64:
                     this.Write((byte)0x12);
                     this.WriteCString(key);
-                    this.Write((Int64)value.RawValue);
+                    this.Write(value.AsInt64);
                     break;
 
                 case BsonType.Decimal:
                     this.Write((byte)0x13);
                     this.WriteCString(key);
-                    this.Write((Decimal)value.RawValue);
+                    this.Write(value.AsDecimal);
                     break;
 
                 case BsonType.MinValue:

@@ -19,7 +19,7 @@ namespace LiteDB.Engine
         {
             if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, $"Collection ${this.Name} requires a string/object parameter");
 
-            var filename = GetOption<string>(options, true, "filename", null) ?? throw new LiteException(0, $"Collection ${this.Name} requires string as 'filename' or a document field 'filename'");
+            var filename = GetOption(options, true, "filename", null).AsString ?? throw new LiteException(0, $"Collection ${this.Name} requires string as 'filename' or a document field 'filename'");
 
             using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
@@ -43,11 +43,11 @@ namespace LiteDB.Engine
         {
             if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, "Collection $file_json requires a string/object parameter");
 
-            var filename = GetOption<string>(options, true, "filename", null) ?? throw new LiteException(0, "Collection $file_json requires string as 'filename' or a document field 'filename'");
-            var pretty = GetOption<bool>(options, false, "pretty", false);
-            var indent = GetOption<int>(options, false, "indent", 4);
-            var encoding = GetOption<string>(options, false, "encoding", "utf-8");
-            var overwritten = GetOption<bool>(options, false, "overwritten", false);
+            var filename = GetOption(options, true, "filename", null).AsString ?? throw new LiteException(0, "Collection $file_json requires string as 'filename' or a document field 'filename'");
+            var pretty = GetOption(options, false, "pretty", false).AsBoolean;
+            var indent = GetOption(options, false, "indent", 4).AsInt32;
+            var encoding = GetOption(options, false, "encoding", "utf-8").AsString;
+            var overwritten = GetOption(options, false, "overwritten", false).AsBoolean;
 
             var index = 0;
             FileStream fs = null;

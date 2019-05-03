@@ -220,8 +220,8 @@ namespace LiteDB.Tests.Expressions
 
             S("LENGTH(a)").ExpectValue(9);
             S("LENGTH(empty)").ExpectValue(0);
-            S("LENGTH(null)").ExpectValue(BsonValue.Null);
-            S("LENGTH(miss)").ExpectValue(BsonValue.Null);
+            S("LENGTH(null)").ExpectValue(0);
+            S("LENGTH(miss)").ExpectValue(0);
             S("LENGTH(b)").ExpectValue(3);
             S("LENGTH(arr)").ExpectValue(3);
             S("LENGTH($)").ExpectValue(5);

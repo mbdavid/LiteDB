@@ -37,7 +37,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Extend source document with other document. Copy all field from extend to source. Source document will be modified.
+        /// Create a new document and copy all properties from source document. Then copy properties (overritting if need) extend document
         /// EXTEND($, {a: 2}) = {_id:1, a: 2}
         /// </summary>
         public static BsonValue EXTEND(BsonValue source, BsonValue extend)
@@ -135,6 +135,19 @@ namespace LiteDB
             else if (value.IsArray) return value.AsArray.Count;
             else if (value.IsDocument) return value.AsDocument.Keys.Count;
             else if (value.IsNull) return 0;
+
+            return BsonValue.Null;
+        }
+
+        /// <summary>
+        /// Returns document position on disk: PageID : Index (RawId)
+        /// </summary>
+        public static BsonValue RAWID(BsonValue document)
+        {
+            if (document.IsDocument)
+            {
+                return document.AsDocument.RawId.ToString();
+            }
 
             return BsonValue.Null;
         }

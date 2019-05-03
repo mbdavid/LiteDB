@@ -205,7 +205,7 @@ namespace LiteDB
             {
                 return string.Join(
                     separator.AsString,
-                    values.Select(x => x.AsString).ToArray()
+                    values.Select(x => x.ToString()).ToArray()
                 );
             }
 

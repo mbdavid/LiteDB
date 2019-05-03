@@ -49,17 +49,22 @@ namespace LiteDB.Engine
         /// <summary>
         /// Static helper to read options arg as plain value or as document fields
         /// </summary>
-        protected static T GetOption<T>(BsonValue options, bool root, string field, T defaultValue)
+        protected static BsonValue GetOption(BsonValue options, bool root, string key, BsonValue defaultValue)
         {
             if (options.IsDocument == false)
             {
-                return root ? (T)options.RawValue : defaultValue;
+                return root ? options : defaultValue;
             }
             else
             {
-                var value = options.AsDocument[field].RawValue ?? defaultValue;
-
-                return (T)value;
+                if (options.AsDocument.TryGetValue(key, out var value))
+                {
+                    return value;
+                }
+                else
+                {
+                    return defaultValue;
+                }
             }
         }
     }

@@ -42,7 +42,7 @@ namespace LiteDB.Engine
         private void InsertDocument(Snapshot snapshot, BsonDocument doc, BsonAutoId autoId, IndexService indexer, DataService data)
         {
             // if no _id, use AutoId
-            if (!doc.RawValue.TryGetValue("_id", out var id))
+            if (!doc.TryGetValue("_id", out var id))
             {
                 doc["_id"] = id =
                     autoId == BsonAutoId.ObjectId ? new BsonValue(ObjectId.NewObjectId()) :

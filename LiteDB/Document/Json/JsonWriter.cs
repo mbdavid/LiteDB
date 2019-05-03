@@ -50,52 +50,52 @@ namespace LiteDB
                     break;
 
                 case BsonType.Array:
-                    this.WriteArray(new BsonArray((List<BsonValue>)value.RawValue));
+                    this.WriteArray(value.AsArray);
                     break;
 
                 case BsonType.Document:
-                    this.WriteObject(new BsonDocument((Dictionary<string, BsonValue>)value.RawValue));
+                    this.WriteObject(value.AsDocument);
                     break;
 
                 case BsonType.Boolean:
-                    _writer.Write(((bool)value.RawValue).ToString().ToLower());
+                    _writer.Write(value.AsBoolean.ToString().ToLower());
                     break;
 
                 case BsonType.String:
-                    this.WriteString((string)value.RawValue);
+                    this.WriteString(value.AsString);
                     break;
 
                 case BsonType.Int32:
-                    _writer.Write(((Int32)value.RawValue).ToString(_numberFormat));
+                    _writer.Write(value.AsInt32.ToString(_numberFormat));
                     break;
 
                 case BsonType.Double:
-                    _writer.Write(((Double)value.RawValue).ToString("0.0########", _numberFormat));
+                    _writer.Write(value.AsDouble.ToString("0.0########", _numberFormat));
                     break;
 
                 case BsonType.Binary:
-                    var bytes = (byte[])value.RawValue;
+                    var bytes = value.AsBinary;
                     this.WriteExtendDataType("$binary", Convert.ToBase64String(bytes, 0, bytes.Length));
                     break;
 
                 case BsonType.ObjectId:
-                    this.WriteExtendDataType("$oid", ((ObjectId)value.RawValue).ToString());
+                    this.WriteExtendDataType("$oid", value.AsObjectId.ToString());
                     break;
 
                 case BsonType.Guid:
-                    this.WriteExtendDataType("$guid", ((Guid)value.RawValue).ToString());
+                    this.WriteExtendDataType("$guid", value.AsGuid.ToString());
                     break;
 
                 case BsonType.DateTime:
-                    this.WriteExtendDataType("$date", ((DateTime)value.RawValue).ToUniversalTime().ToString("o"));
+                    this.WriteExtendDataType("$date", value.AsDateTime.ToUniversalTime().ToString("o"));
                     break;
 
                 case BsonType.Int64:
-                    this.WriteExtendDataType("$numberLong", ((Int64)value.RawValue).ToString(_numberFormat));
+                    this.WriteExtendDataType("$numberLong", value.AsInt64.ToString(_numberFormat));
                     break;
 
                 case BsonType.Decimal:
-                    this.WriteExtendDataType("$numberDecimal", ((Decimal)value.RawValue).ToString(_numberFormat));
+                    this.WriteExtendDataType("$numberDecimal", value.AsDecimal.ToString(_numberFormat));
                     break;
 
                 case BsonType.MinValue:

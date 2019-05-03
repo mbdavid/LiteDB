@@ -407,7 +407,7 @@ namespace LiteDB.Engine
                 // null value means are not selected field
                 if (value != null)
                 {
-                    doc.RawValue[name] = value;
+                    doc[name] = value;
 
                     // remove from remaining fields
                     remaining?.Remove(name);

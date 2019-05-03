@@ -52,7 +52,7 @@ namespace LiteDB
             if (obj == null) return BsonValue.Null;
 
             // if is already a bson value
-            if (obj is BsonValue) return new BsonValue((BsonValue)obj);
+            if (obj is BsonValue bsonValue) return bsonValue;
 
             // test string - mapper has some special options
             else if (obj is String)
@@ -152,7 +152,7 @@ namespace LiteDB
             {
                 var value = dict[key];
 
-                o.RawValue[key.ToString()] = this.Serialize(type, value, depth);
+                o[key.ToString()] = this.Serialize(type, value, depth);
             }
 
             return o;
@@ -160,15 +160,14 @@ namespace LiteDB
 
         private BsonDocument SerializeObject(Type type, object obj, int depth)
         {
-            var o = new BsonDocument();
             var t = obj.GetType();
+            var doc = new BsonDocument();
             var entity = this.GetEntityMapper(t);
-            var dict = o.RawValue;
 
             // adding _type only where property Type is not same as object instance type
             if (type != t)
             {
-                dict["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
+                doc["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
             }
 
             foreach (var member in entity.Members.Where(x => x.Getter != null))
@@ -181,15 +180,15 @@ namespace LiteDB
                 // if member has a custom serialization, use it
                 if (member.Serialize != null)
                 {
-                    dict[member.FieldName] = member.Serialize(value, this);
+                    doc[member.FieldName] = member.Serialize(value, this);
                 }
                 else
                 {
-                    dict[member.FieldName] = this.Serialize(member.DataType, value, depth);
+                    doc[member.FieldName] = this.Serialize(member.DataType, value, depth);
                 }
             }
 
-            return o;
+            return doc;
         }
     }
 }
