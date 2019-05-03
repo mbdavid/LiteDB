@@ -151,12 +151,12 @@ namespace LiteDB.Tests.Mapper
             };
 
             // get full document inside
-            Eval(u, x => x.Phones.Items(0), u.Phones[0]);
-
-            Eval(u, x => x.Phones.Items().Prefix, 10, 20, 30);
-            Eval(u, x => x.Phones.Items(0).Number, 1);
-            Eval(u, x => x.Phones.Items(-1).Number, 3);
-            Eval(u, x => x.Phones.Items(z => z.Prefix >= 20).Number, 2, 3);
+            //** Eval(u, x => x.Phones[0], u.Phones[0]);
+            //** 
+            //** Eval(u, x => x.Phones.Items().Prefix, 10, 20, 30);
+            //** Eval(u, x => x.Phones.Items(0).Number, 1);
+            //** Eval(u, x => x.Phones.Items(-1).Number, 3);
+            //** Eval(u, x => x.Phones.Items(z => z.Prefix >= 20).Number, 2, 3);
 
         }
 

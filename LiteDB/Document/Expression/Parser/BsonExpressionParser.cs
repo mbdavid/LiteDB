@@ -86,6 +86,8 @@ namespace LiteDB
         private static readonly MethodInfo _documentInitMethod = M("DOCUMENT_INIT");
         private static readonly MethodInfo _arrayInitMethod = M("ARRAY_INIT");
 
+        private static readonly MethodInfo _itemsMethod = typeof(BsonExpressionMethods).GetMethod("ITEMS");
+
         #endregion
 
         /// <summary>
@@ -816,16 +818,24 @@ namespace LiteDB
                 isImmutable = false;
             }
 
-            // test parameters Scalar vs IEnumerable
-            foreach (var z in method.GetParameters().Zip(pars, (l, r) => new { l, r }))
+            var paramExpr = new List<Expression>();
+
+            // getting linq expression from BsonExpression for all parameters
+            foreach (var item in method.GetParameters().Zip(pars, (parameter, expr) => new { parameter, expr }))
             {
-                if (z.l.ParameterType.IsEnumerable() && z.r.IsScalar)
+                if (item.parameter.ParameterType.IsEnumerable() == false && item.expr.IsScalar == false)
                 {
-                    throw new LiteException(0, $"Parameter `{z.l.Name}` in method `{method.Name}` requires an enumerable value");
+                    throw new LiteException(0, $"Method {method.Name} requires a scalar expression. Expression `{item.expr.Source}` can return more than one result.");
                 }
-                if (z.l.ParameterType.IsEnumerable() == false && z.r.IsScalar == false)
+
+                if (item.parameter.ParameterType.IsEnumerable() && item.expr.IsScalar)
                 {
-                    throw new LiteException(0, $"Parameter `{z.l.Name}` in method `{method.Name}` requires a scalar value");
+                    // convert scalar expression into enumerable expression
+                    paramExpr.Add(ConvertToEnumerable(item.expr).Expression);
+                }
+                else
+                {
+                    paramExpr.Add(item.expr.Expression);
                 }
             }
 
@@ -836,7 +846,7 @@ namespace LiteDB
                 UseSource = useSource,
                 IsScalar = method.ReturnType.IsEnumerable() == false,
                 Fields = fields,
-                Expression = Expression.Call(method, pars.Select(x => x.Expression).ToArray()),
+                Expression = Expression.Call(method, paramExpr.ToArray()),
                 Source = src.ToString()
             };
         }
@@ -1029,7 +1039,11 @@ namespace LiteDB
         /// </summary>
         private static BsonExpression ParseMap(BsonExpression left, Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
-            if (left.IsScalar) throw new LiteException(0, $"Left side `{left.Source}` map function must be an enumerable expression");
+            // if left is a scalar expression, convert ino enumerable expression (avoid to use [*] all the time)
+            if (left.IsScalar)
+            {
+                left = ConvertToEnumerable(left);
+            }
 
             var right = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
 
@@ -1208,5 +1222,21 @@ namespace LiteDB
             return null;
         }
 
+        /// <summary>
+        /// Convert scalar expression into enumerable expression using ITEMS(...) method
+        /// </summary>
+        private static BsonExpression ConvertToEnumerable(BsonExpression expr)
+        {
+            return new BsonExpression
+            {
+                Type = expr.Type,
+                IsImmutable = expr.IsImmutable,
+                UseSource = expr.UseSource,
+                IsScalar = false,
+                Fields = expr.Fields,
+                Expression = Expression.Call(_itemsMethod, expr.Expression),
+                Source = expr.Source
+            };
+        }
     }
 }

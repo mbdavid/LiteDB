@@ -57,7 +57,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert an array into IEnuemrable of values.
+        /// Convert an array into IEnuemrable of values - If not array, returns as single yield value
         /// ITEMS([1, 2, null]) = 1, 2, null
         /// </summary>
         public static IEnumerable<BsonValue> ITEMS(BsonValue array)
@@ -68,6 +68,10 @@ namespace LiteDB
                 {
                     yield return value;
                 }
+            }
+            else
+            {
+                yield return array;
             }
         }
 

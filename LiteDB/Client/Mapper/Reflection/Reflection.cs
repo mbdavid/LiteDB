@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 
 namespace LiteDB
 {
@@ -202,6 +203,86 @@ namespace LiteDB
             return null;
         }
 
+        #endregion
+
+        #region MethodName
+
+        private static Dictionary<MethodInfo, string> _cache = new Dictionary<MethodInfo, string>();
+
+        /// <summary>
+        /// Get a friendly method name with parameter types
+        /// </summary>
+        public static string MethodName(MethodInfo method, int skipParameters = 0)
+        {
+            if (_cache.TryGetValue(method, out var value))
+            {
+                return value;
+            }
+
+            value = MethodNameInternal(method, skipParameters);
+
+            _cache.Add(method, value);
+
+            return value;
+        }
+
+        private static string MethodNameInternal(MethodInfo method, int skipParameters = 0)
+        {
+            var sb = new StringBuilder(method.Name + "(");
+            var index = 0;
+
+            foreach (var p in method.GetParameters().Skip(skipParameters))
+            {
+                if (index++ > 0) sb.Append(",");
+
+                sb.Append(FriendlyTypeName(p.ParameterType));
+
+                if (p.ParameterType.IsGenericType)
+                {
+                    var generic = p.ParameterType.GetGenericTypeDefinition();
+
+                    var types = generic.GetGenericArguments();
+
+                    sb.Append("<");
+
+                    sb.Append(string.Join(",", types.Select(x => FriendlyTypeName(x))));
+
+                    sb.Append(">");
+                }
+            }
+
+            sb.Append(")");
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Get C# friendly primitive type names
+        /// </summary>
+        private static string FriendlyTypeName(Type type)
+        {
+            var generic = type.Name.IndexOf("`");
+
+            switch (type.FullName)
+            {
+                case "System.Object": return "object";
+                case "System.String": return "string";
+                case "System.Boolean": return "bool";
+                case "System.Byte": return "byte";
+                case "System.Char": return "char";
+                case "System.Decimal": return "decimal";
+                case "System.Double": return "double";
+                case "System.Int16": return "short";
+                case "System.Int32": return "int";
+                case "System.Int64": return "long";
+                case "System.SByte": return "sbyte";
+                case "System.Single": return "float";
+                case "System.UInt16": return "ushort";
+                case "System.UInt32": return "uint";
+                case "System.UInt64": return "ulong";
+
+                default: return generic > 0 ? type.Name.Substring(0, generic) : type.Name;
+            }
+        }
         #endregion
     }
 }

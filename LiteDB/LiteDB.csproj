@@ -118,7 +118,6 @@
     <Compile Include="Client\Mapper\EntityMapper.cs" />
     <Compile Include="Client\Mapper\Linq\LinqExpressionVisitor.cs" />
     <Compile Include="Client\Mapper\Linq\ParameterExpressionVisitor.cs" />
-    <Compile Include="Client\Mapper\Linq\Sql.cs" />
     <Compile Include="Client\Mapper\Linq\TypeResolver\BsonValueResolver.cs" />
     <Compile Include="Client\Mapper\Linq\TypeResolver\ConvertResolver.cs" />
     <Compile Include="Client\Mapper\Linq\TypeResolver\DateTimeResolver.cs" />
@@ -128,7 +127,6 @@
     <Compile Include="Client\Mapper\Linq\TypeResolver\MathResolver.cs" />
     <Compile Include="Client\Mapper\Linq\TypeResolver\NumberResolver.cs" />
     <Compile Include="Client\Mapper\Linq\TypeResolver\ObjectIdResolver.cs" />
-    <Compile Include="Client\Mapper\Linq\TypeResolver\SqlResolver.cs" />
     <Compile Include="Client\Mapper\Linq\TypeResolver\StringResolver.cs" />
     <Compile Include="Client\Mapper\MemberMapper.cs" />
     <Compile Include="Client\Mapper\Reflection\Reflection.cs" />

@@ -50,8 +50,8 @@ namespace LiteDB.Tests.Database
 
                 // has phone starts wtih 555
                 var phones = users.Query()
-                    .Where(x => x.Phones.Items().StartsWith("555"))
-                    .Select(x => new { x.Id, FirstName = x.Name, PhoneCount = Sql.Count(x.Phones.Items()) })
+                    .Where(x => x.Phones.Any(y => y.StartsWith("555")))
+                    .Select(x => new { x.Id, FirstName = x.Name, PhoneCount = x.Phones.Count() })
                     .OrderByDescending(x => x.Id)
                     .ToArray();
 
@@ -60,7 +60,7 @@ namespace LiteDB.Tests.Database
 
                 // array of int phones
                 var arrp = users.Query()
-                    .Select(x => new { x.Name, Arr = Sql.ToArray(Convert.ToInt32(x.Phones.Items().Substring(0, 3))) })
+                    .Select(x => new { x.Name, Arr = x.Phones.Select(s => Convert.ToInt32(s.Substring(0, 3))).ToArray() })
                     .ToList();
 
                 Assert.AreEqual(555, arrp[0].Arr[0]);

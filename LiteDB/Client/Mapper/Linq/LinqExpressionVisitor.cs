@@ -26,7 +26,6 @@ namespace LiteDB
             [typeof(Guid)] = new GuidResolver(),
             [typeof(Math)] = new MathResolver(),
             [typeof(ObjectId)] = new ObjectIdResolver(),
-            [typeof(Sql)] = new SqlResolver(),
             [typeof(String)] = new StringResolver()
         };
 
@@ -199,7 +198,7 @@ namespace LiteDB
             // otherwise I have resolver for this method
             var pattern = type.ResolveMethod(node.Method);
 
-            if (pattern == null) throw new NotSupportedException($"Method {node.Method.Name} in {node.Method.DeclaringType.Name} are not supported when convert to BsonExpression ({node.ToString()}).");
+            if (pattern == null) throw new NotSupportedException($"Method {Reflection.MethodName(node.Method)} in {node.Method.DeclaringType.Name} are not supported when convert to BsonExpression ({node.ToString()}).");
 
             // run pattern using object as # and args as @n
             this.ResolvePattern(pattern, node.Object, node.Arguments);
@@ -589,14 +588,14 @@ namespace LiteDB
                 return true;
             }
 
-            // for Sql.Items(int)
-            if (type == typeof(Sql) && method.Name == "Items" && 
-                pars.Length == 2 && pars[1].ParameterType == typeof(int))
-            {
-                obj = node.Arguments[0];
-                idx = node.Arguments[1];
-                return true;
-            }
+            //** // for Sql.Items(int)
+            //** if (type == typeof(Sql) && method.Name == "Items" && 
+            //**     pars.Length == 2 && pars[1].ParameterType == typeof(int))
+            //** {
+            //**     obj = node.Arguments[0];
+            //**     idx = node.Arguments[1];
+            //**     return true;
+            //** }
 
             obj = null;
             idx = null;
