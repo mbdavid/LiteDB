@@ -89,7 +89,7 @@ namespace LiteDB.Engine
                 // if current node are edges exit while
                 if (node.Key.IsMinValue || node.Key.IsMaxValue) break;
 
-                var valueString = node.Key.AsString;
+                var valueString = node.Key.IsString ? node.Key.AsString : node.Key.ToString();
 
                 if (_equals ?
                     valueString.Equals(_pattern, StringComparison.OrdinalIgnoreCase) :

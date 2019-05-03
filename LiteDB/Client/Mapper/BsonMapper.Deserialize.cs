@@ -160,7 +160,7 @@ namespace LiteDB
                 var doc = value.AsDocument;
 
                 // test if value is object and has _type
-                if (doc.TryGetValue("_type", out var typeField))
+                if (doc.TryGetValue("_type", out var typeField) && typeField.IsString)
                 {
                     type = Type.GetType(typeField.AsString);
 
@@ -250,9 +250,7 @@ namespace LiteDB
 
             foreach (var member in entity.Members.Where(x => x.Setter != null))
             {
-                var val = value[member.FieldName];
-
-                if (!val.IsNull)
+                if (value.TryGetValue(member.FieldName, out var val))
                 {
                     // check if has a custom deserialize function
                     if (member.Deserialize != null)
