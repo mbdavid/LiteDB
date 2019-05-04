@@ -263,14 +263,14 @@ namespace LiteDB
                     using (var w = new BufferWriter(buffer))
                     {
                         w.Skip(1);
-                        w.WriteDocument(value.AsDocument);
+                        w.WriteDocument(value.AsDocument, true);
                     }
                     break;  
                 case BsonType.Array:
                     using (var w = new BufferWriter(buffer))
                     {
                         w.Skip(1);
-                        w.WriteArray(value.AsArray);
+                        w.WriteArray(value.AsArray, true);
                     }
                     break;
 

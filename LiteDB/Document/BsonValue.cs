@@ -560,8 +560,9 @@ namespace LiteDB
 
         /// <summary>
         /// Returns how many bytes this BsonValue will consume when converted into binary BSON
+        /// If recalc = false, use cached length value (from Array/Document only)
         /// </summary>
-        public virtual int GetBytesCount()
+        internal virtual int GetBytesCount(bool recalc)
         {
             switch (this.Type)
             {
@@ -583,8 +584,8 @@ namespace LiteDB
                 case BsonType.Boolean: return 1;
                 case BsonType.DateTime: return 8;
 
-                case BsonType.Document: return this.AsDocument.GetBytesCount();
-                case BsonType.Array: return this.AsArray.GetBytesCount();
+                case BsonType.Document: return this.AsDocument.GetBytesCount(recalc);
+                case BsonType.Array: return this.AsArray.GetBytesCount(recalc);
             }
 
             throw new ArgumentException();
@@ -602,7 +603,7 @@ namespace LiteDB
                 1 + // element type
                 Encoding.UTF8.GetByteCount(key) + // CString
                 1 + // CString \0
-                value.GetBytesCount() +
+                value.GetBytesCount(true) +
                 (variant ? 5 : 0); // bytes.Length + 0x??
         }
 

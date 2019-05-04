@@ -18,11 +18,11 @@ namespace LiteDB
         {
             if (doc == null) throw new ArgumentNullException(nameof(doc));
 
-            var buffer = new byte[doc.GetBytesCount()]; 
+            var buffer = new byte[doc.GetBytesCount(true)]; 
 
             using (var writer = new BufferWriter(buffer))
             {
-                writer.WriteDocument(doc);
+                writer.WriteDocument(doc, false);
             }
 
             return buffer;

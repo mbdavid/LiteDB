@@ -329,9 +329,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Write BsonArray as BSON specs
         /// </summary>
-        public void WriteArray(BsonArray value)
+        public void WriteArray(BsonArray value, bool recalc)
         {
-            this.Write(value.GetBytesCount());
+            this.Write(value.GetBytesCount(recalc));
 
             for (var i = 0; i < value.Count; i++)
             {
@@ -344,9 +344,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Write BsonDocument as BSON specs
         /// </summary>
-        public void WriteDocument(BsonDocument value)
+        public void WriteDocument(BsonDocument value, bool recalc)
         {
-            this.Write(value.GetBytesCount());
+            this.Write(value.GetBytesCount(recalc));
 
             foreach (var el in value.GetElements())
             {
@@ -376,13 +376,13 @@ namespace LiteDB.Engine
                 case BsonType.Document:
                     this.Write((byte)0x03);
                     this.WriteCString(key);
-                    this.WriteDocument(value.AsDocument);
+                    this.WriteDocument(value.AsDocument, false);
                     break;
 
                 case BsonType.Array:
                     this.Write((byte)0x04);
                     this.WriteCString(key);
-                    this.WriteArray(value.AsArray);
+                    this.WriteArray(value.AsArray, false);
                     break;
 
                 case BsonType.Binary:

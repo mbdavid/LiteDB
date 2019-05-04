@@ -28,7 +28,7 @@ namespace LiteDB.Engine
         /// </summary>
         public PageAddress Insert(BsonDocument doc)
         {
-            var bytesLeft = doc.GetBytesCount();
+            var bytesLeft = doc.GetBytesCount(true);
 
             if (bytesLeft > MAX_DOCUMENT_SIZE) throw new LiteException(0, "Document size exceed {0} limit", MAX_DOCUMENT_SIZE);
 
@@ -66,7 +66,8 @@ namespace LiteDB.Engine
             // must be fastest as possible
             using (var w = new BufferWriter(source()))
             {
-                w.WriteDocument(doc);
+                // already bytes count calculate at method start
+                w.WriteDocument(doc, false);
                 w.Consume();
             }
 

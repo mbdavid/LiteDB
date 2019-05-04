@@ -90,7 +90,7 @@ namespace LiteDB.Engine
         {
             return 1 +
                 ((key.IsString || key.IsBinary) ? 1 : 0) +
-                key.GetBytesCount();
+                key.GetBytesCount(true);
         }
 
         /// <summary>

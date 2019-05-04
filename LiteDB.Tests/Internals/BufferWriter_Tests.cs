@@ -197,7 +197,7 @@ namespace LiteDB.Internals
 
             using (var w = new BufferWriter(source))
             {
-                w.WriteDocument(doc);
+                w.WriteDocument(doc, true);
 
                 Assert.AreEqual(307, w.Position);
             }

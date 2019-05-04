@@ -157,8 +157,12 @@ namespace LiteDB
 
         #endregion
 
-        public override int GetBytesCount()
+        private int _length = 0;
+
+        internal override int GetBytesCount(bool recalc)
         {
+            if (recalc == false && _length > 0) return _length;
+
             var length = 5;
 
             foreach(var element in this.RawValue)
@@ -166,7 +170,7 @@ namespace LiteDB
                 length += this.GetBytesCountElement(element.Key, element.Value);
             }
 
-            return length;
+            return _length = length;
         }
     }
 }

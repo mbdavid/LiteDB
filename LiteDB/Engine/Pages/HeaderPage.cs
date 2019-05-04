@@ -145,7 +145,7 @@ namespace LiteDB.Engine
 
                 using (var w = new BufferWriter(area))
                 {
-                    w.WriteDocument(_collections);
+                    w.WriteDocument(_collections, true);
                 }
 
                 _isCollectionsChanged = false;
@@ -242,7 +242,7 @@ namespace LiteDB.Engine
         public int GetAvaiableCollectionSpace()
         {
             return COLLECTIONS_SIZE -
-                _collections.GetBytesCount() -
+                _collections.GetBytesCount(true) -
                 1 + // for int32 type (0x10)
                 1 + // for new CString ('\0')
                 4 + // for PageID (int32)
