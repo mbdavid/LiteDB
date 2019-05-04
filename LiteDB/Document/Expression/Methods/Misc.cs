@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using static LiteDB.ZipExtensions;
 
 namespace LiteDB
 {
@@ -38,6 +37,7 @@ namespace LiteDB
 
         /// <summary>
         /// Create a new document and copy all properties from source document. Then copy properties (overritting if need) extend document
+        /// Always returns a new document!
         /// EXTEND($, {a: 2}) = {_id:1, a: 2}
         /// </summary>
         public static BsonValue EXTEND(BsonValue source, BsonValue extend)
@@ -50,10 +50,15 @@ namespace LiteDB
                 source.AsDocument.CopyTo(newDoc);
                 extend.AsDocument.CopyTo(newDoc);
 
+                // copy rawId from source
+                newDoc.RawId = source.AsDocument.RawId;
+
                 return newDoc;
             }
+            else if (source.IsDocument) return source;
+            else if (extend.IsDocument) return extend;
 
-            return BsonValue.Null;
+            return new BsonDocument();
         }
 
         /// <summary>

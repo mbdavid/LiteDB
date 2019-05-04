@@ -305,6 +305,9 @@ namespace LiteDB
 
                 // if single field already a document
                 if (fields.Count == 1 && first.Type == BsonExpressionType.Document) return first;
+
+                // special case: EXTEND method also returns only a document
+                if (fields.Count == 1 && first.Type == BsonExpressionType.Call && first.Source.StartsWith("EXTEND")) return first;
             }
 
             var arrKeys = Expression.NewArrayInit(typeof(string), fields.Select(x => Expression.Constant(x.Key)).ToArray());
