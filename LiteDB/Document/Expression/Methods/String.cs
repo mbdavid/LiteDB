@@ -176,6 +176,22 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Slit value string based on separator 
+        /// </summary>
+        public static IEnumerable<BsonValue> SPLIT(BsonValue value, BsonValue separator)
+        {
+            if (value.IsString && separator.IsString)
+            {
+                var values = value.AsString.Split(new string[] { separator.AsString }, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach(var str in values)
+                {
+                    yield return str;
+                }
+            }
+        }
+
+        /// <summary>
         /// Return format value string using format definition (same as String.Format("{0:~}", values)).
         /// </summary>
         public static BsonValue FORMAT(BsonValue value, BsonValue format)

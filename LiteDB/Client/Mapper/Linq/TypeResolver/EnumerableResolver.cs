@@ -62,7 +62,9 @@ namespace LiteDB
                 case "ToList()": 
                 case "ToArray()": return "ARRAY(@0)";
 
-                //case "Any(Func<T,TResult>)": return "@0 ANY @1";
+                // any/all special cases
+                case "Any(Func<T,TResult>)": return "@0 ANY %";
+                case "ALL(Func<T,TResult>)": return "@0 ANY %";
             };
 
             return null;

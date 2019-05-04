@@ -122,9 +122,6 @@ namespace LiteDB.Tests.Mapper
         [TestMethod]
         public void Linq_Enumerables()
         {
-            TestExpr<User>(x => x.Phones.AsEnumerable().Select(p => p.Number).Any(p => p == 1), "(Phones[*] => @.Number) ANY = @p0", 1);
-
-
             // access array items
             TestExpr<User>(x => x.Phones, "$.Phones");
             TestExpr<User>(x => x.Phones.AsEnumerable(), "$.Phones[*]");
@@ -174,9 +171,10 @@ namespace LiteDB.Tests.Mapper
             // fixed position with filter expression
             TestExpr<User>(x => x.Phones.First(p => p.Number == 1), "FIRST($.Phones[(@.Number = @p0)])", 1);
 
-
-            // any/all
-            TestExpr<User>(x => x.Phones.AsEnumerable().Select(p => p.Number).Any(p => p == 1), "(Phones[*] => @.Number) ANY = @p0", 1);
+            // using any/all
+            TestExpr<User>(x => x.Phones.Select(p => p.Number).Any(p => p == 1), "(Phones => @.Number) ANY = @p0", 1);
+            TestExpr<User>(x => x.Phones.Select(p => p.Number.ToString()).Any(p => p.StartsWith("51")),
+                "(Phones => STRING(@.Number)) ANY LIKE (@p0 + '%')", "51");
 
         }
 
@@ -243,8 +241,8 @@ namespace LiteDB.Tests.Mapper
             TestExpr(x => string.Empty, "''");
 
             // string static methods
-            TestExpr<User>(x => string.IsNullOrEmpty(x.Name), "(Name = null OR LENGTH(Name) = 0)");
-            TestExpr<User>(x => string.IsNullOrWhiteSpace(x.Name), "(Name = null OR LENGTH(TRIM(Name)) = 0)");
+            TestExpr<User>(x => string.IsNullOrEmpty(x.Name), "(LENGTH(Name) = 0)");
+            TestExpr<User>(x => string.IsNullOrWhiteSpace(x.Name), "(LENGTH(TRIM(Name)) = 0)");
 
             // guid initialize/converter
             TestExpr<User>(x => Guid.NewGuid(), "GUID()");

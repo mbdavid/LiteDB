@@ -199,6 +199,8 @@ http://minisqlquery.codeplex.com/license
         <Key word="RPAD" />
         <Key word="SPLIT" />
         <Key word="FORMAT" />
+        <Key word="JOIN" />
+
       </KeyWords>
       
     </RuleSet>

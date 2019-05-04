@@ -110,16 +110,15 @@ namespace LiteDB
                 // if map stop full expression parse
                 if (op == "=>")
                 {
-                    if (values.Count == 1)
-                    {
-                        var mapExpr = ParseMap(first, tokenizer, source, root, current, parameters, isRoot);
+                    var last = values.Last();
 
-                        return mapExpr;
-                    }
-                    else
-                    {
-                        throw LiteException.UnexpectedToken("Invalid token for map function", tokenizer.Current);
-                    }
+                    var mapExpr = ParseMap(last, tokenizer, source, root, current, parameters, isRoot);
+
+                    // remove last item on stack to add only this current map (map is a single expression)
+                    values.RemoveAt(values.Count - 1);
+                    values.Add(mapExpr);
+
+                    continue;
                 }
 
                 var expr = ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot);
@@ -1039,13 +1038,13 @@ namespace LiteDB
         /// </summary>
         private static BsonExpression ParseMap(BsonExpression left, Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
-            // if left is a scalar expression, convert ino enumerable expression (avoid to use [*] all the time)
+            // if left is a scalar expression, convert into enumerable expression (avoid to use [*] all the time)
             if (left.IsScalar)
             {
                 left = ConvertToEnumerable(left);
             }
 
-            var right = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
+            var right = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Single, false);
 
             if (right == null) throw LiteException.UnexpectedToken(tokenizer.Current);
 

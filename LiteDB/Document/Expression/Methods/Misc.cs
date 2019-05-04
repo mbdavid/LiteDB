@@ -84,7 +84,7 @@ namespace LiteDB
             {
                 var doc = document.AsDocument;
 
-                return doc.RawId.IsEmpty ? null : doc.RawId.ToString();
+                return doc.RawId.IsEmpty ? BsonValue.Null : new BsonValue(doc.RawId.ToString());
             }
 
             return BsonValue.Null;
@@ -135,19 +135,6 @@ namespace LiteDB
             else if (value.IsArray) return value.AsArray.Count;
             else if (value.IsDocument) return value.AsDocument.Keys.Count;
             else if (value.IsNull) return 0;
-
-            return BsonValue.Null;
-        }
-
-        /// <summary>
-        /// Returns document position on disk: PageID : Index (RawId)
-        /// </summary>
-        public static BsonValue RAWID(BsonValue document)
-        {
-            if (document.IsDocument)
-            {
-                return document.AsDocument.RawId.ToString();
-            }
 
             return BsonValue.Null;
         }

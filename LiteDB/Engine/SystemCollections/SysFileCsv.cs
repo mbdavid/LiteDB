@@ -24,12 +24,12 @@ namespace LiteDB.Engine
             var encoding = GetOption(options, "encoding", "utf-8").AsString;
             var delimiter = GetOption(options, "delimiter", ",").AsString[0];
 
-            // read header (or first line as header
+            // read header (or first line as header)
             var header = new List<string>();
 
-            if (options.IsDocument && options.AsDocument["header"].IsArray)
+            if (options.IsDocument && options["header"].IsArray)
             {
-                header.AddRange(options.AsDocument["header"].AsArray.Select(x => x.AsString));
+                header.AddRange(options["header"].AsArray.Select(x => x.AsString));
             }
 
             using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
