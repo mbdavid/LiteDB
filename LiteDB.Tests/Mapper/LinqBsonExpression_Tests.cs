@@ -290,15 +290,6 @@ namespace LiteDB.Tests.Mapper
         }
 
         [TestMethod]
-        public void Linq_Sql_Methods()
-        {
-            // extensions methods aggregation (can change name)
-            //** TestExpr<User>(x => Sql.Sum(x.Phones.Items().Number), "SUM(Phones[*].Number)");
-            //** TestExpr<User>(x => Sql.Max(x.Phones.Items()), "MAX(Phones[*])");
-            //** TestExpr<User>(x => Sql.Count(x.Phones.Items().Number), "COUNT(Phones[*].Number)");
-        }
-
-        [TestMethod]
         public void Linq_New_Instance()
         {
             // new class
@@ -345,24 +336,19 @@ namespace LiteDB.Tests.Mapper
         [TestMethod]
         public void Linq_Complex_Expressions()
         {
-            // 'CityName': $.Address.City.CityName, 
-            // 'Cnt': COUNT(IIF(STRING($.Phones[@.Type = @p0].Number) = @p1, @p2, $.Name)), 
-            // 'List': ARRAY($.Phones[*].Number + $.Phones[@.Prefix > $.Salary].Number)
-            /*
             TestExpr<User>(x => new
             {
-                x.Address.City.CityName,
-                Cnt = Sql.Count(x.Phones.Items(z => z.Type == PhoneType.Landline).Number.ToString() == "555" ? MyMethod() : x.Name),
-                List = Sql.ToList(x.Phones.Items().Number + x.Phones.Items(z => z.Prefix > x.Salary).Number)
+                CityName = x.Address.City.CityName,
+                Count = x.Phones.Where(p => p.Type == PhoneType.Landline).Count(),
+                List = x.Phones.Where(p => p.Number > x.Salary).Select(p => p.Number).ToArray()
             },
             @"
             {
                 CityName: $.Address.City.CityName,
-                Cnt: COUNT(IIF((STRING($.Phones[(@.Type = @p0)].Number) = @p1), @p2, $.Name)),
-                List: ARRAY(($.Phones[*].Number + $.Phones[(@.Prefix > $.Salary)].Number))    
+                Count: COUNT($.Phones[(@.Type = @p0)]),
+                List: ARRAY(($.Phones[(@.Number > $.Salary)] => @.Number))
             }", 
-            (int)PhoneType.Landline, "555", MyMethod());
-            */
+            (int)PhoneType.Landline);
         }
 
         [TestMethod]
@@ -383,6 +369,22 @@ namespace LiteDB.Tests.Mapper
 
             // in creation new class
             TestExpr<User>(x => new { x.DomainName }, "{ DomainName: $.USER_DOMAIN_NAME }");
+        }
+
+        [TestMethod]
+        public void Linq_Use_Enumerable_As_Root()
+        {
+            // when root parameter is IEnumerable, root symbol must be *
+            TestExpr<IEnumerable<User>>(x => x.Count(), "COUNT(*)");
+            TestExpr<IEnumerable<User>>(x => x.Sum(u => u.Id), "SUM(* => @._id)");
+
+            //**
+            //** TestExpr<IEnumerable<User>>(x => new
+            //** {
+            //**     year = x.First().CreatedOn.Year,
+            //**     sum = x.Sum(u => u.Salary)
+            //** }, "{ 'year': YEAR(*[0].CreatedOn), 'sum': SUM(@ => @.Salary) }");
+
         }
 
         #region Test helper

@@ -32,7 +32,8 @@ namespace LiteDB
         private readonly BsonMapper _mapper;
         private readonly BsonDocument _parameters = new BsonDocument();
 
-        private string rootParameter = null;
+        private string _rootParameter = null;
+        private string _rootSymbol = "$";
         private int _paramIndex = 0;
 
         private readonly StringBuilder _builder = new StringBuilder();
@@ -89,9 +90,15 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            if (rootParameter == null) rootParameter = node.Name;
+            if (_rootParameter == null)
+            {
+                _rootParameter = node.Name;
 
-            _builder.Append(node.Name == rootParameter ? "$" : "@");
+                // if root parameter is IEnumerable use root symbol as "*" (source)
+                _rootSymbol = typeof(IEnumerable).IsAssignableFrom(node.Type) ? "*" : "$";
+            }
+
+            _builder.Append(node.Name == _rootParameter ? _rootSymbol : "@");
 
             return base.VisitParameter(node);
         }
