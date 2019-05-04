@@ -21,6 +21,7 @@ namespace LiteDB.Demo
             Console.WriteLine("LITE DB v5");
             Console.WriteLine("===========================================================");
 
+
             var json = "{a:1, nome: 'Jose', arr: [1, 2, 3, 4], items: [ { id:1, precos: [10,20] }, { id:2, precos:[40] } ]}";
             //var json = "{id: 1, nomes:['jose','maria','carlos']}";
 
