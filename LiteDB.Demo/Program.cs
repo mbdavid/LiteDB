@@ -21,30 +21,33 @@ namespace LiteDB.Demo
             Console.WriteLine("LITE DB v5");
             Console.WriteLine("===========================================================");
 
+            var rnd = new Random();
 
-            var json = "{a:1, nome: 'Jose', arr: [1, 2, 3, 4], items: [ { id:1, precos: [10,20] }, { id:2, precos:[40] } ]}";
-            //var json = "{id: 1, nomes:['jose','maria','carlos']}";
+            //var list = Enumerable.Range(0, 1_000_000).Select(x => new KeyValuePair<BsonValue, PageAddress>(rnd.Next(0, 100_000), PageAddress.Empty));
+            var list = Enumerable.Range(0, 1_000_000).Select(x => new KeyValuePair<BsonValue, PageAddress>(
+                (Guid.NewGuid().ToString("n") + Guid.NewGuid().ToString("n"))
+                .Substring(0, rnd.Next(5, 64)), PageAddress.Empty));
 
-            var doc = JsonSerializer.Deserialize(json).AsDocument;
+            var sw = new Stopwatch();
+            sw.Start();
+            //
+            //list.OrderBy(x => x.Key).Count();
+            //
+            //sw.Stop();
+            //Console.WriteLine("Elapsed (linq): " + sw.ElapsedMilliseconds + " ms");
+            //sw.Restart();
 
-            var source = new List<BsonDocument>
+            using (var s = new MergeSortService(100 * 8192, false))
             {
-                JsonSerializer.Deserialize("{id: 1, nomes:['jose','maria','carlos']}").AsDocument,
-                JsonSerializer.Deserialize("{id: 2, nomes:['maria']}").AsDocument,
-                JsonSerializer.Deserialize("{id: 3, nomes:['jose','maria']}").AsDocument,
-                JsonSerializer.Deserialize("{id: 4, nomes:['carlos']}").AsDocument,
-            };
+                var result = s.Sort(list, Query.Ascending).Count();
+            
+                //s.Sort(list, Query.Ascending).ToList().ForEach(x => Console.WriteLine(x.Key.AsString + ";"));
+            }
 
-            var e = BsonExpression.Create("$.items[*].id  any = 4");
+            sw.Stop();
+            Console.WriteLine("Elapsed (merge): " + sw.ElapsedMilliseconds + " ms");
 
-            var result = e.Execute(doc).ToArray();
-
-            //e.Parameters["aa"] = 1234;
-
-            //var s = e.ExecuteScalar(doc);
-            //var r = e.Execute(doc).ToArray();
-
-            //Console.WriteLine(r);
+            
 
             Console.WriteLine("===========================================================");
             Console.WriteLine("End");

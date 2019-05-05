@@ -238,6 +238,8 @@ namespace LiteDB
         /// </summary>
         public static void WriteIndexKey(this BufferSlice buffer, BsonValue value, int offset)
         {
+            ENSURE(value.GetBytesCount(false) < 255, "index key must have less than 255 bytes");
+
             buffer[offset++] = (byte)value.Type;
 
             switch (value.Type)

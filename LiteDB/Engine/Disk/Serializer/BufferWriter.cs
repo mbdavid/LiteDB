@@ -18,8 +18,6 @@ namespace LiteDB.Engine
 
         private bool _isEOF = false;
 
-        private byte[] _tempBuffer = new byte[16]; // re-usable array
-
         /// <summary>
         /// Current global cursor position
         /// </summary>
@@ -231,9 +229,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                toBytes(value, _tempBuffer, 0);
+                var buffer = BufferPool.Rent(size);
 
-                this.Write(_tempBuffer, 0, size);
+                toBytes(value, buffer, 0);
+
+                this.Write(buffer, 0, size);
+
+                BufferPool.Return(buffer);
             }
         }
 
@@ -289,9 +291,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                value.ToByteArray(_tempBuffer, 0);
+                var buffer = BufferPool.Rent(12);
 
-                this.Write(_tempBuffer, 0, 12);
+                value.ToByteArray(buffer, 0);
+
+                this.Write(buffer, 0, 12);
+
+                BufferPool.Return(buffer);
             }
         }
 
