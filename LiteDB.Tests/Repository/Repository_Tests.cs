@@ -92,6 +92,20 @@ namespace LiteDB.Tests.Repository
 
                 Assert.AreEqual(c2.CustomerName, r3.CustomerName);
 
+                // SingleOrDefault by id 
+                try
+                {
+                    db.Query<RCustomer>().SingleById(123456);
+                    Assert.Fail("SingleById should have thrown.");
+                }
+                catch (InvalidOperationException)
+                {
+                    // Sequence contains more than one element
+                }
+                var rNull = db.Query<RCustomer>().SingleOrDefaultById(123456);
+                Assert.IsNull(rNull);
+
+
                 // get second
                 var r4 = db.Query<ROrder>()
                     .Include(x => x.Products)
