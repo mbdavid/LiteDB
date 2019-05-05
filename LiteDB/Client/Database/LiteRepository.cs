@@ -155,7 +155,7 @@ namespace LiteDB
         /// <summary>
         /// Returns new instance of LiteQueryable that provides all method to query any entity inside collection. Use fluent API to apply filter/includes an than run any execute command, like ToList() or First()
         /// </summary>
-        public ILiteQueryableWithIncludes<T> Query<T>(string collectionName = null)
+        public ILiteQueryable<T> Query<T>(string collectionName = null)
         {
             return _db.GetCollection<T>(collectionName).Query();
         }

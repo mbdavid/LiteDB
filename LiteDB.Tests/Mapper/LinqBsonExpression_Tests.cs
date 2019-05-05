@@ -357,7 +357,6 @@ namespace LiteDB.Tests.Mapper
             TestExpr<BsonValue>(x => x["name"].AsString, "$.name");
             TestExpr<BsonValue>(x => x["first"]["name"], "$.first.name");
             TestExpr<BsonValue>(x => x["arr"][0]["demo"], "$.arr[0].demo");
-            //** TestExpr<BsonValue>(x => x["phones"].AsArray.Items(z => z["type"] == 1)["number"], "$.phones[(type = @p0)].number", 1);
             TestExpr<BsonValue>(x => x["age"] == 1, "($.age = @p0)", 1);
         }
 
@@ -377,14 +376,12 @@ namespace LiteDB.Tests.Mapper
             // when root parameter is IEnumerable, root symbol must be *
             TestExpr<IEnumerable<User>>(x => x.Count(), "COUNT(*)");
             TestExpr<IEnumerable<User>>(x => x.Sum(u => u.Id), "SUM(* => @._id)");
-
-            //**
-            //** TestExpr<IEnumerable<User>>(x => new
-            //** {
-            //**     year = x.First().CreatedOn.Year,
-            //**     sum = x.Sum(u => u.Salary)
-            //** }, "{ 'year': YEAR(*[0].CreatedOn), 'sum': SUM(@ => @.Salary) }");
-
+            
+            //**TestExpr<IEnumerable<User>>(x => new
+            //**{
+            //**    year = x.Select(p => p.CreatedOn.Year).First(),
+            //**    sum = x.Sum(u => u.Salary)
+            //**}, "{ 'year': FIRST((@ => YEAR(@.CreatedOn))), 'sum': SUM(@ => @.Salary) }");
         }
 
         #region Test helper
