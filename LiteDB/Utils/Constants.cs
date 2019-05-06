@@ -75,6 +75,11 @@ namespace LiteDB
         public const int VIRTUAL_INDEX_MAX_CACHE = 2000;
 
         /// <summary>
+        /// Define how many bytes each merge sort container will be created
+        /// </summary>
+        public const int CONTAINER_SORT_SIZE = 100 * PAGE_SIZE;
+
+        /// <summary>
         /// Database header parameter: USERVERSION
         /// </summary>
         public const string DB_PARAM_USERVERSION = "USERVERSION";

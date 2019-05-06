@@ -17,7 +17,7 @@ namespace LiteDB.Engine
     /// Service to implement External MergeSort, in disk, to run ORDER BY command.
     /// [ThreadSafe]
     /// </summary>
-    public class MergeSortService : IDisposable
+    internal class MergeSortService : IDisposable
     {
         private readonly IStreamFactory _factory;
         private readonly ConcurrentQueue<long> _freePositions = new ConcurrentQueue<long>();
@@ -28,12 +28,11 @@ namespace LiteDB.Engine
 
         private long _lastContainerPosition = 0;
 
-        public MergeSortService(/*IStreamFactory factory, */int containerSize, bool utcDate)
+        public MergeSortService(IStreamFactory factory, int containerSize, bool utcDate)
         {
             ENSURE(containerSize % PAGE_SIZE == 0, "size must be PAGE_SIZE multiple");
 
-            //_factory = factory;
-            _factory = new FileStreamFactory(@"c:\temp\_sort-data.db", false);
+            _factory = factory;
             _containerSize = containerSize;
             _utcDate = utcDate;
         }

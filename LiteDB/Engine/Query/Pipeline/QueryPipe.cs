@@ -9,8 +9,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class QueryPipe : BasePipe
     {
-        public QueryPipe(TransactionService transaction, IDocumentLookup loader, bool utcDate)
-            : base(transaction, loader, utcDate)
+        public QueryPipe(TransactionService transaction, IDocumentLookup loader, MergeSortService sorter, bool utcDate)
+            : base(transaction, loader, sorter, utcDate)
         {
         }
 

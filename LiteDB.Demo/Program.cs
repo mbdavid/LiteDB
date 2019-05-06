@@ -37,12 +37,12 @@ namespace LiteDB.Demo
             //Console.WriteLine("Elapsed (linq): " + sw.ElapsedMilliseconds + " ms");
             //sw.Restart();
 
-            using (var s = new MergeSortService(100 * 8192, false))
-            {
-                //var result = s.Sort(list, Query.Ascending).Count();
-            
-                s.Sort(list, Query.Descending).ToList().ForEach(x => Console.Write(x.Key.AsInt32 + ";"));
-            }
+            // using (var s = new MergeSortService(100 * 8192, false))
+            // {
+            //     //var result = s.Sort(list, Query.Ascending).Count();
+            // 
+            //     s.Sort(list, Query.Descending).ToList().ForEach(x => Console.Write(x.Key.AsInt32 + ";"));
+            // }
 
             sw.Stop();
             Console.WriteLine("\nElapsed (merge): " + sw.ElapsedMilliseconds + " ms");

@@ -34,16 +34,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get log filename based on original filename. Append "-log" on data filename
-        /// </summary>
-        public static string GetLogFile(string filename)
-        {
-            if (string.IsNullOrEmpty(filename)) return ":memory:";
-
-            return GetTempFile(filename, "-log", false);
-        }
-
-        /// <summary>
         /// Try execute some action while has lock exception
         /// </summary>
         public static bool TryExec(Action action, TimeSpan timeout)

@@ -97,15 +97,15 @@ namespace LiteDB.Engine
         /// <summary>
         /// Select corrent pipe
         /// </summary>
-        public BasePipe GetPipe(TransactionService transaction, Snapshot snapshot, bool utcDate)
+        public BasePipe GetPipe(TransactionService transaction, Snapshot snapshot, MergeSortService sorter, bool utcDate)
         {
             if (this.GroupBy == null)
             {
-                return new QueryPipe(transaction, this.GetLookup(snapshot, utcDate), utcDate);
+                return new QueryPipe(transaction, this.GetLookup(snapshot, utcDate), sorter, utcDate);
             }
             else
             {
-                return new GroupByPipe(transaction, this.GetLookup(snapshot, utcDate), utcDate);
+                return new GroupByPipe(transaction, this.GetLookup(snapshot, utcDate), sorter, utcDate);
             }
         }
 

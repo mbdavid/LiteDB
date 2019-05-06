@@ -22,9 +22,14 @@ namespace LiteDB.Engine
         public Stream DataStream { get; set; } = null;
 
         /// <summary>
-        /// Get/Set custom stream to be used as log file. If is null, use a new TempStream (for TempStrem datafile) or MemoryStrema (for MemoryStream datafile)
+        /// Get/Set custom stream to be used as log file. If is null, use a new TempStream (for TempStrem datafile) or MemoryStream (for MemoryStream datafile)
         /// </summary>
         public Stream LogStream { get; set; } = null;
+
+        /// <summary>
+        /// Get/Set custom stream to be used as temp file. If is null, will create new FileStreamFactory with "-tmp" on name
+        /// </summary>
+        public Stream TempStream { get; set; } = null;
 
         /// <summary>
         /// Full path or relative path from DLL directory. Can use ':temp:' for temp database or ':memory:' for in-memory database. (default: null)
@@ -76,39 +81,81 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new IStreamFactory for datafile
         /// </summary>
-        internal IStreamFactory CreateDataFactory() => this.CreateStreamFactory(true);
+        internal IStreamFactory CreateDataFactory()
+        {
+            if (this.DataStream != null)
+            {
+                return new StreamFactory(this.DataStream);
+            }
+            else if (this.Filename == ":memory:")
+            {
+                return new StreamFactory(new MemoryStream());
+            }
+            else if (this.Filename == ":temp:")
+            {
+                return new StreamFactory(new TempStream());
+            }
+            else if (!string.IsNullOrEmpty(this.Filename))
+            {
+                return new FileStreamFactory(this.Filename, this.ReadOnly);
+            }
+
+            throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");
+        }
 
         /// <summary>
         /// Create new IStreamFactory for logfile
         /// </summary>
-        internal IStreamFactory CreateLogFactory() => this.CreateStreamFactory(false);
-
-        /// <summary>
-        /// Get Data/Log Stream factory
-        /// </summary>
-        private IStreamFactory CreateStreamFactory(bool dataFile)
+        internal IStreamFactory CreateLogFactory()
         {
-            var stream = dataFile ? this.DataStream : this.LogStream;
-            var filename = dataFile ? this.Filename : FileHelper.GetLogFile(this.Filename);
-
-            if (stream != null)
+            if (this.LogStream != null)
             {
-                return new StreamFactory(stream);
+                return new StreamFactory(this.LogStream);
             }
-            else if (filename == ":memory:")
+            else if (this.Filename == ":memory:")
             {
                 return new StreamFactory(new MemoryStream());
             }
-            else if (filename == ":temp:")
+            else if (this.Filename == ":temp:")
             {
                 return new StreamFactory(new TempStream());
             }
-            else if (!string.IsNullOrEmpty(filename))
+            else if (!string.IsNullOrEmpty(this.Filename))
             {
-                return new FileStreamFactory(filename, this.ReadOnly);
+                var logName = FileHelper.GetTempFile(this.Filename, "-log", false);
+
+                return new FileStreamFactory(logName, this.ReadOnly);
             }
 
-            throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");
+            return new StreamFactory(new MemoryStream());
+        }
+
+        /// <summary>
+        /// Create new IStreamFactory for temporary file (sort)
+        /// </summary>
+        /// <returns></returns>
+        internal IStreamFactory CreateTempFactory()
+        {
+            if (this.TempStream != null)
+            {
+                return new StreamFactory(this.TempStream);
+            }
+            else if (this.Filename == ":memory:")
+            {
+                return new StreamFactory(new MemoryStream());
+            }
+            else if (this.Filename == ":temp:")
+            {
+                return new StreamFactory(new TempStream());
+            }
+            else if (string.IsNullOrEmpty(this.Filename))
+            {
+                var tempName = FileHelper.GetTempFile(this.Filename, "-tmp", false);
+
+                return new FileStreamFactory(tempName, false);
+            }
+
+            return new StreamFactory(new TempStream());
         }
     }
 }

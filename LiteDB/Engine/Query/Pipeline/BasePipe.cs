@@ -14,12 +14,14 @@ namespace LiteDB.Engine
 
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLookup _lookup;
+        protected readonly MergeSortService _sorter;
         protected readonly bool _utcDate;
 
-        public BasePipe(TransactionService transaction, IDocumentLookup lookup, bool utcDate)
+        public BasePipe(TransactionService transaction, IDocumentLookup lookup, MergeSortService sorter, bool utcDate)
         {
             _transaction = transaction;
             _lookup = lookup;
+            _sorter = sorter;
             _utcDate = utcDate;
         }
 
@@ -122,26 +124,16 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// ORDER BY: Sort documents according orderby expression and order asc/desc - can be optimzed with offset/limit
+        /// ORDER BY: Sort documents according orderby expression and order asc/desc
         /// </summary>
         protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
         {
-            // in-memory sort (will consume lot of memory and will be done rigth only in RC version)
-            var query = source
-                .Select(x => new { key = expr.ExecuteScalar(x), rawId = x.RawId });
+            var keyValues = source
+                .Select(x => new KeyValuePair<BsonValue, PageAddress>(expr.ExecuteScalar(x), x.RawId));
 
-            if (order == Query.Ascending)
+            foreach (var keyValue in _sorter.Sort(keyValues, order).Skip(offset).Take(limit))
             {
-                query = query.OrderBy(x => x.key);
-            }
-            else if (order == Query.Descending)
-            {
-                query = query.OrderByDescending(x => x.key);
-            }
-
-            foreach (var rec in query.Skip(offset).Take(limit))
-            {
-                var doc = _lookup.Load(rec.rawId);
+                var doc = _lookup.Load(keyValue.Value);
 
                 yield return doc;
             }
