@@ -207,7 +207,7 @@ namespace LiteDB.Engine
                 options = null;
             }
 
-            return name + (options == null ? "" : "(" + options.ToString() + ")");
+            return name + (options == null ? "" : "(" + JsonSerializer.Serialize(options) + ")");
         }
     }
 }

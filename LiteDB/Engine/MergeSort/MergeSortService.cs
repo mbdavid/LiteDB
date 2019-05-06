@@ -35,6 +35,9 @@ namespace LiteDB.Engine
             _factory = factory;
             _containerSize = containerSize;
             _utcDate = utcDate;
+
+            // delete file if exists
+            if (factory.Exists()) factory.Delete();
         }
 
         /// <summary>
