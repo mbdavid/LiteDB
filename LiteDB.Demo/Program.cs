@@ -23,10 +23,10 @@ namespace LiteDB.Demo
 
             var rnd = new Random();
 
-            //var list = Enumerable.Range(0, 1_000_000).Select(x => new KeyValuePair<BsonValue, PageAddress>(rnd.Next(0, 100_000), PageAddress.Empty));
-            var list = Enumerable.Range(0, 1_000_000).Select(x => new KeyValuePair<BsonValue, PageAddress>(
-                (Guid.NewGuid().ToString("n") + Guid.NewGuid().ToString("n"))
-                .Substring(0, rnd.Next(5, 64)), PageAddress.Empty));
+            var list = Enumerable.Range(0, 10_000).Select(x => new KeyValuePair<BsonValue, PageAddress>(rnd.Next(0, 1000), PageAddress.Empty));
+            //var list = Enumerable.Range(0, 1_000).Select(x => new KeyValuePair<BsonValue, PageAddress>(
+            //    (Guid.NewGuid().ToString("n") + Guid.NewGuid().ToString("n"))
+            //    .Substring(0, rnd.Next(5, 64)), PageAddress.Empty));
 
             var sw = new Stopwatch();
             sw.Start();
@@ -39,13 +39,13 @@ namespace LiteDB.Demo
 
             using (var s = new MergeSortService(100 * 8192, false))
             {
-                var result = s.Sort(list, Query.Ascending).Count();
+                //var result = s.Sort(list, Query.Ascending).Count();
             
-                //s.Sort(list, Query.Ascending).ToList().ForEach(x => Console.WriteLine(x.Key.AsString + ";"));
+                s.Sort(list, Query.Descending).ToList().ForEach(x => Console.Write(x.Key.AsInt32 + ";"));
             }
 
             sw.Stop();
-            Console.WriteLine("Elapsed (merge): " + sw.ElapsedMilliseconds + " ms");
+            Console.WriteLine("\nElapsed (merge): " + sw.ElapsedMilliseconds + " ms");
 
             
 

@@ -406,12 +406,14 @@ namespace LiteDB.Engine
                 case BsonType.Int64: return this.ReadInt64();
                 case BsonType.Double: return this.ReadDouble();
                 case BsonType.Decimal: return this.ReadDecimal();
-
+                
+                // Use +1 byte only for length
                 case BsonType.String: return this.ReadString(this.ReadByte());
 
                 case BsonType.Document: return this.ReadDocument(null);
                 case BsonType.Array: return this.ReadArray();
 
+                // Use +1 byte only for length
                 case BsonType.Binary: return this.ReadBytes(this.ReadByte());
                 case BsonType.ObjectId: return this.ReadObjectId();
                 case BsonType.Guid: return this.ReadGuid();

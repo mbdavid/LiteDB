@@ -15,10 +15,7 @@ namespace LiteDB.Engine
 {
     internal class MergeSortContainer : IDisposable
     {
-        private readonly long _position;
         private readonly int _size;
-        private readonly Stream _stream;
-        private readonly bool _utcDate;
 
         private int _remaining = 0;
         private bool _isEOF = false;
@@ -37,15 +34,17 @@ namespace LiteDB.Engine
         /// </summary>
         public KeyValuePair<BsonValue, PageAddress> Current;
 
-        public MergeSortContainer(long position, int size, Stream stream, bool utcDate)
+        /// <summary>
+        /// Get container disk position
+        /// </summary>
+        public long Position { get; set; } = -1;
+
+        public MergeSortContainer(int size)
         {
-            _position = position;
             _size = size;
-            _stream = stream;
-            _utcDate = utcDate;
         }
 
-        public void Store(IEnumerable<KeyValuePair<BsonValue, PageAddress>> items, int order, BufferSlice buffer)
+        public void Insert(IEnumerable<KeyValuePair<BsonValue, PageAddress>> items, int order, BufferSlice buffer)
         {
             var query = order == Query.Ascending ?
                 items.OrderBy(x => x.Key) : items.OrderByDescending(x => x.Key);
@@ -54,11 +53,9 @@ namespace LiteDB.Engine
 
             foreach(var item in query)
             {
-                ENSURE(item.Key.GetBytesCount(false) < 255, "sort key must be less than 255 bytes");
-
                 buffer.WriteIndexKey(item.Key, offset);
 
-                offset += item.Key.GetBytesCount(false) + 1 + (item.Key.IsString || item.Key.IsBinary ? 1 : 0); // +1 to DataType
+                offset += GetKeyLength(item.Key);
 
                 buffer.Write(item.Value, offset);
 
@@ -66,13 +63,21 @@ namespace LiteDB.Engine
 
                 _remaining++;
             }
+        }
 
-            // store in disk
-            _stream.Position = _position;
-            _stream.Write(buffer.Array, 0, _size);
-
-            // prepare reader
-            _reader = new BufferReader(this.GetSource(), _utcDate);
+        /// <summary>
+        /// Initialize reader based on Stream (if data was persisted in disk) or Buffer (if all data fit in only 1 container)
+        /// </summary>
+        public void InitializeReader(Stream stream, BufferSlice buffer, bool utcDate)
+        {
+            if (stream != null)
+            {
+                _reader = new BufferReader(this.GetSourceFromStream(stream), utcDate);
+            }
+            else
+            {
+                _reader = new BufferReader(buffer, utcDate);
+            }
 
             this.MoveNext();
         }
@@ -96,18 +101,18 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get 8k page inside container file
+        /// Get 8k buffer slices inside file container
         /// </summary>
-        private IEnumerable<BufferSlice> GetSource()
+        private IEnumerable<BufferSlice> GetSourceFromStream(Stream stream)
         {
             var bytes = BufferPool.Rent(PAGE_SIZE);
             var buffer = new BufferSlice(bytes, 0, PAGE_SIZE);
 
             while (_readPosition < _size)
             {
-                _stream.Position = _position + _readPosition;
+                stream.Position = this.Position + _readPosition;
 
-                _stream.Read(bytes, 0, PAGE_SIZE);
+                stream.Read(bytes, 0, PAGE_SIZE);
 
                 _readPosition += PAGE_SIZE;
 
@@ -115,6 +120,13 @@ namespace LiteDB.Engine
             }
 
             BufferPool.Return(bytes);
+        }
+
+        public static int GetKeyLength(BsonValue key)
+        {
+            return 1 + // DataType
+                key.GetBytesCount(false) + // BsonValue
+                (key.IsString || key.IsBinary ? 1 : 0); // Key Length
         }
 
         public void Dispose()
