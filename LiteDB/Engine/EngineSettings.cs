@@ -148,7 +148,7 @@ namespace LiteDB.Engine
             {
                 return new StreamFactory(new TempStream());
             }
-            else if (string.IsNullOrEmpty(this.Filename))
+            else if (!string.IsNullOrEmpty(this.Filename))
             {
                 var tempName = FileHelper.GetTempFile(this.Filename, "-tmp", false);
 

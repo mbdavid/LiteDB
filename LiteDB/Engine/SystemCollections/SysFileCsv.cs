@@ -34,7 +34,7 @@ namespace LiteDB.Engine
 
             using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                using (var reader = new StreamReader(fs))
+                using (var reader = new StreamReader(fs, Encoding.GetEncoding(encoding)))
                 {
                     // if not header declared, use first line as header fields
                     if (header.Count == 0)

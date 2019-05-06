@@ -10,8 +10,8 @@ namespace LiteDB.Engine
         /// <summary>
         /// [ EXPLAIN ]
         ///    SELECT {selectExpr}
-        ///    [ INTO {newcollection|FILE} [ : {autoId} ] ]
-        ///    [ FROM {collection|FILE} ]
+        ///    [ INTO {newcollection|$function} [ : {autoId} ] ]
+        ///    [ FROM {collection|$function} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
         ///   [ WHERE {filterExpr} ]
         ///   [ GROUP BY {groupByExpr} ]

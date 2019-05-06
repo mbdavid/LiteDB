@@ -18,10 +18,11 @@ namespace LiteDB.Engine
         public override IEnumerable<BsonDocument> Input(LiteEngine engine, BsonValue options)
         {
             var filename = GetOption(options, "filename", null).AsString ?? throw new LiteException(0, $"Collection ${this.Name} requires string as 'filename' or a document field 'filename'");
+            var encoding = GetOption(options, "encoding", "utf-8").AsString;
 
             using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                using (var reader = new StreamReader(fs))
+                using (var reader = new StreamReader(fs, Encoding.GetEncoding(encoding)))
                 {
                     var json = new JsonReader(reader);
 

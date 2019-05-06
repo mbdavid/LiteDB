@@ -13,43 +13,20 @@ using LiteDB.Engine;
 namespace LiteDB.Tests.Query
 {
     [TestClass]
-    public class Where_Tests
+    public class Where_Tests : Person_Tests
     {
-        private Person[] local;
-
-        private LiteDatabase db;
-        private LiteCollection<Person> collection;
-
-        [TestInitialize]
-        public void Init()
-        {
-            local = DataGen.Person(1, 1000).ToArray();
-
-            db = new LiteDatabase(new MemoryStream());
-            collection = db.GetCollection<Person>();
-
-            collection.Insert(local);
-            collection.EnsureIndex(x => x.Age);
-        }
-
-        [TestCleanup]
-        public void CleanUp()
-        {
-            db.Dispose();
-        }
-
         [TestMethod]
         public void Query_Where_With_Parameter()
         {
             var r0 = local
-                .Where(x => x.State == "FL")
+                .Where(x => x.Address.State == "FL")
                 .ToArray();
 
             var r1 = collection.Query()
-                .Where(x => x.State == "FL")
+                .Where(x => x.Address.State == "FL")
                 .ToArray();
 
-            Util.Compare(r0, r1);
+            AssertEx.ArrayEqual(r0, r1, true);
         }
 
         [TestMethod]
@@ -65,7 +42,7 @@ namespace LiteDB.Tests.Query
                 .Where(x => x.Name.StartsWith("Ge"))
                 .ToArray();
 
-            Util.Compare(r0, r1, true);
+            AssertEx.ArrayEqual(r0, r1, true);
         }
 
         [TestMethod]
@@ -79,7 +56,7 @@ namespace LiteDB.Tests.Query
                 .Where("age = 25 AND active = true")
                 .ToArray();
 
-            Util.Compare(r0, r1, true);
+            AssertEx.ArrayEqual(r0, r1, true);
         }
 
         [TestMethod]
@@ -97,8 +74,8 @@ namespace LiteDB.Tests.Query
                 .Where("age IN [25, 26, 27]")
                 .ToArray();
 
-            Util.Compare(r0, r1, true);
-            Util.Compare(r1, r2, true);
+            AssertEx.ArrayEqual(r0, r1, true);
+            AssertEx.ArrayEqual(r1, r2, true);
         }
     }
 }

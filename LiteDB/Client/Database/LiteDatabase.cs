@@ -60,8 +60,7 @@ namespace LiteDB
             {
                 var settings = new EngineSettings
                 {
-                    DataStream = stream,
-                    LogStream = new MemoryStream()
+                    DataStream = stream
                 };
 
                 return new LiteEngine(settings);

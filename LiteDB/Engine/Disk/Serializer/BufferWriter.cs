@@ -426,7 +426,7 @@ namespace LiteDB.Engine
                     this.WriteCString(key);
                     var date = value.AsDateTime;
                     // do not convert to UTC min/max date values - #19
-                    var utc = (date == DateTime.MinValue || date == DateTime.MaxValue) ? date : date.ToUtc();
+                    var utc = (date == DateTime.MinValue || date == DateTime.MaxValue) ? date : date.ToUniversalTime();
                     var ts = utc - BsonValue.UnixEpoch;
                     this.Write(Convert.ToInt64(ts.TotalMilliseconds));
                     break;

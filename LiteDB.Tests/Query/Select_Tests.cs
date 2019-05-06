@@ -13,65 +13,44 @@ using LiteDB.Engine;
 namespace LiteDB.Tests.Query
 {
     [TestClass]
-    public class Select_Tests
+    public class Select_Tests : Person_Tests
     {
-        private Zip[] local;
-
-        private LiteDatabase db;
-        private LiteCollection<Zip> collection;
-
-        [TestInitialize]
-        public void Init()
-        {
-            local = DataGen.Zip().Take(20).ToArray();
-
-            db = new LiteDatabase(new MemoryStream());
-            collection = db.GetCollection<Zip>();
-
-            collection.EnsureIndex("city");
-            collection.Insert(local);
-        }
-
-        [TestCleanup]
-        public void CleanUp()
-        {
-            db.Dispose();
-        }
-
         [TestMethod]
         public void Query_Select_Key_Only()
         {
+            collection.EnsureIndex(x => x.Address.City);
+
             // must orderBy mem data because index will be sorted
             var r0 = local
-                .Select(x => x.City)
-                .OrderBy(x => x)
+                .OrderBy(x => x.Address.City)
+                .Select(x => x.Address.City)
                 .ToArray();
 
             // this query will not deserialize document, using only index key
             var r1 = collection.Query()
-                .Select(x => x.City)
-                .OrderBy(x => x)
+                .OrderBy(x => x.Address.City)
+                .Select(x => x.Address.City)
                 .ToArray();
 
-            Assert.IsTrue(r0.SequenceEqual(r1));
+            CollectionAssert.AreEqual(r0, r1);
         }
 
         [TestMethod]
         public void Query_Select_New_Document()
         {
             var r0 = local
-                .Select(x => new { city = x.City.ToUpper(), lat = x.Loc[0], lng = x.Loc[1] })
+                .Select(x => new { city = x.Address.City.ToUpper(), phone0 = x.Phones[0], address = new Address { Street = x.Name } })
                 .ToArray();
 
             var r1 = collection.Query()
-                .Select(x => new { city = x.City.ToUpper(), lat = x.Loc[0], lng = x.Loc[1] })
+                .Select(x => new { city = x.Address.City.ToUpper(), phone0 = x.Phones[0], address = new Address { Street = x.Name } })
                 .ToArray();
 
-            foreach(var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
+            foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
             {
                 Assert.AreEqual(r.left.city, r.right.city);
-                Assert.AreEqual(r.left.lat, r.right.lat);
-                Assert.AreEqual(r.left.lng, r.right.lng);
+                Assert.AreEqual(r.left.phone0, r.right.phone0);
+                Assert.AreEqual(r.left.address.Street, r.right.address.Street);
             }
         }
     }

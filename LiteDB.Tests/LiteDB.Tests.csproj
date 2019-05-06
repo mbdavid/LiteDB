@@ -17,17 +17,18 @@
 
   <ItemGroup>
     <Compile Remove="Engine\Index_Tests.cs" />
+    <Compile Remove="Query\Aggregate_Tests.cs" />
+    <Compile Remove="Query\GroupBy_Tests.cs" />
+    <Compile Remove="Query\Include_Tests.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Sql\Scripts\All_Sql.sql" />
     <None Remove="Utils\Json\person.json" />
     <None Remove="Utils\Json\zip.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Sql\Scripts\All_Sql.sql" />
-    <EmbeddedResource Include="Utils\Json\person.json" />
+    <EmbeddedResource Include="Query\Model\person.json" />
     <EmbeddedResource Include="Utils\Json\zip.json" />
   </ItemGroup>
 
