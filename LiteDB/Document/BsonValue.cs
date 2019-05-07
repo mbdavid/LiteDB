@@ -474,8 +474,8 @@ namespace LiteDB
                 case BsonType.Decimal: return this.AsDecimal.CompareTo(other.AsDecimal);
 
                 case BsonType.String: return string.Compare(this.AsString, other.AsString);
-                    //**var d = string.CompareOrdinal(this.AsString, other.AsString);
-                    //**return d < 0 ? -1 : d > 0 ? +1 : 0;
+                    //var d = string.CompareOrdinal(this.AsString, other.AsString);
+                    //return d < 0 ? -1 : d > 0 ? +1 : 0;
 
                 case BsonType.Document: return this.AsDocument.CompareTo(other);
                 case BsonType.Array: return this.AsArray.CompareTo(other);

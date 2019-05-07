@@ -23,8 +23,6 @@ namespace LiteDB.Engine
 
         private readonly WalIndexService _walIndex;
 
-        private readonly MergeSortService _sorter;
-
         private HeaderPage _header;
 
         // immutable settings
@@ -38,9 +36,9 @@ namespace LiteDB.Engine
         internal EngineSettings Settings => _settings;
 
         /// <summary>
-        /// Expose merge sort engine to internal use
+        /// Get internal temporaty disk to be used in sort operation - will create a file "-tmp" when needed (used more than 1 container (800kb) of data to sort)
         /// </summary>
-        internal MergeSortService Sorter => _sorter;
+        internal TempDisk TempDisk { get; }
 
         #endregion
 
@@ -102,8 +100,8 @@ namespace LiteDB.Engine
                     _walIndex.RestoreIndex(ref _header);
                 }
 
-                // initialize sorter
-                _sorter = new MergeSortService(settings.CreateTempFactory(), CONTAINER_SORT_SIZE , settings.UtcDate);
+                // initialize temp disk
+                this.TempDisk = new TempDisk(settings.CreateTempFactory(), CONTAINER_SORT_SIZE, settings.UtcDate);
 
                 // register system collections
                 this.InitializeSystemCollections();
@@ -149,7 +147,7 @@ namespace LiteDB.Engine
                 _disk?.Dispose();
 
                 // delete sort temp file
-                _sorter?.Dispose();
+                this.TempDisk?.Dispose();
 
                 // dispose lockers
                 _locker?.Dispose();

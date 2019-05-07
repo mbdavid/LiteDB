@@ -14,14 +14,14 @@ namespace LiteDB.Engine
 
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLookup _lookup;
-        protected readonly MergeSortService _sorter;
+        protected readonly TempDisk _tempDisk;
         protected readonly bool _utcDate;
 
-        public BasePipe(TransactionService transaction, IDocumentLookup lookup, MergeSortService sorter, bool utcDate)
+        public BasePipe(TransactionService transaction, IDocumentLookup lookup, TempDisk tempDisk, bool utcDate)
         {
             _transaction = transaction;
             _lookup = lookup;
-            _sorter = sorter;
+            _tempDisk = tempDisk;
             _utcDate = utcDate;
         }
 
@@ -131,12 +131,22 @@ namespace LiteDB.Engine
             var keyValues = source
                 .Select(x => new KeyValuePair<BsonValue, PageAddress>(expr.ExecuteScalar(x), x.RawId));
 
-            foreach (var keyValue in _sorter.Sort(keyValues, order).Skip(offset).Take(limit))
+            using (var sorter = new SortService(_tempDisk, order))
             {
-                var doc = _lookup.Load(keyValue.Value);
+                sorter.Insert(keyValues);
 
-                yield return doc;
+                LOG($"sort {sorter.Count} keys in {sorter.Containers.Count} containers", "SORT");
+
+                var result = sorter.Sort().Skip(offset).Take(limit);
+
+                foreach (var keyValue in result)
+                {
+                    var doc = _lookup.Load(keyValue.Value);
+
+                    yield return doc;
+                }
             }
+
         }
 
         public void Dispose()

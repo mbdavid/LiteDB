@@ -9,8 +9,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class GroupByPipe : BasePipe
     {
-        public GroupByPipe(TransactionService transaction, IDocumentLookup loader, MergeSortService sorter, bool utcDate)
-            : base(transaction, loader, sorter, utcDate)
+        public GroupByPipe(TransactionService transaction, IDocumentLookup loader, TempDisk tempDisk, bool utcDate)
+            : base(transaction, loader, tempDisk, utcDate)
         {
         }
 
@@ -142,14 +142,6 @@ namespace LiteDB.Engine
                     yield return new BsonDocument { [defaultName] = value };
                 }
             }
-        }
-
-        /// <summary>
-        /// Bool inside a class to be used as "ref" parameter on ienumerable
-        /// </summary>
-        private class Done
-        {
-            public bool Running = false;
         }
     }
 }

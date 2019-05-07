@@ -13,11 +13,12 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
-    internal class MergeSortContainer : IDisposable
+    internal class SortContainer : IDisposable
     {
         private readonly int _size;
 
         private int _remaining = 0;
+        private int _count = 0;
         private bool _isEOF = false;
 
         private int _readPosition = 0;
@@ -39,7 +40,12 @@ namespace LiteDB.Engine
         /// </summary>
         public long Position { get; set; } = -1;
 
-        public MergeSortContainer(int size)
+        /// <summary>
+        /// Get how many keyValues this container contains
+        /// </summary>
+        public int Count => _count;
+
+        public SortContainer(int size)
         {
             _size = size;
         }
@@ -63,6 +69,8 @@ namespace LiteDB.Engine
 
                 _remaining++;
             }
+
+            _count = _remaining;
         }
 
         /// <summary>
