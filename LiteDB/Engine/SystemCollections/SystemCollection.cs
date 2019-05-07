@@ -53,7 +53,7 @@ namespace LiteDB.Engine
         {
             if (options.IsString)
             {
-                return options.IsString ? options : null;
+                return defaultValue == null ? options : defaultValue;
             }
             else if (options.IsDocument)
             {

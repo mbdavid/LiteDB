@@ -38,11 +38,6 @@ namespace LiteDB.Engine
         private readonly ConcurrentDictionary<long, PageBuffer> _readable = new ConcurrentDictionary<long, PageBuffer>();
 
         /// <summary>
-        /// Locker for multi extend()
-        /// </summary>
-        private readonly ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
-
-        /// <summary>
         /// Get how many extends was made in this store
         /// </summary>
         private int _extends = 0;
@@ -69,9 +64,6 @@ namespace LiteDB.Engine
             // get dict key based on position/origin
             var key = this.GetReadableKey(position, origin);
 
-            // enter extend-locker in read mode
-            _locker.TryEnterReadLock(-1);
-
             // try get from _readble dict or create new
             var page = _readable.GetOrAdd(key, (k) =>
             {
@@ -92,9 +84,6 @@ namespace LiteDB.Engine
 
             // increment share counter
             Interlocked.Increment(ref page.ShareCounter);
-
-            // release extend-locker only after increment share counter
-            _locker.ExitReadLock();
 
             return page;
         }
@@ -128,9 +117,6 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer GetWritablePage(long position, FileOrigin origin, Action<long, BufferSlice> factory)
         {
-            // enter extend-locker in read mode
-            _locker.TryEnterReadLock(-1);
-
             var key = this.GetReadableKey(position, origin);
 
             // write pages always contains a new buffer array
@@ -146,8 +132,6 @@ namespace LiteDB.Engine
                 factory(position, writable);
             }
 
-            _locker.ExitReadLock();
-
             return writable;
         }
 
@@ -156,14 +140,7 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer NewPage()
         {
-            // enter extend-locker in read mode
-            _locker.TryEnterReadLock(-1);
-
-            var page = this.NewPage(long.MaxValue, FileOrigin.None);
-
-            _locker.ExitReadLock();
-
-            return page;
+            return this.NewPage(long.MaxValue, FileOrigin.None);
         }
 
         /// <summary>
@@ -205,8 +182,6 @@ namespace LiteDB.Engine
 
             var key = this.GetReadableKey(page.Position, page.Origin);
 
-            _locker.TryEnterReadLock(-1);
-
             // set page as not in use
             page.ShareCounter = 0;
 
@@ -217,8 +192,6 @@ namespace LiteDB.Engine
             {
                 page.ShareCounter = BUFFER_WRITABLE;
             }
-
-            _locker.ExitReadLock();
 
             return added;
         }
@@ -309,19 +282,12 @@ namespace LiteDB.Engine
             else
             {
                 // ensure only 1 single thread call extend method
-                lock(_locker)
+                lock(_free)
                 {
                     if (_free.Count > 0) return this.GetFreePage();
 
-                    // current thread already in read mode - should exit before enter in write mode
-                    _locker.ExitReadLock();
-
                     this.Extend();
-
-                    // back to read mode
-                    _locker.EnterReadLock();
                 }
-
 
                 return this.GetFreePage();
             }
@@ -338,11 +304,6 @@ namespace LiteDB.Engine
             // if this count are larger than MEMORY_SEGMENT_SIZE, re-use all this pages
             if (emptyShareCounter > _segmentSize)
             {
-                // now, this thread needs enter in write lock
-                // after now, there is not INCREASE ShareCount in any page
-                // and no list-move with ShareCounter = 0
-                _locker.TryEnterWriteLock(-1);
-
                 // get all readable pages that can return to _free (slow way)
                 // sort by timestamp used (set as free oldest first)
                 var readables = _readable
@@ -358,16 +319,28 @@ namespace LiteDB.Engine
                     var removed = _readable.TryRemove(key, out var page);
 
                     ENSURE(removed, "page should be in readable list before move to free list");
-                    ENSURE(page.ShareCounter == 0, "page should be not in use by anyone");
 
-                    // clean controls
-                    page.Position = long.MaxValue;
-                    page.Origin = FileOrigin.None;
+                    // if removed page was changed between make array and now, must add back to readable list
+                    if (page.ShareCounter > 0)
+                    {
+                        // but wait: between last "remove" and now, another thread can added this page
+                        if (!_readable.TryAdd(key, page))
+                        {
+                            // this is a terrible situation, to avoid memory corruption I will throw expcetion for now
+                            throw new LiteException(0, "MemoryCache: removed in-use memory page. This situation has no way to fix (yet). Throwing exception to avoid database corruption. No other thread can read/write from database now.");
+                        }
+                    }
+                    else
+                    {
+                        ENSURE(page.ShareCounter == 0, "page should be not in use by anyone");
 
-                    _free.Enqueue(page);
+                        // clean controls
+                        page.Position = long.MaxValue;
+                        page.Origin = FileOrigin.None;
+
+                        _free.Enqueue(page);
+                    }
                 }
-
-                _locker.ExitWriteLock();
 
                 LOG($"re-using cache pages (flushing {_free.Count} pages)", "CACHE");
             }
