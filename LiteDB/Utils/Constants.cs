@@ -2,10 +2,11 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 #if DEBUG
 [assembly: InternalsVisibleTo("LiteDB.Tests")]
-#endif 
+#endif
 
 namespace LiteDB
 {
@@ -91,7 +92,9 @@ namespace LiteDB
         [Conditional("DEBUG")]
         public static void LOG(string message, string category)
         {
-            Debug.WriteLine(message, category);
+            var threadID = Thread.CurrentThread.ManagedThreadId;
+
+            Debug.WriteLine(message, threadID + "|" + category);
         }
 
         /// <summary>

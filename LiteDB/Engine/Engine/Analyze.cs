@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -11,14 +12,11 @@ namespace LiteDB.Engine
         /// </summary>
         public int Analyze(string[] collections)
         {
-            throw new NotImplementedException();
-            /*
-            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Analyze", TransactionState.Active);
+            // collection analyze is possible only in exclusive transaction for this
+            if (_locker.IsInTransaction) throw LiteException.AlreadyExistsTransaction();
 
-            var cols = collections == null || collections.Length == 0 ? _header.Collections.Keys.ToArray() : collections;
+            var cols = collections == null || collections.Length == 0 ? _header.GetCollections().Select(x => x.Key).ToArray() : collections;
             var count = 0;
-
-            _log.Info("analyze collections " + string.Join("', '", collections));
 
             foreach (var collection in cols)
             {
@@ -36,7 +34,7 @@ namespace LiteDB.Engine
                     if (snapshot.CollectionPage == null) return 0;
 
                     var indexer = new IndexService(snapshot);
-                    var indexes = snapshot.CollectionPage.GetIndexes(true).ToArray();
+                    var indexes = snapshot.CollectionPage.GetCollectionIndexes().ToArray();
 
                     foreach (var index in indexes)
                     {
@@ -56,23 +54,26 @@ namespace LiteDB.Engine
                     }
 
                     // after do all analyze, update snapshot to write mode
-                    snapshot.WriteMode(false);
+                    snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
 
-                    foreach (var index in snapshot.CollectionPage.GetIndexes(true))
+                    foreach (var name in indexes.Select(x => x.Name))
                     {
+                        // will get index and set as dirty
+                        var index = snapshot.CollectionPage.UpdateCollectionIndex(name);
+
                         index.KeyCount = keyCount[index.Name];
                         index.UniqueKeyCount = keyUniqueCount[index.Name];
                     }
 
                     snapshot.CollectionPage.LastAnalyzed = DateTime.Now;
 
-                    snapshot.SetDirty(snapshot.CollectionPage);
+                    snapshot.CollectionPage.IsDirty = true;
 
                     return ++count;
                 });
             }
 
-            return count;*/
+            return count;
         }
     }
 }

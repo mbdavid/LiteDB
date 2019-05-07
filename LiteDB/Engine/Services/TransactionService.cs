@@ -272,6 +272,8 @@ namespace LiteDB.Engine
         {
             if (_disposed) return false;
 
+            LOG($"commit transaction ({_transPages.TransactionSize} pages)", "TRANSACTION");
+
             if (_mode == LockMode.Write || _transPages.HeaderChanged)
             {
                 // persist all dirty page as commit mode (mark last page as IsConfirm)
@@ -301,6 +303,8 @@ namespace LiteDB.Engine
         public bool Rollback()
         {
             if (_disposed) return false;
+
+            LOG($"rollback transaction ({_transPages.TransactionSize} pages with {_transPages.NewPages.Count} returns)", "TRANSACTION");
 
             // if transaction contains new pages, must return to database in another transaction
             if (_transPages.NewPages.Count > 0)
