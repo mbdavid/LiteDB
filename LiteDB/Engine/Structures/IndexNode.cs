@@ -145,6 +145,7 @@ namespace LiteDB.Engine
             }
 
             // persist in buffer read only data
+            segment[P_SLOT] = slot;
             segment[P_LEVEL] = level;
             segment.Write(dataBlock, P_DATA_BLOCK);
             segment.WriteIndexKey(key, P_KEY);

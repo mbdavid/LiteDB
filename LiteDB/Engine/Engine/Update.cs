@@ -11,7 +11,6 @@ namespace LiteDB.Engine
         /// </summary>
         public int Update(string collection, IEnumerable<BsonDocument> docs)
         {
-            throw new NotImplementedException(); /*
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
@@ -34,7 +33,7 @@ namespace LiteDB.Engine
                 }
 
                 return count;
-            });*/
+            });
         }
 
         /// <summary>
@@ -42,7 +41,6 @@ namespace LiteDB.Engine
         /// </summary>
         public int UpdateMany(string collection, BsonExpression extend, BsonExpression predicate)
         {
-            throw new NotImplementedException(); /*
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (extend == null) throw new ArgumentNullException(nameof(extend));
 
@@ -52,7 +50,7 @@ namespace LiteDB.Engine
 
                 IEnumerable<BsonDocument> ExtendDocs()
                 {
-                    var q = new QueryDefinition { Select = "$", ForUpdate = true };
+                    var q = new Query { Select = "$", ForUpdate = true };
 
                     if (predicate != null)
                     {
@@ -66,30 +64,30 @@ namespace LiteDB.Engine
                             var doc = reader.Current.AsDocument;
 
                             var id = doc["_id"];
-                            var result = extend.Execute(doc, true).First();
+                            var result = extend.ExecuteScalar(doc);
 
                             if (!result.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(extend));
 
-                            var output = doc.Extend(result.AsDocument);
+                            // copy extend result document into current document
+                            result.AsDocument.CopyTo(doc);
 
                             // be sure result document will contain same _id as current doc
-                            if (output.TryGetValue("_id", out var newId))
+                            if (doc.TryGetValue("_id", out var newId))
                             {
                                 if (newId != id) throw LiteException.InvalidUpdateField("_id");
                             }
                             else
                             {
-                                output["_id"] = id;
+                                doc["_id"] = id;
                             }
 
-                            yield return output;
+                            yield return doc;
                         }
                     }
                 }
-            });*/
+            });
         }
 
-        /*
         /// <summary>
         /// Implement internal update document
         /// </summary>
@@ -109,52 +107,51 @@ namespace LiteDB.Engine
             
             // if not found document, no updates
             if (pkNode == null) return false;
-
-            // serialize document in bytes
-            var stream = _bsonWriter.Serialize(doc);
             
             // update data storage
-            var dataBlock = data.Update(col, pkNode.DataBlock, stream);
+            data.Update(col, pkNode.DataBlock, doc);
             
-            // get all non-pk index nodes from this data block
-            var allNodes = indexer.GetNodeList(pkNode, false).ToArray();
-            
-            // delete/insert indexes - do not touch on PK
-            foreach (var index in col.GetIndexes(false))
+            // get all current non-pk index nodes from this data block (slot, key, nodePosition)
+            var oldKeys = indexer.GetNodeList(pkNode.NextNode)
+                .Select(x => new Tuple<byte, BsonValue, PageAddress>(x.Slot, x.Key, x.Position))
+                .ToArray();
+
+            // build a list of all new key index keys
+            var newKeys = new List<Tuple<byte, BsonValue, string>>();
+
+            foreach (var index in col.GetCollectionIndexes().Where(x => x.Name != "_id"))
             {
-                var expr = BsonExpression.Create(index.Expression);
-            
                 // getting all keys do check
-                var keys = expr.Execute(doc).ToArray();
-            
-                // get a list of to delete nodes (using ToArray to resolve now)
-                var toDelete = allNodes
-                    .Where(x => x.Slot == index.Slot && !keys.Any(k => k == x.Key))
-                    .ToArray();
-            
-                // get a list of to insert nodes (using ToArray to resolve now)
-                var toInsert = keys
-                    .Where(x => !allNodes.Any(k => k.Slot == index.Slot && k.Key == x))
-                    .ToArray();
-            
-                // delete changed index nodes
-                foreach (var node in toDelete)
+                var keys = index.BsonExpr.Execute(doc);
+
+                foreach (var key in keys)
                 {
-                    indexer.Delete(index, node.Position);
-                }
-            
-                // insert new nodes
-                foreach (var key in toInsert)
-                {
-                    // and add a new one
-                    var node = indexer.AddNode(index, key, pkNode);
-            
-                    // link my node to data block
-                    node.DataBlock = dataBlock.Position;
+                    newKeys.Add(new Tuple<byte, BsonValue, string>(index.Slot, key, index.Name));
                 }
             }
 
+            // get a list of all nodes that are in oldKeys but not in newKeys (must delete)
+            var toDelete = new HashSet<PageAddress>(oldKeys
+                .Where(x => newKeys.Any(n => n.Item1 == x.Item1 && n.Item2 == x.Item2) == false)
+                .Select(x => x.Item3));
+
+            // get a list of all keys that are not in oldKeys (must insert)
+            var toInsert = newKeys
+                .Where(x => oldKeys.Any(o => o.Item1 == x.Item1 && o.Item2 == x.Item2) == false)
+                .ToArray();
+
+            // delete nodes and return last keeped node in list
+            var last = indexer.DeleteList(pkNode.Position, toDelete);
+
+            // now, insert all new nodes
+            foreach(var elem in toInsert)
+            {
+                var index = col.GetCollectionIndex(elem.Item3);
+
+                last = indexer.AddNode(index, elem.Item2, pkNode.DataBlock, last);
+            }
+
             return true;
-        }*/
+        }
     }
 }

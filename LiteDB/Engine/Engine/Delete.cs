@@ -34,7 +34,7 @@ namespace LiteDB.Engine
                     if (pkNode == null) continue;
 
                     // delete all nodes (start in pk node)
-                    indexer.Delete(pkNode.Position);
+                    indexer.DeleteAll(pkNode.Position);
 
                     // remove object data
                     data.Delete(pkNode.DataBlock);

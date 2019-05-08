@@ -159,21 +159,17 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Gets all node list from any index node (go forward and backward)
+        /// Gets all node list from passed nodeAddress (fordward only)
         /// </summary>
-        public IEnumerable<IndexNode> GetNodeList(IndexNode pkNode, bool includeInitial)
+        public IEnumerable<IndexNode> GetNodeList(PageAddress nodeAddress)
         {
-            var next = pkNode.NextNode;
+            var node = this.GetNode(nodeAddress);
 
-            // returns some initial node
-            if (includeInitial) yield return pkNode;
-
-            // go forward
-            while (next.IsEmpty == false)
+            while (node != null)
             {
-                var n = this.GetNode(next);
-                next = n.NextNode;
-                yield return n;
+                yield return node;
+
+                node = this.GetNode(node.NextNode);
             }
         }
 
@@ -194,42 +190,77 @@ namespace LiteDB.Engine
         /// <summary>
         /// Deletes all indexes nodes from pkNode
         /// </summary>
-        public void Delete(PageAddress pkAddress)
+        public void DeleteAll(PageAddress pkAddress)
         {
-            var next = pkAddress;
+            var node = this.GetNode(pkAddress);
 
-            // get all nodes
-            while(next != PageAddress.Empty)
+            while (node != null)
             {
-                var node = this.GetNode(next);
-
-                for (int i = node.Level - 1; i >= 0; i--)
-                {
-                    // get previous and next nodes (between my deleted node)
-                    var prevNode = this.GetNode(node.Prev[i]);
-                    var nextNode = this.GetNode(node.Next[i]);
-
-                    if (prevNode != null)
-                    {
-                        prevNode.SetNext((byte)i, node.Next[i]);
-                    }
-                    if (nextNode != null)
-                    {
-                        nextNode.SetPrev((byte)i, node.Prev[i]);
-                    }
-                }
-
-                // get current slot position in free list
-                var slot = BasePage.FreeIndexSlot(node.Page.FreeBytes);
-
-                node.Page.DeleteIndexNode(node.Position.Index);
-
-                // update (if needed) slot position
-                _snapshot.AddOrRemoveFreeList(node.Page, slot);
+                this.DeleteSingleNode(node);
 
                 // move to next node
-                next = node.NextNode;
+                node = this.GetNode(node.NextNode);
             }
+        }
+
+        /// <summary>
+        /// Deletes all list of nodes in toDelete - fix single linked-list and return last non-delete node
+        /// </summary>
+        public IndexNode DeleteList(PageAddress pkAddress, HashSet<PageAddress> toDelete)
+        {
+            var last = this.GetNode(pkAddress);
+            var node = this.GetNode(last.NextNode); // starts in first node after PK
+
+            while (node != null)
+            {
+                if (toDelete.Contains(node.Position))
+                {
+                    this.DeleteSingleNode(node);
+
+                    // fix single-linked list from last non-delete delete
+                    last.SetNextNode(node.NextNode);
+                }
+                else
+                {
+                    // last non-delete node to set "NextNode"
+                    last = node;
+                }
+
+                // move to next node
+                node = this.GetNode(node.NextNode);
+            }
+
+            return last;
+        }
+
+        /// <summary>
+        /// Delete a single index node - fix tree double-linked list levels
+        /// </summary>
+        private void DeleteSingleNode(IndexNode node)
+        {
+            for (int i = node.Level - 1; i >= 0; i--)
+            {
+                // get previous and next nodes (between my deleted node)
+                var prevNode = this.GetNode(node.Prev[i]);
+                var nextNode = this.GetNode(node.Next[i]);
+
+                if (prevNode != null)
+                {
+                    prevNode.SetNext((byte)i, node.Next[i]);
+                }
+                if (nextNode != null)
+                {
+                    nextNode.SetPrev((byte)i, node.Prev[i]);
+                }
+            }
+
+            // get current slot position in free list
+            var slot = BasePage.FreeIndexSlot(node.Page.FreeBytes);
+
+            node.Page.DeleteIndexNode(node.Position.Index);
+
+            // update (if needed) slot position
+            _snapshot.AddOrRemoveFreeList(node.Page, slot);
         }
 
         /// <summary>

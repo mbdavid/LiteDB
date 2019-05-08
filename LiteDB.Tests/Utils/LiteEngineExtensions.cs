@@ -15,5 +15,10 @@ namespace LiteDB.Tests
         {
             return engine.Insert(collection, new BsonDocument[] { doc }, autoId);
         }
+
+        public static int Update(this LiteEngine engine, string collection, BsonDocument doc)
+        {
+            return engine.Update(collection, new BsonDocument[] { doc });
+        }
     }
 }
