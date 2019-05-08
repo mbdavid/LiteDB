@@ -29,7 +29,7 @@ namespace LiteDB.Engine
             var token = _tokenizer.LookAhead();
 
             // read required SELECT <expr> and convert into single expression
-            query.Select = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Document);
+            query.Select = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.SelectDocument);
 
             // read FROM|INTO
             var from = _tokenizer.ReadToken();

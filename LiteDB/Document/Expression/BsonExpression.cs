@@ -357,7 +357,8 @@ namespace LiteDB
             var expr =
                 mode == BsonExpressionParserMode.Full ? BsonExpressionParser.ParseFullExpression(tokenizer, source, root, current, parameters, isRoot) :
                 mode == BsonExpressionParserMode.Single ? BsonExpressionParser.ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot) :
-                BsonExpressionParser.ParseDocumentBuilder(tokenizer, source, root, current, parameters);
+                mode == BsonExpressionParserMode.SelectDocument ? BsonExpressionParser.ParseSelectDocumentBuilder(tokenizer, source, root, current, parameters) :
+                BsonExpressionParser.ParseUpdateDocumentBuilder(tokenizer, source, root, current, parameters);
 
             // before compile try find in cache if this source already has in cache (already compiled)
             var cached = _cache.GetOrAdd(expr.Source, (s) =>
