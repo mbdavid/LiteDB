@@ -180,6 +180,10 @@ http://minisqlquery.codeplex.com/license
         <Key word="JSON" />
         <Key word="EXTEND" />
         <Key word="ITEMS" />
+        <Key word="UNION" />
+        <Key word="EXCEPT" />
+        <Key word="CONCAT" />
+        <Key word="DISTINCT" />
         <Key word="RAW_ID" />
         <Key word="KEYS" />
         <Key word="IIF" />
