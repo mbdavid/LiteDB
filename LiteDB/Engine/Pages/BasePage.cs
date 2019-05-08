@@ -282,16 +282,16 @@ namespace LiteDB.Engine
         {
             index = this.GetFreeIndex();
 
-            return this.Insert(bytesLength, index);
+            return this.Insert(bytesLength, index, false);
         }
 
         /// <summary>
         /// Get a new page segment for this length content using fixed index
         /// </summary>
-        private BufferSlice Insert(ushort bytesLength, byte index)
+        private BufferSlice Insert(ushort bytesLength, byte index, bool overwrite)
         {
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
-            ENSURE(this.FreeBytes >= bytesLength + SLOT_SIZE, "length must be always lower than current free space");
+            ENSURE(this.FreeBytes >= bytesLength + (overwrite ? 0 : SLOT_SIZE), "length must be always lower than current free space");
             ENSURE(index != byte.MaxValue, "index shloud be a valid number (0-254)");
             ENSURE(this.ItemsCount < byte.MaxValue, "page full");
 
@@ -482,7 +482,7 @@ namespace LiteDB.Engine
                 _buffer.Write((ushort)0, lengthAddr);
 
                 // call insert
-                return this.Insert(bytesLength, index);
+                return this.Insert(bytesLength, index, true);
             }
         }
 
@@ -654,7 +654,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Checks if segment length has a valid value (used for DEBUG)
         /// </summary>
-        private bool IsValidLen(ushort length) => length > 0 && length < (PAGE_SIZE - PAGE_HEADER_SIZE - this.FooterSize);
+        private bool IsValidLen(ushort length) => length > 0 && length <= (PAGE_SIZE - PAGE_HEADER_SIZE - this.FooterSize);
 
         #endregion
 

@@ -27,8 +27,61 @@ namespace LiteDB.Tests.Engine
                 doc["name"] = "John";
 
                 db.Update("col1", doc);
+            }
+        }
 
+        [TestMethod]
+        public void Update_ExtendBlocks()
+        {
+            using (var db = new LiteEngine())
+            {
+                var doc = new BsonDocument { ["_id"] = 1, ["d"] = new byte[1000] };
 
+                db.Insert("col1", doc);
+
+                // small (same page)
+                doc["d"] = new byte[300];
+
+                db.Update("col1", doc);
+
+                var page3 = db.GetPageLog(3);
+
+                Assert.AreEqual(7828, page3["freeBytes"].AsInt32);
+
+                // big (same page)
+                doc["d"] = new byte[2000];
+
+                db.Update("col1", doc);
+
+                page3 = db.GetPageLog(3);
+
+                Assert.AreEqual(6128, page3["freeBytes"].AsInt32);
+
+                // big (extend page)
+                doc["d"] = new byte[20000];
+
+                db.Update("col1", doc);
+
+                page3 = db.GetPageLog(3);
+                var page4 = db.GetPageLog(4);
+                var page5 = db.GetPageLog(5);
+
+                Assert.AreEqual(0, page3["freeBytes"].AsInt32);
+                Assert.AreEqual(0, page4["freeBytes"].AsInt32);
+                Assert.AreEqual(4428, page5["freeBytes"].AsInt32);
+
+                // small (shrink page)
+                doc["d"] = new byte[10000];
+
+                db.Update("col1", doc);
+
+                page3 = db.GetPageLog(3);
+                page4 = db.GetPageLog(4);
+                page5 = db.GetPageLog(5);
+
+                Assert.AreEqual(7828, page3["freeBytes"].AsInt32);
+                Assert.AreEqual(7828, page4["freeBytes"].AsInt32);
+                Assert.AreEqual("Empty", page5["pageType"].AsString);
             }
         }
     }

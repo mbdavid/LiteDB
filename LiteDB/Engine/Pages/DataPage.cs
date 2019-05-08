@@ -38,13 +38,13 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Insert new DataBlock. Use dataIndex as sequencial for large documents
+        /// Insert new DataBlock. Use extend to indicate document sequence (document are large than PAGE_SIZE)
         /// </summary>
-        public DataBlock InsertBlock(int bytesLength, byte dataIndex)
+        public DataBlock InsertBlock(int bytesLength, bool extend)
         {
             var segment = base.Insert((ushort)(bytesLength + DataBlock.DATA_BLOCK_FIXED_SIZE), out var index);
 
-            return new DataBlock(this, index, segment, dataIndex, PageAddress.Empty);
+            return new DataBlock(this, index, segment, extend, PageAddress.Empty);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace LiteDB.Engine
         {
             var segment = base.Update(currentBlock.Position.Index, (ushort)(bytesLength + DataBlock.DATA_BLOCK_FIXED_SIZE));
 
-            return new DataBlock(this, currentBlock.Position.Index, segment, currentBlock.DataIndex, currentBlock.NextBlock);
+            return new DataBlock(this, currentBlock.Position.Index, segment, currentBlock.Extend, currentBlock.NextBlock);
         }
 
         /// <summary>
@@ -66,18 +66,18 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get all block positions inside this page that are DataIndex = 0 (initial data block)
+        /// Get all block positions inside this page that are not extend blocks (initial data block)
         /// </summary>
-        public IEnumerable<PageAddress> GetBlocks(bool onlyRootBlock)
+        public IEnumerable<PageAddress> GetBlocks(bool onlyDataBlock)
         {
             foreach(var index in base.GetUsedIndexs())
             {
                 var slotPosition = BasePage.CalcPositionAddr(index);
                 var position = _buffer.ReadUInt16(slotPosition);
 
-                var dataIndex = _buffer[position + DataBlock.P_DATA_INDEX];
+                var extend = _buffer.ReadBool(position + DataBlock.P_EXTEND);
 
-                if (onlyRootBlock == false || dataIndex == 0)
+                if (onlyDataBlock == false || extend == false)
                 {
                     yield return new PageAddress(this.PageID, index);
                 }

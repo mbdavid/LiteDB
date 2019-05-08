@@ -36,16 +36,14 @@ namespace LiteDB.Engine
 
             IEnumerable<BufferSlice> source()
             {
-                byte dataIndex = 0;
+                var blockIndex = 0;
                 DataBlock lastBlock = null;
 
                 while (bytesLeft > 0)
                 {
                     var bytesToCopy = Math.Min(bytesLeft, MAX_DATA_BYTES_PER_PAGE);
                     var dataPage = _snapshot.GetFreePage<DataPage>(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE);
-                    var dataBlock = dataPage.InsertBlock(bytesToCopy, dataIndex);
-
-                    dataIndex++;
+                    var dataBlock = dataPage.InsertBlock(bytesToCopy, blockIndex++ > 0);
 
                     if (lastBlock != null)
                     {
@@ -79,99 +77,67 @@ namespace LiteDB.Engine
         /// </summary>
         public void Update(CollectionPage col, PageAddress blockAddress, BsonDocument doc)
         {
-            /*
             var bytesLeft = doc.GetBytesCount(true);
 
             if (bytesLeft > MAX_DOCUMENT_SIZE) throw new LiteException(0, "Document size exceed {0} limit", MAX_DOCUMENT_SIZE);
 
-            var updating = true;
-            byte dataIndex = 0;
+            DataBlock lastBlock = null;
+            var updateAddress = blockAddress;
 
-
-            IEnumerable<BufferSlice> source()
+            IEnumerable <BufferSlice> source()
             {
-                var dataPage = _snapshot.GetPage<DataPage>(blockAddress.PageID);
-                var currentBlock = dataPage.GetBlock(blockAddress.Index);
-                var bytesToCopy = Math.Min(bytesLeft, dataPage.FreeBytes + currentBlock.Buffer.Count);
-
-                yield return currentBlock.Buffer;
-
-                bytesLeft -= bytesToCopy;
-
-                var lastBlock = currentBlock;
-
-                // check for next page if use a single page only
-                if (currentBlock.NextBlock.IsEmpty == false)
-                {
-                    var nextPage = _snapshot.GetPage<DataPage>(currentBlock.NextBlock.PageID);
-
-                    if (nextPage.ItemsCount == 1 || nextPage.FreeBytes > bytesLeft)
-                    {
-                        updating = true;
-                    }
-                    else
-                    {
-
-                    }
-
-
-                }
-
+                var bytesToCopy = 0;
 
                 while (bytesLeft > 0)
                 {
-                    if (updating)
+                    // if last block contains new block sequence, continue updating
+                    if (updateAddress.IsEmpty == false)
                     {
+                        var dataPage = _snapshot.GetPage<DataPage>(updateAddress.PageID);
+                        var currentBlock = dataPage.GetBlock(updateAddress.Index);
 
-                        // get max bytes to copy
-                        bytesToCopy = Math.Min(bytesLeft, updatePage.FreeBytes + currentBlock.Buffer.Count);
+                        // try get full page size content
+                        bytesToCopy = Math.Min(bytesLeft, dataPage.FreeBytes + currentBlock.Buffer.Count);
 
-                        var updateBlock = updatePage.UpdateBlock(currentBlock, bytesToCopy);
+                        // get current free slot linked list
+                        var slot = BasePage.FreeIndexSlot(dataPage.FreeBytes);
 
-                        dataIndex++;
+                        var updateBlock = dataPage.UpdateBlock(currentBlock, bytesToCopy);
+
+                        _snapshot.AddOrRemoveFreeList(dataPage, slot);
 
                         yield return updateBlock.Buffer;
 
-                        //
-                        if (updateBlock.NextBlock.IsEmpty == false)
-                        updatePage = _snapshot.GetPage<DataPage>(updateBlock.NextBlock.PageID);
+                        lastBlock = updateBlock;
 
-                        // still using 
-                        if (updatePage.ItemsCount > 1)
-                        {
-                            // deleta todos e avisa que tem q inserir agora, caso contrario, continua usando o update
-
-                            updating = false;
-
-                            continue;
-                        }
+                        // go to next address (if extits)
+                        updateAddress = updateBlock.NextBlock;
                     }
-                    // if there is no more space to update in existing pages, use new pages
                     else
                     {
                         bytesToCopy = Math.Min(bytesLeft, MAX_DATA_BYTES_PER_PAGE);
-
                         var dataPage = _snapshot.GetFreePage<DataPage>(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE);
-                        var dataBlock = dataPage.InsertBlock(bytesToCopy, dataIndex);
-
-                        dataIndex++;
+                        var insertBlock = dataPage.InsertBlock(bytesToCopy, true);
 
                         if (lastBlock != null)
                         {
-                            lastBlock.SetNextBlock(dataBlock.Position);
+                            lastBlock.SetNextBlock(insertBlock.Position);
                         }
 
-                        yield return dataBlock.Buffer;
+                        yield return insertBlock.Buffer;
 
-                        lastBlock = dataBlock;
+                        lastBlock = insertBlock;
                     }
 
                     bytesLeft -= bytesToCopy;
                 }
 
-                // pode ser que seja necessário ainda excluir paginas, fique atento!
+                // old document was bigger than current, must delete extend blocks
+                if (lastBlock.NextBlock.IsEmpty == false)
+                {
+                    this.Delete(lastBlock.NextBlock);
+                }
             }
-
 
             // consume all source bytes to write BsonDocument direct into PageBuffer
             // must be fastest as possible
@@ -181,7 +147,6 @@ namespace LiteDB.Engine
                 w.WriteDocument(doc, false);
                 w.Consume();
             }
-            */
         }
 
         /// <summary>

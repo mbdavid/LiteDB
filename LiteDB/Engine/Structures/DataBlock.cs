@@ -11,7 +11,7 @@ namespace LiteDB.Engine
         public const int DATA_BLOCK_FIXED_SIZE = 1 + // DataIndex
                                                  PageAddress.SIZE; // NextBlock
 
-        public const int P_DATA_INDEX = 0; // 00-00 [byte]
+        public const int P_EXTEND = 0; // 00-00 [byte]
         public const int P_NEXT_BLOCK = 1; // 01-05 [pageAddress]
         public const int P_BUFFER = 6; // 06-EOF [byte[]]
 
@@ -24,9 +24,9 @@ namespace LiteDB.Engine
         public PageAddress Position { get; }
 
         /// <summary>
-        /// Data index block (single document can use 0-255 index blocks)
+        /// Indicate if this data block is first block (false) or extend block (true)
         /// </summary>
-        public byte DataIndex { get; }
+        public bool Extend { get; }
 
         /// <summary>
         /// If document need more than 1 block, use this link to next block
@@ -48,8 +48,8 @@ namespace LiteDB.Engine
 
             this.Position = new PageAddress(page.PageID, index);
 
-            // byte 00: DataIndex
-            this.DataIndex = segment[P_DATA_INDEX];
+            // byte 00: Extend
+            this.Extend = segment.ReadBool(P_EXTEND);
 
             // byte 01-05: NextBlock (PageID, Index)
             this.NextBlock = segment.ReadPageAddress(P_NEXT_BLOCK);
@@ -61,7 +61,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new DataBlock and fill into buffer
         /// </summary>
-        public DataBlock(DataPage page, byte index, BufferSlice segment, byte dataIndex, PageAddress nextBlock)
+        public DataBlock(DataPage page, byte index, BufferSlice segment, bool extend, PageAddress nextBlock)
         {
             _page = page;
             _segment = segment;
@@ -69,10 +69,10 @@ namespace LiteDB.Engine
             this.Position = new PageAddress(page.PageID, index);
 
             this.NextBlock = nextBlock;
-            this.DataIndex = dataIndex;
+            this.Extend = extend;
 
             // byte 00: Data Index
-            segment[P_DATA_INDEX] = dataIndex;
+            segment.Write(extend, P_EXTEND);
 
             // byte 01-05 (can be updated in "UpdateNextBlock")
             segment.Write(nextBlock, P_NEXT_BLOCK);
@@ -95,7 +95,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return $"Pos: [{this.Position}] - Seq: [{this.DataIndex}] - Next: [{this.NextBlock}] - Buffer: [{this.Buffer}]";
+            return $"Pos: [{this.Position}] - Ext: [{this.Extend}] - Next: [{this.NextBlock}] - Buffer: [{this.Buffer}]";
         }
     }
 }

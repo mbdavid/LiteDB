@@ -12,7 +12,7 @@ namespace LiteDB
 
         public static bool ReadBool(this BufferSlice buffer, int offset)
         {
-            return buffer.Array[buffer.Offset + offset] == 1;
+            return buffer.Array[buffer.Offset + offset] != 0;
         }
 
         public static byte ReadByte(this BufferSlice buffer, int offset)
