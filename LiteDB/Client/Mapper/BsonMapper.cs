@@ -158,7 +158,17 @@ namespace LiteDB
         {
             var visitor = new LinqExpressionVisitor(this);
 
-            return visitor.Resolve(predicate, typeof(K) == typeof(bool));
+            return visitor.Resolve(predicate, typeof(K) == typeof(bool), false);
+        }
+
+        /// <summary>
+        /// Resolve LINQ expression into BsonExpression
+        /// </summary>
+        public BsonExpression GetExtendExpression<T, K>(Expression<Func<T, K>> predicate)
+        {
+            var visitor = new LinqExpressionVisitor(this);
+
+            return visitor.Resolve(predicate, false, true);
         }
 
         #endregion

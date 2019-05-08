@@ -327,7 +327,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Parse a document builder syntax used in UPDATE statment: {field0} = {expr0}, ....
+        /// Parse a document builder syntax used in UPDATE statment: 
+        /// {key0} = {expr0}, .... will be converted into EXTEND($, { key: [expr], ... })
+        /// {key: value} ... return return a new document
         /// </summary>
         public static BsonExpression ParseUpdateDocumentBuilder(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters)
         {
@@ -348,7 +350,7 @@ namespace LiteDB
             var useSource = false;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            src.Append("{");
+            src.Append("EXTEND($,{");
 
             while (!tokenizer.CheckEOF())
             {
@@ -383,19 +385,24 @@ namespace LiteDB
                 else break;
             }
 
-            src.Append("}");
+            src.Append("})");
 
             var arrKeys = Expression.NewArrayInit(typeof(string), keys.ToArray());
             var arrValues = Expression.NewArrayInit(typeof(BsonValue), values.ToArray());
 
+            // create linq expression for "EXTEND($, { doc })"
+            var docExpr = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues });
+            var rootExpr = Expression.Call(_memberPathMethod, root, Expression.Constant("")) as Expression;
+            var extendExpr = Expression.Call(BsonExpression.GetMethod("EXTEND", 2), rootExpr, docExpr); 
+
             return new BsonExpression
             {
-                Type = BsonExpressionType.Document,
+                Type = BsonExpressionType.Call,
                 IsImmutable = isImmutable,
                 UseSource = useSource,
                 IsScalar = true,
                 Fields = fields,
-                Expression = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues }),
+                Expression = extendExpr,
                 Source = src.ToString()
             };
 

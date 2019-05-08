@@ -37,18 +37,18 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Update documents using extend expression to extend found document using predicate
+        /// Update documents using transform expression (must return a scalar/document value) using predicate as filter
         /// </summary>
-        public int UpdateMany(string collection, BsonExpression extend, BsonExpression predicate)
+        public int UpdateMany(string collection, BsonExpression transform, BsonExpression predicate)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
-            if (extend == null) throw new ArgumentNullException(nameof(extend));
+            if (transform == null) throw new ArgumentNullException(nameof(transform));
 
-            return this.AutoTransaction(transaction =>
+            return this.AutoTransaction((Func<TransactionService, int>)(transaction =>
             {
-                return this.Update(collection, ExtendDocs());
+                return this.Update(collection, transformDocs());
 
-                IEnumerable<BsonDocument> ExtendDocs()
+                IEnumerable<BsonDocument> transformDocs()
                 {
                     var q = new Query { Select = "$", ForUpdate = true };
 
@@ -64,28 +64,27 @@ namespace LiteDB.Engine
                             var doc = reader.Current.AsDocument;
 
                             var id = doc["_id"];
-                            var result = extend.ExecuteScalar(doc);
+                            var value = transform.ExecuteScalar(doc);
 
-                            if (!result.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(extend));
+                            if (!value.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(transform));
 
-                            // copy extend result document into current document
-                            result.AsDocument.CopyTo(doc);
+                            var result = value.AsDocument;
 
                             // be sure result document will contain same _id as current doc
-                            if (doc.TryGetValue("_id", out var newId))
+                            if (result.TryGetValue("_id", out var newId))
                             {
                                 if (newId != id) throw LiteException.InvalidUpdateField("_id");
                             }
                             else
                             {
-                                doc["_id"] = id;
+                                result["_id"] = id;
                             }
 
-                            yield return doc;
+                            yield return result;
                         }
                     }
                 }
-            });
+            }));
         }
 
         /// <summary>

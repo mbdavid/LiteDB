@@ -44,11 +44,15 @@ namespace LiteDB
             _mapper = mapper;
         }
 
-        public BsonExpression Resolve(Expression expr, bool predicate)
+        public BsonExpression Resolve(Expression expr, bool predicate, bool extend)
         {
+            if (extend) _builder.Append("EXTEND($,");
+
             this.Visit(expr);
 
             ENSURE(_nodes.Count == 0, "node stack must be empty when finish expression resolve");
+
+            if (extend) _builder.Append(")");
 
             var expression = _builder.ToString();
 
