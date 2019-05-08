@@ -62,7 +62,7 @@ namespace LiteDB
 
             foreach (var item in items)
             {
-                this.Add(item);
+                this.Add(item ?? BsonValue.Null);
             }
         }
 

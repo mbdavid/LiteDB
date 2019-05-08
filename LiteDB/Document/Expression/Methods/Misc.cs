@@ -81,35 +81,11 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Produce a set union of two sequences using Union LINQ method - remove duplicate values
-        /// </summary>
-        public static IEnumerable<BsonValue> UNION(IEnumerable<BsonValue> first, IEnumerable<BsonValue> second)
-        {
-            return first.Union(second);
-        }
-
-        /// <summary>
-        /// Produce a set difference of two sequences using EXCEPT LINQ method - remove duplicate values
-        /// </summary>
-        public static IEnumerable<BsonValue> EXCEPT(IEnumerable<BsonValue> first, IEnumerable<BsonValue> second)
-        {
-            return first.Except(second);
-        }
-
-        /// <summary>
         /// Concatenates 2 sequences into a new single sequence
         /// </summary>
         public static IEnumerable<BsonValue> CONCAT(IEnumerable<BsonValue> first, IEnumerable<BsonValue> second)
         {
             return first.Concat(second);
-        }
-
-        /// <summary>
-        /// Return a distinct sequence of values
-        /// </summary>
-        public static IEnumerable<BsonValue> DISTINCT(IEnumerable<BsonValue> values)
-        {
-            return values.Distinct();
         }
 
         /// <summary>
