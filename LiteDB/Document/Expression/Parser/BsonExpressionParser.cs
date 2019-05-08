@@ -331,101 +331,74 @@ namespace LiteDB
         /// </summary>
         public static BsonExpression ParseUpdateDocumentBuilder(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters)
         {
-            throw new NotImplementedException();
-            /*
-            // creating unique field names
-            var fields = new List<KeyValuePair<string, BsonExpression>>();
-
             var next = tokenizer.LookAhead();
 
-            // defined document
+            // if starts with { just return a normal document expression
             if (next.Type == TokenType.OpenBrace)
             {
+                tokenizer.ReadToken(); // consume {
+
                 return TryParseDocument(tokenizer, source, root, current, parameters, true);
             }
 
-            void Add(string field, BsonExpression expr)
+            var keys = new List<Expression>();
+            var values = new List<Expression>();
+            var src = new StringBuilder();
+            var isImmutable = true;
+            var useSource = false;
+            var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            src.Append("{");
+
+            while (!tokenizer.CheckEOF())
             {
-                if (expr.IsScalar == false) throw new LiteException(0, $"Document value `{expr.Source}` must be a scalar expression");
+                var key = ReadKey(tokenizer, src);
 
-                fields.Add(new KeyValuePair<string, BsonExpression>(field, expr));
-            };
+                tokenizer.ReadToken().Expect(TokenType.Equals);
 
-            while (!(next.Type == TokenType.EOF || next.Type == TokenType.SemiColon || next.Is("WHERE")))
-            {
-                var field = ReadField(tokenizer, )
+                src.Append(":");
 
-                var expr = ParseFullExpression(tokenizer, source, root, current, parameters, true);
+                var value = ParseFullExpression(tokenizer, source, root, current, parameters, true);
 
-                var next = tokenizer.LookAhead();
+                if (value.IsScalar == false) throw new LiteException(0, $"Document value `{value.Source}` must be a scalar expression");
 
-                // finish reading
-                if (stop(next))
+                // update isImmutable only when came false
+                if (value.IsImmutable == false) isImmutable = false;
+                if (value.UseSource) useSource = true;
+
+                fields.AddRange(value.Fields);
+
+                // add key and value to parameter list (as an expression)
+                keys.Add(Expression.Constant(key));
+                values.Add(value.Expression);
+
+                src.Append(value.Source);
+
+                // read ,
+                if (tokenizer.LookAhead().Type == TokenType.Comma)
                 {
-                    Add(expr.DefaultFieldName(), expr);
-
-                    break;
+                    src.Append(tokenizer.ReadToken().Value);
+                    continue;
                 }
-                // field with no alias
-                if (next.Type == TokenType.Comma)
-                {
-                    tokenizer.ReadToken(); // consume ,
-
-                    Add(expr.DefaultFieldName(), expr);
-                }
-                // using alias
-                else
-                {
-                    if (next.Is("AS"))
-                    {
-                        tokenizer.ReadToken(); // consume "AS"
-                    }
-
-                    var alias = tokenizer.ReadToken().Expect(TokenType.Word);
-
-                    Add(alias.Value, expr);
-
-                    // go ahead to next token to see if last field
-                    next = tokenizer.LookAhead();
-
-                    if (stop(next))
-                    {
-                        break;
-                    }
-
-                    // consume ,
-                    tokenizer.ReadToken().Expect(TokenType.Comma);
-                }
+                else break;
             }
 
-            var first = fields[0].Value;
+            src.Append("}");
 
-            if (fields.Count == 1)
-            {
-                // if just $ return empty BsonExpression
-                if (first.Type == BsonExpressionType.Path && first.Source == "$") return BsonExpression.Root;
-
-                // if single field already a document
-                if (fields.Count == 1 && first.Type == BsonExpressionType.Document) return first;
-
-                // special case: EXTEND method also returns only a document
-                if (fields.Count == 1 && first.Type == BsonExpressionType.Call && first.Source.StartsWith("EXTEND")) return first;
-            }
-
-            var arrKeys = Expression.NewArrayInit(typeof(string), fields.Select(x => Expression.Constant(x.Key)).ToArray());
-            var arrValues = Expression.NewArrayInit(typeof(BsonValue), fields.Select(x => x.Value.Expression).ToArray());
+            var arrKeys = Expression.NewArrayInit(typeof(string), keys.ToArray());
+            var arrValues = Expression.NewArrayInit(typeof(BsonValue), values.ToArray());
 
             return new BsonExpression
             {
                 Type = BsonExpressionType.Document,
-                IsImmutable = fields.All(x => x.Value.IsImmutable),
-                UseSource = fields.Any(x => x.Value.UseSource),
+                IsImmutable = isImmutable,
+                UseSource = useSource,
                 IsScalar = true,
-                Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(fields.SelectMany(x => x.Value.Fields)),
+                Fields = fields,
                 Expression = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues }),
-                Source = "{" + string.Join(",", fields.Select(x => x.Key + ":" + x.Value.Source)) + "}"
+                Source = src.ToString()
             };
-            */
+
         }
 
         #region Constants

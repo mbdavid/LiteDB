@@ -79,8 +79,8 @@ namespace LiteDB.Tests.Engine
                 page4 = db.GetPageLog(4);
                 page5 = db.GetPageLog(5);
 
-                Assert.AreEqual(7828, page3["freeBytes"].AsInt32);
-                Assert.AreEqual(7828, page4["freeBytes"].AsInt32);
+                Assert.AreEqual(0, page3["freeBytes"].AsInt32);
+                Assert.AreEqual(6278, page4["freeBytes"].AsInt32);
                 Assert.AreEqual("Empty", page5["pageType"].AsString);
             }
         }
