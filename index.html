@@ -213,7 +213,7 @@ public class Order
 // Re-use mapper from global instance
 var mapper = BsonMapper.Global;
 
-// Produts and Customer are other collections (not embedded document)
+// Products and Customer are other collections (not embedded document)
 // you can use [BsonRef("colname")] attribute
 mapper.Entity&lt;Order&gt;()
     .DbRef(x => x.Products, "products")
