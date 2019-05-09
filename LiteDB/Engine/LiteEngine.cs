@@ -85,8 +85,7 @@ namespace LiteDB.Engine
                     // read page with no cache ref (has a own PageBuffer) - do not Release() support
                     var buffer = _disk.ReadFull(FileOrigin.Data).First();
 
-                    //TODO: ler se o banco de dados precisa de UPGRADE aqui, antes mesmo de ler a pagina
-                    //this.Upgrade();
+                    this.TryUpgrade(buffer);
 
                     _header = new HeaderPage(buffer);
                 }

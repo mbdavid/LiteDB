@@ -9,32 +9,33 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Upgrade datafile from old versions - use same process as Shrink
+        /// Test if header buffer is old version of LiteDB (works only with v7 - LiteDB4)
+        /// Create backup before any change
         /// </summary>
-        private void Upgrade()
+        private void TryUpgrade(BufferSlice buffer)
         {
-            throw new NotImplementedException(); /*
-            LOG($"upgrading datafile from {_header.FileVersion} to new v8 version", "UPGRADE");
+            var info = buffer.ReadString(25, 27);
+            var ver = buffer.ReadByte(52);
 
-            // only FileStream can be upgratable
-            if (!(_factory is FileStreamDiskFactory))
+            if (info == "** This is a LiteDB file **" && ver == 7)
             {
-                throw new NotSupportedException("Current datafile must be upgrade but are not using FileStreamDiskFactory.");
+                var recovery = buffer.ReadBool(4095);
+
+                if (recovery) throw new LiteException(0, "Datafile in recovery mode. Before upgrade datafile version, you must open/recovery in LiteDB 4.1.x");
+
+                var backup = FileHelper.GetTempFile(_settings.Filename, "-backup", true);
+
+                File.Copy(_settings.Filename, backup);
+
+                using (var stream = new FileStream(_settings.Filename, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    // there is only v7 upgrade version
+                    var reader = new FileReaderV7(stream);
+
+                    // upgrade is same operation than Shrink, but use custom file reader
+                    this.Shrink(reader);
+                }
             }
-
-            // make a backup to original datafile
-            var backup = FileHelper.GetTempFile(_factory.Filename, "-backup", true);
-
-            File.Copy(_factory.Filename, backup);
-
-            using (var stream = _factory.GetDataFileStream(false))
-            {
-                // there is only v7 upgrade version
-                var reader = new FileReaderV7(stream);
-
-                // upgrade is same operation than Shrink, but use custom file reader
-                this.Shrink(reader);
-            }*/
         }
     }
 }
