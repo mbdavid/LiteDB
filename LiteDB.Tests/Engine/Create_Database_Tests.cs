@@ -27,7 +27,7 @@ namespace LiteDB.Tests.Engine
                 Assert.AreEqual(initial, file.Size);
 
                 // ok, now shrink and test if file are minimal size
-                db.Shrink();
+                db.Shrink(null);
                 
                 Assert.AreEqual(minimal, file.Size);
             }

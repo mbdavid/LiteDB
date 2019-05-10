@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     {
         int Analyze(string[] collections);
         void Checkpoint();
-        long Shrink();
+        long Shrink(string password);
         int Vaccum();
         DatabaseReport CheckIntegrity();
 

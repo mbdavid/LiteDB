@@ -71,13 +71,13 @@ namespace LiteDB
             }
         }
 
-        public long Shrink()
+        public long Shrink(string password)
         {
             this.OpenShared();
 
             try
             {
-                return _engine.Shrink();
+                return _engine.Shrink(password);
             }
             finally
             {

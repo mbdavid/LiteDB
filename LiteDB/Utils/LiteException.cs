@@ -94,7 +94,7 @@ namespace LiteDB
 
         internal static LiteException InvalidDatabaseVersion(int version)
         {
-            return new LiteException(INVALID_DATABASE_VERSION, "Invalid database version: {0}", version);
+            return new LiteException(INVALID_DATABASE_VERSION, "This datafile is in version {0} and needs to be migrated. Run Upgrade method (in LiteEngine class) to migrate your data to new file version", version);
         }
 
         internal static LiteException FileSizeExceeded(long limit)

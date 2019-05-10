@@ -9,116 +9,99 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Reduce disk size re-arranging unused spaces.
+        /// Reduce disk size re-arranging unused spaces - can change password or remove (using null password)
         /// </summary>
-        public long Shrink()
+        public long Shrink(string password)
         {
-            return this.Shrink(new FileReaderV8(this, _header));
+            return this.Shrink(new FileReaderV8(this), password);
         }
 
         /// <summary>
         /// Run shrink operation using an file reader interface (can be used as Upgrade datafile)
+        /// Can change/remove password (use null in password if want remove password)
         /// </summary>
-        private long Shrink(IFileReader reader)
+        private long Shrink(IFileReader reader, string password)
         {
-            throw new NotImplementedException(); /*
-            var originalSize = _dataFile.Length;
-
             // shrink can only run with no transaction
-            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Shrink", TransactionState.Active);
+            if (_locker.IsInTransaction) throw LiteException.AlreadyExistsTransaction();
 
             // shrink works with a temp engine that will use same log file
             // after copy all data from current datafile to temp datafile (all data will be in log)
             // run checkpoint in current database
-
-            _locker.EnterReserved(true);
             
-            try
+            // first do a complete checkpoint 
+            _walIndex.Checkpoint();
+
+            var originalSize = _disk.GetLength(FileOrigin.Data);
+            var logLength = 0L;
+
+            // just after enter
+            _locker.EnterReserved(true);
+
+            var s = new EngineSettings
             {
-                // first do checkpoint with WAL delete
-                _wal.Checkpoint(_header, false);
+                DataStream = new MemoryStream(),
+                LogStream = _disk.LogStream,
+                Password = password
+            };
 
-                var s = new EngineSettings
+            if(_disk.GetLength(FileOrigin.Log) != 0) throw new LiteException(0, "Invalid shrink command - log file are not empty");
+
+            // create temp engine using same LOG file
+            using (var temp = new LiteEngine(s))
+            {
+                // get all indexes
+                var indexes = reader.GetIndexes().ToArray();
+
+                // begin transaction and get TransactionID
+                temp.AutoTransaction(transaction =>
                 {
-                    DataStream = new MemoryStream(),
-                    LogStream = _wal.LogFile.Stream,
-                    CheckpointOnShutdown = false
-                };
-
-                DEBUG(s.LogStream.Length > 0, "LOG file must be an empty stream here");
-
-                // temp datafile
-                using (var temp = new LiteEngine(s))
-                {
-                    // get all indexes
-                    var indexes = reader.GetIndexes().ToArray();
-
-                    // begin transaction and get TransactionID
-                    var transaction = temp.GetTransaction(true, out var isNew);
-
-                    try
+                    foreach (var collection in reader.GetCollections())
                     {
-                        foreach (var collection in reader.GetCollections())
+                        // first create all user indexes (exclude _id index)
+                        foreach (var index in indexes.Where(x => x.Collection == collection && x.Name != "_id"))
                         {
-                            // first create all user indexes (exclude _id index)
-                            foreach (var index in indexes.Where(x => x.Collection == collection && x.Name != "_id"))
-                            {
-                                temp.EnsureIndex(collection,
-                                    index.Name,
-                                    BsonExpression.Create(index.Expression),
-                                    index.Unique);
-                            }
-
-                            // get all documents from current collection
-                            var docs = reader.GetDocuments(indexes.Single(x => x.Collection == collection && x.Name == "_id"));
-
-                            // and insert into 
-                            temp.Insert(collection, docs, BsonAutoId.ObjectId);
+                            temp.EnsureIndex(collection,
+                                index.Name,
+                                BsonExpression.Create(index.Expression),
+                                index.Unique);
                         }
 
-                        // update header page and create another fake-transaction
-                        temp._header.CreationTime = reader.CreationTime;
-                        temp._header.UserVersion = reader.UserVersion;
+                        // get all documents from current collection
+                        var docs = reader.GetDocuments(indexes.Single(x => x.Collection == collection && x.Name == "_id"));
 
-                        if (indexes.Length == 0)
-                        {
-                            // if there is no collection, force commit only header page 
-                            // by default, commit() will only store confirm page if there is any changed page
-                            temp._header.TransactionID = transaction.TransactionID;
-                            temp._header.IsConfirmed = true;
-                            temp._header.IsDirty = true;
-                            temp._wal.LogFile.WritePages(new[] { temp._header }, null);
-
-                            temp._wal.ConfirmTransaction(transaction.TransactionID, new PagePosition[0]);
-                        }
-                        else
-                        {
-                            temp.Commit();
-                        }
-
-                        // add this commited transaction as confirmed transaction in current datafile (to do checkpoint after)
-                        _wal.ConfirmedTransactions.Add(transaction.TransactionID);
-
+                        // and insert into 
+                        temp.Insert(collection, docs, BsonAutoId.ObjectId);
                     }
-                    finally
-                    {
-                        transaction.Release();
-                    }
-                }
 
-                // this checkpoint will use log file from temp database and will override all datafile pages
-                _wal.Checkpoint(_header, false);
+                    temp.Commit();
 
-                // must reload header page because current _header has complete different pageIDs for collections
-                _header = _dataFile.ReadPage(0) as HeaderPage;
+                    return true;
+                });
 
-                // if datafile grow (it's possible because index flipcoin can change) return 0
-                return Math.Max(0, originalSize - _dataFile.Length);
+                // update DB userversion
+                temp.DbParam(DB_PARAM_USERVERSION, reader.UserVersion);
+
+                logLength = temp._disk.GetLength(FileOrigin.Log);
             }
-            finally
-            {
-                _locker.ExitReserved(true);
-            }*/
+
+            // force disk update log file
+            _disk.SetLength(logLength, FileOrigin.Log);
+
+            // now, restore index confirm transactions
+            _walIndex.RestoreIndex(ref _header);
+
+            // crop data file
+            _disk.SetLength(BasePage.GetPagePosition(_header.LastPageID), FileOrigin.Data);
+
+            // exit locker
+            _locker.ExitReserved(true);
+
+            // this checkpoint will use log file from temp database and will override all datafile pages
+            _walIndex.Checkpoint();
+
+            // if datafile grow (it's possible because index flipcoin can change) return 0
+            return Math.Max(0, originalSize - _disk.GetLength(FileOrigin.Data));
         }
     }
 }

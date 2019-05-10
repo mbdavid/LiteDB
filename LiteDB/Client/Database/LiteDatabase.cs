@@ -268,9 +268,9 @@ namespace LiteDB
         /// <summary>
         /// Reduce disk size re-arranging unused spaces.
         /// </summary>
-        public long Shrink()
+        public long Shrink(string password = null)
         {
-            return _engine.Value.Shrink();
+            return _engine.Value.Shrink(password);
         }
 
         /// <summary>

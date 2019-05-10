@@ -154,7 +154,6 @@
     <Compile Include="Engine\Engine\SystemCollections.cs" />
     <Compile Include="Engine\Engine\Transaction.cs" />
     <Compile Include="Engine\Engine\Update.cs" />
-    <Compile Include="Engine\Engine\Upgrade.cs" />
     <Compile Include="Engine\Engine\Upsert.cs" />
     <Compile Include="Engine\Engine\Vaccum.cs" />
     <Compile Include="Engine\Services\CollectionService.cs" />

@@ -14,7 +14,6 @@ namespace LiteDB.Engine
     {
         private BinaryReader _reader;
 
-        public DateTime CreationTime { get; set; } = DateTime.Now;
         public int UserVersion { get; set; }
 
         public FileReaderV7(Stream stream)

@@ -79,16 +79,10 @@ namespace LiteDB.Engine
                 // initialize disk service (will create database if needed)
                 _disk = new DiskService(settings);
 
-                // read header page
-                using (var reader = _disk.GetReader())
-                {
-                    // read page with no cache ref (has a own PageBuffer) - do not Release() support
-                    var buffer = _disk.ReadFull(FileOrigin.Data).First();
+                // read page with no cache ref (has a own PageBuffer) - do not Release() support
+                var buffer = _disk.ReadFull(FileOrigin.Data).First();
 
-                    this.TryUpgrade(buffer);
-
-                    _header = new HeaderPage(buffer);
-                }
+                _header = new HeaderPage(buffer);
 
                 // initialize wal-index service
                 _walIndex = new WalIndexService(_disk, _locker);
@@ -122,7 +116,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Run checkpoint command to copy log file into data file
         /// </summary>
-        public void Checkpoint() => _walIndex.Checkpoint(_header);
+        public void Checkpoint() => _walIndex.Checkpoint();
 
         /// <summary>
         /// Shutdown process:

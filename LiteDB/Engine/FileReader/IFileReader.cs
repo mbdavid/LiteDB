@@ -12,7 +12,6 @@ namespace LiteDB.Engine
     /// </summary>
     interface IFileReader
     {
-        DateTime CreationTime { get; }
         int UserVersion { get; }
 
         IEnumerable<string> GetCollections();

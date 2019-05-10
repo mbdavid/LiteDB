@@ -58,6 +58,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
+            // dipose stream only implement on factory
+            if (_factory.CloseOnDispose == false) return;
+
             // dispose all reader stream
             foreach (var stream in _pool)
             {

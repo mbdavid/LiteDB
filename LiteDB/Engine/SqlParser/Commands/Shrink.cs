@@ -7,13 +7,16 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// SHRINK
+        /// SHRINK {password}
         /// </summary>
         private BsonDataReader ParseShrink()
         {
             var token = _tokenizer.ReadToken().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
+            var password = token.Type == TokenType.Word ? token.Value : null;
 
-            var result = _engine.Shrink();
+            if (password != null) _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+
+            var result = _engine.Shrink(password);
 
             return new BsonDataReader(result);
         }
