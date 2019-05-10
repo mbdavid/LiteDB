@@ -123,7 +123,7 @@ namespace LiteDB
             }
             else
             {
-                return new SharedEngine(settings);
+                throw new NotImplementedException();
             }
         }
     }

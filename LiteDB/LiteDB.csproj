@@ -139,8 +139,6 @@
     <Compile Include="Client\Structures\ConnectionString.cs" />
     <Compile Include="Client\Structures\ConnectionType.cs" />
     <Compile Include="Client\Structures\Query.cs" />
-    <Compile Include="Client\Structures\SharedBsonDataReader.cs" />
-    <Compile Include="Client\Structures\SharedEngine.cs" />
     <Compile Include="Engine\Engine\Analyze.cs" />
     <Compile Include="Engine\Engine\CheckIntegrity.cs" />
     <Compile Include="Engine\Engine\Collection.cs" />
