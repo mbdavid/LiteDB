@@ -23,7 +23,7 @@ namespace LiteDB.Engine
 
         private readonly WalIndexService _walIndex;
 
-        private HeaderPage _header;
+        private readonly HeaderPage _header;
 
         // immutable settings
         private readonly EngineSettings _settings;

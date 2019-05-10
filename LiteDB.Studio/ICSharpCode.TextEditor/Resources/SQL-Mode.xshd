@@ -95,7 +95,6 @@ http://minisqlquery.codeplex.com/license
         <Key word="FOR" />
         <Key word="SET" />
         <Key word="EXPLAIN" />
-        <Key word="SHRINK" />
         <Key word="UPDATE" />
         <Key word="REPLACE" />
         <Key word="VACCUM" />

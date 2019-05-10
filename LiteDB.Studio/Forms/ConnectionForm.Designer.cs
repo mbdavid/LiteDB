@@ -47,6 +47,8 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.txtPassword = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -94,7 +96,7 @@
             this.btnOK.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnOK.Image = global::LiteDB.Studio.Properties.Resources.database_connect;
             this.btnOK.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnOK.Location = new System.Drawing.Point(454, 290);
+            this.btnOK.Location = new System.Drawing.Point(454, 318);
             this.btnOK.Name = "btnOK";
             this.btnOK.Padding = new System.Windows.Forms.Padding(10, 0, 0, 0);
             this.btnOK.Size = new System.Drawing.Size(127, 38);
@@ -117,7 +119,7 @@
             // chkUTC
             // 
             this.chkUTC.AutoSize = true;
-            this.chkUTC.Location = new System.Drawing.Point(257, 30);
+            this.chkUTC.Location = new System.Drawing.Point(257, 53);
             this.chkUTC.Name = "chkUTC";
             this.chkUTC.Size = new System.Drawing.Size(75, 19);
             this.chkUTC.TabIndex = 26;
@@ -128,7 +130,7 @@
             // 
             // txtLimitSize
             // 
-            this.txtLimitSize.Location = new System.Drawing.Point(151, 86);
+            this.txtLimitSize.Location = new System.Drawing.Point(151, 109);
             this.txtLimitSize.Name = "txtLimitSize";
             this.txtLimitSize.Size = new System.Drawing.Size(70, 23);
             this.txtLimitSize.TabIndex = 25;
@@ -136,7 +138,7 @@
             // 
             // txtInitialSize
             // 
-            this.txtInitialSize.Location = new System.Drawing.Point(151, 57);
+            this.txtInitialSize.Location = new System.Drawing.Point(151, 80);
             this.txtInitialSize.Name = "txtInitialSize";
             this.txtInitialSize.Size = new System.Drawing.Size(70, 23);
             this.txtInitialSize.TabIndex = 24;
@@ -162,6 +164,8 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.label1);
+            this.groupBox3.Controls.Add(this.txtPassword);
             this.groupBox3.Controls.Add(this.txtTimeout);
             this.groupBox3.Controls.Add(this.txtLimitSize);
             this.groupBox3.Controls.Add(this.txtInitialSize);
@@ -172,14 +176,14 @@
             this.groupBox3.Controls.Add(this.label2);
             this.groupBox3.Location = new System.Drawing.Point(12, 159);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(569, 122);
+            this.groupBox3.Size = new System.Drawing.Size(569, 147);
             this.groupBox3.TabIndex = 29;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Parameters";
             // 
             // txtTimeout
             // 
-            this.txtTimeout.Location = new System.Drawing.Point(151, 28);
+            this.txtTimeout.Location = new System.Drawing.Point(151, 51);
             this.txtTimeout.Name = "txtTimeout";
             this.txtTimeout.Size = new System.Drawing.Size(70, 23);
             this.txtTimeout.TabIndex = 23;
@@ -189,7 +193,7 @@
             // chkReadonly
             // 
             this.chkReadonly.AutoSize = true;
-            this.chkReadonly.Location = new System.Drawing.Point(257, 59);
+            this.chkReadonly.Location = new System.Drawing.Point(257, 82);
             this.chkReadonly.Name = "chkReadonly";
             this.chkReadonly.Size = new System.Drawing.Size(78, 19);
             this.chkReadonly.TabIndex = 27;
@@ -199,7 +203,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(18, 89);
+            this.label4.Location = new System.Drawing.Point(18, 112);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(89, 15);
             this.label4.TabIndex = 31;
@@ -208,7 +212,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(18, 60);
+            this.label3.Location = new System.Drawing.Point(18, 83);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(91, 15);
             this.label3.TabIndex = 30;
@@ -217,17 +221,33 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(18, 31);
+            this.label2.Location = new System.Drawing.Point(16, 54);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(109, 15);
             this.label2.TabIndex = 29;
             this.label2.Text = "Timeout (seconds):";
             // 
+            // txtPassword
+            // 
+            this.txtPassword.Location = new System.Drawing.Point(151, 22);
+            this.txtPassword.Name = "txtPassword";
+            this.txtPassword.Size = new System.Drawing.Size(404, 23);
+            this.txtPassword.TabIndex = 4;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(18, 25);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(57, 15);
+            this.label1.TabIndex = 32;
+            this.label1.Text = "Password";
+            // 
             // ConnectionForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(596, 340);
+            this.ClientSize = new System.Drawing.Size(596, 368);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -269,5 +289,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox txtPassword;
     }
 }

@@ -263,15 +263,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Shrink/Analyze/Vaccum/Checkpoint/UserVersion
-
-        /// <summary>
-        /// Reduce disk size re-arranging unused spaces.
-        /// </summary>
-        public long Shrink(string password = null)
-        {
-            return _engine.Value.Shrink(password);
-        }
+        #region Analyze/Vaccum/Checkpoint/UserVersion
 
         /// <summary>
         /// Do database checkpoint. Copy all commited transaction from log file into datafile. 

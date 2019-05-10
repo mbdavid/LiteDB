@@ -25,7 +25,7 @@ namespace LiteDB.Engine
         {
             var first = _tokenizer.ReadToken().Expect(TokenType.Word);
 
-            LOG($"execution `{first.Value.ToUpper()}`", "SQL");
+            LOG($"executing `{first.Value.ToUpper()}`", "SQL");
 
             switch (first.Value.ToUpper())
             {
@@ -42,7 +42,6 @@ namespace LiteDB.Engine
 
                 case "ANALYZE": return this.ParseAnalyze();
                 case "CHECKPOINT": return this.ParseCheckpoint();
-                case "SHRINK": return this.ParseShrink();
                 case "VACCUM": return this.ParseVaccum();
                 case "CHECK": return this.ParseCheck();
 

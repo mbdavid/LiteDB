@@ -36,6 +36,7 @@ namespace LiteDB.Studio.Forms
             this.ConnectionString.Filename = txtFilename.Text;
             this.ConnectionString.UtcDate = chkUTC.Checked;
             this.ConnectionString.ReadOnly = chkReadonly.Checked;
+            this.ConnectionString.Password = txtPassword.Text.Trim().Length > 0 ? txtPassword.Text.Trim() : null;
 
             if (int.TryParse(txtTimeout.Text, out var timeout))
             {

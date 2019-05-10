@@ -89,11 +89,6 @@ namespace LiteDB.Engine
         public MemoryCache Cache => _cache;
 
         /// <summary>
-        /// Get log writer stream instance (used in Shrink command)
-        /// </summary>
-        public Stream LogStream => _logPool.Writer;
-
-        /// <summary>
         /// Create a new empty database (use synced mode)
         /// </summary>
         private void Initialize(Stream stream, AesEncryption aes, long initialSize)

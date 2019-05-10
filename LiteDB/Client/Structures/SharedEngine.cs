@@ -71,20 +71,6 @@ namespace LiteDB
             }
         }
 
-        public long Shrink(string password)
-        {
-            this.OpenShared();
-
-            try
-            {
-                return _engine.Shrink(password);
-            }
-            finally
-            {
-                this.CloseShared();
-            }
-        }
-
         public int Vaccum()
         {
             this.OpenShared();
