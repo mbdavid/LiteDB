@@ -9,7 +9,7 @@ using static LiteDB.Constants;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Internal class to read all datafile documents - use simplest way using current engine
+    /// Internal class to read all datafile documents - use current engine version
     /// </summary>
     internal class FileReaderV8 : IFileReader
     {
@@ -17,11 +17,17 @@ namespace LiteDB.Engine
 
         public int UserVersion { get; set; }
 
-        public FileReaderV8(LiteEngine engine)
+        public FileReaderV8(string filename, string password)
         {
-            _engine = engine;
+            _engine = new LiteEngine(new EngineSettings
+            {
+                Filename = filename,
+                Password = password,
+                ReadOnly = true,
+                LogStream = new MemoryStream() // never will be used... it's a readonly database
+            });
 
-            this.UserVersion = engine.DbParam(DB_PARAM_USERVERSION);
+            this.UserVersion = _engine.DbParam(DB_PARAM_USERVERSION);
         }
 
         /// <summary>
@@ -65,6 +71,11 @@ namespace LiteDB.Engine
                     yield return reader.Current.AsDocument;
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            _engine.Dispose();
         }
     }
 }

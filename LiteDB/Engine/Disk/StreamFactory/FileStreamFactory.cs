@@ -43,6 +43,14 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Get file length using FileInfo
+        /// </summary>
+        public long GetLength()
+        {
+            return new FileInfo(_filename).Length;
+        }
+
+        /// <summary>
         /// Check if file exists (without open it)
         /// </summary>
         public bool Exists()

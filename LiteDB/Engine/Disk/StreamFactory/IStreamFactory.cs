@@ -22,6 +22,12 @@ namespace LiteDB.Engine
         Stream GetStream(bool canWrite, bool sequencial);
 
         /// <summary>
+        /// Get file length
+        /// </summary>
+        /// <returns></returns>
+        long GetLength();
+
+        /// <summary>
         /// Checks if file exists
         /// </summary>
         bool Exists();

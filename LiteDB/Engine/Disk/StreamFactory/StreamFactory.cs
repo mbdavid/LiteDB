@@ -30,6 +30,11 @@ namespace LiteDB.Engine
         public Stream GetStream(bool canWrite, bool sequencial) => new ConcurrentStream(_stream, canWrite);
 
         /// <summary>
+        /// Get file length using _stream.Length
+        /// </summary>
+        public long GetLength() => _stream.Length;
+
+        /// <summary>
         /// Check if file exists based on stream length
         /// </summary>
         public bool Exists() => _stream.Length > 0;

@@ -21,33 +21,32 @@ namespace LiteDB.Demo
             Console.WriteLine("LITE DB v5");
             Console.WriteLine("===========================================================");
 
-            var rnd = new Random();
+            var cn = @"filename=d:\app__pwd.db; password=abc";
 
-            var list = Enumerable.Range(0, 10_000).Select(x => new KeyValuePair<BsonValue, PageAddress>(rnd.Next(0, 1000), PageAddress.Empty));
-            //var list = Enumerable.Range(0, 1_000).Select(x => new KeyValuePair<BsonValue, PageAddress>(
-            //    (Guid.NewGuid().ToString("n") + Guid.NewGuid().ToString("n"))
-            //    .Substring(0, rnd.Next(5, 64)), PageAddress.Empty));
+            File.Delete(@"d:\app__pwd.db");
+            File.Delete(@"d:\app__pwd-log.db");
 
-            var sw = new Stopwatch();
-            sw.Start();
-            //
-            //list.OrderBy(x => x.Key).Count();
-            //
-            //sw.Stop();
-            //Console.WriteLine("Elapsed (linq): " + sw.ElapsedMilliseconds + " ms");
-            //sw.Restart();
+            var s = new EngineSettings
+            {
+                Filename = @"d:\app__pwd.db",
+                Password = "abc"
+            };
 
-            // using (var s = new MergeSortService(100 * 8192, false))
-            // {
-            //     //var result = s.Sort(list, Query.Ascending).Count();
-            // 
-            //     s.Sort(list, Query.Descending).ToList().ForEach(x => Console.Write(x.Key.AsInt32 + ";"));
-            // }
+            using (var repo = new LiteRepository(cn))
+            {
+                repo.Insert(new BsonDocument { ["_id"] = 1, ["nome"] = "Mauricio" }, "col1");
 
-            sw.Stop();
-            Console.WriteLine("\nElapsed (merge): " + sw.ElapsedMilliseconds + " ms");
+                //repo.Database.Checkpoint();
+            }
 
-            
+            using (var repo = new LiteRepository(cn))
+            {
+                var d = repo.First<BsonDocument>("_id = 1", "col1");
+
+                Console.WriteLine(d["nome"].AsString);
+            }
+
+
 
             Console.WriteLine("===========================================================");
             Console.WriteLine("End");

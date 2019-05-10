@@ -621,5 +621,19 @@ namespace LiteDB.Studio
         }
 
         #endregion
+
+        private void mnuShrink_Click(object sender, EventArgs e)
+        {
+            var s = new ShrinkForm(_connectionString.Filename, _connectionString.Password, this.Disconnect);
+
+            s.ShowDialog();
+
+            if (_db == null)
+            {
+                _connectionString.Password = s.NewPassword;
+
+                this.Connect(_connectionString);
+            }
+        }
     }
 }

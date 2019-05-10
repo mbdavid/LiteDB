@@ -522,6 +522,10 @@ namespace LiteDB
                     {
                         token = new Token(TokenType.Word, this.ReadWord(), this.Position);
                     }
+                    else
+                    {
+                        this.ReadChar();
+                    }
                     break;
             }
 

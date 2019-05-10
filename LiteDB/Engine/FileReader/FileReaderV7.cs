@@ -293,5 +293,9 @@ namespace LiteDB.Engine
                 return buffer.ToArray();
             }
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

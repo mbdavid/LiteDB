@@ -42,13 +42,13 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.txtFilename = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.txtPassword = new System.Windows.Forms.TextBox();
             this.txtTimeout = new System.Windows.Forms.TextBox();
             this.chkReadonly = new System.Windows.Forms.CheckBox();
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.txtPassword = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -181,6 +181,23 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Parameters";
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(18, 25);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(57, 15);
+            this.label1.TabIndex = 32;
+            this.label1.Text = "Password";
+            // 
+            // txtPassword
+            // 
+            this.txtPassword.Location = new System.Drawing.Point(151, 22);
+            this.txtPassword.Name = "txtPassword";
+            this.txtPassword.PasswordChar = '*';
+            this.txtPassword.Size = new System.Drawing.Size(404, 23);
+            this.txtPassword.TabIndex = 4;
+            // 
             // txtTimeout
             // 
             this.txtTimeout.Location = new System.Drawing.Point(151, 51);
@@ -226,22 +243,6 @@
             this.label2.Size = new System.Drawing.Size(109, 15);
             this.label2.TabIndex = 29;
             this.label2.Text = "Timeout (seconds):";
-            // 
-            // txtPassword
-            // 
-            this.txtPassword.Location = new System.Drawing.Point(151, 22);
-            this.txtPassword.Name = "txtPassword";
-            this.txtPassword.Size = new System.Drawing.Size(404, 23);
-            this.txtPassword.TabIndex = 4;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(18, 25);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(57, 15);
-            this.label1.TabIndex = 32;
-            this.label1.Text = "Password";
             // 
             // ConnectionForm
             // 

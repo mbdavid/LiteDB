@@ -122,7 +122,7 @@ namespace LiteDB.Engine
             }
             else if (!string.IsNullOrEmpty(this.Filename))
             {
-                var logName = FileHelper.GetTempFile(this.Filename, "-log", false);
+                var logName = FileHelper.GetLogFile(this.Filename);
 
                 return new FileStreamFactory(logName, this.ReadOnly);
             }
@@ -150,7 +150,7 @@ namespace LiteDB.Engine
             }
             else if (!string.IsNullOrEmpty(this.Filename))
             {
-                var tempName = FileHelper.GetTempFile(this.Filename, "-tmp", false);
+                var tempName = FileHelper.GetTempFile(this.Filename);
 
                 return new FileStreamFactory(tempName, false);
             }

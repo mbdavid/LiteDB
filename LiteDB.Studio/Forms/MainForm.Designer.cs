@@ -34,11 +34,14 @@
             this.tvwDatabase = new System.Windows.Forms.TreeView();
             this.imgList = new System.Windows.Forms.ImageList(this.components);
             this.splitRight = new System.Windows.Forms.SplitContainer();
+            this.txtSql = new ICSharpCode.TextEditor.TextEditorControl();
             this.tabResult = new System.Windows.Forms.TabControl();
             this.tabGrid = new System.Windows.Forms.TabPage();
             this.grdResult = new System.Windows.Forms.DataGridView();
             this.tabText = new System.Windows.Forms.TabPage();
+            this.txtResult = new ICSharpCode.TextEditor.TextEditorControl();
             this.tabParameters = new System.Windows.Forms.TabPage();
+            this.txtParameters = new ICSharpCode.TextEditor.TextEditorControl();
             this.tabSql = new System.Windows.Forms.TabControl();
             this.stbStatus = new System.Windows.Forms.StatusStrip();
             this.lblCursor = new System.Windows.Forms.ToolStripStatusLabel();
@@ -76,9 +79,6 @@
             this.mnuVaccum = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuShrink = new System.Windows.Forms.ToolStripMenuItem();
             this.imgCodeCompletion = new System.Windows.Forms.ImageList(this.components);
-            this.txtSql = new ICSharpCode.TextEditor.TextEditorControl();
-            this.txtResult = new ICSharpCode.TextEditor.TextEditorControl();
-            this.txtParameters = new ICSharpCode.TextEditor.TextEditorControl();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -165,6 +165,22 @@
             this.splitRight.SplitterDistance = 174;
             this.splitRight.TabIndex = 8;
             // 
+            // txtSql
+            // 
+            this.txtSql.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtSql.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtSql.ConvertTabsToSpaces = true;
+            this.txtSql.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtSql.Highlighting = "SQL";
+            this.txtSql.Location = new System.Drawing.Point(0, 0);
+            this.txtSql.Name = "txtSql";
+            this.txtSql.ShowLineNumbers = false;
+            this.txtSql.ShowVRuler = false;
+            this.txtSql.Size = new System.Drawing.Size(828, 171);
+            this.txtSql.TabIndex = 2;
+            // 
             // tabResult
             // 
             this.tabResult.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -211,24 +227,56 @@
             // tabText
             // 
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 24);
+            this.tabText.Location = new System.Drawing.Point(4, 22);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(824, 361);
+            this.tabText.Size = new System.Drawing.Size(824, 363);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
             // 
+            // txtResult
+            // 
+            this.txtResult.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtResult.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtResult.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtResult.Highlighting = "JSON";
+            this.txtResult.Location = new System.Drawing.Point(5, 4);
+            this.txtResult.Name = "txtResult";
+            this.txtResult.ReadOnly = true;
+            this.txtResult.ShowLineNumbers = false;
+            this.txtResult.ShowVRuler = false;
+            this.txtResult.Size = new System.Drawing.Size(812, 351);
+            this.txtResult.TabIndex = 1;
+            // 
             // tabParameters
             // 
             this.tabParameters.Controls.Add(this.txtParameters);
-            this.tabParameters.Location = new System.Drawing.Point(4, 24);
+            this.tabParameters.Location = new System.Drawing.Point(4, 22);
             this.tabParameters.Name = "tabParameters";
             this.tabParameters.Padding = new System.Windows.Forms.Padding(3);
-            this.tabParameters.Size = new System.Drawing.Size(824, 361);
+            this.tabParameters.Size = new System.Drawing.Size(824, 363);
             this.tabParameters.TabIndex = 5;
             this.tabParameters.Text = "Parameters";
             this.tabParameters.UseVisualStyleBackColor = true;
+            // 
+            // txtParameters
+            // 
+            this.txtParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtParameters.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtParameters.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtParameters.Highlighting = "JSON";
+            this.txtParameters.Location = new System.Drawing.Point(6, 5);
+            this.txtParameters.Name = "txtParameters";
+            this.txtParameters.ReadOnly = true;
+            this.txtParameters.ShowLineNumbers = false;
+            this.txtParameters.ShowVRuler = false;
+            this.txtParameters.Size = new System.Drawing.Size(811, 350);
+            this.txtParameters.TabIndex = 2;
             // 
             // tabSql
             // 
@@ -493,27 +541,27 @@
             this.mnuVaccum,
             this.mnuShrink});
             this.ctxMenuRoot.Name = "ctxMenu";
-            this.ctxMenuRoot.Size = new System.Drawing.Size(171, 120);
+            this.ctxMenuRoot.Size = new System.Drawing.Size(181, 142);
             this.ctxMenuRoot.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenuRoot_ItemClicked);
             // 
             // mnuInfo
             // 
             this.mnuInfo.Image = global::LiteDB.Studio.Properties.Resources.information;
             this.mnuInfo.Name = "mnuInfo";
-            this.mnuInfo.Size = new System.Drawing.Size(170, 22);
+            this.mnuInfo.Size = new System.Drawing.Size(180, 22);
             this.mnuInfo.Tag = "SELECT $ FROM $database;";
             this.mnuInfo.Text = "Database Info";
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(167, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(177, 6);
             // 
             // mnuImport
             // 
             this.mnuImport.Image = global::LiteDB.Studio.Properties.Resources.layout_add;
             this.mnuImport.Name = "mnuImport";
-            this.mnuImport.Size = new System.Drawing.Size(170, 22);
+            this.mnuImport.Size = new System.Drawing.Size(180, 22);
             this.mnuImport.Tag = "SELECT $\\n  INTO new_col\\n  FROM $file_json(\'C:/temp/file.json\');";
             this.mnuImport.Text = "Import from JSON";
             // 
@@ -521,7 +569,7 @@
             // 
             this.mnuCheckpoint.Image = global::LiteDB.Studio.Properties.Resources.application_put;
             this.mnuCheckpoint.Name = "mnuCheckpoint";
-            this.mnuCheckpoint.Size = new System.Drawing.Size(170, 22);
+            this.mnuCheckpoint.Size = new System.Drawing.Size(180, 22);
             this.mnuCheckpoint.Tag = "CHECKPOINT;";
             this.mnuCheckpoint.Text = "Checkpoint";
             // 
@@ -529,7 +577,7 @@
             // 
             this.mnuVaccum.Image = global::LiteDB.Studio.Properties.Resources.brick;
             this.mnuVaccum.Name = "mnuVaccum";
-            this.mnuVaccum.Size = new System.Drawing.Size(170, 22);
+            this.mnuVaccum.Size = new System.Drawing.Size(180, 22);
             this.mnuVaccum.Tag = "VACCUM;";
             this.mnuVaccum.Text = "Vaccum";
             // 
@@ -537,9 +585,10 @@
             // 
             this.mnuShrink.Image = global::LiteDB.Studio.Properties.Resources.compress;
             this.mnuShrink.Name = "mnuShrink";
-            this.mnuShrink.Size = new System.Drawing.Size(170, 22);
-            this.mnuShrink.Tag = "SHRINK;";
+            this.mnuShrink.Size = new System.Drawing.Size(180, 22);
+            this.mnuShrink.Tag = "";
             this.mnuShrink.Text = "Shrink";
+            this.mnuShrink.Click += new System.EventHandler(this.mnuShrink_Click);
             // 
             // imgCodeCompletion
             // 
@@ -551,54 +600,6 @@
             this.imgCodeCompletion.Images.SetKeyName(3, "KEYWORD");
             this.imgCodeCompletion.Images.SetKeyName(4, "SYSTEM");
             this.imgCodeCompletion.Images.SetKeyName(5, "SYSTEM_FN");
-            // 
-            // txtSql
-            // 
-            this.txtSql.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtSql.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtSql.ConvertTabsToSpaces = true;
-            this.txtSql.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtSql.Highlighting = "SQL";
-            this.txtSql.Location = new System.Drawing.Point(0, 0);
-            this.txtSql.Name = "txtSql";
-            this.txtSql.ShowLineNumbers = false;
-            this.txtSql.ShowVRuler = false;
-            this.txtSql.Size = new System.Drawing.Size(828, 171);
-            this.txtSql.TabIndex = 2;
-            // 
-            // txtResult
-            // 
-            this.txtResult.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtResult.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtResult.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtResult.Highlighting = "JSON";
-            this.txtResult.Location = new System.Drawing.Point(5, 4);
-            this.txtResult.Name = "txtResult";
-            this.txtResult.ReadOnly = true;
-            this.txtResult.ShowLineNumbers = false;
-            this.txtResult.ShowVRuler = false;
-            this.txtResult.Size = new System.Drawing.Size(812, 351);
-            this.txtResult.TabIndex = 1;
-            // 
-            // txtParameters
-            // 
-            this.txtParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtParameters.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtParameters.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtParameters.Highlighting = "JSON";
-            this.txtParameters.Location = new System.Drawing.Point(6, 5);
-            this.txtParameters.Name = "txtParameters";
-            this.txtParameters.ReadOnly = true;
-            this.txtParameters.ShowLineNumbers = false;
-            this.txtParameters.ShowVRuler = false;
-            this.txtParameters.Size = new System.Drawing.Size(811, 350);
-            this.txtParameters.TabIndex = 2;
             // 
             // MainForm
             // 

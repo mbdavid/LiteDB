@@ -61,16 +61,12 @@ namespace LiteDB.Engine
             }
 
             // get initial data file length
-            var dataStream = _dataPool.Rent();
-            _dataLength = dataStream.Length - PAGE_SIZE;
-            _dataPool.Return(dataStream);
+            _dataLength = _dataFactory.GetLength() - PAGE_SIZE;
 
             // get initial log file length
             if (_logFactory.Exists())
             {
-                var logStream = _logPool.Rent();
-                _logLength = logStream.Length - PAGE_SIZE;
-                _logPool.Return(logStream);
+                _logLength = _logFactory.GetLength() - PAGE_SIZE;
             }
             else
             {
@@ -110,8 +106,12 @@ namespace LiteDB.Engine
             {
                 aes.Encrypt(buffer, stream);
 
-                // writing a fake-page that contains only SALT in #0001
-                stream.Write(aes.Salt, 0, ENCRYPTION_SALT_SIZE);
+                // writing a fake-page that contains only SALT in #0001 (fill with 0 to fit 8192 bytes page)
+                var bytes = new byte[PAGE_SIZE];
+
+                Buffer.BlockCopy(aes.Salt, 0, bytes, 0, ENCRYPTION_SALT_SIZE);
+
+                stream.Write(bytes, 0, bytes.Length);
             }
 
             if (initialSize > 0)
@@ -221,7 +221,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get file length
+        /// Get virtual file length: real file can be small but async thread can still writing on disk
         /// </summary>
         public long GetLength(FileOrigin origin)
         {
@@ -333,26 +333,6 @@ namespace LiteDB.Engine
             ENSURE(_queue.Value.Length == 0, "queue must be empty before set new length");
 
             stream.SetLength(length);
-        }
-
-        /// <summary>
-        /// Delete file - checks if empty (0 bytes) before delete - dispose all Stream (this Disk instance can't be used after this)
-        /// </summary>
-        public bool Delete(FileOrigin origin)
-        {
-            var factory = origin == FileOrigin.Log ? _logFactory : _dataFactory;
-
-            if (factory.Exists() == false) return false;
-
-            ENSURE(this.GetLength(origin) == 0, "file should be 0 length before delete");
-
-            this.Dispose();
-
-            LOG($"deleting `{Path.GetFileName(factory.Name)}` file", "DISK");
-
-            factory.Delete();
-
-            return true;
         }
 
         /// <summary>
