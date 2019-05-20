@@ -14,10 +14,10 @@ namespace LiteDB.Engine
 
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLookup _lookup;
-        protected readonly TempDisk _tempDisk;
+        protected readonly SortDisk _tempDisk;
         protected readonly bool _utcDate;
 
-        public BasePipe(TransactionService transaction, IDocumentLookup lookup, TempDisk tempDisk, bool utcDate)
+        public BasePipe(TransactionService transaction, IDocumentLookup lookup, SortDisk tempDisk, bool utcDate)
         {
             _transaction = transaction;
             _lookup = lookup;

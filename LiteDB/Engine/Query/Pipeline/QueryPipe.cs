@@ -9,7 +9,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal class QueryPipe : BasePipe
     {
-        public QueryPipe(TransactionService transaction, IDocumentLookup loader, TempDisk tempDisk, bool utcDate)
+        public QueryPipe(TransactionService transaction, IDocumentLookup loader, SortDisk tempDisk, bool utcDate)
             : base(transaction, loader, tempDisk, utcDate)
         {
         }

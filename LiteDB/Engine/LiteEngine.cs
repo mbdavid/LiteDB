@@ -38,7 +38,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get internal temporaty disk to be used in sort operation - will create a file "-tmp" when needed (used more than 1 container (800kb) of data to sort)
         /// </summary>
-        internal TempDisk TempDisk { get; }
+        internal SortDisk SortDisk { get; }
 
         #endregion
 
@@ -93,8 +93,8 @@ namespace LiteDB.Engine
                     _walIndex.RestoreIndex(ref _header);
                 }
 
-                // initialize temp disk
-                this.TempDisk = new TempDisk(settings.CreateTempFactory(), CONTAINER_SORT_SIZE, settings.UtcDate);
+                // initialize sort temp disk
+                this.SortDisk = new SortDisk(settings.CreateTempFactory(), CONTAINER_SORT_SIZE, settings.UtcDate);
 
                 // register system collections
                 this.InitializeSystemCollections();
@@ -140,7 +140,7 @@ namespace LiteDB.Engine
                 _disk?.Dispose();
 
                 // delete sort temp file
-                this.TempDisk?.Dispose();
+                this.SortDisk?.Dispose();
 
                 // dispose lockers
                 _locker?.Dispose();

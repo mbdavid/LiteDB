@@ -14,7 +14,7 @@ namespace LiteDB.Engine
     /// Single instance of TempDisk manage read/write access to temporary disk - used in merge sort
     /// [ThreadSafe]
     /// </summary>
-    internal class TempDisk : IDisposable
+    internal class SortDisk : IDisposable
     {
         private readonly IStreamFactory _factory;
         private readonly StreamPool _pool;
@@ -27,7 +27,7 @@ namespace LiteDB.Engine
 
         public bool UtcDate => _utcDate;
 
-        public TempDisk(IStreamFactory factory, int containerSize , bool utcDate)
+        public SortDisk(IStreamFactory factory, int containerSize, bool utcDate)
         {
             ENSURE(containerSize % PAGE_SIZE == 0, "size must be PAGE_SIZE multiple");
 

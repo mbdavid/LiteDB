@@ -95,7 +95,7 @@ namespace LiteDB.Engine
                 var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot));
 
                 // get current query pipe: normal or groupby pipe
-                using (var pipe = queryPlan.GetPipe(transaction, snapshot, _engine.TempDisk, _engine.Settings.UtcDate))
+                using (var pipe = queryPlan.GetPipe(transaction, snapshot, _engine.SortDisk, _engine.Settings.UtcDate))
                 {
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>

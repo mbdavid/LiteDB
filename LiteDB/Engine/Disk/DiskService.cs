@@ -243,7 +243,7 @@ namespace LiteDB.Engine
         public IEnumerable<PageBuffer> ReadFull(FileOrigin origin)
         {
             // do not use MemoryCache factory - reuse same buffer array (one page per time)
-            var buffer = new byte[PAGE_SIZE];
+            var buffer = BufferPool.Rent(PAGE_SIZE);
 
             var pool = origin == FileOrigin.Log ? _logPool : _dataPool;
             var stream = pool.Rent();
@@ -252,6 +252,7 @@ namespace LiteDB.Engine
             {
                 // get length before starts (avoid grow during loop)
                 var length = this.GetLength(origin);
+                var slice = new BufferSlice(buffer, 0, PAGE_SIZE);
 
                 stream.Position = 0;
 
@@ -262,7 +263,7 @@ namespace LiteDB.Engine
                     // read encrypted or plain data from Stream into buffer
                     if (_aes != null)
                     {
-                        _aes.Decrypt(stream, new BufferSlice(buffer, 0, PAGE_SIZE));
+                        _aes.Decrypt(stream, slice);
                     }
                     else
                     {
@@ -279,6 +280,7 @@ namespace LiteDB.Engine
             }
             finally
             {
+                BufferPool.Return(buffer);
                 pool.Return(stream);
             }
         }

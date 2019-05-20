@@ -19,7 +19,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal class SortService : IDisposable
     {
-        private readonly TempDisk _disk;
+        private readonly SortDisk _disk;
 
         private readonly List<SortContainer> _containers = new List<SortContainer>();
         private readonly int _containerSize;
@@ -41,7 +41,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IReadOnlyCollection<SortContainer> Containers => _containers;
 
-        public SortService(TempDisk disk, int order)
+        public SortService(SortDisk disk, int order)
         {
             _disk = disk;
             _order = order;

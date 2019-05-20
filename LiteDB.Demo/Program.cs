@@ -21,22 +21,16 @@ namespace LiteDB.Demo
             Console.WriteLine("LITE DB v5");
             Console.WriteLine("===========================================================");
 
-            var cn = @"filename=d:\app__pwd.db; password=abc";
+            var cn = @"filename=d:\appPWD.db; password=abc";
 
-            File.Delete(@"d:\app__pwd.db");
-            File.Delete(@"d:\app__pwd-log.db");
-
-            var s = new EngineSettings
-            {
-                Filename = @"d:\app__pwd.db",
-                Password = "abc"
-            };
+            File.Delete(@"d:\appPWD.db");
+            File.Delete(@"d:\appPWD-log.db");
 
             using (var repo = new LiteRepository(cn))
             {
                 repo.Insert(new BsonDocument { ["_id"] = 1, ["nome"] = "Mauricio" }, "col1");
 
-                //repo.Database.Checkpoint();
+                repo.Database.Checkpoint();
             }
 
             using (var repo = new LiteRepository(cn))

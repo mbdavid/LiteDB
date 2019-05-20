@@ -97,7 +97,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Select corrent pipe
         /// </summary>
-        public BasePipe GetPipe(TransactionService transaction, Snapshot snapshot, TempDisk tempDisk, bool utcDate)
+        public BasePipe GetPipe(TransactionService transaction, Snapshot snapshot, SortDisk tempDisk, bool utcDate)
         {
             if (this.GroupBy == null)
             {

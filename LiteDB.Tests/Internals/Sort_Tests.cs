@@ -27,7 +27,7 @@ namespace LiteDB.Internals
                 .Select(x => new KeyValuePair<BsonValue, PageAddress>(x, PageAddress.Empty))
                 .ToArray();
 
-            using (var tempDisk = new TempDisk(_factory, 10 * 8192, false))
+            using (var tempDisk = new SortDisk(_factory, 10 * 8192, false))
             using (var s = new SortService(tempDisk, Query.Ascending))
             {
                 s.Insert(source);
@@ -53,7 +53,7 @@ namespace LiteDB.Internals
                 .ToArray();
 
 
-            using (var tempDisk = new TempDisk(_factory, 10 * 8192, false))
+            using (var tempDisk = new SortDisk(_factory, 10 * 8192, false))
             using (var s = new SortService(tempDisk, Query.Descending))
             {
                 s.Insert(source);
