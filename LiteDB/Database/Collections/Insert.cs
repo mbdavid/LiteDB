@@ -103,7 +103,8 @@ namespace LiteDB
                     (_autoId == BsonType.Guid && id.AsGuid == Guid.Empty) ||
                     (_autoId == BsonType.DateTime && id.AsDateTime == DateTime.MinValue) ||
                     (_autoId == BsonType.Int32 && id.AsInt32 == 0) ||
-                    (_autoId == BsonType.Int64 && id.AsInt64 == 0))
+                    (_autoId == BsonType.Int64 && id.AsInt64 == 0) ||
+                    (_autoId == BsonType.String && id.IsNull))
                 {
                     // in this cases, remove _id and set new value after
                     doc.Remove("_id");
