@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -63,6 +63,10 @@ namespace LiteDB
         }
         
         public BsonValue(UInt32 value) : this((Int64)value)
+        {
+        }
+
+        public BsonValue(UInt64 value) : this((Double)value)
         {
         }
 
@@ -269,6 +273,12 @@ namespace LiteDB
             get { return this.IsNumber ? Convert.ToUInt32(this.RawValue) : default(UInt32); }
         }
 
+        public ulong AsUInt64
+        {
+            get { return this.IsNumber ? Convert.ToUInt64(this.RawValue) : default(UInt64); }
+        }
+
+
         public double AsDouble
         {
             get { return this.IsNumber ? Convert.ToDouble(this.RawValue) : default(Double); }
@@ -442,16 +452,16 @@ namespace LiteDB
             return new BsonValue(value);
         }
 
-        // UInt64 (to avoid ambigous between Double-Decimal)
+        // UInt64 (to avoid ambiguous between Double-Decimal)
         public static implicit operator UInt64(BsonValue value)
         {
             return (UInt64)value.RawValue;
         }
 
-        // Decimal
+        // UInt64
         public static implicit operator BsonValue(UInt64 value)
         {
-            return new BsonValue((Double)value);
+            return new BsonValue(value);
         }
 
         // String
