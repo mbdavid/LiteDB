@@ -61,6 +61,10 @@ namespace LiteDB
             this.Type = BsonType.Int64;
             this.RawValue = value;
         }
+        
+        public BsonValue(UInt32 value) : this((Int64)value)
+        {
+        }
 
         public BsonValue(Double value)
         {
@@ -260,6 +264,11 @@ namespace LiteDB
             get { return this.IsNumber ? Convert.ToInt64(this.RawValue) : default(Int64); }
         }
 
+        public uint AsUInt32
+        {
+            get { return this.IsNumber ? Convert.ToUInt32(this.RawValue) : default(UInt32); }
+        }
+
         public double AsDouble
         {
             get { return this.IsNumber ? Convert.ToDouble(this.RawValue) : default(Double); }
@@ -381,6 +390,18 @@ namespace LiteDB
 
         // Int32
         public static implicit operator BsonValue(Int32 value)
+        {
+            return new BsonValue(value);
+        }
+
+        // UInt32
+        public static implicit operator UInt32(BsonValue value)
+        {
+            return (UInt32)value.RawValue;
+        }
+
+        // UInt32
+        public static implicit operator BsonValue(UInt32 value)
         {
             return new BsonValue(value);
         }
