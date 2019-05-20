@@ -27,6 +27,16 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Implements bulk upsert of documents in a collection. Usefull when need lots of documents.
+        /// </summary>
+        public int UpsertBulk(IEnumerable<T> docs, int batchSize = 5000)
+        {
+            if (docs == null) throw new ArgumentNullException(nameof(docs));
+
+            return _engine.Value.UpsertBulk(_name, this.GetBsonDocs(docs), batchSize, _autoId);
+        }
+
+        /// <summary>
         /// Insert or Update a document in this collection.
         /// </summary>
         public bool Upsert(BsonValue id, T document)
