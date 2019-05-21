@@ -29,12 +29,12 @@ namespace LiteDB.Benchmarks.Benchmarks.Queries
             _fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(N)); // executed once per each N value
         }
 
-        [GlobalSetup(Target = nameof(Query_CompoundIndexVariant1))]
-        public void GlobalSetupCompoundIndexVariant1()
+        [GlobalSetup(Target = nameof(Query_CompoundIndexVariant))]
+        public void GlobalSetupCompoundIndexVariant()
         {
             DatabaseInstance = new LiteDatabase(ConnectionString);
             _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
-            _fileMetaCollection.EnsureIndex(_compoundIndexName, "$.IsFavorite +';' + $.ShouldBeShown", true);
+            _fileMetaCollection.EnsureIndex(_compoundIndexName, $"$.{nameof(FileMetaBase.IsFavorite)};$.{nameof(FileMetaBase.ShouldBeShown)}");
 
             _fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(N)); // executed once per each N value
         }
@@ -49,7 +49,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Queries
         }
 
         [Benchmark]
-        public List<FileMetaBase> Query_CompoundIndexVariant1()
+        public List<FileMetaBase> Query_CompoundIndexVariant()
         {
             return _fileMetaCollection.Find(Query.EQ(_compoundIndexName, $"{false};{true}")).ToList();
         }
