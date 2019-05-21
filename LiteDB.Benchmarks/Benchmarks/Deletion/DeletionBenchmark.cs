@@ -21,12 +21,14 @@ namespace LiteDB.Benchmarks.Benchmarks.Deletion
         [GlobalSetup]
         public void GlobalSetup()
         {
+            File.Delete(DatabasePath);
+
             DatabaseInstance = new LiteDatabase(ConnectionString);
             _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
             _fileMetaCollection.EnsureIndex(file => file.IsFavorite);
             _fileMetaCollection.EnsureIndex(file => file.ShouldBeShown);
 
-            data = FileMetaGenerator<FileMetaBase>.GenerateList(N); // executed once per each N value
+            data = FileMetaGenerator<FileMetaBase>.GenerateList(N);
         }
 
         [IterationSetup]
