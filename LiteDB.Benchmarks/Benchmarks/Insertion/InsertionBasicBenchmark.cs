@@ -39,7 +39,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
             return _fileMetaCollection.InsertBulk(data, 1000);
         }
 
-        [Benchmark]
+        /*[Benchmark()]
         public void InsertionWithLoop()
         {
             // ReSharper disable once ForCanBeConvertedToForeach
@@ -47,7 +47,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
             {
                 _fileMetaCollection.Insert(data[i]);
             }
-        }
+        }*/
 
         [Benchmark]
         public int Upsertion()
@@ -61,7 +61,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
             return _fileMetaCollection.UpsertBulk(data, 1000);
         }
 
-        [Benchmark]
+        /*[Benchmark]
         public void UpsertionWithLoop()
         {
             // ReSharper disable once ForCanBeConvertedToForeach
@@ -69,7 +69,7 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
             {
                 _fileMetaCollection.Upsert(data[i]);
             }
-        }
+        }*/
 
         [IterationCleanup]
         public void IterationCleanup()
