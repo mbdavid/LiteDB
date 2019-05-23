@@ -14,6 +14,7 @@ namespace LiteDB.Benchmarks
         static void Main(string[] args)
         {
             BenchmarkRunner.Run(typeof(Program).Assembly, DefaultConfig.Instance
+                //.With(new BenchmarkDotNet.Filters.AnyCategoriesFilter(new[] {Benchmarks.Constants.Categories.QUERIES}))
                 .With(Job.Mono
                     .With(Jit.Llvm)
                     .With(new[] {new MonoArgument("--optimize=inline")})
