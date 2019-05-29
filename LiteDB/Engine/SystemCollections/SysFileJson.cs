@@ -17,13 +17,12 @@ namespace LiteDB.Engine
 
         public override IEnumerable<BsonDocument> Input(LiteEngine engine, BsonValue options)
         {
-            if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, $"Collection ${this.Name} requires a string/object parameter");
-
-            var filename = GetOption<string>(options, true, "filename", null) ?? throw new LiteException(0, $"Collection ${this.Name} requires string as 'filename' or a document field 'filename'");
+            var filename = GetOption(options, "filename", null).AsString ?? throw new LiteException(0, $"Collection ${this.Name} requires string as 'filename' or a document field 'filename'");
+            var encoding = GetOption(options, "encoding", "utf-8").AsString;
 
             using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                using (var reader = new StreamReader(fs))
+                using (var reader = new StreamReader(fs, Encoding.GetEncoding(encoding)))
                 {
                     var json = new JsonReader(reader);
 
@@ -41,13 +40,11 @@ namespace LiteDB.Engine
 
         public override int Output(IEnumerable<BsonDocument> source, BsonValue options)
         {
-            if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, "Collection $file_json requires a string/object parameter");
-
-            var filename = GetOption<string>(options, true, "filename", null) ?? throw new LiteException(0, "Collection $file_json requires string as 'filename' or a document field 'filename'");
-            var pretty = GetOption<bool>(options, false, "pretty", false);
-            var indent = GetOption<int>(options, false, "indent", 4);
-            var encoding = GetOption<string>(options, false, "encoding", "utf-8");
-            var overwritten = GetOption<bool>(options, false, "overwritten", false);
+            var filename = GetOption(options, "filename", null).AsString ?? throw new LiteException(0, "Collection $file_json requires string as filename or a document field 'filename'");
+            var pretty = GetOption(options, "pretty", false).AsBoolean;
+            var indent = GetOption(options, "indent", 4).AsInt32;
+            var encoding = GetOption(options, "encoding", "utf-8").AsString;
+            var overwritten = GetOption(options, "overwritten", false).AsBoolean;
 
             var index = 0;
             FileStream fs = null;

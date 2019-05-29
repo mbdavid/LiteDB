@@ -11,22 +11,21 @@ namespace LiteDB.Engine
     /// <summary>
     /// Lock service are collection-based locks. Lock will support any threads reading at same time. Writing operations will be locked
     /// based on collection. Eventualy, write operation can change header page that has an exclusive locker for.
+    /// [ThreadSafe]
     /// </summary>
     public class LockService : IDisposable
     {
         private readonly TimeSpan _timeout;
-        private readonly Logger _log;
         private readonly bool _readonly;
 
         private ReaderWriterLockSlim _transaction = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
         private ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
-        internal LockService(TimeSpan timeout, bool @readonly, Logger log)
+        internal LockService(TimeSpan timeout, bool @readonly)
         {
             _timeout = timeout;
             _readonly = @readonly;
-            _log = log;
         }
 
         /// <summary>
@@ -35,7 +34,12 @@ namespace LiteDB.Engine
         public bool IsInTransaction => _transaction.IsReadLockHeld;
 
         /// <summary>
-        /// Use ReaderWriterLockSlim to manage only one transaction per thread
+        /// Return how many transactions are opened
+        /// </summary>
+        public int TransactionsCount => _transaction.CurrentReadCount;
+
+        /// <summary>
+        /// Enter transaction read lock
         /// </summary>
         public void EnterTransaction()
         {
@@ -53,7 +57,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Exit transaction locker
+        /// Exit transaction read lock
         /// </summary>
         public void ExitTransaction()
         {
@@ -64,11 +68,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Enter collection in read lock mode
+        /// Enter collection in read lock
         /// </summary>
         public void EnterRead(string collectionName)
         {
-            DEBUG(_transaction.IsReadLockHeld == false && _transaction.IsWriteLockHeld == false, "Use EnterTransaction() before EnterRead(name)");
+            ENSURE(_transaction.IsReadLockHeld || _transaction.IsWriteLockHeld, "Use EnterTransaction() before EnterRead(name)");
 
             // get collection locker from dictionary (or create new if doesnt exists)
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
@@ -78,7 +82,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Exit read lock
+        /// Exit collection read lock
         /// </summary>
         public void ExitRead(string collectionName)
         {
@@ -88,11 +92,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Enter collection in reserved lock mode
+        /// Enter collection reserved lock mode (only 1 collection per time can have this lock)
         /// </summary>
         public void EnterReserved(string collectionName)
         {
-            DEBUG(_transaction.IsReadLockHeld == false, "Use EnterTransaction() before EnterReserved(name)");
+            ENSURE(_transaction.IsReadLockHeld, "Use EnterTransaction() before EnterReserved(name)");
 
             // checks if engine was open in readonly mode
             if (_readonly) throw new LiteException(0, "This operation are not support because engine was open in reaodnly mode");
@@ -116,7 +120,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Exit reserved lock
+        /// Exit collection reserved lock
         /// </summary>
         public void ExitReserved(string collectionName)
         {
@@ -146,6 +150,8 @@ namespace LiteDB.Engine
             // wait finish all transactions before enter in reserved mode
             if (_transaction.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
 
+            ENSURE(_transaction.RecursiveReadCount == 0, "must have no other transaction here");
+
             try
             {
                 // reserved locker in write lock
@@ -153,6 +159,7 @@ namespace LiteDB.Engine
                 {
                     // exit transaction write lock
                     _transaction.ExitWriteLock();
+
                     throw LiteException.LockTimeout("reserved", _timeout);
                 }
             }
@@ -167,7 +174,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Exit reserved lock
+        /// Exit reserved/exclusive lock
         /// </summary>
         public void ExitReserved(bool exclusive)
         {
@@ -185,9 +192,24 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            _transaction.Dispose();
-            _reserved.Dispose();
-            _collections.ForEach((i, x) => x.Value.Dispose());
+            this.SafeDispose(_transaction);
+            this.SafeDispose(_reserved);
+
+            _collections.ForEach((i, x) => this.SafeDispose(x.Value));
+        }
+
+        /// <summary>
+        /// Dispose class testing for lock synchronization
+        /// </summary>
+        private void SafeDispose(IDisposable obj)
+        {
+            try
+            {
+                obj.Dispose();
+            }
+            catch (SynchronizationLockException)
+            {
+            }
         }
     }
 }

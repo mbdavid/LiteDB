@@ -35,7 +35,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get index cost (lower is best)
         /// </summary>
-        public long IndexCost { get; internal set; } = 0; // not calculated
+        public uint IndexCost { get; internal set; } = 0; // not calculated
 
         /// <summary>
         /// If true, gereate document result only with IndexNode.Key (avoid load all document)
@@ -92,6 +92,50 @@ namespace LiteDB.Engine
         /// </summary>
         public bool ForUpdate { get; set; } = false;
 
+        #region Get Query Pipeline and document lookup implementation
+
+        /// <summary>
+        /// Select corrent pipe
+        /// </summary>
+        public BasePipe GetPipe(TransactionService transaction, Snapshot snapshot, SortDisk tempDisk, bool utcDate)
+        {
+            if (this.GroupBy == null)
+            {
+                return new QueryPipe(transaction, this.GetLookup(snapshot, utcDate), tempDisk, utcDate);
+            }
+            else
+            {
+                return new GroupByPipe(transaction, this.GetLookup(snapshot, utcDate), tempDisk, utcDate);
+            }
+        }
+
+        /// <summary>
+        /// Get corrent IDocumentLookup
+        /// </summary>
+        public IDocumentLookup GetLookup(Snapshot snapshot, bool utcDate)
+        {
+            var data = new DataService(snapshot);
+            var indexer = new IndexService(snapshot);
+
+            // define document loader
+            // if index are VirtualIndex - it's also lookup document
+            if (!(this.Index is IDocumentLookup lookup))
+            {
+                if (this.IsIndexKeyOnly)
+                {
+                    lookup = new IndexLookup(indexer, this.Fields.Single());
+                }
+                else
+                {
+                    lookup = new DatafileLookup(data, utcDate, this.Fields);
+                }
+            }
+
+            return lookup;
+        }
+
+        #endregion  
+
         #region Execution Plan
 
         /// <summary>
@@ -123,24 +167,45 @@ namespace LiteDB.Engine
                     (BsonValue)new BsonArray(this.Fields.Select(x => new BsonValue(x))),
             };
 
-            doc["includeBefore"] = this.IncludeBefore.Count == 0 ?
-                BsonValue.Null :
-                new BsonArray(this.IncludeBefore.Select(x => new BsonValue(x.Source)));
+            if (this.IncludeBefore.Count > 0)
+            {
+                doc["includeBefore"] = new BsonArray(this.IncludeBefore.Select(x => new BsonValue(x.Source)));
+            }
 
-            doc["filters"] = this.Filters.Count == 0 ?
-                BsonValue.Null :
-                new BsonArray(this.Filters.Select(x => new BsonValue(x.Source)));
+            if (this.Filters.Count > 0)
+            {
+                doc["filters"] = new BsonArray(this.Filters.Select(x => new BsonValue(x.Source)));
+            }
 
-            doc["includeAfter"] = this.IncludeAfter.Count == 0 ?
-                BsonValue.Null :
-                new BsonArray(this.IncludeAfter.Select(x => new BsonValue(x.Source)));
+            if (this.OrderBy != null)
+            {
+                doc["orderBy"] = new BsonDocument
+                {
+                    ["expr"] = this.OrderBy.Expression.Source,
+                    ["order"] = this.OrderBy.Order,
+                };
+            }
+
+            if (this.Limit != int.MaxValue)
+            {
+                doc["limit"] = this.Limit;
+            }
+
+            if (this.Offset != 0)
+            {
+                doc["offset"] = this.Offset;
+            }
+
+            if (this.IncludeAfter.Count > 0)
+            {
+                doc["includeAfter"] = new BsonArray(this.IncludeAfter.Select(x => new BsonValue(x.Source)));
+            }
 
             if (this.GroupBy != null)
             {
                 doc["groupBy"] = new BsonDocument
                 {
                     ["expr"] = this.GroupBy.Expression.Source,
-                    ["order"] = this.GroupBy.Order, // order = 0 means no sorted by GroupBy (used from index order)
                     ["having"] = this.GroupBy.Having?.Source,
                     ["select"] = this.GroupBy.Select?.Source
                 };
@@ -153,17 +218,6 @@ namespace LiteDB.Engine
                     ["all"] = this.Select.All
                 };
             }
-
-            doc["orderBy"] = this.OrderBy == null ?
-                BsonValue.Null :
-                new BsonDocument
-                {
-                    ["expr"] = this.OrderBy.Expression.Source,
-                    ["order"] = this.OrderBy.Order,
-                };
-
-            doc["limit"] = this.Limit;
-            doc["offset"] = this.Offset;
 
             return doc;
         }

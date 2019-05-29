@@ -11,16 +11,14 @@ namespace LiteDB.Engine
     /// </summary>
     internal class OrderBy
     {
-        private readonly BsonExpression _expression;
+        public BsonExpression Expression { get; }
+
+        public int Order { get; set; }
 
         public OrderBy(BsonExpression expression, int order)
         {
-            _expression = expression;
+            this.Expression = expression;
             this.Order = order;
         }
-
-        public BsonExpression Expression => _expression;
-
-        public int Order { get; set; }
     }
 }

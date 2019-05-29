@@ -9,86 +9,57 @@ namespace LiteDB.Engine
     /// </summary>
     internal class GroupByPipe : BasePipe
     {
-        public GroupByPipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader, CursorInfo cursor)
-            : base(engine, transaction, loader, cursor)
+        public GroupByPipe(TransactionService transaction, IDocumentLookup loader, SortDisk tempDisk, bool utcDate)
+            : base(transaction, loader, tempDisk, utcDate)
         {
         }
 
         /// <summary>
         /// GroupBy Pipe Order
         /// - LoadDocument
-        /// - IncludeBefore
         /// - Filter
-        /// - IncludeAfter
-        /// - OrderBy to GroupBy
+        /// - OrderBy (to GroupBy)
         /// - GroupBy
-        /// - SelectGroupBy
-        /// - Having
-        /// - OrderBy
+        /// - HavingSelectGroupBy
         /// - OffSet
         /// - Limit
         /// </summary>
         public override IEnumerable<BsonDocument> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
         {
             // starts pipe loading document
-            var source = this.LoadDocument(nodes, query.IsIndexKeyOnly, query.Fields.FirstOrDefault());
+            var source = this.LoadDocument(nodes);
 
-            // do includes in result before filter
-            foreach (var path in query.IncludeBefore)
-            {
-                source = this.Include(source, path);
-            }
-
-            // filter results according expressions
+            // filter results according filter expressions
             foreach (var expr in query.Filters)
             {
                 source = this.Filter(source, expr);
             }
 
-            // do includes in result after filter
-            foreach (var path in query.IncludeAfter)
+            // run orderBy used in GroupBy (if not already ordered by index)
+            if (query.OrderBy != null)
             {
-                source = this.Include(source, path);
-            }
-
-            // pipe: if groupBy order is 0, do not need sort (already sorted by index)
-            if (query.GroupBy.Order != 0)
-            {
-                source = this.OrderBy(source, query.GroupBy.Expression, query.GroupBy.Order, 0, int.MaxValue);
+                source = this.OrderBy(source, query.OrderBy.Expression, query.OrderBy.Order, 0, int.MaxValue);
             }
 
             // apply groupby
-            var groups = this.GroupBy(source, query.GroupBy.Expression);
+            var groups = this.GroupBy(source, query.GroupBy);
 
-            // now, get only first document from each group
-            source = this.SelectGroupBy(groups, query.GroupBy.Select);
+            // apply group filter and transform result
+            var result = this.SelectGroupBy(groups, query.GroupBy);
 
-            // if contains having clause, run after select group by
-            if (query.GroupBy.Having != null)
-            {
-                source = this.Having(source, query.GroupBy.Having);
-            }
+            // apply offset
+            if (query.Offset > 0) result = result.Skip(query.Offset);
 
-            // pipe: if groupBy order is 0, do not need sort (already sorted by index)
-            if (query.OrderBy.Order != 0)
-            {
-                source = this.OrderBy(source, query.GroupBy.Expression, query.GroupBy.Order, 0, int.MaxValue);
-            }
+            // apply limit
+            if (query.Limit < int.MaxValue) result = result.Take(query.Limit);
 
-            // pipe: apply offset (no orderby)
-            if (query.Offset > 0) source = source.Skip(query.Offset);
-
-            // pipe: apply limit (no orderby)
-            if (query.Limit < int.MaxValue) source = source.Take(query.Limit);
-
-            // return document pipe
-            return source;
+            return result;
         }
 
         /// <summary>
-        /// Apply groupBy expression and transform results
+        /// GROUP BY: Apply groupBy expression and aggregate results in DocumentGroup
         /// </summary>
-        private IEnumerable<IEnumerable<BsonDocument>> GroupBy(IEnumerable<BsonDocument> source, BsonExpression expr)
+        private IEnumerable<DocumentGroup> GroupBy(IEnumerable<BsonDocument> source, GroupBy groupBy)
         {
             using (var enumerator = source.GetEnumerator())
             {
@@ -96,91 +67,81 @@ namespace LiteDB.Engine
 
                 while (done.Running)
                 {
-                    var group = YieldDocuments(enumerator, expr, done);
+                    var key = groupBy.Expression.ExecuteScalar(enumerator.Current);
 
-                    yield return new DocumentEnumerable(group, _loader);
+                    groupBy.Select.Parameters["key"] = key;
+
+                    var group = YieldDocuments(key, enumerator, groupBy, done);
+
+                    yield return new DocumentGroup(key, enumerator.Current, group, _lookup);
                 }
             }
         }
 
-        private IEnumerable<BsonDocument> YieldDocuments(IEnumerator<BsonDocument> source, BsonExpression expr, Done done)
+        /// <summary>
+        /// YieldDocuments will run over all key-ordered source and returns groups of source
+        /// </summary>
+        private IEnumerable<BsonDocument> YieldDocuments(BsonValue key, IEnumerator<BsonDocument> enumerator, GroupBy groupBy, Done done)
         {
-            var current = expr.Execute(source.Current, true).First();
+            yield return enumerator.Current;
 
-            yield return source.Current;
-
-            while (done.Running = source.MoveNext())
+            while (done.Running = enumerator.MoveNext())
             {
-                var key = expr.Execute(source.Current, true).First();
+                var current = groupBy.Expression.ExecuteScalar(enumerator.Current);
 
                 if (key == current)
                 {
-                    yield return source.Current;
+                    // yield return document in same key (group)
+                    yield return enumerator.Current;
                 }
                 else
                 {
-                    break;
+                    groupBy.Select.Parameters["key"] = current;
+
+                    // stop current sequence
+                    yield break;
                 }
             }
         }
 
         /// <summary>
-        /// Transform groups of documents into single documents enumerable and apply select expression into group or return first document from each group
+        /// Run Select expression over a group source - each group will return a single value
+        /// If contains Having expression, test if result = true before run Select
         /// </summary>
-        private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<IEnumerable<BsonDocument>> groups, BsonExpression select)
+        private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<DocumentGroup> groups, GroupBy groupBy)
         {
-            foreach (DocumentEnumerable group in groups)
+            var defaultName = groupBy.Select.DefaultFieldName();
+
+            foreach (var group in groups)
             {
                 // transfom group result if contains select expression
-                if (select != null)
+                BsonValue value;
+
+                try
                 {
-                    var result = select.Execute(group, true);
-
-                    // each group result must return a single value after run expression
-                    var value = result.First();
-
-                    if (value.IsDocument)
+                    if (groupBy.Having != null)
                     {
-                        yield return value.AsDocument;
+                        var filter = groupBy.Having.ExecuteScalar(group, group.Root, group.Root);
+
+                        if (!filter.IsBoolean || !filter.AsBoolean) continue;
                     }
-                    else
-                    {
-                        yield return new BsonDocument { ["expr"] = value };
-                    }
+
+                    value = groupBy.Select.ExecuteScalar(group, group.Root, group.Root);
+                }
+                finally
+                {
+                    group.Dispose();
+                }
+
+                if (value.IsDocument)
+                {
+                    yield return value.AsDocument;
                 }
                 else
                 {
-                    // get first document BUT with full source scan (get from DocumentEnumerable)
-                    var doc = group.FirstOrDefault();
-
-                    yield return doc;
-                }
-
-                group.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// Pipe: Filter source using having bool expression to skip or include on final resultset
-        /// </summary>
-        protected IEnumerable<BsonDocument> Having(IEnumerable<BsonDocument> source, BsonExpression having)
-        {
-            foreach (var doc in source)
-            {
-                var result = having.Execute(doc, true).First();
-
-                if (result.IsBoolean && result.AsBoolean)
-                {
-                    yield return doc;
+                    yield return new BsonDocument { [defaultName] = value };
                 }
             }
-        }
-        /// <summary>
-        /// Bool inside a class to be used as "ref" parameter on ienumerable
-        /// </summary>
-        private class Done
-        {
-            public bool Running = false;
         }
     }
 }

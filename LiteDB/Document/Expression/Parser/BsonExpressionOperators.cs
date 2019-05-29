@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using static LiteDB.ZipExtensions;
+using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -15,92 +15,94 @@ namespace LiteDB
         /// <summary>
         /// Add two number values. If any side are string, concat left+right as string
         /// </summary>
-        public static IEnumerable<BsonValue> ADD(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        public static BsonValue ADD(BsonValue left, BsonValue right)
         {
-            foreach (var value in ZipValues(left, right))
+            // if both sides are string, concat
+            if (left.IsString && right.IsString)
             {
-                // if any side are string, concat
-                if (value.First.IsString || value.Second.IsString)
-                {
-                    yield return value.First.RawValue?.ToString() + value.Second.RawValue?.ToString();
-                }
-                else if (value.First.IsDateTime && value.Second.IsNumber)
-                {
-                    yield return value.First.AsDateTime.AddDays(value.Second.AsDouble);
-                }
-                else if (value.First.IsNumber && value.Second.IsDateTime)
-                {
-                    yield return value.Second.AsDateTime.AddDays(value.First.AsDouble);
-                }
-                else if (value.First.IsNumber || value.Second.IsNumber)
-                {
-                    yield return value.First + value.Second;
-                }
+                return left.AsString + right.AsString;
             }
+            // if any sides are string, concat casting both to string
+            else if (left.IsString || right.IsString)
+            {
+                return left.ToString() + right.ToString();
+            }
+            // if any side are DateTime and another is number, add days in date
+            else if (left.IsDateTime && right.IsNumber)
+            {
+                return left.AsDateTime.AddDays(right.AsDouble);
+            }
+            else if (left.IsNumber && right.IsDateTime)
+            {
+                return right.AsDateTime.AddDays(left.AsDouble);
+            }
+            // if both sides are number, add as math
+            else if (left.IsNumber && right.IsNumber)
+            {
+                return left + right;
+            }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Minus two number values
         /// </summary>
-        public static IEnumerable<BsonValue> MINUS(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        public static BsonValue MINUS(BsonValue left, BsonValue right)
         {
-            foreach (var value in ZipValues(left, right))
+            if (left.IsDateTime && right.IsNumber)
             {
-                if (value.First.IsDateTime && value.Second.IsNumber)
-                {
-                    yield return value.First.AsDateTime.AddDays(-value.Second.AsDouble);
-                }
-                else if (value.First.IsNumber && value.Second.IsDateTime)
-                {
-                    yield return value.Second.AsDateTime.AddDays(-value.First.AsDouble);
-                }
-                else if (value.First.IsNumber && value.Second.IsNumber)
-                {
-                    yield return value.First - value.Second;
-                }
+                return left.AsDateTime.AddDays(-right.AsDouble);
             }
+            else if (left.IsNumber && right.IsDateTime)
+            {
+                return right.AsDateTime.AddDays(-left.AsDouble);
+            }
+            else if (left.IsNumber && right.IsNumber)
+            {
+                return left - right;
+            }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Multiply two number values
         /// </summary>
-        public static IEnumerable<BsonValue> MULTIPLY(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        public static BsonValue MULTIPLY(BsonValue left, BsonValue right)
         {
-            foreach (var value in ZipValues(left, right))
+            if (left.IsNumber && right.IsNumber)
             {
-                if (value.First.IsNumber && value.Second.IsNumber)
-                {
-                    yield return value.First * value.Second;
-                }
+                return left * right;
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Divide two number values
         /// </summary>
-        public static IEnumerable<BsonValue> DIVIDE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        public static BsonValue DIVIDE(BsonValue left, BsonValue right)
         {
-            foreach (var value in ZipValues(left, right))
+            if (left.IsNumber && right.IsNumber)
             {
-                if (value.First.IsNumber && value.Second.IsNumber)
-                {
-                    yield return value.First / value.Second;
-                }
+                return left / right;
             }
+
+            return BsonValue.Null;
         }
 
         /// <summary>
         /// Mod two number values
         /// </summary>
-        public static IEnumerable<BsonValue> MOD(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        public static BsonValue MOD(BsonValue left, BsonValue right)
         {
-            foreach (var value in ZipValues(left, right))
+            if (left.IsNumber && right.IsNumber)
             {
-                if (value.First.IsNumber && value.Second.IsNumber)
-                {
-                    yield return value.First % value.Second;
-                }
+                return left % right;
             }
+
+            return BsonValue.Null;
         }
 
         #endregion
@@ -110,124 +112,101 @@ namespace LiteDB
         /// <summary>
         /// Test if left and right are same value. Returns true or false
         /// </summary>
-        public static IEnumerable<BsonValue> EQ(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
-        {
-            foreach (var value in ZipValues(left, right))
-            {
-                yield return value.First == value.Second;
-            }
-        }
-
-        /// <summary>
-        /// Test if left is "SQL LIKE" with right. Returns true or false. Works only when left and right are string
-        /// </summary>
-        public static IEnumerable<BsonValue> LIKE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
-        {
-            foreach (var value in ZipValues(left, right))
-            {
-                if (value.First.IsString && value.Second.IsString)
-                {
-                    yield return value.First.AsString.SqlLike(value.Second.AsString);
-                }
-                else
-                {
-                    yield return false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Test if left is between right-array. Returns true or false. Right value must be an array. Support multiple values
-        /// </summary>
-        public static IEnumerable<BsonValue> BETWEEN(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
-        {
-            foreach (var value in ZipValues(left, right))
-            {
-                if (!value.Second.IsArray) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
-
-                var arr = value.Second.AsArray;
-
-                if (arr.Count != 2) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
-
-                var start = arr[0];
-                var end = arr[1];
-
-                yield return value.First >= start && value.First <= end;
-            }
-        }
+        public static BsonValue EQ(BsonValue left, BsonValue right) => left == right;
+        public static BsonValue EQ_ANY(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => x == right);
+        public static BsonValue EQ_ALL(IEnumerable<BsonValue> left, BsonValue right) => left.All(x => x == right);
 
         /// <summary>
         /// Test if left is greater than right value. Returns true or false
         /// </summary>
-        public static IEnumerable<BsonValue> GT(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
-        {
-            foreach (var value in ZipValues(left, right))
-            {
-                yield return value.First > value.Second;
-            }
-        }
+        public static BsonValue GT(BsonValue left, BsonValue right) => left > right;
+        public static BsonValue GT_ANY(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => x > right);
+        public static BsonValue GT_ALL(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => x > right);
 
         /// <summary>
         /// Test if left is greater or equals than right value. Returns true or false
         /// </summary>
-        public static IEnumerable<BsonValue> GTE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
-        {
-            foreach (var value in ZipValues(left, right))
-            {
-                yield return value.First >= value.Second;
-            }
-        }
+        public static BsonValue GTE(BsonValue left, BsonValue right) => left >= right;
+        public static BsonValue GTE_ANY(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => x >= right);
+        public static BsonValue GTE_ALL(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => x >= right);
+
 
         /// <summary>
         /// Test if left is less than right value. Returns true or false
         /// </summary>
-        public static IEnumerable<BsonValue> LT(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
-        {
-            foreach (var value in ZipValues(left, right))
-            {
-                yield return value.First < value.Second;
-            }
-        }
+        public static BsonValue LT(BsonValue left, BsonValue right) => left < right;
+        public static BsonValue LT_ANY(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => x < right);
+        public static BsonValue LT_ALL(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => x < right);
 
         /// <summary>
         /// Test if left is less or equals than right value. Returns true or false
         /// </summary>
-        public static IEnumerable<BsonValue> LTE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
-        {
-            foreach (var value in ZipValues(left, right))
-            {
-                yield return value.First <= value.Second;
-            }
-        }
+        public static BsonValue LTE(BsonValue left, BsonValue right) => left <= right;
+        public static BsonValue LTE_ANY(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => x <= right);
+        public static BsonValue LTE_ALL(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => x <= right);
 
         /// <summary>
         /// Test if left and right are not same value. Returns true or false
         /// </summary>
-        public static IEnumerable<BsonValue> NEQ(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        public static BsonValue NEQ(BsonValue left, BsonValue right) => left != right;
+        public static BsonValue NEQ_ANY(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => x != right);
+        public static BsonValue NEQ_ALL(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => x != right);
+
+        /// <summary>
+        /// Test if left is "SQL LIKE" with right. Returns true or false. Works only when left and right are string
+        /// </summary>
+        public static BsonValue LIKE(BsonValue left, BsonValue right)
         {
-            foreach (var value in ZipValues(left, right))
+            if (left.IsString && right.IsString)
             {
-                yield return value.First != value.Second;
+                return left.AsString.SqlLike(right.AsString);
+            }
+            else
+            {
+                return false;
             }
         }
+
+        public static BsonValue LIKE_ANY(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => LIKE(x, right));
+        public static BsonValue LIKE_ALL(IEnumerable<BsonValue> left, BsonValue right) => left.All(x => LIKE(x, right));
+
+        /// <summary>
+        /// Test if left is between right-array. Returns true or false. Right value must be an array. Support multiple values
+        /// </summary>
+        public static BsonValue BETWEEN(BsonValue left, BsonValue right)
+        {
+            if (!right.IsArray) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
+
+            var arr = right.AsArray;
+
+            if (arr.Count != 2) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
+
+            var start = arr[0];
+            var end = arr[1];
+
+            return left >= start && left <= end;
+        }
+
+        public static BsonValue BETWEEN_ANY(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => BETWEEN(x, right));
+        public static BsonValue BETWEEN_ALL(IEnumerable<BsonValue> left, BsonValue right) => left.All(x => BETWEEN(x, right));
 
         /// <summary>
         /// Test if left are in any value in right side (when right side is an array). If right side is not an array, just implement a simple Equals (=). Returns true or false
         /// </summary>
-        public static IEnumerable<BsonValue> IN(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        public static BsonValue IN(BsonValue left, BsonValue right)
         {
-            foreach (var value in ZipValues(left, right))
+            if (right.IsArray)
             {
-                if (value.Second.IsArray)
-                {
-                    yield return value.Second.AsArray.Contains(value.First);
-                }
-                else
-                {
-                    yield return value.First == value.Second;
-                }
+                return right.AsArray.Contains(left);
+            }
+            else
+            {
+                return left == right;
             }
         }
+
+        public static BsonValue IN_ANY(IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => IN(x, right));
+        public static BsonValue IN_ALL(IEnumerable<BsonValue> left, BsonValue right) => left.All(x => IN(x, right));
 
         #endregion
 
@@ -236,23 +215,17 @@ namespace LiteDB
         /// <summary>
         /// Test left AND right value. Returns true or false
         /// </summary>
-        public static IEnumerable<BsonValue> AND(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        public static BsonValue AND(BsonValue left, BsonValue right)
         {
-            foreach (var value in ZipValues(left, right))
-            {
-                yield return value.First && value.Second;
-            }
+            return left && right;
         }
 
         /// <summary>
         /// Test left OR right value. Returns true or false
         /// </summary>
-        public static IEnumerable<BsonValue> OR(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        public static BsonValue OR(BsonValue left, BsonValue right)
         {
-            foreach (var value in ZipValues(left, right))
-            {
-                yield return value.First || value.Second;
-            }
+            return left || right;
         }
 
         #endregion
@@ -262,121 +235,135 @@ namespace LiteDB
         /// <summary>
         /// Returns value from root document (used in parameter). Returns same document if name are empty
         /// </summary>
-        public static IEnumerable<BsonValue> PARAMETER_PATH(BsonValue value, string name)
+        public static BsonValue PARAMETER_PATH(BsonDocument doc, string name)
         {
             if (string.IsNullOrEmpty(name))
             {
-                yield return value;
+                return doc;
             }
-            else if (value.IsDocument)
-            {
-                if (value.AsDocument.TryGetValue(name, out BsonValue item))
-                {
-                    // fill destroy action to remove value from root
-                    item.Destroy = () => value.AsDocument.Remove(name);
 
-                    yield return item;
-                }
+            if (doc.TryGetValue(name, out BsonValue item))
+            {
+                return item;
+            }
+            else
+            {
+                return BsonValue.Null;
             }
         }
 
         /// <summary>
         /// Return a value from a value as document. If has no name, just return values ($). If value are not a document, do not return anything
         /// </summary>
-        public static IEnumerable<BsonValue> MEMBER_PATH(IEnumerable<BsonValue> values, string name)
+        public static BsonValue MEMBER_PATH(BsonValue value, string name)
         {
-            foreach (var value in values)
+            if (string.IsNullOrEmpty(name))
             {
-                if (string.IsNullOrEmpty(name))
+                return value;
+            }
+            else if (value.IsDocument)
+            {
+                var doc = value.AsDocument;
+
+                if (doc.TryGetValue(name, out BsonValue item))
                 {
-                    yield return value;
+                    return item;
                 }
-                else if (value.IsDocument)
+            }
+
+            return BsonValue.Null;
+        }
+
+        #endregion
+
+        #region Array Index/Filter
+
+        /// <summary>
+        /// Returns a single value from array according index or expression parameter
+        /// </summary>
+        public static BsonValue ARRAY_INDEX(BsonValue value, int index, BsonExpression expr, BsonDocument root, BsonDocument parameters)
+        {
+            if (!value.IsArray) return BsonValue.Null;
+
+            var arr = value.AsArray;
+
+            // for expr.Type = parameter, just get value as index (fixed position)
+            if (expr.Type == BsonExpressionType.Parameter)
+            {
+                // update parameters in expression
+                parameters.CopyTo(expr.Parameters);
+
+                // get fixed position based on parameter value (must return int value)
+                var indexValue = expr.ExecuteScalar(root);
+
+                if (!indexValue.IsNumber) throw new LiteException(0, "Parameter expression must return number when called inside an array");
+
+                index = indexValue.AsInt32;
+            }
+
+            var idx = index < 0 ? arr.Count + index : index;
+
+            if (arr.Count > idx)
+            {
+                return arr[idx];
+            }
+
+            return BsonValue.Null;
+        }
+
+        /// <summary>
+        /// Returns all values from array according filter expression or all values (index = MaxValue)
+        /// </summary>
+        public static IEnumerable<BsonValue> ARRAY_FILTER(BsonValue value, int index, BsonExpression filterExpr, BsonDocument root, BsonDocument parameters)
+        {
+            if (!value.IsArray) yield break;
+
+            var arr = value.AsArray;
+
+            // [*] - index are all values
+            if (index == int.MaxValue)
+            {
+                foreach (var item in arr)
                 {
-                    var doc = value.AsDocument;
+                    yield return item;
+                }
+            }
+            // [<expr>] - index are an expression
+            else
+            {
+                // update parameters in expression
+                parameters.CopyTo(filterExpr.Parameters);
 
-                    if (doc.TryGetValue(name, out BsonValue item))
+                foreach (var item in arr)
+                {
+                    // execute for each child value and except a first bool value (returns if true)
+                    var c = filterExpr.ExecuteScalar(new BsonDocument[] { root }, root, item);
+
+                    if (c.IsBoolean && c.AsBoolean == true)
                     {
-                        // fill destroy action to remove value from parent document
-                        item.Destroy = () => doc.Remove(name);
-
                         yield return item;
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// Returns all values from array according index. If index are MaxValue, return all values
-        /// </summary>
-        public static IEnumerable<BsonValue> ARRAY_PATH(IEnumerable<BsonValue> values, int index, BsonExpression expr, IEnumerable<BsonDocument> root, BsonDocument parameters)
+        #endregion
+
+        #region Map
+
+        public static IEnumerable<BsonValue> MAP(IEnumerable<BsonValue> input, BsonExpression mapExpr, BsonDocument root, BsonDocument parameters)
         {
-            foreach (var value in values)
+            // update parameters in expression
+            parameters.CopyTo(mapExpr.Parameters);
+
+            foreach (var item in input)
             {
-                if (value.IsArray)
+                // execute for each child value and except a first bool value (returns if true)
+                var values = mapExpr.Execute(new BsonDocument[] { root }, root, item);
+
+                foreach(var value in values)
                 {
-                    var arr = value.AsArray;
-
-                    // for expr.Type = parameter, just get value as index (fixed position)
-                    if (expr.Type == BsonExpressionType.Parameter)
-                    {
-                        // update parameters in expression
-                        parameters.CopyTo(expr.Parameters);
-
-                        // get fixed position based on parameter value (must return int value)
-                        var idx = expr.Execute(root, root, true).First();
-
-                        if (!idx.IsNumber) throw new LiteException(0, "Parameter expression must return number when called inside an array");
-
-                        index = idx.AsInt32;
-                    }
-
-                    // [<expr>] - index are an expression
-                    if (expr.Type != BsonExpressionType.Empty && expr.Type != BsonExpressionType.Parameter)
-                    {
-                        // update parameters in expression
-                        parameters.CopyTo(expr.Parameters);
-
-                        foreach (var item in arr)
-                        {
-                            // execute for each child value and except a first bool value (returns if true)
-                            var c = expr.Execute(root, new BsonValue[] { item }, true).First();
-
-                            if (c.IsBoolean && c.AsBoolean == true)
-                            {
-                                // fill destroy action to remove value from parent array
-                                item.Destroy = () => arr.Remove(item);
-
-                                yield return item;
-                            }
-                        }
-                    }
-                    // [*] - index are all values
-                    else if (index == int.MaxValue)
-                    {
-                        foreach (var item in arr)
-                        {
-                            // fill destroy action to remove value from parent array
-                            item.Destroy = () => arr.Remove(item);
-
-                            yield return item;
-                        }
-                    }
-                    // [n] - fixed index
-                    else
-                    {
-                        var idx = index < 0 ? arr.Count + index : index;
-
-                        if (arr.Count > idx)
-                        {
-                            var item = arr[idx];
-
-                            // fill destroy action to remove value from parent array
-                            item.Destroy = () => arr.Remove(item);
-
-                            yield return item;
-                        }
-                    }
+                    yield return value;
                 }
             }
         }
@@ -388,44 +375,26 @@ namespace LiteDB
         /// <summary>
         /// Create multi documents based on key-value pairs on parameters. DOCUMENT('_id', 1)
         /// </summary>
-        public static IEnumerable<BsonValue> DOCUMENT_INIT(string[] keys, IEnumerable<IEnumerable<BsonValue>> values)
+        public static BsonValue DOCUMENT_INIT(string[] keys, BsonValue[] values)
         {
-            var matrix = values.Select(x => x.ToArray()).ToArray();
+            ENSURE(keys.Length == values.Length, "both keys/value must contains same length");
 
-            var i = 0;
+            var doc = new BsonDocument();
 
-            while(true)
+            for(var i = 0; i < keys.Length; i++)
             {
-                var doc = new BsonDocument();
-
-                for (var j = 0; j < keys.Length; j++)
-                {
-                    var key = keys[j];
-                    var counter = matrix[j].Length;
-
-                    if (i < counter)
-                    {
-                        var value = matrix[j][i];
-
-                        doc[key] = value;
-                    }
-                }
-
-                if (doc.Keys.Count == 0) yield break;
-
-                yield return doc;
-
-                i++;
+                doc[keys[i]] = values[i];
             }
 
+            return doc;
         }
 
         /// <summary>
         /// Return an array from list of values. Support multiple values but returns a single value
         /// </summary>
-        public static IEnumerable<BsonValue> ARRAY_INIT(IEnumerable<IEnumerable<BsonValue>> values)
+        public static BsonValue ARRAY_INIT(BsonValue[] values)
         {
-            yield return new BsonArray(values.SelectMany(x => x));
+            return new BsonArray(values);
         }
 
         #endregion

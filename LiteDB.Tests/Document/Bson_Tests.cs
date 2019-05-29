@@ -28,12 +28,12 @@ namespace LiteDB.Tests.Document
 
 
             doc["Items"] = new BsonArray();
-
+            
             doc["Items"].AsArray.Add(new BsonDocument());
             doc["Items"].AsArray[0].AsDocument["Qtd"] = 3;
             doc["Items"].AsArray[0].AsDocument["Description"] = "Big beer package";
             doc["Items"].AsArray[0].AsDocument["Unit"] = (double)10 / (double)3;
-
+            
             doc["Items"].AsArray.Add("string-one");
             doc["Items"].AsArray.Add(null);
             doc["Items"].AsArray.Add(true);

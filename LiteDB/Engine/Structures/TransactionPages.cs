@@ -7,23 +7,24 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Represent a simple structure to store added/removed pages in a transaction. One instance per transaction
+    /// [SingleThread]
     /// </summary>
     internal class TransactionPages
     {
         /// <summary>
-        /// Get how many pages are involved in this transaction across all snapshots
+        /// Get how many pages are involved in this transaction across all snapshots - Will be clear when get MAX_TRANSACTION_SIZE
         /// </summary>
         public int TransactionSize { get; set; } = 0;
 
         /// <summary>
-        /// Contains all dirty pages already persist in WAL (used in all snapshots). Store in [uint, PagePosition] to reuse same method in save pages into wal and get saved page positions on wal
+        /// Contains all dirty pages already persist in LOG file (used in all snapshots). Store in [uint, PagePosition] to reuse same method in save pages into log and get saved page positions on log
         /// </summary>
-        public Dictionary<uint, PagePosition> DirtyPagesWal { get; private set; } = new Dictionary<uint, PagePosition>();
+        public Dictionary<uint, PagePosition> DirtyPages { get; } = new Dictionary<uint, PagePosition>();
 
         /// <summary>
         /// Handle created pages during transaction (for rollback) - Is a list because order is important
         /// </summary>
-        public List<uint> NewPages { get; private set; } = new List<uint>();
+        public List<uint> NewPages { get; } = new List<uint>();
 
         /// <summary>
         /// First deleted pageID 
@@ -41,22 +42,24 @@ namespace LiteDB.Engine
         public int DeletedPages { get; set; }
 
         /// <summary>
-        /// New collections added in this transaction
+        /// Callback function to modify header page on commit
         /// </summary>
-        public Dictionary<string, uint> NewCollections { get; set; } = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+        public event Action<HeaderPage> Commit;
 
         /// <summary>
-        /// Deleted collection in this transaction (support only 1 drop collection per transaction)
+        /// Run Commit event
         /// </summary>
-        public string DeletedCollection { get; set; }
+        public void OnCommit(HeaderPage header)
+        {
+            this.Commit?.Invoke(header);
+        }
 
         /// <summary>
         /// Detect if this transaction will need persist header page (has added/deleted pages or added/deleted collections)
         /// </summary>
         public bool HeaderChanged =>
             this.NewPages.Count > 0 ||
-            this.DeletedPages > 0 ||
-            this.NewCollections.Count > 0 || // test NewCollections/DeletedCollection is redundant because this two operations
-            this.DeletedCollection != null; // always Added/Removed pages
+            this.DeletedPages > 0 || 
+            this.Commit != null;
     }
 }

@@ -12,42 +12,77 @@ namespace LiteDB
     {
         public string ResolveMethod(MethodInfo method)
         {
-            switch (method.Name)
+            // all methods in Enumerable are Extensions (static methods), so first parameter is IEnumerable
+            var name = Reflection.MethodName(method, 1); 
+
+            switch (name)
             {
-                // works only with single-result extension method
-                case "get_Item": return "#[@0]";
-                case "ElementAt": return "@0[@1]";
-                case "Single":
-                case "First":
-                case "SingleOrDefault":
-                case "FirstOrDefault": return "@0[0]";
-                case "Last":
-                case "LastOrDefault": return "@0[-1]";
+                // get all items
+                case "AsEnumerable()": return "@0[*]";
 
-                // COUNT() works for IEnumerable<BsonValue> 
-                // LENGTH() for Array/String/...
-                case "Count": return "LENGTH(@0)";
+                // get fixed index item
+                case "get_Item(int)": return "#[@0]";
+                case "ElementAt(int)": return "@0[@1]";
+                case "Single()":
+                case "First()":
+                case "SingleOrDefault()":
+                case "FirstOrDefault()": return "@0[0]";
+                case "Last()":
+                case "LastOrDefault()": return "@0[-1]";
 
-                // not supported (recommend use Sql extension method)
-                case "Select":
-                case "Any":
-                case "Where": throw new NotSupportedException($"Method {method.Name} are not supported. Try use `Items()` extension method to access sub documents fields. Eg: `x => x.Phones.Items(z => z.Type == 'Mobile').Number`");
+                // get single item but with predicate function
+                case "Single(Func<T,TResult>)":
+                case "First(Func<T,TResult>)":
+                case "SingleOrDefault(Func<T,TResult>)":
+                case "FirstOrDefault(Func<T,TResult>)": return "FIRST(@0[@1])";
+                case "Last(Func<T,TResult>)":
+                case "LastOrDefault(Func<T,TResult>)": return "LAST(@0[@1])";
 
-                // not supported (recommend use Sql extension method)
-                case "Sum":
-                case "Average":
-                case "Max":
-                case "Min": throw new NotSupportedException($"Method {method.Name} are not supported. Try use `Sql` static methods. Eg: `x => Sql.Sum(x.Details.Items().Price)`");
+                // filter
+                case "Where(Func<T,TResult>)": return "@0[@1]";
+                
+                // map
+                case "Select(Func<T,TResult>)": return "(@0 => @1)";
 
-                // not supported (recommend use Sql extension method)
-                case "ToList": 
-                case "ToArray": throw new NotSupportedException($"Method {method.Name} are not supported. Try use `Sql` static methods. Eg: `x => Sql.ToArray(x.Details.Items().Price)`");
+                // aggregate
+                case "Count()": return "COUNT(@0)";
+                case "Sum()": return "SUM(@0)";
+                case "Average()": return "AVG(@0)";
+                case "Max()": return "MAX(@0)";
+                case "Min()": return "MIN(@0)";
+
+                // aggregate with map function
+                case "Count(Func<T,TResult>)": return "COUNT(@0 => @1)";
+                case "Sum(Func<T,TResult>)": return "SUM(@0 => @1)";
+                case "Average(Func<T,TResult>)": return "AVG(@0 => @1)";
+                case "Max(Func<T,TResult>)": return "MAX(@0 => @1)";
+                case "Min(Func<T,TResult>)": return "MIN(@0 => @1)";
+
+                // convert to array
+                case "ToList()": 
+                case "ToArray()": return "ARRAY(@0)";
+
+                // any/all special cases
+                case "Any(Func<T,TResult>)": return "@0 ANY %";
+                case "ALL(Func<T,TResult>)": return "@0 ANY %";
             };
 
             return null;
         }
 
-        public string ResolveMember(MemberInfo member) => null;
+        public string ResolveMember(MemberInfo member)
+        {
+            // this both members are not from IEnumerable:
+            // but any IEnumerable type will run this resolver (IList, ICollection)
+            switch(member.Name)
+            {
+                case "Length": return "LENGTH(#)";
+                case "Count": return "COUNT(#)";
+            }
+
+            return null;
+        }
+
         public string ResolveCtor(ConstructorInfo ctor) => null;
     }
 }

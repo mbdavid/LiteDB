@@ -48,25 +48,25 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Update many document based on merge current document with extend expression (must return a new document). This merge will be applied in all predicate results
-        /// Eg: col.UpdateMany("{Name: UPPER(Name)}", "_id > 0")
+        /// Update many documents based on transform expression. This expression must return a new document that will be replaced over current document (according with predicate).
+        /// Eg: col.UpdateMany("{ Name: UPPER($.Name), Age }", "_id > 0")
         /// </summary>
-        public int UpdateMany(BsonExpression extend, BsonExpression predicate)
+        public int UpdateMany(BsonExpression transform, BsonExpression predicate)
         {
-            if (extend == null) throw new ArgumentNullException(nameof(extend));
+            if (transform == null) throw new ArgumentNullException(nameof(transform));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            if (extend.Type != BsonExpressionType.Document)
+            if (transform.Type != BsonExpressionType.Document)
             {
                 throw new ArgumentException("Extend expression must return a document. Eg: `col.UpdateMany('{ Name: UPPER(Name) }', 'Age > 10')`");
             }
 
-            return _engine.Value.UpdateMany(_collection, extend, predicate);
+            return _engine.Value.UpdateMany(_collection, transform, predicate);
         }
 
         /// <summary>
         /// Update many document based on merge current document with extend expression. Use your class with initializers. 
-        /// Eg: col.UpdateMany(x => new Customer { Name = Name.ToUpper(), Salary: 100 }, x => x.Name == "John")
+        /// Eg: col.UpdateMany(x => new Customer { Name = x.Name.ToUpper(), Salary: 100 }, x => x.Name == "John")
         /// </summary>
         public int UpdateMany(Expression<Func<T, T>> extend, Expression<Func<T, bool>> predicate)
         {

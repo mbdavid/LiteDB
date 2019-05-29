@@ -60,9 +60,7 @@ namespace LiteDB
             {
                 var settings = new EngineSettings
                 {
-                    DataStream = stream,
-                    LogStream = new MemoryStream(),
-                    CheckpointOnShutdown = true
+                    DataStream = stream
                 };
 
                 return new LiteEngine(settings);
@@ -265,22 +263,14 @@ namespace LiteDB
 
         #endregion
 
-        #region Shrink/Analyze/Vaccum/Checkpoint/UserVersion
+        #region Analyze/Vaccum/Checkpoint/UserVersion
 
         /// <summary>
-        /// Reduce disk size re-arranging unused spaces.
+        /// Do database checkpoint. Copy all commited transaction from log file into datafile. 
         /// </summary>
-        public long Shrink()
+        public void Checkpoint()
         {
-            return _engine.Value.Shrink();
-        }
-
-        /// <summary>
-        /// Do database checkpoint. Copy all commited transaction from log file into datafile.
-        /// </summary>
-        public int Checkpoint()
-        {
-            return _engine.Value.Checkpoint();
+            _engine.Value.Checkpoint();
         }
 
         /// <summary>

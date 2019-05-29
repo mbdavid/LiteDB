@@ -8,7 +8,7 @@ namespace LiteDB
     /// <summary>
     /// Class is a result from optimized QueryBuild. Indicate how engine must run query - there is no more decisions to engine made, must only execute as query was defined
     /// </summary>
-    public class Query
+    public partial class Query
     {
         /// <summary>
         /// Indicate when a query must execute in ascending order

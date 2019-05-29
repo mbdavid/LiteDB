@@ -8,7 +8,7 @@ namespace LiteDB.Engine
     /// <summary>
     /// Implement a simple system collection with input data only (to use Output must inherit this class)
     /// </summary>
-    public class SystemCollection
+    internal class SystemCollection
     {
         private readonly string _name;
         private Func<IEnumerable<BsonDocument>> _input = null;
@@ -49,18 +49,32 @@ namespace LiteDB.Engine
         /// <summary>
         /// Static helper to read options arg as plain value or as document fields
         /// </summary>
-        protected static T GetOption<T>(BsonValue options, bool root, string field, T defaultValue)
+        protected static BsonValue GetOption(BsonValue options, string key, BsonValue defaultValue)
         {
-            if (options.IsDocument == false)
+            if (options.IsString)
             {
-                return root ? (T)options.RawValue : defaultValue;
+                return defaultValue == null ? options : defaultValue;
             }
-            else
+            else if (options.IsDocument)
             {
-                var value = options.AsDocument[field].RawValue ?? defaultValue;
+                if (options.AsDocument.TryGetValue(key, out var value))
+                {
+                    if (defaultValue == null || value.Type == defaultValue.Type)
+                    {
+                        return value;
+                    }
+                    else
+                    {
+                        throw new LiteException(0, $"Parameter `{key}` expect {defaultValue.Type} value type");
+                    }
+                }
+                else
+                {
+                    return defaultValue;
+                }
+            }
 
-                return (T)value;
-            }
+            throw new LiteException(0, $"System collection requires a option parameter as string or document");
         }
     }
 }

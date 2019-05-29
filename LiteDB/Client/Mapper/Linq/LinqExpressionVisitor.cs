@@ -26,29 +26,33 @@ namespace LiteDB
             [typeof(Guid)] = new GuidResolver(),
             [typeof(Math)] = new MathResolver(),
             [typeof(ObjectId)] = new ObjectIdResolver(),
-            [typeof(Sql)] = new SqlResolver(),
             [typeof(String)] = new StringResolver()
         };
 
         private readonly BsonMapper _mapper;
         private readonly BsonDocument _parameters = new BsonDocument();
 
-        private string rootParameter = null;
+        private string _rootParameter = null;
+        private string _rootSymbol = "$";
         private int _paramIndex = 0;
 
-        private StringBuilder _builder = new StringBuilder();
-        private Stack<Expression> _nodes = new Stack<Expression>();
+        private readonly StringBuilder _builder = new StringBuilder();
+        private readonly Stack<Expression> _nodes = new Stack<Expression>();
 
         public LinqExpressionVisitor(BsonMapper mapper)
         {
             _mapper = mapper;
         }
 
-        public BsonExpression Resolve(Expression expr, bool predicate)
+        public BsonExpression Resolve(Expression expr, bool predicate, bool extend)
         {
+            if (extend) _builder.Append("EXTEND($,");
+
             this.Visit(expr);
 
-            DEBUG(_nodes.Count > 0, "node stack must be empty when finish expression resolve");
+            ENSURE(_nodes.Count == 0, "node stack must be empty when finish expression resolve");
+
+            if (extend) _builder.Append(")");
 
             var expression = _builder.ToString();
 
@@ -90,9 +94,15 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            if (rootParameter == null) rootParameter = node.Name;
+            if (_rootParameter == null)
+            {
+                _rootParameter = node.Name;
 
-            _builder.Append(node.Name == rootParameter ? "$" : "@");
+                // if root parameter is IEnumerable use root symbol as "*" (source)
+                _rootSymbol = typeof(IEnumerable).IsAssignableFrom(node.Type) ? "*" : "$";
+            }
+
+            _builder.Append(node.Name == _rootParameter ? _rootSymbol : "@");
 
             return base.VisitParameter(node);
         }
@@ -199,7 +209,7 @@ namespace LiteDB
             // otherwise I have resolver for this method
             var pattern = type.ResolveMethod(node.Method);
 
-            if (pattern == null) throw new NotSupportedException($"Method {node.Method.Name} in {node.Method.DeclaringType.Name} are not supported when convert to BsonExpression ({node.ToString()}).");
+            if (pattern == null) throw new NotSupportedException($"Method {Reflection.MethodName(node.Method)} in {node.Method.DeclaringType.Name} are not supported when convert to BsonExpression ({node.ToString()}).");
 
             // run pattern using object as # and args as @n
             this.ResolvePattern(pattern, node.Object, node.Arguments);
@@ -230,7 +240,7 @@ namespace LiteDB
                 _nodes.Pop();
             }
 
-            DEBUG(_nodes.Count > 0, "counter stack must be zero to eval all properties/field over object");
+            ENSURE(_nodes.Count == 0, "counter stack must be zero to eval all properties/field over object");
 
             var parameter = "p" + (_paramIndex++);
 
@@ -470,36 +480,8 @@ namespace LiteDB
         /// <summary>
         /// Resolve string pattern using an object + N arguments. Will write over _builder
         /// </summary>
-        private void ResolvePattern(string pattern, Expression obj, IEnumerable<Expression> args)
+        private void ResolvePattern(string pattern, Expression obj, IList<Expression> args)
         {
-            // retain current builder/stack/isMemberParameter variables
-            var currentBuilder = _builder;
-            var currentNodes = _nodes;
-
-            // create new instances
-            _builder = new StringBuilder();
-            _nodes = new Stack<Expression>();
-
-            if (obj != null)
-            {
-                this.Visit(obj);
-            }
-
-            // get object expression string
-            var objectExpr = _builder.ToString();
-            var parameters = new Dictionary<int, string>();
-            var index = 0;
-
-            // now, get all parameter expressions strings
-            foreach (var arg in args)
-            {
-                _builder = new StringBuilder();
-                this.Visit(arg);
-                parameters[index++] = _builder.ToString();
-            }
-
-            // now, do replace for # to objet and @N as parameters
-            var output = new StringBuilder();
             var tokenizer = new Tokenizer(pattern);
 
             // lets use tokenizer to parse this method pattern
@@ -509,25 +491,63 @@ namespace LiteDB
 
                 if (token.Type == TokenType.Hashtag)
                 {
-                    output.Append(objectExpr);
+                    this.Visit(obj);
                 }
                 else if (token.Type == TokenType.At)
                 {
                     var i = Convert.ToInt32(tokenizer.ReadToken(false).Expect(TokenType.Int).Value);
-                    output.Append(parameters[i]);
+
+                    this.Visit(args[i]);
+                }
+                else if (token.Type == TokenType.Percent)
+                {
+                    // special ANY/ALL cases
+                    this.VisitEnumerablePredicate(args[1] as LambdaExpression);
                 }
                 else
                 {
-                    output.Append(token.Type == TokenType.String ? "'" + token.Value + "'" : token.Value);
+                    _builder.Append(token.Type == TokenType.String ? "'" + token.Value + "'" : token.Value);
                 }
             }
+        }
 
-            // now restore instances before run pattern
-            _builder = currentBuilder;
-            _nodes = currentNodes;
+        private void VisitEnumerablePredicate(LambdaExpression lambda)
+        {
+            var expression = lambda.Body;
 
-            // append into builder result of resolve pattern
-            _builder.Append(output.ToString());
+            // Visit .Any(x => `x == 10`)
+            if (expression is BinaryExpression bin)
+            {
+                if (bin.Left.NodeType != ExpressionType.Parameter) throw new LiteException(0, "Any/All requires simple parameter on left side. Eg: `(x => x.Phones.Select(p => p.Number).Any(n => n > 5)`");
+
+                var op = this.GetOperator(bin.NodeType);
+
+                _builder.Append(op);
+
+                this.VisitAsPredicate(bin.Right, false);
+            }
+            // Visit .Any(x => `x.StartsWith("John")`)
+            else if(expression is MethodCallExpression met)
+            {
+                // if not found in resolver, try run method
+                if (!_resolver.TryGetValue(met.Method.DeclaringType, out var type))
+                {
+                    throw new NotSupportedException($"Method {met.Method.Name} not available to convert to BsonExpression inside Any/All call.");
+                }
+
+                // otherwise I have resolver for this method
+                var pattern = type.ResolveMethod(met.Method);
+
+                if (pattern == null || !pattern.StartsWith("#")) throw new NotSupportedException($"Method {met.Method.Name} not available to convert to BsonExpression inside Any/All call.");
+
+                // call resolve pattern removing first `#`
+                this.ResolvePattern(pattern.Substring(1), met.Object, met.Arguments);
+            }
+            else
+            {
+                throw new LiteException(0, "When using Any/All method test do only simple predicate variable. Eg: `(x => x.Phones.Select(p => p.Number).Any(n => n > 5)`");
+            }
+
         }
 
         /// <summary>
@@ -589,14 +609,14 @@ namespace LiteDB
                 return true;
             }
 
-            // for Sql.Items(int)
-            if (type == typeof(Sql) && method.Name == "Items" && 
-                pars.Length == 2 && pars[1].ParameterType == typeof(int))
-            {
-                obj = node.Arguments[0];
-                idx = node.Arguments[1];
-                return true;
-            }
+            //** // for Sql.Items(int)
+            //** if (type == typeof(Sql) && method.Name == "Items" && 
+            //**     pars.Length == 2 && pars[1].ParameterType == typeof(int))
+            //** {
+            //**     obj = node.Arguments[0];
+            //**     idx = node.Arguments[1];
+            //**     return true;
+            //** }
 
             obj = null;
             idx = null;

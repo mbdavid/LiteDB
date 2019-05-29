@@ -12,23 +12,37 @@ namespace LiteDB.Engine
         {
             var doc = new BsonDocument();
 
-            doc["filename"] = _factory.Filename;    
+            doc["name"] = _disk.GetName(FileOrigin.Data);    
             doc["limitSize"] = (int)_settings.LimitSize;
             doc["timeout"] = _settings.Timeout.TotalSeconds;
             doc["utcDate"] = _settings.UtcDate;
             doc["readOnly"] = _settings.ReadOnly;
-            doc["checkpointOnShutdown"] = _settings.CheckpointOnShutdown;
 
             doc["lastPageID"] = (int)_header.LastPageID;
             doc["freeEmptyPageID"] = (int)_header.FreeEmptyPageID;
 
             doc["creationTime"] = _header.CreationTime;
-            doc["lastCheckpoint"] = _header.LastCheckpoint;
 
-            doc["dataFileSize"] = (int)_dataFile.Length;
-            doc["logFileSize"] = (int)_wal.LogFile.Length;
+            doc["dataFileSize"] = (int)_disk.GetLength(FileOrigin.Data);
+            doc["logFileSize"] = (int)_disk.GetLength(FileOrigin.Log);
+            doc["asyncQueueLength"] = _disk.Queue.Length;
+
+            doc["currentReadVersion"] = _walIndex.CurrentReadVersion;
+            doc["lastTransactionID"] = _walIndex.LastTransactionID;
 
             doc["userVersion"] = _header.UserVersion;
+
+            doc["cache"] = new BsonDocument
+            {
+                ["extendSegments"] = _disk.Cache.ExtendSegments,
+                ["memoryUsage"] = 
+                    (_disk.Cache.ExtendSegments * _settings.MemorySegmentSize * PAGE_SIZE) +
+                    (40 * (_disk.Cache.ExtendSegments * _settings.MemorySegmentSize)),
+                ["freePages"] = _disk.Cache.FreePages,
+                ["readablePages"] = _disk.Cache.GetPages().Count,
+                ["writablePages"] = _disk.Cache.WritablePages,
+                ["pagesInUse"] = _disk.Cache.PagesInUse,
+            };
 
             yield return doc;
         }

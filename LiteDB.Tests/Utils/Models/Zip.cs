@@ -37,5 +37,10 @@ namespace LiteDB.Tests
         {
             return this.Id.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            return new BsonMapper().Serialize(this).ToString();
+        }
     }
 }

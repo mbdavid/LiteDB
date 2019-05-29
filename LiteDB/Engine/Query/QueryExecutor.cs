@@ -12,14 +12,14 @@ namespace LiteDB.Engine
     {
         private readonly LiteEngine _engine;
         private readonly string _collection;
-        private readonly QueryDefinition _queryDefinition;
+        private readonly Query _query;
         private readonly IEnumerable<BsonDocument> _source;
 
-        public QueryExecutor(LiteEngine engine, string collection, QueryDefinition query, IEnumerable<BsonDocument> source)
+        public QueryExecutor(LiteEngine engine, string collection, Query query, IEnumerable<BsonDocument> source)
         {
             _engine = engine;
             _collection = collection;
-            _queryDefinition = query;
+            _query = query;
 
             // source will be != null when query will run over external data source, like system collections or files (not user collection)
             _source = source;
@@ -27,13 +27,13 @@ namespace LiteDB.Engine
 
         public BsonDataReader ExecuteQuery()
         {
-            if (_queryDefinition.Into == null)
+            if (_query.Into == null)
             {
-                return this.ExecuteQuery(_queryDefinition.ExplainPlan);
+                return this.ExecuteQuery(_query.ExplainPlan);
             }
             else
             {
-                return this.ExecuteQueryInto(_queryDefinition.Into, _queryDefinition.IntoAutoId);
+                return this.ExecuteQueryInto(_query.Into, _query.IntoAutoId);
             }
         }
 
@@ -43,6 +43,8 @@ namespace LiteDB.Engine
         internal BsonDataReader ExecuteQuery(bool executionPlan)
         {
             var transaction = _engine.GetTransaction(true, out var isNew);
+
+            transaction.OpenCursors++;
 
             try
             {
@@ -58,101 +60,56 @@ namespace LiteDB.Engine
 
             IEnumerable<BsonDocument> RunQuery()
             {
-                var snapshot = transaction.CreateSnapshot(_queryDefinition.ForUpdate ? LockMode.Write : LockMode.Read, _collection, false);
-                var cursor = _engine.NewCursor(transaction, snapshot);
-
-                // if query will run over external data source, create fake collection page from virtual index
-                if (_source != null)
-                {
-                    snapshot.CollectionPage = IndexVirtual.CreateCollectionPage(_collection);
-                }
-
-                cursor.Start();
-
-                var data = new DataService(snapshot);
-                var indexer = new IndexService(snapshot);
+                var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? LockMode.Write : LockMode.Read, _collection, false);
 
                 // no collection, no documents
-                if (snapshot.CollectionPage == null)
+                if (snapshot.CollectionPage == null && _source == null)
                 {
-                    cursor.Finish();
-
-                    if (isNew)
+                    if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
                     {
-                        transaction.Release();
+                        transaction.Commit();
                     }
+
                     yield break;
                 }
 
                 // execute optimization before run query (will fill missing _query properties instance)
-                var optimizer = new QueryOptimization(snapshot, _queryDefinition, _source);
-
-                // check if query definition rules are ok
-                optimizer.Validate();
+                var optimizer = new QueryOptimization(snapshot, _query, _source);
 
                 var queryPlan = optimizer.ProcessQuery();
 
                 // if execution is just to get explan plan, return as single document result
                 if (executionPlan)
                 {
-                    cursor.Timer.Stop();
-
                     yield return queryPlan.GetExecutionPlan();
 
-                    if (isNew)
+                    if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
                     {
-                        transaction.Release();
+                        transaction.Commit();
                     }
 
                     yield break;
                 }
 
-                // define document loader
-                if (!(queryPlan.Index is IDocumentLoader loader)) // use index as document loader (virtual collection)
-                {
-                    if (queryPlan.IsIndexKeyOnly)
-                    {
-                        loader = new IndexKeyLoader(indexer, queryPlan.Fields.Single());
-                    }
-                    else
-                    {
-                        loader = new CachedDocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor);
-                    }
-                }
-
                 // get node list from query - distinct by dataBlock (avoid duplicate)
-                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, indexer);
+                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot));
 
                 // get current query pipe: normal or groupby pipe
-                using (var pipe = queryPlan.GroupBy != null ?
-                    new GroupByPipe(_engine, transaction, loader, cursor) :
-                    (BasePipe)new QueryPipe(_engine, transaction, loader, cursor))
+                using (var pipe = queryPlan.GetPipe(transaction, snapshot, _engine.SortDisk, _engine.Settings.UtcDate))
                 {
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>
                     {
-                        if (isNew)
+                        if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
                         {
-                            //TODO: this was .Commit() before, but I don't remember why... if is a new transaction, just release
-                            transaction.Release();
+                            transaction.Commit();
                         }
-
-                        // finish timer and mark cursor as done
-                        cursor.Done = true;
-                        cursor.Timer.Stop();
                     };
 
                     // call safepoint just before return each document
                     foreach (var doc in pipe.Pipe(nodes, queryPlan))
                     {
-                        // stop timer and increase counter
-                        cursor.Timer.Stop();
-                        cursor.DocumentCount++;
-
                         yield return doc;
-
-                        // start timer again
-                        cursor.Timer.Start();
                     }
                 }
             };
@@ -180,9 +137,9 @@ namespace LiteDB.Engine
             if (into.StartsWith("$"))
             {
                 SqlParser.ParseCollection(new Tokenizer(into), out var name, out var options);
-
+            
                 var sys = _engine.GetSystemCollection(name);
-
+            
                 result = sys.Output(getResultset(), options);
             }
             // otherwise insert as normal collection

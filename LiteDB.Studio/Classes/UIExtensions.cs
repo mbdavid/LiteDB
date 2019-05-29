@@ -130,7 +130,7 @@ namespace LiteDB.Studio
                 case BsonType.String:
                 case BsonType.ObjectId:
                 case BsonType.Guid:
-                    cell.Value = value.RawValue.ToString();
+                    cell.Value = value.ToString();
                     break;
                 default:
                     cell.Value = JsonSerializer.Serialize(value);

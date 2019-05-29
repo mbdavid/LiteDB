@@ -37,8 +37,8 @@ namespace LiteDB.Tests.Document
 
             Assert.AreEqual(d0, x0["A"].AsDecimal);
             Assert.AreEqual(d1, x1["A"].AsDecimal);
-            Assert.AreEqual(dmin, xmin["A"].AsDecimal);
-            Assert.AreEqual(dmax, xmax["A"].AsDecimal);
+            Assert.AreEqual(dmin.AsDecimal, xmin["A"].AsDecimal);
+            Assert.AreEqual(dmax.AsDecimal, xmax["A"].AsDecimal);
 
         }
     }

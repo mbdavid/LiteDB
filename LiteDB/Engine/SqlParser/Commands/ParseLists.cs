@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace LiteDB.Engine
 {
@@ -13,7 +14,7 @@ namespace LiteDB.Engine
         {
             while(true)
             {
-                var expr = BsonExpression.Create(_tokenizer, _parameters);
+                var expr = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                 yield return expr;
 
@@ -99,5 +100,6 @@ namespace LiteDB.Engine
                 }
             }
         }
+
     }
 }

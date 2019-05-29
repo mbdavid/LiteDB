@@ -18,7 +18,7 @@ namespace LiteDB.Engine
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             if (expression.IsIndexable == false) throw new ArgumentException("Index expressions must contains at least one document field. Used methods must be immutable. Parameters are not supported.", nameof(expression));
 
-            if (name.Length > INDEX_NAME_MAX_LENGTH) throw LiteException.InvalidIndexName(name, collection, "MaxLength = " + INDEX_PER_COLLECTION);
+            if (name.Length > INDEX_NAME_MAX_LENGTH) throw LiteException.InvalidIndexName(name, collection, "MaxLength = " + INDEX_NAME_MAX_LENGTH);
             if (!name.IsWord()) throw LiteException.InvalidIndexName(name, collection, "Use only [a-Z$_]");
             if (name.StartsWith("$")) throw LiteException.InvalidIndexName(name, collection, "Index name can't starts with `$`");
 
@@ -32,7 +32,7 @@ namespace LiteDB.Engine
                 var data = new DataService(snapshot);
 
                 // check if index already exists
-                var current = col.GetIndex(name);
+                var current = col.GetCollectionIndex(name);
 
                 // if already exists, just exit
                 if (current != null)
@@ -44,36 +44,42 @@ namespace LiteDB.Engine
                 }
 
                 // create index head
-                var index = indexer.CreateIndex(col);
-
-                index.Name = name;
-                index.Expression = expression.Source;
-                index.Unique = unique;
-
-                // test if this new name/expression fit on PAGE_SIZE
-                col.CalculateNameSize();
+                var index = indexer.CreateIndex(name, expression.Source, unique);
 
                 // read all objects (read from PK index)
                 foreach (var pkNode in new IndexAll("_id", LiteDB.Query.Ascending).Run(col, indexer))
                 {
-                    transaction.Safepoint();
-
-                    // read binary and deserialize document (select only used field)
-                    var buffer = data.Read(data.GetBlock(pkNode.DataBlock));
-                    var doc = _bsonReader.Deserialize(buffer, expression.Fields).AsDocument;
-
-                    // get values from expression in document
-                    var keys = expression.Execute(doc, true);
-
-                    // adding index node for each value
-                    foreach (var key in keys)
+                    using (var reader = new BufferReader(data.Read(pkNode.DataBlock)))
                     {
-                        // insert new index node
-                        var node = indexer.AddNode(index, key, pkNode);
+                        var doc = reader.ReadDocument(expression.Fields);
 
-                        // link index node to datablock
-                        node.DataBlock = pkNode.DataBlock;
+                        // first/last node in this document that will be added
+                        IndexNode last = null;
+                        IndexNode first = null;
+
+                        // get values from expression in document
+                        var keys = expression.Execute(doc);
+
+                        // adding index node for each value
+                        foreach (var key in keys)
+                        {
+                            // insert new index node
+                            var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
+
+                            if (first == null) first = node;
+
+                            last = node;
+                        }
+
+                        // fix single linked-list in pkNode
+                        if (first != null)
+                        {
+                            last.SetNextNode(pkNode.NextNode);
+                            pkNode.SetNextNode(first.Position);
+                        }
                     }
+
+                    transaction.Safepoint();
                 }
 
                 return true;
@@ -100,19 +106,16 @@ namespace LiteDB.Engine
                 if (col == null) return false;
             
                 // search for index reference
-                var index = col.GetIndex(name);
+                var index = col.GetCollectionIndex(name);
             
                 // no index, no drop
                 if (index == null) return false;
 
                 // delete all data pages + indexes pages
                 indexer.DropIndex(index);
-            
-                // clear index reference
-                index.Clear();
-            
-                // mark collection page as dirty
-                snapshot.SetDirty(col);
+
+                // remove index entry in collection page
+                snapshot.CollectionPage.DeleteCollectionIndex(name);
             
                 return true;
             });

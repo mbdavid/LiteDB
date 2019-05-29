@@ -29,7 +29,7 @@ namespace LiteDB.Tests.Engine
                 col.Insert(zip);
 
                 col.EnsureIndex(x => x.City);
-                col.EnsureIndex(x => x.Loc.Items());
+                col.EnsureIndex(x => x.Loc);
 
                 var indexes = db.GetCollection("$indexes").FindAll()
                     .ToDictionary(x => x["name"].AsString, x => x, StringComparer.OrdinalIgnoreCase);

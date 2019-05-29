@@ -9,8 +9,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class QueryPipe : BasePipe
     {
-        public QueryPipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader, CursorInfo cursor)
-            : base(engine, transaction, loader, cursor)
+        public QueryPipe(TransactionService transaction, IDocumentLookup loader, SortDisk tempDisk, bool utcDate)
+            : base(transaction, loader, tempDisk, utcDate)
         {
         }
 
@@ -19,16 +19,16 @@ namespace LiteDB.Engine
         /// - LoadDocument
         /// - IncludeBefore
         /// - Filter
-        /// - IncludeAfter
-        /// - Select
         /// - OrderBy
         /// - OffSet
         /// - Limit
+        /// - IncludeAfter
+        /// - Select
         /// </summary>
         public override IEnumerable<BsonDocument> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
         {
             // starts pipe loading document
-            var source = this.LoadDocument(nodes, query.IsIndexKeyOnly, query.Fields.FirstOrDefault());
+            var source = this.LoadDocument(nodes);
 
             // do includes in result before filter
             foreach (var path in query.IncludeBefore)
@@ -40,23 +40,6 @@ namespace LiteDB.Engine
             foreach (var expr in query.Filters)
             {
                 source = this.Filter(source, expr);
-            }
-
-            // do includes in result after filter
-            foreach (var path in query.IncludeAfter)
-            {
-                source = this.Include(source, path);
-            }
-
-            // if is an aggregate query, run select transform over all resultset - will return a single value
-            if (query.Select.All)
-            {
-                source = this.SelectAll(source, query.Select.Expression);
-            }
-            // run select transform in each document and return a new document or value
-            else
-            {
-                source = this.Select(source, query.Select.Expression);
             }
 
             if (query.OrderBy != null)
@@ -73,7 +56,22 @@ namespace LiteDB.Engine
                 if (query.Limit < int.MaxValue) source = source.Take(query.Limit);
             }
 
-            return source;
+            // do includes in result after filter
+            foreach (var path in query.IncludeAfter)
+            {
+                source = this.Include(source, path);
+            }
+
+            // if is an aggregate query, run select transform over all resultset - will return a single value
+            if (query.Select.All)
+            {
+                return this.SelectAll(source, query.Select.Expression);
+            }
+            // run select transform in each document and return a new document or value
+            else
+            {
+                return this.Select(source, query.Select.Expression);
+            }
         }
 
         /// <summary>
@@ -81,32 +79,19 @@ namespace LiteDB.Engine
         /// </summary>
         private IEnumerable<BsonDocument> Select(IEnumerable<BsonDocument> source, BsonExpression select)
         {
-            if (select == null)
+            var defaultName = select.DefaultFieldName();
+
+            foreach (var doc in source)
             {
-                foreach (var value in source)
+                var value = select.ExecuteScalar(doc);
+
+                if (value.IsDocument)
                 {
-                    yield return value;
+                    yield return value.AsDocument;
                 }
-            }
-            else
-            {
-                var defaultName = select.DefaultFieldName();
-
-                foreach (var doc in source)
+                else
                 {
-                    var result = select.Execute(doc, true);
-
-                    foreach (var value in result)
-                    {
-                        if (value.IsDocument)
-                        {
-                            yield return value.AsDocument;
-                        }
-                        else
-                        {
-                            yield return new BsonDocument { [defaultName] = value };
-                        }
-                    }
+                    yield return new BsonDocument { [defaultName] = value };
                 }
             }
         }
@@ -117,7 +102,10 @@ namespace LiteDB.Engine
         private IEnumerable<BsonDocument> SelectAll(IEnumerable<BsonDocument> source, BsonExpression select)
         {
             var defaultName = select.DefaultFieldName();
-            var result = select.Execute(source, true);
+            var result = select.Execute(source);
+
+            //TODO: pode ter algum tipo de CACHE caso a expressão contenha mais de 1 "UseSource"... 
+            // evita executar todo pipe -- pior dos casos dá um ToArray() (ou usa um DocumentGroup)
 
             foreach (var value in result)
             {

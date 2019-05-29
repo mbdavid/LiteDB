@@ -11,17 +11,14 @@ namespace LiteDB.Engine
     /// </summary>
     internal class Select
     {
-        private readonly BsonExpression _expression;
-        private readonly bool _all;
+        public BsonExpression Expression { get; }
+
+        public bool All { get; }
 
         public Select(BsonExpression expression, bool all)
         {
-            _expression = expression;
-            _all = all;
+            this.Expression = expression;
+            this.All = all;
         }
-
-        public BsonExpression Expression => _expression;
-
-        public bool All => _all;
     }
 }

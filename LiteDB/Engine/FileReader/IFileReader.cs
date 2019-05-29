@@ -10,11 +10,8 @@ namespace LiteDB.Engine
     /// <summary>
     /// Interface to read current or old datafile structure - Used to shirnk/upgrade datafile from old LiteDB versions
     /// </summary>
-    interface IFileReader
+    interface IFileReader : IDisposable
     {
-        DateTime CreationTime { get; }
-        uint CommitCounter { get; }
-        DateTime LastCommit { get; }
         int UserVersion { get; }
 
         IEnumerable<string> GetCollections();

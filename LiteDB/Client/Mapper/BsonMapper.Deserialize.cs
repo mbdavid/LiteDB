@@ -89,7 +89,7 @@ namespace LiteDB
             // check if your type is already a BsonValue/BsonDocument/BsonArray
             if (type == typeof(BsonValue))
             {
-                return new BsonValue(value);
+                return value;
             }
             else if (type == typeof(BsonDocument))
             {
@@ -115,13 +115,15 @@ namespace LiteDB
             // special cast to UInt64 to Int64
             else if (type == typeof(UInt64))
             {
-                return unchecked((UInt64)((Int64)value.RawValue));
+                return unchecked((UInt64)value.AsInt64);
             }
 
             // enum value is an int
             else if (type.GetTypeInfo().IsEnum)
             {
-                return Enum.Parse(type, value.AsString);
+                if (value.IsString) return Enum.Parse(type, value.AsString);
+
+                if (value.IsNumber) return value.AsInt32;
             }
 
             // test if has a custom type implementation
@@ -160,7 +162,7 @@ namespace LiteDB
                 var doc = value.AsDocument;
 
                 // test if value is object and has _type
-                if (doc.RawValue.TryGetValue("_type", out var typeField))
+                if (doc.TryGetValue("_type", out var typeField) && typeField.IsString)
                 {
                     type = Type.GetType(typeField.AsString);
 
@@ -235,10 +237,10 @@ namespace LiteDB
 
         private void DeserializeDictionary(Type K, Type T, IDictionary dict, BsonDocument value)
         {
-            foreach (var key in value.Keys)
+            foreach (var el in value.GetElements())
             {
-                var k = K.GetTypeInfo().IsEnum ? Enum.Parse(K, key) : Convert.ChangeType(key, K);
-                var v = this.Deserialize(T, value[key]);
+                var k = K.GetTypeInfo().IsEnum ? Enum.Parse(K, el.Key) : Convert.ChangeType(el.Key, K);
+                var v = this.Deserialize(T, el.Value);
 
                 dict.Add(k, v);
             }
@@ -250,9 +252,7 @@ namespace LiteDB
 
             foreach (var member in entity.Members.Where(x => x.Setter != null))
             {
-                var val = value[member.FieldName];
-
-                if (!val.IsNull)
+                if (value.TryGetValue(member.FieldName, out var val))
                 {
                     // check if has a custom deserialize function
                     if (member.Deserialize != null)

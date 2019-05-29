@@ -11,9 +11,9 @@ namespace LiteDB
         /// <summary>
         /// Return a new LiteQueryable to build more complex queries
         /// </summary>
-        public ILiteQueryableWithIncludes<T> Query()
+        public ILiteQueryable<T> Query()
         {
-            return new LiteQueryable<T>(_engine.Value, _mapper, _collection, new QueryDefinition());
+            return new LiteQueryable<T>(_engine.Value, _mapper, _collection, new Query());
         }
 
         #region Find

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Collections;
 
 namespace LiteDB
 {
@@ -16,6 +17,11 @@ namespace LiteDB
             var isAnonymousType = hasCompilerGeneratedAttribute && nameContainsAnonymousType;
 
             return isAnonymousType;
+        }
+
+        public static bool IsEnumerable(this Type type)
+        {
+            return typeof(IEnumerable).IsAssignableFrom(type);
         }
 
 #if HAVE_TYPE_INFO

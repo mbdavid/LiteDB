@@ -6,17 +6,16 @@ using static LiteDB.Constants;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Implement virtual index for system collections
+    /// Implement virtual index for system collections AND full data collection read
     /// </summary>
-    internal class IndexVirtual : Index, IDocumentLoader
+    internal class IndexVirtual : Index, IDocumentLookup
     {
         private readonly IEnumerable<BsonDocument> _source;
-        private readonly Dictionary<uint, BsonDocument> _cache = new Dictionary<uint, BsonDocument>();
-        private BsonDocument _current = null;
-        private uint _counter = 0;
+
+        private Dictionary<uint, BsonDocument> _cache = new Dictionary<uint, BsonDocument>();
 
         public IndexVirtual(IEnumerable<BsonDocument> source)
-            : base("_id", Query.Ascending)
+            : base(null, 0)
         {
             _source = source;
         }
@@ -34,65 +33,43 @@ namespace LiteDB.Engine
 
         public override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
+            var rawId = 0u;
+
             foreach(var doc in _source)
             {
-                _counter++;
+                rawId++;
 
-                // create an fake page address for this document
-                doc.RawId = new PageAddress(_counter, 1);
+                // create fake rawId for document source
+                doc.RawId = new PageAddress(rawId, 0);
 
-                // if cache reach max count, clear cache and use only single value (with no support from random access - group by)
-                if (_counter > MAX_CACHE_DOCUMENT_LOADER_SIZE)
+                // create cache until reach 1000 document - after this, delete cache and remove support
+                if (_cache != null)
                 {
-                    _current = doc;
-                }
-                else
-                {
-                    // and add this document into cache to be used on Load method
-                    _cache[_counter] = doc;
+                    _cache[rawId] = doc;
+
+                    if (_cache.Count > VIRTUAL_INDEX_MAX_CACHE) _cache = null;
                 }
 
                 // return an fake indexNode
-                yield return new IndexNode(0)
-                {
-                    Key = (int)_counter,
-                    DataBlock = doc.RawId
-                };
+                yield return new IndexNode(doc);
             }
         }
 
-        public BsonDocument Load(PageAddress dataBlock)
+        public BsonDocument Load(IndexNode node)
         {
-            if (_current != null)
-            {
-                if (_current.RawId.PageID != dataBlock.PageID) throw new LiteException(0, $"When system collection reach {MAX_CACHE_DOCUMENT_LOADER_SIZE} documents there is no more support for random access (like in group by operations)");
+            return node.Key as BsonDocument;
+        }
 
-                return _current;
-            }
-            else
-            {
-                return _cache[dataBlock.PageID];
-            }
+        public BsonDocument Load(PageAddress rawId)
+        {
+            if (_cache == null) throw new LiteException(0, $"OrderBy/GroupBy operation are supported only in virtual collection with less than {VIRTUAL_INDEX_MAX_CACHE} documents");
+
+            return _cache[rawId.PageID];
         }
 
         public override string ToString()
         {
-            return string.Format("FULL INDEX SCAN(VIRTUAL)");
-        }
-
-        /// <summary>
-        /// Create fake collection page for virtual collections
-        /// </summary>
-        public static CollectionPage CreateCollectionPage(string name)
-        {
-            var col = new CollectionPage(0) { CollectionName = name };
-
-            var pk = col.GetFreeIndex();
-
-            pk.Name = "_id";
-            pk.Expression = "$._id";
-
-            return col;
+            return string.Format("FULL COLLECTION SCAN");
         }
     }
 }

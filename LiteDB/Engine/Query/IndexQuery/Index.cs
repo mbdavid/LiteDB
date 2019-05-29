@@ -187,9 +187,9 @@ namespace LiteDB.Engine
         public virtual IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
             // get index for this query
-            var index = col.GetIndex(this.Name);
+            var index = col.GetCollectionIndex(this.Name);
 
-            if (index == null) throw LiteException.IndexNotFound(col.CollectionName, this.Name);
+            if (index == null) throw LiteException.IndexNotFound(this.Name);
 
             // execute query to get all IndexNodes
             return this.Execute(indexer, index);

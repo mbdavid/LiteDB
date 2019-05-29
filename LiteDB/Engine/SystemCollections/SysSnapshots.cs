@@ -12,18 +12,16 @@ namespace LiteDB.Engine
         {
             foreach (var transaction in _transactions.Values)
             {
-                foreach (var snapshot in transaction.Snapshots.Values)
+                foreach (var snapshot in transaction.Snapshots)
                 {
                     yield return new BsonDocument
                     {
-                        ["threadID"] = transaction.ThreadID,
-                        ["transactionID"] = transaction.TransactionID,
-                        ["transactionState"] = transaction.State.ToString(),
-                        ["startTime"] = transaction.TransactionID.CreationTime,
-                        ["collection"] = snapshot.CollectionPage?.CollectionName,
+                        ["transactionID"] = (int)transaction.TransactionID,
+                        ["collection"] = snapshot.CollectionName,
                         ["mode"] = snapshot.Mode.ToString(),
                         ["readVersion"] = snapshot.ReadVersion,
-                        ["pagesInMemory"] = snapshot.LocalPagesCount
+                        ["pagesInMemory"] = snapshot.LocalPages.Count,
+                        ["collectionDirty"] = snapshot.CollectionPage?.IsDirty ?? false
                     };
                 }
             }

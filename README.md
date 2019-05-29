@@ -18,6 +18,7 @@
     - Input/Output parameter support: `@name`
     - Simplified document notation `{ _id, name, year }`
     - Support partial BSON document: read/deserialize only used data in query
+    - New Map
     
 - System Collections
     - Support query over internal collection 
@@ -29,27 +30,14 @@
     - Support OrderBy/GroupBy expressions
     - Query optimization with Explain Plan
     - Aggregate functions
-    - LINQ to `BsonExpression` query support
+    - LINQ to `BsonExpression` query support - easy to use (and similar to EF)
     
 - New SQL-Like syntax
     - Simple SQL syntax for any command
     - Syntax near to SQL ANSI 
     - Support INSERT/UPDATE/DELETE/...
-
-```SQL
- SELECT { _id, fullname: name.first + ' ' + name.last, age: 2018 - YEAR(birthday) }
-   FROM customers
-INCLUDE orders
-  WHERE name LIKE 'John%'
-    AND _id BETWEEN 1 AND 2000
-  ORDER BY name
-  LIMIT 10
-
-SELECT { city, count: COUNT($), high_pop: MAX(pop) }
-  FROM zip
- GROUP BY city
-```    
-    
+    - MapReduce using GroupBy/Having
+   
 - New Native UI - LiteDB.Studio
     - WinForms app to manipulate database
     - Based on SQL commands
@@ -59,7 +47,6 @@ SELECT { city, count: COUNT($), high_pop: MAX(pop) }
 > What was droped?
 
 - Single process only - optimazed for multi thread (open file as exclusive mode)
-- Datafile Encryption (will be external plugin)
 - Drop .NET 3.5/4.0 - works only in .NET 4.5+ and .NETStandard 2.0
 - Shell commands (use SQL commands)
     
@@ -70,7 +57,7 @@ SELECT { city, count: COUNT($), high_pop: MAX(pop) }
 - Single DLL, no dependency and 100% C#
 - 100% free open source
     
-> Roadmap: late in 2018 :smile:
+> Roadmap: first beta version will be released in 31/May/2019
     
 ---
 

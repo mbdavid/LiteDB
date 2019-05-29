@@ -9,9 +9,9 @@ namespace LiteDB.Engine
     {
         /// <summary>
         /// [ EXPLAIN ]
-        ///    SELECT [ ALL ] {selectExpr}
-        ///    [ INTO {newcollection|FILE} [ : {autoId} ] ]
-        ///    [ FROM {collection|FILE} ]
+        ///    SELECT {selectExpr}
+        ///    [ INTO {newcollection|$function} [ : {autoId} ] ]
+        ///    [ FROM {collection|$function} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
         ///   [ WHERE {filterExpr} ]
         ///   [ GROUP BY {groupByExpr} ]
@@ -24,18 +24,12 @@ namespace LiteDB.Engine
         private IBsonDataReader ParseSelect(bool explain)
         {
             // initialize query definition
-            var query = new QueryDefinition { ExplainPlan = explain };
+            var query = new Query { ExplainPlan = explain };
 
             var token = _tokenizer.LookAhead();
 
-            if (token.Is("ALL"))
-            {
-                query.SelectAll = true;
-                _tokenizer.ReadToken();
-            }
-
-            // read required SELECT <expr>
-            query.Select = BsonExpression.Create(_tokenizer, _parameters);
+            // read required SELECT <expr> and convert into single expression
+            query.Select = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.SelectDocument);
 
             // read FROM|INTO
             var from = _tokenizer.ReadToken();
@@ -43,9 +37,9 @@ namespace LiteDB.Engine
             if (from.Type == TokenType.EOF || from.Type == TokenType.SemiColon)
             {
                 // select with no FROM - just run expression (avoid DUAL table, Mr. Oracle)
-                var result = query.Select.Execute(true);
+                var result = query.Select.Execute();
 
-                var defaultName = query.Select.DefaultFieldName();
+                var defaultName = "expr";
 
                 return new BsonDataReader(result.Select(x => x.IsDocument ? x.AsDocument : new BsonDocument { [defaultName] = x }), null);
             }
@@ -84,7 +78,7 @@ namespace LiteDB.Engine
                 // read WHERE keyword
                 _tokenizer.ReadToken();
 
-                var where = BsonExpression.Create(_tokenizer, _parameters);
+                var where = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                 query.Where.Add(where);
             }
@@ -97,7 +91,7 @@ namespace LiteDB.Engine
                 _tokenizer.ReadToken();
                 _tokenizer.ReadToken().Expect("BY");
 
-                var groupBy = BsonExpression.Create(_tokenizer, _parameters);
+                var groupBy = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                 query.GroupBy = groupBy;
 
@@ -108,7 +102,7 @@ namespace LiteDB.Engine
                     // read HAVING keyword
                     _tokenizer.ReadToken();
 
-                    var having = BsonExpression.Create(_tokenizer, _parameters);
+                    var having = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                     query.Having = having;
                 }
@@ -122,7 +116,7 @@ namespace LiteDB.Engine
                 _tokenizer.ReadToken();
                 _tokenizer.ReadToken().Expect("BY");
 
-                var orderBy = BsonExpression.Create(_tokenizer, _parameters);
+                var orderBy = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                 var orderByOrder = Query.Ascending;
                 var orderByToken = _tokenizer.LookAhead();
@@ -213,7 +207,7 @@ namespace LiteDB.Engine
                 options = null;
             }
 
-            return name + (options == null ? "" : "(" + options.ToString() + ")");
+            return name + (options == null ? "" : "(" + JsonSerializer.Serialize(options) + ")");
         }
     }
 }

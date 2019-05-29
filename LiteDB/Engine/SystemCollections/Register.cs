@@ -17,15 +17,15 @@ namespace LiteDB.Engine
             this.RegisterSystemCollection("$cols", () => this.SysCols());
             this.RegisterSystemCollection("$indexes", () => this.SysIndexes());
 
-            this.RegisterSystemCollection("$dump", () => this.SysDumpData());
-            this.RegisterSystemCollection("$dump_log", () => this.SysDumpLog());
+            this.RegisterSystemCollection("$dump", () => this.SysDump(FileOrigin.Data));
+            this.RegisterSystemCollection("$dump_log", () => this.SysDump(FileOrigin.Log));
+
+            this.RegisterSystemCollection("$dump_cache", () => this.SysDumpCache());
 
             this.RegisterSystemCollection("$sequences", () => this.SysSequences());
 
             this.RegisterSystemCollection("$transactions", () => this.SysTransactions());
             this.RegisterSystemCollection("$snapshots", () => this.SysSnapshots());
-            this.RegisterSystemCollection("$versions", () => this.SysVersions());
-            this.RegisterSystemCollection("$cursors", () => this.SysCursors());
 
             // external collections
             this.RegisterSystemCollection(new SysFileJson());

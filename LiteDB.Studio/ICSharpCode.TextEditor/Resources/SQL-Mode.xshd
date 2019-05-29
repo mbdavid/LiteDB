@@ -79,12 +79,14 @@ http://minisqlquery.codeplex.com/license
         <Key word="VALUES" />
         <Key word="SELECT" />
         <Key word="ALL" />
+        <Key word="FULL" />
         <Key word="FROM" />
         <Key word="WHERE" />
         <Key word="INCLUDE" />
         <Key word="GROUP" />
         <Key word="ORDER" />
         <Key word="BY" />
+        <Key word="AS" />
         <Key word="ASC" />
         <Key word="DESC" />
         <Key word="HAVING" />
@@ -93,10 +95,11 @@ http://minisqlquery.codeplex.com/license
         <Key word="FOR" />
         <Key word="SET" />
         <Key word="EXPLAIN" />
-        <Key word="SHRINK" />
         <Key word="UPDATE" />
         <Key word="REPLACE" />
         <Key word="VACCUM" />
+        <Key word="CHECK" />
+        <Key word="INTEGRITY" />
       </KeyWords>
       
       <KeyWords name="SqlMethods" bold="false" italic="false" color="Fuchsia">
@@ -176,6 +179,7 @@ http://minisqlquery.codeplex.com/license
         <Key word="JSON" />
         <Key word="EXTEND" />
         <Key word="ITEMS" />
+        <Key word="CONCAT" />
         <Key word="RAW_ID" />
         <Key word="KEYS" />
         <Key word="IIF" />
@@ -195,6 +199,8 @@ http://minisqlquery.codeplex.com/license
         <Key word="RPAD" />
         <Key word="SPLIT" />
         <Key word="FORMAT" />
+        <Key word="JOIN" />
+
       </KeyWords>
       
     </RuleSet>

@@ -92,11 +92,10 @@ namespace LiteDB
             if (doc.TryGetValue("_id", out var id)) 
             {
                 // check if exists _autoId and current id is "empty"
-                if ((_autoId == BsonAutoId.ObjectId && (id.IsNull || id.AsObjectId == ObjectId.Empty)) ||
-                    (_autoId == BsonAutoId.Guid && id.AsGuid == Guid.Empty) ||
-                    (_autoId == BsonAutoId.DateTime && id.AsDateTime == DateTime.MinValue) ||
-                    (_autoId == BsonAutoId.Int32 && id.AsInt32 == 0) ||
-                    (_autoId == BsonAutoId.Int64 && id.AsInt64 == 0))
+                if ((_autoId == BsonAutoId.Int32 && (id.IsInt32 && id.AsInt32 == 0)) ||
+                    (_autoId == BsonAutoId.ObjectId && (id.IsNull || (id.IsObjectId && id.AsObjectId == ObjectId.Empty))) ||
+                    (_autoId == BsonAutoId.Guid && id.IsGuid && id.AsGuid == Guid.Empty) ||
+                    (_autoId == BsonAutoId.Int64 && id.IsInt64 && id.AsInt64 == 0))
                 {
                     // in this cases, remove _id and set new value after
                     doc.Remove("_id");

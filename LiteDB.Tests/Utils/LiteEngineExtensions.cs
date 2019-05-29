@@ -11,23 +11,41 @@ namespace LiteDB.Tests
 {
     public static class LiteEngineExtensions
     {
-        public static T[] ExecuteValues<T>(this LiteEngine engine, string sql, BsonDocument args = null)
+        public static int Insert(this LiteEngine engine, string collection, BsonDocument doc, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
-            var values = new List<T>();
-            var mapper = new BsonMapper();
+            return engine.Insert(collection, new BsonDocument[] { doc }, autoId);
+        }
 
-            using (var r = engine.Execute(sql, args ?? new BsonDocument()))
+        public static int Update(this LiteEngine engine, string collection, BsonDocument doc)
+        {
+            return engine.Update(collection, new BsonDocument[] { doc });
+        }
+
+        public static List<BsonDocument> Find(this LiteEngine engine, string collection, BsonExpression where)
+        {
+            var q = new LiteDB.Query();
+
+            if (where != null)
             {
-                while(r.Read())
-                {
-                    var doc = r.Current.AsDocument;
-                    var key = doc.Keys.First();
+                q.Where.Add(where);
+            }
 
-                    values.Add(mapper.Deserialize<T>(doc[key]));
+            var docs = new List<BsonDocument>();
+
+            using (var r = engine.Query(collection, q))
+            {
+                while (r.Read())
+                {
+                    docs.Add(r.Current.AsDocument);
                 }
             }
 
-            return values.ToArray();
+            return docs;
+        }
+
+        public static BsonDocument GetPageLog(this LiteEngine engine, int pageID)
+        {
+            return engine.Find("$dump_log", "pageID = " + pageID).Last();
         }
     }
 }

@@ -47,6 +47,12 @@
   <ItemGroup>
     <Compile Include="Classes\SqlCodeCompletion.cs" />
     <Compile Include="Classes\UIExtensions.cs" />
+    <Compile Include="Forms\ShrinkForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ShrinkForm.Designer.cs">
+      <DependentUpon>ShrinkForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\ConnectionForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -205,6 +211,9 @@
     <Compile Include="ICSharpCode.TextEditor\Util\WeakCollection.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Forms\ShrinkForm.resx">
+      <DependentUpon>ShrinkForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\ConnectionForm.resx">
       <DependentUpon>ConnectionForm.cs</DependentUpon>
     </EmbeddedResource>

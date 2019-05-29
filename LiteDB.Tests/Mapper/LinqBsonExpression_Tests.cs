@@ -120,31 +120,62 @@ namespace LiteDB.Tests.Mapper
         }
 
         [TestMethod]
-        public void Linq_Array_Navigation()
+        public void Linq_Enumerables()
         {
-            // new `Items` array access
-            TestExpr<User>(x => x.Phones.Items().Number, "Phones[*].Number");
-            TestExpr<User>(x => x.Phones.Items(1).Number, "Phones[1].Number");
-            TestExpr<User>(x => x.Phones.Items(z => z.Prefix == 0).Number, "Phones[(@.Prefix = @p0)].Number", 0);
+            // access array items
+            TestExpr<User>(x => x.Phones, "$.Phones");
+            TestExpr<User>(x => x.Phones.AsEnumerable(), "$.Phones[*]");
+
+            // where
+            TestExpr<User>(x => x.Phones.Where(p => p.Prefix == 1), "$.Phones[(@.Prefix = @p0)]", 1);
+            TestExpr<User>(x => x.Phones.Where(p => p.Prefix == x.Id), "$.Phones[(@.Prefix = $._id)]");
+
+            // aggregate
+            TestExpr<User>(x => x.Phones.Count(), "COUNT($.Phones)");
+            TestExpr<User>(x => x.Phones.Min(), "MIN($.Phones)");
+            TestExpr<User>(x => x.Phones.Max(), "MAX($.Phones)");
+            TestExpr<User>(x => x.Phones.Select(p => p.Number).Sum(), "SUM(($.Phones => @.Number))");
+
+            // aggregate with map
+            TestExpr<User>(x => x.Phones.Sum(w => w.Number), "SUM($.Phones => @.Number)");
+
+            // map
+            TestExpr<User>(x => x.Phones.Select(y => y.Type), "($.Phones => @.Type)");
+
+            TestExpr<User>(x => x.Phones.Select(p => p.Number).Sum(), "SUM(($.Phones => @.Number))");
+            TestExpr<User>(x => x.Phones.Select(p => p.Number).Average(), "AVG(($.Phones => @.Number))");
+
+            // array/list
+            TestExpr<User>(x => x.Phones.Where(w => w.Number == 5).ToArray(), "ARRAY($.Phones[(@.Number = @p0)])", 5);
+            TestExpr<User>(x => x.Phones.ToList(), "ARRAY($.Phones)");
 
             // access using native array index (special "get_Item" eval index value)
-            TestExpr<User>(x => x.Phones[1].Number, "Phones[1].Number");
+            TestExpr<User>(x => x.Phones[1].Number, "$.Phones[1].Number");
 
             // fixed position
-            TestExpr<User>(x => x.Phones[15], "Phones[15]");
-            TestExpr<User>(x => x.Phones.ElementAt(1), "Phones[@p0]", 1);
-
-            // fixed position based on method names
-            TestExpr<User>(x => x.Phones.First(), "Phones[0]");
-            TestExpr<User>(x => x.Phones.Last(), "Phones[-1]");
+            TestExpr<User>(x => x.Phones[15], "$.Phones[15]");
+            TestExpr<User>(x => x.Phones.ElementAt(1), "$.Phones[@p0]", 1);
 
             // call external method/props/const inside parameter expression
             var a = new { b = new { c = 123 } };
 
             // Items(int) generate eval value index
-            TestExpr<User>(x => x.Phones.Items(a.b.c).Number, "Phones[123].Number");
-            TestExpr<User>(x => x.Phones.Items(CONST_INT).Number, "Phones[100].Number");
-            TestExpr<User>(x => x.Phones.Items(MyIndex()).Number, "Phones[5].Number");
+            TestExpr<User>(x => x.Phones[a.b.c].Number, "$.Phones[123].Number");
+            TestExpr<User>(x => x.Phones[CONST_INT].Number, "$.Phones[100].Number");
+            TestExpr<User>(x => x.Phones[MyIndex()].Number, "$.Phones[5].Number");
+
+            // fixed position
+            TestExpr<User>(x => x.Phones.First(), "$.Phones[0]");
+            TestExpr<User>(x => x.Phones.Last(), "$.Phones[-1]");
+
+            // fixed position with filter expression
+            TestExpr<User>(x => x.Phones.First(p => p.Number == 1), "FIRST($.Phones[(@.Number = @p0)])", 1);
+
+            // using any/all
+            TestExpr<User>(x => x.Phones.Select(p => p.Number).Any(p => p == 1), "(Phones => @.Number) ANY = @p0", 1);
+            TestExpr<User>(x => x.Phones.Select(p => p.Number.ToString()).Any(p => p.StartsWith("51")),
+                "(Phones => STRING(@.Number)) ANY LIKE (@p0 + '%')", "51");
+
         }
 
         [TestMethod]
@@ -210,8 +241,8 @@ namespace LiteDB.Tests.Mapper
             TestExpr(x => string.Empty, "''");
 
             // string static methods
-            TestExpr<User>(x => string.IsNullOrEmpty(x.Name), "(Name = null OR LENGTH(Name) = 0)");
-            TestExpr<User>(x => string.IsNullOrWhiteSpace(x.Name), "(Name = null OR LENGTH(TRIM(Name)) = 0)");
+            TestExpr<User>(x => string.IsNullOrEmpty(x.Name), "(LENGTH(Name) = 0)");
+            TestExpr<User>(x => string.IsNullOrWhiteSpace(x.Name), "(LENGTH(TRIM(Name)) = 0)");
 
             // guid initialize/converter
             TestExpr<User>(x => Guid.NewGuid(), "GUID()");
@@ -256,15 +287,6 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.MetaData["KeyLocal"], "$.MetaData.KeyLocal");
 
             TestExpr<User>(x => x.MetaData["Key Local"].Street, "$.MetaData.['Key Local'].Street");
-        }
-
-        [TestMethod]
-        public void Linq_Sql_Methods()
-        {
-            // extensions methods aggregation (can change name)
-            TestExpr<User>(x => Sql.Sum(x.Phones.Items().Number), "SUM(Phones[*].Number)");
-            TestExpr<User>(x => Sql.Max(x.Phones.Items()), "MAX(Phones[*])");
-            TestExpr<User>(x => Sql.Count(x.Phones.Items().Number), "COUNT(Phones[*].Number)");
         }
 
         [TestMethod]
@@ -314,23 +336,19 @@ namespace LiteDB.Tests.Mapper
         [TestMethod]
         public void Linq_Complex_Expressions()
         {
-            // 'CityName': $.Address.City.CityName, 
-            // 'Cnt': COUNT(IIF(STRING($.Phones[@.Type = @p0].Number) = @p1, @p2, $.Name)), 
-            // 'List': ARRAY($.Phones[*].Number + $.Phones[@.Prefix > $.Salary].Number)
-
             TestExpr<User>(x => new
             {
-                x.Address.City.CityName,
-                Cnt = Sql.Count(x.Phones.Items(z => z.Type == PhoneType.Landline).Number.ToString() == "555" ? MyMethod() : x.Name),
-                List = Sql.ToList(x.Phones.Items().Number + x.Phones.Items(z => z.Prefix > x.Salary).Number)
+                CityName = x.Address.City.CityName,
+                Count = x.Phones.Where(p => p.Type == PhoneType.Landline).Count(),
+                List = x.Phones.Where(p => p.Number > x.Salary).Select(p => p.Number).ToArray()
             },
             @"
             {
                 CityName: $.Address.City.CityName,
-                Cnt: COUNT(IIF((STRING($.Phones[(@.Type = @p0)].Number) = @p1), @p2, $.Name)),
-                List: ARRAY(($.Phones[*].Number + $.Phones[(@.Prefix > $.Salary)].Number))    
+                Count: COUNT($.Phones[(@.Type = @p0)]),
+                List: ARRAY(($.Phones[(@.Number > $.Salary)] => @.Number))
             }", 
-            (int)PhoneType.Landline, "555", MyMethod());
+            (int)PhoneType.Landline);
         }
 
         [TestMethod]
@@ -339,7 +357,6 @@ namespace LiteDB.Tests.Mapper
             TestExpr<BsonValue>(x => x["name"].AsString, "$.name");
             TestExpr<BsonValue>(x => x["first"]["name"], "$.first.name");
             TestExpr<BsonValue>(x => x["arr"][0]["demo"], "$.arr[0].demo");
-            TestExpr<BsonValue>(x => x["phones"].AsArray.Items(z => z["type"] == 1)["number"], "$.phones[(type = @p0)].number", 1);
             TestExpr<BsonValue>(x => x["age"] == 1, "($.age = @p0)", 1);
         }
 
@@ -351,6 +368,20 @@ namespace LiteDB.Tests.Mapper
 
             // in creation new class
             TestExpr<User>(x => new { x.DomainName }, "{ DomainName: $.USER_DOMAIN_NAME }");
+        }
+
+        [TestMethod]
+        public void Linq_Use_Enumerable_As_Root()
+        {
+            // when root parameter is IEnumerable, root symbol must be *
+            TestExpr<IEnumerable<User>>(x => x.Count(), "COUNT(*)");
+            TestExpr<IEnumerable<User>>(x => x.Sum(u => u.Id), "SUM(* => @._id)");
+            
+            //**TestExpr<IEnumerable<User>>(x => new
+            //**{
+            //**    year = x.Select(p => p.CreatedOn.Year).First(),
+            //**    sum = x.Sum(u => u.Salary)
+            //**}, "{ 'year': FIRST((@ => YEAR(@.CreatedOn))), 'sum': SUM(@ => @.Salary) }");
         }
 
         #region Test helper

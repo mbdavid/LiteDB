@@ -11,206 +11,196 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Tests.Expressions
 {
-    /// <summary>
-    /// BsonExpression unit test from external text file 
-    /// File format:
-    /// "#" new comment used in next tests
-    /// "{" new document to be used in next tests (support many)
-    /// ">" indicate new expression to test (execute over each input document)
-    /// ">>" indicate new expression to test in aggregate mode (execute over all input document)
-    /// "~" expect expression formatted (Source)
-    /// "-" expect used fields (comma separated) (Fields)
-    /// "@" expect parameter value  
-    /// "=" expect result (support multilines per test)
-    /// </summary>
-
     [TestClass]
     public class Expressions_Tests
     {
         [TestMethod]
-        public void Expressions_Aggregate() => this.RunTest("Aggregate.txt");
-
-        [TestMethod]
-        public void Expressions_Path() => this.RunTest("Path.txt");
-
-        [TestMethod]
-        public void Expressions_Format() => this.RunTest("Format.txt");
-
-        [TestMethod]
-        public void Expressions_Operator() => this.RunTest("Operator.txt");
-
-        [TestMethod]
-        public void Expressions_Method() => this.RunTest("Method.txt");
-
-        [TestMethod]
-        public void Expressions_Parameter() => this.RunTest("Parameter.txt");
-
-        [TestMethod]
-        public void Expressions_Custom_Method()
+        public void Expressions_Constants()
         {
-            BsonExpression.RegisterMethod(PLUS_ONE);
+            BsonValue K(string s) { return BsonExpression.Create(s).ExecuteScalar(); };
 
-            var r = BsonExpression.Create("1 + PLUS_ONE(10)").Execute().First();
-
-            Assert.AreEqual(12, r.AsInt32);
+            K(@"123").ExpectValue(123);
+            K(@"null").ExpectValue(BsonValue.Null);
+            K(@"15.9").ExpectValue(15.9);
+            K(@"true").ExpectValue(true);
+            K(@"false").ExpectValue(false);
+            K(@"'my string'").ExpectValue("my string");
+            K(@"""my string""").ExpectValue("my string");
+            K(@"[1,2]").ExpectArray(1, 2);
+            K(@"[]").ExpectJson("[]");
+            K(@"{a:1}").ExpectJson("{a:1}");
+            K(@"{a:true,i:0}").ExpectJson("{a:true,i:0}");
         }
 
-        public static IEnumerable<BsonValue> PLUS_ONE(IEnumerable<BsonValue> values)
+        [TestMethod]
+        public void Expression_Fields()
         {
-            return values.Select(x => new BsonValue(x.AsInt32 + 1));
+            IEnumerable<string> F(string s) { return BsonExpression.Create(s).Fields; };
+
+            // simple case
+            F("$.Name").ExpectValues("Name");
+
+            F("JustName").ExpectValues("JustName");
+            F("$.[\"My First Name\"]").ExpectValues("My First Name");
+
+            // only root field
+            F("$.Name.First").ExpectValues("Name");
+            F("$.Items[*].Type").ExpectValues("Items");
+
+            // inside new document/array
+            F("{ Active, _id }").ExpectValues("Active", "_id");
+            F("{ Active, _id: 1 }").ExpectValues("Active");
+            F("[ Active, _id, null, UPPER(Name.First)]").ExpectValues("Active", "_id", "Name");
+
+            // no fields
+            F("{ Active: 1, _id: 2 }").ExpectCount(0);
+            F("123").ExpectCount(0);
+            F("UPPER(@p0) = 'JOHN' OR YEAR(NOW()) = 2018").ExpectCount(0);
+
+            // duplicate 
+            F("{ Active: active, NewActive: active, Root: $ }").ExpectValues("active", "$");
+
+            // case insensitive (only first field is return)
+            F("{ Active: active, NewActive: ACTIVE }").ExpectValues("active");
+
+            // with no root in array
+            F("Items[0].Type = Age").ExpectValues("Items", "Age");
+
+            // with root and MAP :: ($.Items[$.Root = 1] => @.Type) = $.Age
+            F("Items[$.Root = 1].Type all = Age").ExpectValues("Items", "Root", "Age");
+
+            // predicate + method
+            F("_id = Age + YEAR(DATETIME(2000, 1, DAY(NewField))) AND UPPER(TRIM(Name)) = @0")
+                .ExpectValues("_id", "Age", "NewField", "Name");
+
+            // using root document
+            F("$").ExpectValues("$");
+            F("$ + _id").ExpectValues("$", "_id");
+
+            // fields when using source (do simplify, when use * is same as $)
+            F("*").ExpectValues("$");
+            F("*._id").ExpectValues("$");
+            F("FIRST(* => @._id + $.name) + _id)").ExpectValues("$", "name", "_id");
         }
 
-        public void RunTest(string filename)
+        [TestMethod]
+        public void Expression_Immutable()
         {
-            var tests = this.ReadTests("LiteDB.Tests.Expressions.ExprTests." + filename);
+            bool I(string s) { return BsonExpression.Create(s).IsImmutable; };
 
-            foreach(var test in tests)
-            {
-                var expr = BsonExpression.Create(test.Expression);
-                
-                // test formatted source
-                if (test.Formatted != null)
-                {
-                    Assert.AreEqual(test.Formatted, expr.Source, "Invalid formatted in " + test.Expression + " (" + filename + ")");
-                }
+            // some immutable expression
+            I("_id").ExpectValue(true);
+            I("{ a: 1, n: UPPER(name) }").ExpectValue(true);
+            I("GUID('00000000-0000-0000-0000-000000000000')").ExpectValue(true);
 
-                // test fields
-                if (test.Fields != null)
-                {
-                    var areEquivalent = 
-                        (expr.Fields.Count == test.Fields.Length) && 
-                        !expr.Fields.Except(test.Fields).Any();
-
-                    Assert.IsTrue(areEquivalent, "Invalid Fields");
-                }
-
-                if (test.Results.Count == 0) continue;
-
-                expr.Parameters.Clear();
-                test.Parameters.CopyTo(expr.Parameters);
-
-                // test result
-                var inputs = new List<BsonDocument>();
-
-                if (test.Documents.Count == 0)
-                {
-                    inputs.Add(new BsonDocument());
-                }
-                else
-                {
-                    foreach (var d in test.Documents)
-                    {
-                        inputs.Add(JsonSerializer.Deserialize(d) as BsonDocument);
-                    }
-                }
-
-                var results = new List<BsonValue>();
-
-                if (test.Aggregate)
-                {
-                    results.Add(expr.Execute(inputs, true).First());
-                }
-                else
-                {
-                    foreach(var doc in inputs)
-                    {
-                        var r = expr.Execute(doc, true);
-
-                        results.AddRange(r);
-                    }
-                }
-
-                var jsonResult = JsonSerializer.Serialize(new BsonArray(results));
-                var jsonExpect = JsonSerializer.Serialize(new BsonArray(test.Results));
-
-                if (jsonResult != jsonExpect)
-                {
-                    Assert.AreEqual(string.Join("; ", test.Results.Select(x => x?.ToString() ?? "<null>")),
-                        string.Join("; ", results.Select(x => x?.ToString() ?? "<null>")),
-                        test.Comment + " : " + test.Expression + " (" + filename + ")");
-                }
-            }
+            // using method that are not immutable 
+            I("_id + DAY(NOW())").ExpectValue(false);
+            I("r + 10 > 10 AND GUID() = true").ExpectValue(false);
+            I("r + 10 > 10 AND Name LIKE OBJECTID() + '%'").ExpectValue(false);
+            I("_id > @0").ExpectValue(false);
         }
 
-        public List<ExprTest> ReadTests(string name)
+        [TestMethod]
+        public void Expression_Type()
         {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
-            var tests = new List<ExprTest>();
+            BsonExpressionType T(string s) { return BsonExpression.Create(s).Type; };
 
-            using (var reader = new StreamReader(stream))
-            {
-                var lines = reader.ReadToEnd().Trim().Split('\n').Select(x => x.Trim()).ToArray();
+            T("1").ExpectValue(BsonExpressionType.Int);
+            T("-1").ExpectValue(BsonExpressionType.Int);
+            T("1.1").ExpectValue(BsonExpressionType.Double);
+            T("-1.1").ExpectValue(BsonExpressionType.Double);
+            T("''").ExpectValue(BsonExpressionType.String);
+            T("null").ExpectValue(BsonExpressionType.Null);
+            T("[ ]").ExpectValue(BsonExpressionType.Array);
+            T("{ }").ExpectValue(BsonExpressionType.Document);
+            T("true").ExpectValue(BsonExpressionType.Boolean);
+            T("false").ExpectValue(BsonExpressionType.Boolean);
 
-                var docs = new List<string>();
-                var clearDocs = true;
-                ExprTest test = null;
-                var comment = "";
+            T("@p0").ExpectValue(BsonExpressionType.Parameter);
+            T("UPPER(@p0)").ExpectValue(BsonExpressionType.Call);
 
-                foreach(var line in lines)
-                {
-                    if (line.StartsWith(@">")) // new test
-                    {
-                        test = new ExprTest
-                        {
-                            Aggregate = line.StartsWith(">>"),
-                            Documents = new List<string>(docs),
-                            Expression = line.Substring(line.IndexOf(' ')).Trim(),
-                            Comment = comment
-                        };
-                        tests.Add(test);
-                        clearDocs = true;
-                    }
-                    else if (line.StartsWith("=")) // new result
-                    {
-                        var res = line.Substring(1).Trim();
-                        test.Results.Add(JsonSerializer.Deserialize(res));
-                    }
-                    else if (line.StartsWith("~")) // expected format
-                    {
-                        test.Formatted = line.Substring(1).Trim();
-                    }
-                    else if (line.StartsWith("-")) // expected fields
-                    {
-                        var f = line.Substring(1).Trim();
+            T("1 + 1").ExpectValue(BsonExpressionType.Add);
+            T("1 - 1").ExpectValue(BsonExpressionType.Subtract);
+            T("1 * 1").ExpectValue(BsonExpressionType.Multiply);
+            T("1 / 1").ExpectValue(BsonExpressionType.Divide);
 
-                        test.Fields = f.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
-                    }
-                    else if (line.StartsWith("@")) // expected parameter
-                    {
-                        var pname = line.Substring(1, line.IndexOf(' ')).Trim();
-                        var pvalue = line.Substring(line.IndexOf(' ') + 1).Trim();
+            // math order
+            T("1 + 1 / 3").ExpectValue(BsonExpressionType.Add);
+            T("(1 + 1) / 3").ExpectValue(BsonExpressionType.Divide);
 
-                        test.Parameters[pname] = JsonSerializer.Deserialize(pvalue);
-                    }
-                    else if (line.StartsWith("#")) // comment in test
-                    {
-                        comment = line.Substring(1).Trim();
-                    }
-                    else if (line.StartsWith(@"{")) // new doc
-                    {
-                        if (clearDocs) docs.Clear();
+            // predicate
+            T("1 = 1").ExpectValue(BsonExpressionType.Equal);
+            T("1 > 1").ExpectValue(BsonExpressionType.GreaterThan);
+            T("1 >= 1").ExpectValue(BsonExpressionType.GreaterThanOrEqual);
+            T("1 < 1").ExpectValue(BsonExpressionType.LessThan);
+            T("1 <= 1").ExpectValue(BsonExpressionType.LessThanOrEqual);
+            T("'JOHN' LIKE 'J%'").ExpectValue(BsonExpressionType.Like);
+            T("1 BETWEEN 0 AND 1").ExpectValue(BsonExpressionType.Between);
+            T("1 IN [1,2]").ExpectValue(BsonExpressionType.In);
+            T("1 != 1").ExpectValue(BsonExpressionType.NotEqual);
 
-                        docs.Add(line);
+            T("1=1 OR 1=2").ExpectValue(BsonExpressionType.Or);
+            T("2=1 AND 1=2").ExpectValue(BsonExpressionType.And);
 
-                        clearDocs = false;
-                    }
-                }
-            }
+            T("*").ExpectValue(BsonExpressionType.Source);
 
-            return tests;
+            // maps
+            T("arr[*] => @").ExpectValue(BsonExpressionType.Map);
+            T("el.arr[*] => @").ExpectValue(BsonExpressionType.Map);
+            T("el.arr[*] => @ + 10 + UPPER(@)").ExpectValue(BsonExpressionType.Map);
+
+            // shortcut
+            T("arr[*].price").ExpectValue(BsonExpressionType.Map);
+            T("*._id").ExpectValue(BsonExpressionType.Map);
         }
 
-    }
+        [TestMethod]
+        public void Expression_Format()
+        {
+            string F(string s) { return BsonExpression.Create(s).Source; };
 
-    public class ExprTest
-    {
-        public List<string> Documents { get; set; }
-        public string Expression { get; set; }
-        public string Formatted { get; set; }
-        public bool Aggregate { get; set; }
-        public string[] Fields { get; set; }
-        public List<BsonValue> Results { get; set; } = new List<BsonValue>();
-        public BsonDocument Parameters { get; set; } = new BsonDocument();
-        public string Comment { get; set; }
+            F("_id").ExpectValue("$._id");
+
+            // Expression format
+            F("_id").ExpectValue("$._id");
+            F("a.b").ExpectValue("$.a.b");
+            F("a[ @ + 1 = @ + 2].b").ExpectValue("($.a[@+1=@+2]=>@.b)");
+            F("a.['a-b']").ExpectValue("$.a.[\"a-b\"]");
+            F("'single \"quote\\\' string'").ExpectValue("\"single \\\"quote' string\"");
+            F("\"double 'quote\\\" string\"").ExpectValue("\"double 'quote\\\" string\"");
+            F("{'a-b':1, \"x + 1\": 2, 'y': 3}").ExpectValue("{\"a-b\":1,\"x + 1\":2,y:3}");
+            F("[1, 2 ,  { $guid : \"826944a6-72ec-4fc0-a1bc-9fd9f846c266\" }]")
+                .ExpectValue("[1,2,{$guid:\"826944a6-72ec-4fc0-a1bc-9fd9f846c266\"}]");
+
+            // And/Or
+            F("1 =  true   and false > \"A\"").ExpectValue("1=true AND false>\"A\"");
+            F("1 < 1 or \"two\" = \"two\" or three > three").ExpectValue("1<1 OR \"two\"=\"two\" OR $.three>$.three");
+            F("( 1 + 2) = 3    and X  +  y = 9").ExpectValue("(1+2)=3 AND $.X+$.y=9");
+
+            // Methods
+            F("SUBSTRING( \"lite\" + \"db\", -4, 1 + 9 )").ExpectValue("SUBSTRING(\"lite\"+\"db\",-4,1+9)");
+
+            // Array
+            F("[a,b, 1, true , [ null, { \"x\" : 99 }] ]").ExpectValue("[$.a,$.b,1,true,[null,{x:99}]]");
+
+            // Inner
+            F("(10 * (1 + 2) - 5)").ExpectValue("(10*(1+2)-5)");
+
+            // Map
+            F("names[length(@) > 10] => upper(@)").ExpectValue("$.names[LENGTH(@)>10]=>UPPER(@)");
+
+            // Path/Source-Map
+            F("items[*].id").ExpectValue("($.items[*]=>@.id)");
+            F("items[*].products[*].price").ExpectValue("($.items[*]=>(@.products[*]=>@.price))");
+            F("sum(items[*].price  ) + 3").ExpectValue("SUM(($.items[*]=>@.price))+3");
+
+            // any/all
+            F("items[*].id any=5").ExpectValue("($.items[*]=>@.id) ANY=5");
+            F("items[id > 99].id all between 5 and  'go'").ExpectValue("($.items[@.id>99]=>@.id) ALL BETWEEN 5 AND \"go\"");
+
+            // parameters
+            F("items[ @0 ].price = 9").ExpectValue("$.items[@0].price=9");
+
+        }
     }
 }
