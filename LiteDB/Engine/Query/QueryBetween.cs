@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -78,13 +77,27 @@ namespace LiteDB
                 });
         }
 
+        public override BsonValue ToMongoQuery()
+        {
+            string o1 = _startEquals ? "$gte" : "$gt";
+            string o2 = _endEquals ? "$lte" : "$lt";
+            BsonDocument opt1 = new BsonDocument();
+            opt1.Add(o1, _start);
+            BsonDocument opt2 = new BsonDocument();
+            opt2.Add(o2, _end);
+            BsonDocument btw = new BsonDocument();
+            btw.Add(this.Field, opt1);
+            btw.Add(this.Field, opt2);
+            return btw;
+        }
+
         public override string ToString()
         {
             return string.Format("{0}({1} between {2}{3} and {4}{5})",
                 this.UseFilter ? "Filter" : this.UseIndex ? "IndexSeek" : "",
                 this.Expression?.ToString() ?? this.Field,
                 _startEquals ? "[" : "(",
-                _start, 
+                _start,
                 _end,
                 _endEquals ? "]" : ")"
                 );

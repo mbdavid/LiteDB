@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LiteDB
@@ -24,6 +24,11 @@ namespace LiteDB
         internal override bool FilterDocument(BsonDocument doc)
         {
             return false;
+        }
+
+        public override BsonValue ToMongoQuery()
+        {
+            throw new NotImplementedException();
         }
 
         public override string ToString()

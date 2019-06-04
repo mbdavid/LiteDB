@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 
 namespace LiteDB
@@ -135,6 +134,11 @@ namespace LiteDB
             if (value == null) this.Type = BsonType.Null;
             else if (value is Int32) this.Type = BsonType.Int32;
             else if (value is Int64) this.Type = BsonType.Int64;
+            else if (value is Single)
+            {
+                this.Type = BsonType.Double;
+                this.RawValue = (double)(float)this.RawValue;
+            }
             else if (value is Double) this.Type = BsonType.Double;
             else if (value is Decimal) this.Type = BsonType.Decimal;
             else if (value is String) this.Type = BsonType.String;

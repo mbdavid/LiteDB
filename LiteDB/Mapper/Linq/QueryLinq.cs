@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LiteDB
@@ -45,6 +44,11 @@ namespace LiteDB
             var obj = _mapper.ToObject<T>(doc);
 
             return _where(obj);
+        }
+
+        public override BsonValue ToMongoQuery()
+        {
+            throw new NotImplementedException();
         }
 
         public override string ToString()

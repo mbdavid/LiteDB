@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace LiteDB
 {
@@ -20,6 +19,8 @@ namespace LiteDB
         {
             this.Field = field;
         }
+
+        public abstract BsonValue ToMongoQuery();
 
         #region Static Methods
 
@@ -278,7 +279,7 @@ namespace LiteDB
                 this.UseFilter = true;
 
                 // create expression based on Field (if field contains '$' or '(' is already an expression)
-                var expr = this.Field.StartsWith("$") || this.Field.IndexOf("(") > 0 ? 
+                var expr = this.Field.StartsWith("$") || this.Field.IndexOf("(") > 0 ?
                     this.Field : "$." + this.Field;
 
                 this.Expression = new BsonExpression(expr);

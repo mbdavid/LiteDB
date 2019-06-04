@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -47,6 +46,15 @@ namespace LiteDB
             return this.Expression.Execute(doc, false)
                 .Where(x => x.IsString)
                 .Any(x => x.AsString.StartsWith(_value));
+        }
+
+        public override BsonValue ToMongoQuery()
+        {
+            BsonDocument opt = new BsonDocument();
+            opt.Add("$regex", "^" + _value);
+            BsonDocument startwith = new BsonDocument();
+            startwith.Add(this.Field, opt);
+            return startwith;
         }
 
         public override string ToString()

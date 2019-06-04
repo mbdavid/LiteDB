@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 
 namespace LiteDB
@@ -143,8 +143,7 @@ namespace LiteDB
             {
                 return BsonValue.MaxValue;
             }
-
-            throw new NotSupportedException("BSON type not supported");
+            throw new NotSupportedException("BSON type not supported " + type + "\\\\" + name);
         }
     }
 }

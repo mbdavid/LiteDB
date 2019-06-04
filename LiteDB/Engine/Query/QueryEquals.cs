@@ -1,4 +1,3 @@
-﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -38,6 +37,15 @@ namespace LiteDB
         {
             return this.Expression.Execute(doc, true)
                 .Any(x => x.CompareTo(_value) == 0);
+        }
+
+        public override BsonValue ToMongoQuery()
+        {
+            BsonDocument opt = new BsonDocument();
+            opt.Add("$eq", _value);
+            BsonDocument equal = new BsonDocument();
+            equal.Add(this.Field, opt);
+            return equal;
         }
 
         public override string ToString()

@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -27,7 +26,7 @@ namespace LiteDB
 
         internal override bool FilterDocument(BsonDocument doc)
         {
-            foreach(var val in this.Expression.Execute(doc, true))
+            foreach (var val in this.Expression.Execute(doc, true))
             {
                 foreach (var value in _values.Distinct())
                 {
@@ -40,12 +39,26 @@ namespace LiteDB
             return false;
         }
 
+        public override BsonValue ToMongoQuery()
+        {
+            BsonArray array = new BsonArray();
+            foreach (var value in _values.Distinct())
+            {
+                array.Add(value);
+            }
+            BsonDocument opt = new BsonDocument();
+            opt.Add("$in", array);
+            BsonDocument in_ = new BsonDocument();
+            in_.Add(this.Field, opt);
+            return in_;
+        }
+
         public override string ToString()
         {
             return string.Format("{0}({1} in {2})",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
                 this.Expression?.ToString() ?? this.Field,
-                 string.Join(",", _values.Select(a => a != null ? a.ToString() : "Null" ).ToArray()));
+                 string.Join(",", _values.Select(a => a != null ? a.ToString() : "Null").ToArray()));
         }
     }
 }

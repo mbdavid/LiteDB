@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -29,6 +28,15 @@ namespace LiteDB
             return this.Expression.Execute(doc, false)
                 .Where(x => x.IsString)
                 .Any(x => x.AsString.Contains(_value));
+        }
+
+        public override BsonValue ToMongoQuery()
+        {
+            BsonDocument opt = new BsonDocument();
+            opt.Add("$regex", _value);
+            BsonDocument contains = new BsonDocument();
+            contains.Add(this.Field, opt);
+            return contains;
         }
 
         public override string ToString()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -30,6 +30,11 @@ namespace LiteDB
             return indexer
                 .FindAll(index, _order)
                 .Where(i => _func(i.Key));
+        }
+
+        public override BsonValue ToMongoQuery()
+        {
+            throw new NotImplementedException();
         }
 
         public override string ToString()
