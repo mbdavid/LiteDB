@@ -81,13 +81,13 @@ namespace LiteDB
         {
             string o1 = _startEquals ? "$gte" : "$gt";
             string o2 = _endEquals ? "$lte" : "$lt";
-            BsonDocument opt1 = new BsonDocument();
-            opt1.Add(o1, _start);
-            BsonDocument opt2 = new BsonDocument();
-            opt2.Add(o2, _end);
+            BsonDocument opt = new BsonDocument();
+            opt.Add(o1, _start);
+            //BsonDocument opt2 = new BsonDocument();
+            opt.Add(o2, _end);
             BsonDocument btw = new BsonDocument();
-            btw.Add(this.Field, opt1);
-            btw.Add(this.Field, opt2);
+            btw.Add(this.Field, opt);
+            //btw.Add(this.Field, opt2);
             return btw;
         }
 
