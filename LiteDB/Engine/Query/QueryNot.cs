@@ -55,9 +55,9 @@ namespace LiteDB
         {
             BsonDocument opt = new BsonDocument();
             opt.Add("$not", _query.ToMongoQuery());
-            BsonDocument not = new BsonDocument();
-            not.Add(this.Field, opt);
-            return not;
+            BsonDocument mq = new BsonDocument();
+            mq.Add(this.Field, opt);
+            return mq;
         }
 
         public override string ToString()

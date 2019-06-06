@@ -43,9 +43,9 @@ namespace LiteDB
             BsonArray array = new BsonArray();
             array.Add(_left.ToMongoQuery());
             array.Add(_right.ToMongoQuery());
-            BsonDocument or = new BsonDocument();
-            or.Add("$or", array);
-            return or;
+            BsonDocument mq = new BsonDocument();
+            mq.Add("$or", array);
+            return mq;
         }
 
         public override string ToString()

@@ -43,9 +43,9 @@ namespace LiteDB
         {
             BsonDocument opt = new BsonDocument();
             opt.Add("$eq", _value);
-            BsonDocument equal = new BsonDocument();
-            equal.Add(this.Field, opt);
-            return equal;
+            BsonDocument mq = new BsonDocument();
+            mq.Add(this.Field, opt);
+            return mq;
         }
 
         public override string ToString()

@@ -52,9 +52,9 @@ namespace LiteDB
         {
             BsonDocument opt = new BsonDocument();
             opt.Add("$regex", "^" + _value);
-            BsonDocument startwith = new BsonDocument();
-            startwith.Add(this.Field, opt);
-            return startwith;
+            BsonDocument mq = new BsonDocument();
+            mq.Add(this.Field, opt);
+            return mq;
         }
 
         public override string ToString()

@@ -33,9 +33,9 @@ namespace LiteDB
         {
             BsonDocument opt = new BsonDocument();
             opt.Add("$ne", _value);
-            BsonDocument notequal = new BsonDocument();
-            notequal.Add(this.Field, opt);
-            return notequal;
+            BsonDocument mq = new BsonDocument();
+            mq.Add(this.Field, opt);
+            return mq;
         }
 
         public override string ToString()

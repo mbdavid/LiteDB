@@ -27,12 +27,12 @@ namespace LiteDB
 
         public override BsonValue ToMongoQuery()
         {
-            BsonDocument all = new BsonDocument();
-            all.Add("$query", new BsonDocument());
+            BsonDocument mq = new BsonDocument();
+            mq.Add("$query", new BsonDocument());
             //BsonDocument order = new BsonDocument();
             //order.Add(this.Field, _order);
             //all.Add("$orderby", order);
-            return all;
+            return mq;
         }
 
         public override string ToString()

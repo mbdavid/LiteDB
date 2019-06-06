@@ -75,9 +75,9 @@ namespace LiteDB
             BsonArray array = new BsonArray();
             array.Add(_left.ToMongoQuery());
             array.Add(_right.ToMongoQuery());
-            BsonDocument and = new BsonDocument();
-            and.Add("$and", array);
-            return and;
+            BsonDocument mq = new BsonDocument();
+            mq.Add("$and", array);
+            return mq;
         }
 
         public override string ToString()

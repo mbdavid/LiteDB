@@ -48,9 +48,9 @@ namespace LiteDB
             }
             BsonDocument opt = new BsonDocument();
             opt.Add("$in", array);
-            BsonDocument in_ = new BsonDocument();
-            in_.Add(this.Field, opt);
-            return in_;
+            BsonDocument mq = new BsonDocument();
+            mq.Add(this.Field, opt);
+            return mq;
         }
 
         public override string ToString()

@@ -34,9 +34,9 @@ namespace LiteDB
         {
             BsonDocument opt = new BsonDocument();
             opt.Add("$regex", _value);
-            BsonDocument contains = new BsonDocument();
-            contains.Add(this.Field, opt);
-            return contains;
+            BsonDocument mq = new BsonDocument();
+            mq.Add(this.Field, opt);
+            return mq;
         }
 
         public override string ToString()

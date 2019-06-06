@@ -57,9 +57,9 @@ namespace LiteDB
             string o = _equals ? "$gte" : "$gt";
             BsonDocument opt = new BsonDocument();
             opt.Add(o, _value);
-            BsonDocument greater = new BsonDocument();
-            greater.Add(this.Field, opt);
-            return greater;
+            BsonDocument mq = new BsonDocument();
+            mq.Add(this.Field, opt);
+            return mq;
         }
 
         public override string ToString()

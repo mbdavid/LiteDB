@@ -83,12 +83,10 @@ namespace LiteDB
             string o2 = _endEquals ? "$lte" : "$lt";
             BsonDocument opt = new BsonDocument();
             opt.Add(o1, _start);
-            //BsonDocument opt2 = new BsonDocument();
             opt.Add(o2, _end);
-            BsonDocument btw = new BsonDocument();
-            btw.Add(this.Field, opt);
-            //btw.Add(this.Field, opt2);
-            return btw;
+            BsonDocument mq = new BsonDocument();
+            mq.Add(this.Field, opt);
+            return mq;
         }
 
         public override string ToString()
