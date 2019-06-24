@@ -26,23 +26,33 @@ namespace LiteDB.Demo
             File.Delete(@"d:\appPWD.db");
             File.Delete(@"d:\appPWD-log.db");
 
-            using (var repo = new LiteRepository(cn))
+            //using (var repo = new LiteRepository(cn))
+            //{
+            //    repo.Database.UserVersion = 99;
+            //}
+            using (var e = new LiteEngine(new EngineSettings { Filename = @"d:\appPWD.db", Password = "abc" }))
             {
-                repo.Insert(new BsonDocument { ["_id"] = 1, ["nome"] = "Mauricio" }, "col1");
+                e.DbParam("USERVERSION", 99);
 
-                repo.Database.Checkpoint();
+                e.Insert("col1", new BsonDocument[] { new BsonDocument { ["n"] = "Mauricio" } }, BsonAutoId.Int32);
+
             }
 
             using (var repo = new LiteRepository(cn))
             {
-                var d = repo.First<BsonDocument>("_id = 1", "col1");
+                var u = repo.Database.UserVersion;
 
-                Console.WriteLine(d["nome"].AsString);
+                Console.WriteLine(u);
+
+                var mau = repo.FirstOrDefault<BsonDocument>("_id = 1", "col1");
+
+                Console.WriteLine("dados:" + mau["n"].AsString);
+
             }
 
 
 
-            Console.WriteLine("===========================================================");
+            Console.WriteLine(" ===========================================================");
             Console.WriteLine("End");
             Console.ReadKey();
         }

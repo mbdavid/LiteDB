@@ -85,19 +85,19 @@ namespace LiteDB.Engine
         {
             if (this.DataStream != null)
             {
-                return new StreamFactory(this.DataStream);
+                return new StreamFactory(this.DataStream, this.Password);
             }
             else if (this.Filename == ":memory:")
             {
-                return new StreamFactory(new MemoryStream());
+                return new StreamFactory(new MemoryStream(), this.Password);
             }
             else if (this.Filename == ":temp:")
             {
-                return new StreamFactory(new TempStream());
+                return new StreamFactory(new TempStream(), this.Password);
             }
             else if (!string.IsNullOrEmpty(this.Filename))
             {
-                return new FileStreamFactory(this.Filename, this.ReadOnly);
+                return new FileStreamFactory(this.Filename, this.Password, this.ReadOnly);
             }
 
             throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");
@@ -110,24 +110,24 @@ namespace LiteDB.Engine
         {
             if (this.LogStream != null)
             {
-                return new StreamFactory(this.LogStream);
+                return new StreamFactory(this.LogStream, this.Password);
             }
             else if (this.Filename == ":memory:")
             {
-                return new StreamFactory(new MemoryStream());
+                return new StreamFactory(new MemoryStream(), this.Password);
             }
             else if (this.Filename == ":temp:")
             {
-                return new StreamFactory(new TempStream());
+                return new StreamFactory(new TempStream(), this.Password);
             }
             else if (!string.IsNullOrEmpty(this.Filename))
             {
                 var logName = FileHelper.GetLogFile(this.Filename);
 
-                return new FileStreamFactory(logName, this.ReadOnly);
+                return new FileStreamFactory(logName, this.Password, this.ReadOnly);
             }
 
-            return new StreamFactory(new MemoryStream());
+            return new StreamFactory(new MemoryStream(), this.Password);
         }
 
         /// <summary>
@@ -138,24 +138,24 @@ namespace LiteDB.Engine
         {
             if (this.TempStream != null)
             {
-                return new StreamFactory(this.TempStream);
+                return new StreamFactory(this.TempStream, this.Password);
             }
             else if (this.Filename == ":memory:")
             {
-                return new StreamFactory(new MemoryStream());
+                return new StreamFactory(new MemoryStream(), this.Password);
             }
             else if (this.Filename == ":temp:")
             {
-                return new StreamFactory(new TempStream());
+                return new StreamFactory(new TempStream(), this.Password);
             }
             else if (!string.IsNullOrEmpty(this.Filename))
             {
                 var tempName = FileHelper.GetTempFile(this.Filename);
 
-                return new FileStreamFactory(tempName, false);
+                return new FileStreamFactory(tempName, this.Password, false);
             }
 
-            return new StreamFactory(new TempStream());
+            return new StreamFactory(new TempStream(), this.Password);
         }
     }
 }

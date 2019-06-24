@@ -25,13 +25,16 @@ namespace LiteDB.Internals
 
             // encrypt
             var media = new MemoryStream();
-            var memory = new byte[4 * 8192];
-            var input = new BufferSlice(memory, 0, 8192);
-            var output = new BufferSlice(memory, 0, 8192);
+            var input = new BufferSlice(new byte[8192], 0, 8192);
+            var output = new BufferSlice(new byte[8192], 0, 8192);
 
             input.Fill(99);
 
+            Assert.AreEqual(0, media.Position);
+
             aes.Encrypt(input, media);
+
+            Assert.AreEqual(8192, media.Position);
 
             Assert.IsFalse(media.ToArray().All(x => x == 99));
             Assert.IsFalse(media.ToArray().All(x => x == 0));

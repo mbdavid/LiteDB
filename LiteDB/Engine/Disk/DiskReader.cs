@@ -19,7 +19,6 @@ namespace LiteDB.Engine
     internal class DiskReader : IDisposable
     {
         private readonly MemoryCache _cache;
-        private readonly AesEncryption _aes;
 
         private readonly StreamPool _dataPool;
         private readonly StreamPool _logPool;
@@ -27,12 +26,11 @@ namespace LiteDB.Engine
         private readonly Lazy<Stream> _dataStream;
         private readonly Lazy<Stream> _logStream;
 
-        public DiskReader(MemoryCache cache, StreamPool dataPool, StreamPool logPool, AesEncryption aes)
+        public DiskReader(MemoryCache cache, StreamPool dataPool, StreamPool logPool)
         {
             _cache = cache;
             _dataPool = dataPool;
             _logPool = logPool;
-            _aes = aes;
 
             _dataStream = new Lazy<Stream>(() => _dataPool.Rent());
             _logStream = new Lazy<Stream>(() => _logPool.Rent());
@@ -63,15 +61,7 @@ namespace LiteDB.Engine
 
             stream.Position = position;
 
-            // read encrypted or plain data from Stream into buffer
-            if (_aes != null)
-            {
-                _aes.Decrypt(stream, buffer);
-            }
-            else
-            {
-                stream.Read(buffer.Array, buffer.Offset, buffer.Count);
-            }
+            stream.Read(buffer.Array, buffer.Offset, buffer.Count);
         }
 
         /// <summary>

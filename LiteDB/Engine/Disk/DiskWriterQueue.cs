@@ -18,7 +18,6 @@ namespace LiteDB.Engine
     /// </summary>
     internal class DiskWriterQueue : IDisposable
     {
-        private readonly AesEncryption _aes;
         private readonly Stream _stream;
 
         // async thread controls
@@ -30,10 +29,9 @@ namespace LiteDB.Engine
 
         private ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
 
-        public DiskWriterQueue(Stream stream, AesEncryption aes)
+        public DiskWriterQueue(Stream stream)
         {
             _stream = stream;
-            _aes = aes;
 
             // prepare async thread writer
             _waiter = new ManualResetEventSlim(false);
@@ -133,15 +131,7 @@ namespace LiteDB.Engine
                 // set stream position according to page
                 _stream.Position = page.Position;
 
-                // write plain or encrypted data into stream
-                if (_aes != null)
-                {
-                    _aes.Encrypt(page, _stream);
-                }
-                else
-                {
-                    _stream.Write(page.Array, page.Offset, PAGE_SIZE);
-                }
+                _stream.Write(page.Array, page.Offset, PAGE_SIZE);
 
                 // release page here (no page use after this)
                 page.Release();

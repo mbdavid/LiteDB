@@ -85,6 +85,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Get content CRC-8
+        /// </summary>
+        public byte CRC => Crc8.ComputeChecksum(this.Array, this.Offset, this.Count);
+
+        /// <summary>
         /// Convert this buffer slice into new byte[]
         /// </summary>
         public byte[] ToArray()

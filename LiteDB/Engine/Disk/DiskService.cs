@@ -28,8 +28,6 @@ namespace LiteDB.Engine
         private long _dataLength;
         private long _logLength;
 
-        private readonly AesEncryption _aes;
-
         public DiskService(EngineSettings settings)
         {
             _cache = new MemoryCache(settings.MemorySegmentSize);
@@ -44,20 +42,15 @@ namespace LiteDB.Engine
 
             var isNew = _dataFactory.Exists() == false;
 
-            // load AES encryption class instance
-            _aes = settings.Password != null ? 
-                new AesEncryption(settings.Password, isNew ? AesEncryption.NewSalt() : this.ReadSalt(_dataPool)) : 
-                null;
-
             // create lazy async writer queue for log file
-            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer, _aes));
+            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer));
 
             // create new database if not exist yet
             if (isNew)
             {
                 LOG($"creating new database: '{Path.GetFileName(_dataFactory.Name)}'", "DISK");
 
-                this.Initialize(_dataPool.Writer, _aes, settings.InitialSize);
+                this.Initialize(_dataPool.Writer, settings.InitialSize);
             }
 
             // get initial data file length
@@ -87,32 +80,15 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create a new empty database (use synced mode)
         /// </summary>
-        private void Initialize(Stream stream, AesEncryption aes, long initialSize)
+        private void Initialize(Stream stream, long initialSize)
         {
             var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
             var header = new HeaderPage(buffer, 0);
 
-            // encryption will use 2 pages (#0 for header, #1 for SALT)
-            header.LastPageID = aes == null ? 0u : 1u;
-
             // update buffer
             header.UpdateBuffer();
 
-            if (aes == null)
-            {
-                stream.Write(buffer.Array, 0, PAGE_SIZE);
-            }
-            else
-            {
-                aes.Encrypt(buffer, stream);
-
-                // writing a fake-page that contains only SALT in #0001 (fill with 0 to fit 8192 bytes page)
-                var bytes = new byte[PAGE_SIZE];
-
-                Buffer.BlockCopy(aes.Salt, 0, bytes, 0, ENCRYPTION_SALT_SIZE);
-
-                stream.Write(bytes, 0, bytes.Length);
-            }
+            stream.Write(buffer.Array, 0, PAGE_SIZE);
 
             if (initialSize > 0)
             {
@@ -123,33 +99,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read SALT bytes in Page #1 (in data page)
-        /// </summary>
-        private byte[] ReadSalt(StreamPool pool)
-        {
-            var stream = pool.Rent();
-
-            try
-            {
-                var salt = new byte[ENCRYPTION_SALT_SIZE];
-
-                stream.Position = P_ENCRYPTION_SALT;
-                stream.Read(salt, 0, ENCRYPTION_SALT_SIZE);
-
-                return salt;
-            }
-            finally
-            {
-                pool.Return(stream);
-            }
-        }
-
-        /// <summary>
         /// Get a new instance for read data/log pages. This instance are not thread-safe - must request 1 per thread (used in Transaction)
         /// </summary>
         public DiskReader GetReader()
         {
-            return new DiskReader(_cache, _dataPool, _logPool, _aes);
+            return new DiskReader(_cache, _dataPool, _logPool);
         }
 
         /// <summary>
@@ -260,15 +214,7 @@ namespace LiteDB.Engine
                 {
                     var position = stream.Position;
 
-                    // read encrypted or plain data from Stream into buffer
-                    if (_aes != null)
-                    {
-                        _aes.Decrypt(stream, slice);
-                    }
-                    else
-                    {
-                        stream.Read(buffer, 0, PAGE_SIZE);
-                    }
+                    stream.Read(buffer, 0, PAGE_SIZE);
 
                     yield return new PageBuffer(buffer, 0, 0)
                     {
@@ -302,15 +248,7 @@ namespace LiteDB.Engine
 
                 stream.Position = page.Position;
 
-                // write plain or encrypted data into stream
-                if (_aes != null)
-                {
-                    _aes.Encrypt(page, stream);
-                }
-                else
-                {
-                    stream.Write(page.Array, page.Offset, PAGE_SIZE);
-                }
+                stream.Write(page.Array, page.Offset, PAGE_SIZE);
             }
 
             stream.FlushToDisk();
@@ -364,7 +302,6 @@ namespace LiteDB.Engine
 
             // other disposes
             _cache.Dispose();
-            _aes?.Dispose();
         }
     }
 }

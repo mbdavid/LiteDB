@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -13,10 +14,12 @@ namespace LiteDB.Engine
     internal class StreamFactory : IStreamFactory
     {
         private readonly Stream _stream;
+        private readonly string _password;
 
-        public StreamFactory(Stream stream)
+        public StreamFactory(Stream stream, string password)
         {
             _stream = stream;
+            _password = password;
         }
 
         /// <summary>
@@ -27,12 +30,25 @@ namespace LiteDB.Engine
         /// <summary>
         /// Use ConcurrentStream wrapper to support multi thread in same Stream (using lock control)
         /// </summary>
-        public Stream GetStream(bool canWrite, bool sequencial) => new ConcurrentStream(_stream, canWrite);
+        public Stream GetStream(bool canWrite, bool sequencial)
+        {
+            if (_password == null)
+            {
+                return new ConcurrentStream(_stream, canWrite);
+            }
+            else
+            {
+                return new AesStream(_password, new ConcurrentStream(_stream, canWrite));
+            }
+        }
 
         /// <summary>
         /// Get file length using _stream.Length
         /// </summary>
-        public long GetLength() => _stream.Length;
+        public long GetLength()
+        {
+            return _stream.Length - (_password == null ? 0 : ENCRYPTION_SALT_SIZE);
+        }
 
         /// <summary>
         /// Check if file exists based on stream length
