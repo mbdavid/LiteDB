@@ -149,6 +149,10 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 - F# support: https://github.com/Zaid-Ajaj/LiteDB.FSharp
 - PowerShell wrapper - https://github.com/v2kiran/PSLiteDB
 
+## Articles/Review
+
+- LiteDB Review: https://www.codeproject.com/Articles/5156832/LiteDb-Review
+
 ## Changelog
 
 Change details for each release are documented in the [release notes](https://github.com/mbdavid/LiteDB/releases).
