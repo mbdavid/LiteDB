@@ -114,14 +114,22 @@ namespace LiteDB
                     autoId == BsonType.Guid ? new BsonValue(Guid.NewGuid()) :
                     autoId == BsonType.DateTime ? new BsonValue(DateTime.Now) :
                     autoId == BsonType.Int32 ? new BsonValue((Int32)col.Sequence) :
-                    autoId == BsonType.Int64 ? new BsonValue(col.Sequence) : BsonValue.Null;
+                    autoId == BsonType.Int64 ? new BsonValue(col.Sequence) :
+                    autoId == BsonType.String ? new BsonValue(col.Sequence.ToString()) : BsonValue.Null;
             }
+
             // create bubble in sequence number if _id is bigger than current sequence
             else if(autoId == BsonType.Int32 || autoId == BsonType.Int64)
             {
                 var current = id.AsInt64;
 
-                // if current id is bigger than sequence, jump sequence to this number. Other was, do not increse sequnce
+                // if current id is bigger than sequence, jump sequence to this number. Other was, do not increase sequence
+                col.Sequence = current >= col.Sequence ? current : col.Sequence - 1;
+            }
+            // create bubble in sequence number if _id as an string is bigger than current sequence as integer
+            else if (autoId == BsonType.String && long.TryParse(id.AsString, out var current))
+            {
+                // if current id is bigger than sequence, jump sequence to this number. Other was, do not increase sequence
                 col.Sequence = current >= col.Sequence ? current : col.Sequence - 1;
             }
 
