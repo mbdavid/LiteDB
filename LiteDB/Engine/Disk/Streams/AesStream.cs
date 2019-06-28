@@ -26,13 +26,15 @@ namespace LiteDB.Engine
 
         public override bool CanWrite => _stream.CanWrite;
 
-        public override long Length => _stream.Length - ENCRYPTION_SALT_SIZE;
+        public override long Length => _stream.Length - PAGE_SIZE;
 
         public override long Position
         {
-            get => _stream.Position - ENCRYPTION_SALT_SIZE;
-            set => _stream.Position = value + ENCRYPTION_SALT_SIZE;
+            get => _stream.Position - PAGE_SIZE;
+            set => this.Seek(value, SeekOrigin.Begin);
         }
+
+        public long StreamPosition => _stream.Position;
 
         public AesStream(string password, Stream stream)
         {
@@ -51,6 +53,8 @@ namespace LiteDB.Engine
 
                 _stream.Read(this.Salt, 0, ENCRYPTION_SALT_SIZE);
             }
+
+            _stream.Position = PAGE_SIZE;
 
             _aes = Aes.Create();
             _aes.Padding = PaddingMode.Zeros;
@@ -75,20 +79,36 @@ namespace LiteDB.Engine
                 null;
         }
 
+        /// <summary>
+        /// Decrypt data from Stream
+        /// </summary>
         public override int Read(byte[] array, int offset, int count)
         {
             ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
             ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
 
-            return _reader.Read(array, offset, count);
+            var r = _reader.Read(array, offset, count);
+
+            //if (!_reader.HasFlushedFinalBlock)
+                //_reader.FlushFinalBlock();
+
+            return r;
         }
 
+        /// <summary>
+        /// Encrypt data to Stream
+        /// </summary>
         public override void Write(byte[] array, int offset, int count)
         {
             ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
             ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
 
+            //if (!_writer.HasFlushedFinalBlock)
+            //    _writer.FlushFinalBlock();
+
             _writer.Write(array, offset, count);
+
+
         }
 
         protected override void Dispose(bool disposing)
@@ -125,12 +145,18 @@ namespace LiteDB.Engine
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            return _stream.Seek(offset + ENCRYPTION_SALT_SIZE, origin);
+            if (_stream.Position != offset + PAGE_SIZE)
+            {
+                _writer.FlushFinalBlock();
+            }
+
+
+            return _stream.Seek(offset + PAGE_SIZE, origin);
         }
 
         public override void SetLength(long value)
         {
-            _stream.SetLength(value + ENCRYPTION_SALT_SIZE);
+            _stream.SetLength(value + PAGE_SIZE);
         }
     }
 }

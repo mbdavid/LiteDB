@@ -32,10 +32,11 @@ namespace LiteDB.Demo
             //}
             using (var e = new LiteEngine(new EngineSettings { Filename = @"d:\appPWD.db", Password = "abc" }))
             {
-                e.DbParam("USERVERSION", 99);
+                e.DbParam("USERVERSION", 199);
 
-                e.Insert("col1", new BsonDocument[] { new BsonDocument { ["n"] = "Mauricio" } }, BsonAutoId.Int32);
-
+                //e.Insert("col1", new BsonDocument[] { new BsonDocument { ["_id"] = 1, ["n"] = "Mauricio" } }, BsonAutoId.Int32);
+                //
+                //e.Checkpoint();
             }
 
             using (var repo = new LiteRepository(cn))
@@ -44,9 +45,9 @@ namespace LiteDB.Demo
 
                 Console.WriteLine(u);
 
-                var mau = repo.FirstOrDefault<BsonDocument>("_id = 1", "col1");
-
-                Console.WriteLine("dados:" + mau["n"].AsString);
+                //var mau = repo.FirstOrDefault<BsonDocument>("_id = 1", "col1");
+                //
+                //Console.WriteLine("dados:" + mau["n"].AsString);
 
             }
 

@@ -20,74 +20,58 @@ namespace LiteDB.Internals
         [TestMethod]
         public void Encrypt_Decrypt_Stream()
         {
-            var salt = AesEncryption.NewSalt();
-            var aes = new AesEncryption("abc", salt);
-
-            // encrypt
-            var media = new MemoryStream();
-            var input = new BufferSlice(new byte[8192], 0, 8192);
-            var output = new BufferSlice(new byte[8192], 0, 8192);
-
-            input.Fill(99);
-
-            Assert.AreEqual(0, media.Position);
-
-            aes.Encrypt(input, media);
-
-            Assert.AreEqual(8192, media.Position);
-
-            Assert.IsFalse(media.ToArray().All(x => x == 99));
-            Assert.IsFalse(media.ToArray().All(x => x == 0));
-
-            // decrypt
-            media.Position = 0;
-
-            aes.Decrypt(media, output);
-
-            Assert.IsTrue(output.All(99));
-
-            // decrypt with wrong password
-            var aes1 = new AesEncryption("abC", salt);
-
-            media.Position = 0;
-
-            aes1.Decrypt(media, output);
-
-            Assert.IsFalse(output.All(99));
-
-        }
-
-        [TestMethod]
-        public void Encrypt_Decrypt_Multi_Pages()
-        {
-            var salt = AesEncryption.NewSalt();
-            var aes = new AesEncryption("abc", salt);
-
-            // encrypt
-            var pages = 4;
-            var media = new MemoryStream();
-            var memory = new byte[pages * 8192];
-
-            for(var i = 0; i < pages; i++)
+            using (var media = new MemoryStream())
+            using (var crypto = new AesStream("abc", media))
             {
-                var input = new BufferSlice(memory, i * 8192, 8192);
+                var input0 = new byte[8192];
+                var input1 = new byte[8192];
+                var input2 = new byte[8192];
 
-                input.Fill((byte)(99 + i));
+                var output0 = new byte[8192];
+                var output1 = new byte[8192];
+                var output2 = new byte[8192];
 
-                aes.Encrypt(input, media);
+                input0.Fill(100, 0, 8192);
+                input1.Fill(101, 0, 8192);
+                input2.Fill(102, 0, 8192);
+
+                // write 0, 2, 1 but in order 0, 1, 2
+                crypto.Position = 0 * 8192;
+                crypto.Write(input0, 0, 8192);
+
+                crypto.Position = 2 * 8192;
+                crypto.Write(input2, 0, 8192);
+
+                crypto.Position = 1 * 8192;
+                crypto.Write(input1, 0, 8192);
+
+                // read encrypted data
+                media.Position = 0;
+                //media.Read(output0, 0, 8192);
+                //media.Read(output1, 0, 8192);
+                //media.Read(output2, 0, 8192);
+                //
+                //Assert.IsFalse(output0.All(x => x == 100));
+                //Assert.IsFalse(output1.All(x => x == 101));
+                //Assert.IsFalse(output2.All(x => x == 102));
+
+                // read decrypted data
+                crypto.Position = 0 * 8192;
+                crypto.Read(output0, 0, 8192);
+
+                //crypto.Position = 1 * 8192;
+                crypto.Read(output1, 0, 8192);
+
+                //crypto.Position = 2 * 8192;
+                crypto.Read(output2, 0, 8192);
+
+                Assert.IsTrue(output0.All(x => x == 100));
+                Assert.IsTrue(output1.All(x => x == 101));
+                Assert.IsTrue(output2.All(x => x == 102));
+
+
             }
 
-            media.Position = 0;
-
-            // decrypt
-            for (var i = 0; i < pages; i++)
-            {
-                var output = new BufferSlice(memory, i * 8192, 8192);
-
-                aes.Decrypt(media, output);
-
-                Assert.IsTrue(output.All((byte)(99 + i)));
-            }
         }
     }
 }

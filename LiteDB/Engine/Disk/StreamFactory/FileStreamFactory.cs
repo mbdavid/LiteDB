@@ -52,7 +52,7 @@ namespace LiteDB.Engine
         public long GetLength()
         {
             // getting size from OS - if encrypted must remove salt size
-            return new FileInfo(_filename).Length - (_password == null ? 0 : ENCRYPTION_SALT_SIZE);
+            return new FileInfo(_filename).Length - (_password == null ? 0 : PAGE_SIZE);
         }
 
         /// <summary>
