@@ -57,7 +57,8 @@ namespace LiteDB.Engine
             _stream.Position = PAGE_SIZE;
 
             _aes = Aes.Create();
-            _aes.Padding = PaddingMode.Zeros;
+            _aes.Padding = PaddingMode.None;
+            _aes.Mode = CipherMode.ECB;
 
             var pdb = new Rfc2898DeriveBytes(password, this.Salt);
 
@@ -145,12 +146,6 @@ namespace LiteDB.Engine
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            if (_stream.Position != offset + PAGE_SIZE)
-            {
-                _writer.FlushFinalBlock();
-            }
-
-
             return _stream.Seek(offset + PAGE_SIZE, origin);
         }
 

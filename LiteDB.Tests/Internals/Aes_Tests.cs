@@ -59,11 +59,11 @@ namespace LiteDB.Internals
                 crypto.Position = 0 * 8192;
                 crypto.Read(output0, 0, 8192);
 
-                //crypto.Position = 1 * 8192;
-                crypto.Read(output1, 0, 8192);
-
-                //crypto.Position = 2 * 8192;
+                crypto.Position = 2 * 8192;
                 crypto.Read(output2, 0, 8192);
+
+                crypto.Position = 1 * 8192;
+                crypto.Read(output1, 0, 8192);
 
                 Assert.IsTrue(output0.All(x => x == 100));
                 Assert.IsTrue(output1.All(x => x == 101));
