@@ -309,8 +309,6 @@ namespace LiteDB.Tests.Mapper
 
             // used in UpdateMany extend document
             TestExpr<User>(x => new User { Name = x.Name.ToUpper(), Salary = x.Salary * 2 }, "{ Name: UPPER($.Name), Salary: ($.Salary * @p0) }", 2);
-
-
         }
 
         [TestMethod]
@@ -358,6 +356,12 @@ namespace LiteDB.Tests.Mapper
             TestExpr<BsonValue>(x => x["first"]["name"], "$.first.name");
             TestExpr<BsonValue>(x => x["arr"][0]["demo"], "$.arr[0].demo");
             TestExpr<BsonValue>(x => x["age"] == 1, "($.age = @p0)", 1);
+        }
+
+        [TestMethod]
+        public void Linq_BsonDocument_Predicate()
+        {
+            TestPredicate<BsonValue>(x => x["age"] == 1, "($.age = @p0)", 1);
         }
 
         [TestMethod]

@@ -34,8 +34,8 @@ namespace LiteDB.Demo
             {
                 e.DbParam("USERVERSION", 199);
 
-                //e.Insert("col1", new BsonDocument[] { new BsonDocument { ["_id"] = 1, ["n"] = "Mauricio" } }, BsonAutoId.Int32);
-                //
+                e.Insert("col1", new BsonDocument[] { new BsonDocument { ["_id"] = 1, ["n"] = "Mauricio" } }, BsonAutoId.Int32);
+
                 //e.Checkpoint();
             }
 
@@ -45,9 +45,9 @@ namespace LiteDB.Demo
 
                 Console.WriteLine(u);
 
-                //var mau = repo.FirstOrDefault<BsonDocument>("_id = 1", "col1");
+                var mau = repo.FirstOrDefault<BsonDocument>(x => x["_id"] == 1, "col1");
                 //
-                //Console.WriteLine("dados:" + mau["n"].AsString);
+                Console.WriteLine("dados:" + mau["n"].AsString);
 
             }
 

@@ -47,13 +47,13 @@ namespace LiteDB.Internals
 
                 // read encrypted data
                 media.Position = 0;
-                //media.Read(output0, 0, 8192);
-                //media.Read(output1, 0, 8192);
-                //media.Read(output2, 0, 8192);
-                //
-                //Assert.IsFalse(output0.All(x => x == 100));
-                //Assert.IsFalse(output1.All(x => x == 101));
-                //Assert.IsFalse(output2.All(x => x == 102));
+                media.Read(output0, 0, 8192);
+                media.Read(output1, 0, 8192);
+                media.Read(output2, 0, 8192);
+                
+                Assert.IsFalse(output0.All(x => x == 100));
+                Assert.IsFalse(output1.All(x => x == 101));
+                Assert.IsFalse(output2.All(x => x == 102));
 
                 // read decrypted data
                 crypto.Position = 0 * 8192;

@@ -99,7 +99,9 @@ namespace LiteDB
                 _rootParameter = node.Name;
 
                 // if root parameter is IEnumerable use root symbol as "*" (source)
-                _rootSymbol = typeof(IEnumerable).IsAssignableFrom(node.Type) ? "*" : "$";
+                _rootSymbol = typeof(IEnumerable).IsAssignableFrom(node.Type) &&
+                    node.Type != typeof(BsonDocument) ? 
+                    "*" : "$";
             }
 
             _builder.Append(node.Name == _rootParameter ? _rootSymbol : "@");

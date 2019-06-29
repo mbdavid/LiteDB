@@ -51,7 +51,7 @@ namespace LiteDB.Engine
         /// </summary>
         public long GetLength()
         {
-            // getting size from OS - if encrypted must remove salt size
+            // getting size from OS - if encrypted must remove salt first page
             return new FileInfo(_filename).Length - (_password == null ? 0 : PAGE_SIZE);
         }
 
