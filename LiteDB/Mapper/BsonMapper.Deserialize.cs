@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -71,8 +71,13 @@ namespace LiteDB
         };
 
         #endregion
-
-        internal object Deserialize(Type type, BsonValue value)
+        /// <summary>
+        /// Deserilize an object and it's members. It's the entry point of deserialization procedure
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public virtual object Deserialize(Type type, BsonValue value)
         {
             Func<BsonValue, object> custom;
 
@@ -187,8 +192,13 @@ namespace LiteDB
             // it's used for "public object MyInt { get; set; }"
             return value.RawValue;
         }
-
-        private object DeserializeArray(Type type, BsonArray array)
+        /// <summary>
+        /// Deserializes an array member of a class.
+        /// </summary>
+        /// <param name="type">Type of array </param>
+        /// <param name="array">BsonArray to be deserialized</param>
+        /// <returns>Deserialized Object</returns>
+        protected virtual object DeserializeArray(Type type, BsonArray array)
         {
             var arr = Array.CreateInstance(type, array.Count);
             var idx = 0;
@@ -200,8 +210,13 @@ namespace LiteDB
 
             return arr;
         }
-
-        private object DeserializeList(Type type, BsonArray value)
+        /// <summary>
+        /// Deserializes a list member of a class.
+        /// </summary>
+        /// <param name="type">Type of list </param>
+        /// <param name="array">BsonArray to be deserialized</param>
+        /// <returns>Deserialized Object</returns>
+        protected virtual object DeserializeList(Type type, BsonArray value)
         {
             var itemType = Reflection.GetListItemType(type);
             var enumerable = (IEnumerable)Reflection.CreateInstance(type);
@@ -226,8 +241,14 @@ namespace LiteDB
 
             return enumerable;
         }
-
-        private void DeserializeDictionary(Type K, Type T, IDictionary dict, BsonDocument value)
+        /// <summary>
+        /// Deserializes a Dictionary
+        /// </summary>
+        /// <param name="K">Keys</param>
+        /// <param name="T">Dictionary Value Type</param>
+        /// <param name="dict">Dictionary Object</param>
+        /// <param name="value">BsonValue to be deserialize</param>
+        protected virtual void DeserializeDictionary(Type K, Type T, IDictionary dict, BsonDocument value)
         {
             foreach (var key in value.Keys)
             {
@@ -237,8 +258,13 @@ namespace LiteDB
                 dict.Add(k, v);
             }
         }
-
-        private void DeserializeObject(Type type, object obj, BsonDocument value)
+        /// <summary>
+        /// Deserialize an Object
+        /// </summary>
+        /// <param name="type">Type of object</param>
+        /// <param name="obj">instance of deserialized object </param>
+        /// <param name="value">BsonValue for copying to instance of object</param>
+        protected virtual void DeserializeObject(Type type, object obj, BsonDocument value)
         {
             var entity = this.GetEntityMapper(type);
 

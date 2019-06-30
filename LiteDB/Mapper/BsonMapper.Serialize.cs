@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,8 +28,14 @@ namespace LiteDB
         {
             return this.ToDocument(typeof(T), entity).AsDocument;
         }
-
-        internal BsonValue Serialize(Type type, object obj, int depth)
+        /// <summary>
+        /// Entry point on serialization procedure
+        /// </summary>
+        /// <param name="type">Type of object to be serialized</param>
+        /// <param name="obj">Instance of the object to be serialized</param>
+        /// <param name="depth">Depth of the recursive call</param>
+        /// <returns>Serialized BsonValue</returns>
+        public virtual BsonValue Serialize(Type type, object obj, int depth)
         {
             if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH, type);
 
@@ -109,7 +115,7 @@ namespace LiteDB
             // check if is a list or array
             else if (obj is IEnumerable)
             {
-                return this.SerializeArray(Reflection.GetListItemType(obj.GetType()), obj as IEnumerable, depth);
+                return this.SerializeArray(GetListItemType(obj), obj as IEnumerable, depth);
             }
             // otherwise serialize as a plain object
             else
@@ -117,8 +123,23 @@ namespace LiteDB
                 return this.SerializeObject(type, obj, depth);
             }
         }
-
-        private BsonArray SerializeArray(Type type, IEnumerable array, int depth)
+        /// <summary>
+        /// Get the Type of ListItem
+        /// </summary>
+        /// <param name="obj">Instance of List</param>
+        /// <returns>Type of ListItem</returns>
+        protected virtual Type GetListItemType(object obj)
+        {
+            return Reflection.GetListItemType(obj.GetType());
+        }
+        /// <summary>
+        /// Serializes an Array
+        /// </summary>
+        /// <param name="type">Type of <b>ListItem</b></param>
+        /// <param name="array">Instance of the array to be serialized</param>
+        /// <param name="depth">Depth of the recursive call</param>
+        /// <returns></returns>
+        protected virtual BsonArray SerializeArray(Type type, IEnumerable array, int depth)
         {
             var arr = new BsonArray();
 
@@ -129,8 +150,14 @@ namespace LiteDB
 
             return arr;
         }
-
-        private BsonDocument SerializeDictionary(Type type, IDictionary dict, int depth)
+        /// <summary>
+        /// Serialize a Dictionary
+        /// </summary>
+        /// <param name="type">Type of object to be serialized</param>
+        /// <param name="dict">Instance of the dictionary to be serialized</param>
+        /// <param name="depth">Depth of the recursive call</param>
+        /// <returns></returns>
+        protected virtual BsonDocument SerializeDictionary(Type type, IDictionary dict, int depth)
         {
             var o = new BsonDocument();
 
@@ -143,8 +170,14 @@ namespace LiteDB
 
             return o;
         }
-
-        private BsonDocument SerializeObject(Type type, object obj, int depth)
+        /// <summary>
+        /// Serializes a class object
+        /// </summary>
+        /// <param name="type">Type of object to be serialized</param>
+        /// <param name="obj">Instance of the object to be serialized</param>
+        /// <param name="depth">Depth of the recursive call</param>
+        /// <returns></returns>
+        protected virtual BsonDocument SerializeObject(Type type, object obj, int depth)
         {
             var o = new BsonDocument();
             var t = obj.GetType();
