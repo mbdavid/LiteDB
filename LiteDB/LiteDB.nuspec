@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>LiteDB</id>
+    <version>4.1.2-patched</version>
+    <title>LiteDB</title>
+    <authors>Maurício David</authors>
+    <owners>Maurício David</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://raw.github.com/mbdavid/LiteDB/master/LICENSE</licenseUrl>
+    <projectUrl>https://www.litedb.org/</projectUrl>
+    <iconUrl>http://www.litedb.org/img/logo_64x64.png</iconUrl>
+    <description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</description>
+    <copyright>MIT</copyright>
+    <tags>database nosql embedded</tags>
+    <dependencies>
+      <group targetFramework=".NETFramework3.5" />
+      <group targetFramework=".NETFramework4.0" />
+      <group targetFramework=".NETStandard1.3">
+        <dependency id="NETStandard.Library" version="1.6.1" exclude="Build,Analyzers" />
+        <dependency id="System.Reflection" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Reflection.TypeExtensions" version="4.3.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="System.Reflection" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Reflection.TypeExtensions" version="4.3.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="System" targetFramework=".NETFramework3.5, .NETFramework4.0" />
+    </frameworkAssemblies>
+  </metadata>
+	<files>
+		<file src="bin\Release\net35\LiteDB.dll" target="lib\net35" />
+		<file src="bin\Release\net35\LiteDB.xml" target="lib\net35" />
+		
+		<file src="bin\Release\net40\LiteDB.dll" target="lib\net40" />
+		<file src="bin\Release\net40\LiteDB.xml" target="lib\net40" />
+
+		<file src="bin\Release\netstandard1.3\LiteDB.dll" target="lib\netstandard1.3" />
+		<file src="bin\Release\netstandard1.3\LiteDB.xml" target="lib\netstandard1.3" />
+
+		<file src="bin\Release\netstandard2.0\LiteDB.dll" target="lib\netstandard2.0" />
+		<file src="bin\Release\netstandard2.0\LiteDB.xml" target="lib\netstandard2.0" />
+	</files>
+</package>

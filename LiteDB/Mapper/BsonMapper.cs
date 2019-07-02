@@ -404,11 +404,18 @@ namespace LiteDB
 
                 var id = idField.Getter(obj);
 
-                return new BsonDocument
+                var bsonDocument = new BsonDocument
                 {
                     { "$id", m.Serialize(id.GetType(), id, 0) },
                     { "$ref", collection }
                 };
+
+                if (member.DataType.GetTypeInfo().IsInterface || member.DataType.GetTypeInfo().IsAbstract) {
+                    bsonDocument["$type"] = obj.GetType().FullName + ", " +
+                                            obj.GetType().GetTypeInfo().Assembly.GetName().Name;
+                }
+
+                return bsonDocument;
             };
 
             member.Deserialize = (bson, m) =>
@@ -416,9 +423,12 @@ namespace LiteDB
                 var idRef = bson.AsDocument["$id"];
 
                 return m.Deserialize(entity.ForType,
-                    idRef.IsNull ?
-                    bson : // if has no $id object was full loaded (via Include) - so deserialize using normal function
-                    new BsonDocument { { "_id", idRef } }); // if has $id, deserialize object using only _id object
+                    idRef.IsNull
+                        ? bson
+                        : // if has no $id object was full loaded (via Include) - so deserialize using normal function
+                        member.DataType.GetTypeInfo().IsAbstract || member.DataType.GetTypeInfo().IsInterface
+                            ? new BsonDocument {{"_id", idRef},{"_type", bson.AsDocument["$type"]} }
+                            : new BsonDocument {{"_id", idRef}}); // if has $id, deserialize object using only _id object
             };
         }
 
