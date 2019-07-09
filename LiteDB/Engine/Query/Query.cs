@@ -61,6 +61,13 @@ namespace LiteDB
             return new QueryEquals(field, value ?? BsonValue.Null);
         }
 
+        public static Query StringEQ(string field, string value, StringComparison comparison)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+
+            return new QueryStringEquals(field, value ?? BsonValue.Null, comparison);
+        }
+
         /// <summary>
         /// Returns all documents that value are less than value (&lt;)
         /// </summary>
