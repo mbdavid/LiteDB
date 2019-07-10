@@ -8,7 +8,6 @@ namespace LiteDB.Engine
         int Analyze(string[] collections);
         void Checkpoint();
         int Vaccum();
-        DatabaseReport CheckIntegrity();
 
         bool BeginTrans();
         bool Commit();
