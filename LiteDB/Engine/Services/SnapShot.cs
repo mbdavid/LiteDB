@@ -437,6 +437,7 @@ namespace LiteDB.Engine
             ENSURE(page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue, "before delete a page, no linked list with any another page");
             ENSURE(page.Buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE - 1).All(0), "page content shloud be empty");
             ENSURE(page.ItemsCount == 0 && page.UsedBytes == 0, "no items on page when delete this page");
+            ENSURE(page.PageType == PageType.Data || page.PageType == PageType.Index, "only data/index page can be deleted");
 
             // mark page as empty and dirty
             page.MarkAsEmtpy();

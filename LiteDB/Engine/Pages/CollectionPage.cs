@@ -115,6 +115,9 @@ namespace LiteDB.Engine
 
         public override PageBuffer UpdateBuffer()
         {
+            // if page was deleted, do not write in content area (must keep with 0 only)
+            if (this.PageType == PageType.Empty) return base.UpdateBuffer();
+
             var area = _buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE);
 
             using (var w = new BufferWriter(area))
@@ -130,12 +133,12 @@ namespace LiteDB.Engine
                 w.Write(this.CreationTime);
                 w.Write(this.LastAnalyzed);
 
-                // skip reserved area (indexes starts at position 96)
-                w.Skip(P_INDEXES - w.Position);
-
                 // update collection only if needed
                 if (_isIndexesChanged)
                 {
+                    // skip reserved area (indexes starts at position 96)
+                    w.Skip(P_INDEXES - w.Position);
+
                     w.Write((byte)_indexes.Count); // 1 byte
 
                     foreach (var index in _indexes.Values)
