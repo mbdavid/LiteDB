@@ -141,7 +141,7 @@
     <Compile Include="Client\Structures\Query.cs" />
     <Compile Include="Engine\Engine\Analyze.cs" />
     <Compile Include="Engine\Engine\Collection.cs" />
-    <Compile Include="Engine\Engine\DbParam.cs" />
+    <Compile Include="Engine\Engine\UserVersion.cs" />
     <Compile Include="Engine\Engine\Delete.cs" />
     <Compile Include="Engine\Engine\Index.cs" />
     <Compile Include="Engine\Engine\Sequence.cs" />

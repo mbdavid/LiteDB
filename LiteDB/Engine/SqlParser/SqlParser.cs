@@ -48,8 +48,6 @@ namespace LiteDB.Engine
                 case "ROLLBACK": return this.ParseRollback();
                 case "COMMIT": return this.ParseCommit();
 
-                case "SET": return this.ParseSet();
-
                 default:  throw LiteException.UnexpectedToken(first);
             }
         }

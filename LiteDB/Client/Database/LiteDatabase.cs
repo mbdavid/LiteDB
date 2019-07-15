@@ -294,8 +294,8 @@ namespace LiteDB
         /// </summary>
         public int UserVersion
         {
-            get => _engine.Value.DbParam(DB_PARAM_USERVERSION);
-            set => _engine.Value.DbParam(DB_PARAM_USERVERSION, value);
+            get => _engine.Value.UserVersion;
+            set => _engine.Value.UserVersion = value;
         }
 
         #endregion

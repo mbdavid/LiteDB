@@ -81,11 +81,6 @@ namespace LiteDB
         public const int CONTAINER_SORT_SIZE = 100 * PAGE_SIZE;
 
         /// <summary>
-        /// Database header parameter: USERVERSION
-        /// </summary>
-        public const string DB_PARAM_USERVERSION = "USERVERSION";
-
-        /// <summary>
         /// Log a message using Debug.WriteLine
         /// </summary>
         [DebuggerHidden]

@@ -27,7 +27,7 @@ namespace LiteDB.Engine
                 LogStream = new MemoryStream() // never will be used... it's a readonly database
             });
 
-            this.UserVersion = _engine.DbParam(DB_PARAM_USERVERSION);
+            this.UserVersion = _engine.UserVersion;
         }
 
         /// <summary>

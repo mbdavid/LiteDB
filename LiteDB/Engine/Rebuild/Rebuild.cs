@@ -46,8 +46,8 @@ namespace LiteDB.Engine
                     this.Insert(collection, docs, BsonAutoId.ObjectId);
                 }
 
-                // update user version in commit
-                transaction.Pages.Commit += h => h.UserVersion = this.DbParam(DB_PARAM_USERVERSION);
+                // update user version on commit
+                transaction.Pages.Commit += h => h.UserVersion = reader.UserVersion;
 
                 this.Commit();
             }

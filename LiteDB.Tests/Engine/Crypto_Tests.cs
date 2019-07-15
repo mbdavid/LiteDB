@@ -71,7 +71,7 @@ namespace LiteDB.Tests.Engine
 
         private void CreateDatabase(LiteEngine engine)
         {
-            engine.DbParam("USERVERSION", 123);
+            engine.UserVersion = 123;
 
             engine.Insert("mycol", new[] {
                 new BsonDocument

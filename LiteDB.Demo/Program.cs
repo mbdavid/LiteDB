@@ -32,7 +32,7 @@ namespace LiteDB.Demo
             //}
             using (var e = new LiteEngine(new EngineSettings { Filename = @"d:\appPWD.db", Password = "abc" }))
             {
-                e.DbParam("USERVERSION", 199);
+                e.UserVersion = 199;
 
                 e.Insert("col1", new BsonDocument[] { new BsonDocument { ["_id"] = 1, ["n"] = "Mauricio" } }, BsonAutoId.Int32);
 
