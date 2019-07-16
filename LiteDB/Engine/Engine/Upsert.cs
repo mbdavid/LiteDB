@@ -44,6 +44,10 @@ namespace LiteDB
                     _trans.CheckPoint();
                 }
 
+                if (count > 0)
+                {
+                    CheckNotification(collection);
+                }
                 // returns how many document was inserted
                 return count;
             });

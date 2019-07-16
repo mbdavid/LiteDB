@@ -41,6 +41,10 @@ namespace LiteDB
                     }
                 }
 
+                if (count > 0)
+                {
+                    CheckNotification(collection);
+                }
                 return count;
             });
         }

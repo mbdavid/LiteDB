@@ -13,7 +13,7 @@ namespace LiteDB
         {
             if (doc == null) throw new ArgumentNullException(nameof(doc));
 
-            this.Insert(collection, new BsonDocument[] { doc }, autoId);
+            this.Insert(collection, new BsonDocument[] { doc }, autoId,true);
 
             return doc["_id"];
         }
@@ -21,7 +21,7 @@ namespace LiteDB
         /// <summary>
         /// Implements insert documents in a collection - use a buffer to commit transaction in each buffer count
         /// </summary>
-        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonType autoId = BsonType.ObjectId)
+        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonType autoId = BsonType.ObjectId,bool notify=true)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
@@ -39,6 +39,10 @@ namespace LiteDB
                     count++;
                 }
 
+                if (notify && count > 0)
+                {
+                    CheckNotification(collection);
+                }
                 return count;
             });
         }
@@ -56,9 +60,13 @@ namespace LiteDB
 
             foreach(var batch in docs.Batch(batchSize))
             {
-                count += this.Insert(collection, batch, autoId);
+                count += this.Insert(collection, batch, autoId,false);
             }
 
+            if (count > 0)
+            {
+                CheckNotification(collection);
+            }
             return count;
         }
 
