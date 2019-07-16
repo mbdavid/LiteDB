@@ -21,35 +21,38 @@ namespace LiteDB.Demo
             Console.WriteLine("LITE DB v5");
             Console.WriteLine("===========================================================");
 
-            var cn = @"filename=d:\appPWD.db; password=abc";
+            //var cn = @"filename=d:\appPWD.db; password=abc";
 
-            File.Delete(@"d:\appPWD.db");
-            File.Delete(@"d:\appPWD-log.db");
+            //File.Delete(@"d:\appPWD.db");
+            //File.Delete(@"d:\appPWD-log.db");
 
             //using (var repo = new LiteRepository(cn))
             //{
             //    repo.Database.UserVersion = 99;
             //}
-            using (var e = new LiteEngine(new EngineSettings { Filename = @"d:\appPWD.db", Password = "abc" }))
-            {
-                e.UserVersion = 199;
+            LiteEngine.Upgrade(@"c:\git\temp\app-v4.db");
 
-                e.Insert("col1", new BsonDocument[] { new BsonDocument { ["_id"] = 1, ["n"] = "Mauricio" } }, BsonAutoId.Int32);
 
-                //e.Checkpoint();
-            }
-
-            using (var repo = new LiteRepository(cn))
-            {
-                var u = repo.Database.UserVersion;
-
-                Console.WriteLine(u);
-
-                var mau = repo.FirstOrDefault<BsonDocument>(x => x["_id"] == 1, "col1");
-                //
-                Console.WriteLine("dados:" + mau["n"].AsString);
-
-            }
+            //using (var e = new LiteEngine(new EngineSettings { Filename = @"d:\appPWD.db", Password = "abc" }))
+            //{
+            //    e.UserVersion = 199;
+            //
+            //    e.Insert("col1", new BsonDocument[] { new BsonDocument { ["_id"] = 1, ["n"] = "Mauricio" } }, BsonAutoId.Int32);
+            //
+            //    //e.Checkpoint();
+            //}
+            //
+            //using (var repo = new LiteRepository(cn))
+            //{
+            //    var u = repo.Database.UserVersion;
+            //
+            //    Console.WriteLine(u);
+            //
+            //    var mau = repo.FirstOrDefault<BsonDocument>(x => x["_id"] == 1, "col1");
+            //    //
+            //    Console.WriteLine("dados:" + mau["n"].AsString);
+            //
+            //}
 
 
 

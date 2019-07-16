@@ -68,7 +68,38 @@ namespace LiteDB.Studio
 
             _connectionString = connectionString;
 
-            _codeCompletion.UpdateCodeCompletion(_db);
+            // checks for database upgrade
+            try
+            {
+                _codeCompletion.UpdateCodeCompletion(_db);
+            }
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.INVALID_DATABASE_VERSION)
+            {
+                var confirm = MessageBox.Show(
+                    "This datafile are in old v4 version. Do you want upgrade? (this operation will backup your database first)",
+                    "Upgrade",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (confirm == DialogResult.Yes)
+                {
+                    LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
+
+                    MessageBox.Show("Datafile upgraded successfully", "Upgrade", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
+                    _db.Dispose();
+
+                    _db = new LiteDatabase(connectionString);
+
+                    _codeCompletion.UpdateCodeCompletion(_db);
+                }
+                else
+                {
+                    MessageBox.Show("Aborted operation", "Upgrade", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
+                    throw ex;
+                }
+            }
 
             btnConnect.Text = "Disconnect";
 
