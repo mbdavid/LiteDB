@@ -73,21 +73,22 @@ namespace LiteDB.Studio
             {
                 _codeCompletion.UpdateCodeCompletion(_db);
             }
-            catch (LiteException ex) when (ex.ErrorCode == LiteException.INVALID_DATABASE_VERSION)
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.INVALID_DATABASE)
             {
                 var confirm = MessageBox.Show(
-                    "This datafile are in old v4 version. Do you want upgrade? (this operation will backup your database first)",
+                    "This datafile are not valid as current LiteDB format. Do you want try to upgrade? (this operation will backup your database first)",
                     "Upgrade",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question);
+
+                _db.Dispose();
+                _db = null;
 
                 if (confirm == DialogResult.Yes)
                 {
                     LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
 
                     MessageBox.Show("Datafile upgraded successfully", "Upgrade", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-
-                    _db.Dispose();
 
                     _db = new LiteDatabase(connectionString);
 

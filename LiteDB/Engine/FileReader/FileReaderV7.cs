@@ -31,6 +31,25 @@ namespace LiteDB.Engine
 
             this.UserVersion = header["userVersion"].AsInt32;
 
+            if (password == null && header["salt"].AsBinary.IsFullZero() == false)
+            {
+                throw new LiteException(0, "Current datafile requires password");
+            }
+            else if (password != null)
+            {
+                if (header["salt"].AsBinary.IsFullZero())
+                {
+                    throw new LiteException(0, "Current datafile has no encryption - do not use password");
+                }
+
+                var hash = AesEncryption.HashSHA1(password);
+
+                if (hash.SequenceEqual(header["password"].AsBinary) == false)
+                {
+                    throw new LiteException(0, "Invalid database password");
+                }
+            }
+
             _aes = password == null ?
                 null :
                 new AesEncryption(password, header["salt"].AsBinary);
@@ -142,13 +161,21 @@ namespace LiteDB.Engine
             // skip freeByte + reserved
             reader.ReadBytes(2 + 8);
 
-            #region Header
+            #region Header (1)
 
             // read header
             if (page["pageType"] == 1)
             {
-                // skip HEADER_INFO + VERSION + ChangeID + FreeEmptyPageID + LastPageID
-                reader.ReadBytes(27 + 1 + 2 + 4 + 4);
+                var info = reader.ReadString(27);
+                var ver = reader.ReadByte();
+
+                if (string.CompareOrdinal(info, HeaderPage.HEADER_INFO) != 0 || ver != 7)
+                {
+                    throw LiteException.InvalidDatabase();
+                }
+
+                // skip ChangeID + FreeEmptyPageID + LastPageID
+                reader.ReadBytes(2 + 4 + 4);
                 page["userVersion"] = (int)reader.ReadUInt16();
                 page["password"] = reader.ReadBytes(20);
                 page["salt"] = reader.ReadBytes(16);
@@ -168,7 +195,7 @@ namespace LiteDB.Engine
 
             #endregion
 
-            #region Collection
+            #region Collection (2)
 
             // collection page
             else if (page["pageType"] == 2)
@@ -210,7 +237,7 @@ namespace LiteDB.Engine
 
             #endregion
 
-            #region Index
+            #region Index (3)
 
             else if (page["pageType"] == 3)
             {
@@ -258,7 +285,7 @@ namespace LiteDB.Engine
 
             #endregion
 
-            #region Data
+            #region Data (4)
 
             else if (page["pageType"] == 4)
             {
@@ -282,7 +309,7 @@ namespace LiteDB.Engine
 
             #endregion
 
-            #region Extend
+            #region Extend (5)
 
             else if (page["pageType"] == 5)
             {

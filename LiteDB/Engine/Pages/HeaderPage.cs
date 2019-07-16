@@ -17,7 +17,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Header info the validate that datafile is a LiteDB file (27 bytes)
         /// </summary>
-        private const string HEADER_INFO = "** This is a LiteDB file **";
+        public const string HEADER_INFO = "** This is a LiteDB file **";
 
         /// <summary>
         /// Datafile specification version
@@ -54,7 +54,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// DateTime when database was created [8 bytes]
         /// </summary>
-        public DateTime CreationTime { get; }
+        public DateTime CreationTime { get; private set; }
 
         /// <summary>
         /// UserVersion int - for user get/set database version changes
@@ -98,11 +98,6 @@ namespace LiteDB.Engine
         public HeaderPage(PageBuffer buffer)
             : base(buffer)
         {
-            if (this.PageType != PageType.Header) throw new LiteException(0, $"Invalid HeaderPage buffer on {PageID}");
-
-            // CreateTime is readonly
-            this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
-
             this.LoadPage();
         }
 
@@ -111,23 +106,17 @@ namespace LiteDB.Engine
         /// </summary>
         private void LoadPage()
         {
+            // check database file format
             var info = _buffer.ReadString(P_HEADER_INFO, HEADER_INFO.Length);
             var ver = _buffer[P_FILE_VERSION];
 
             if (string.CompareOrdinal(info, HEADER_INFO) != 0 || ver != FILE_VERSION)
             {
-                // test for version 7 (LiteDBv4)
-                info = _buffer.ReadString(25, 27);
-                ver = _buffer.ReadByte(52);
-
-                if (info == HEADER_INFO && ver == 7)
-                {
-                    throw LiteException.InvalidDatabaseVersion(7);
-                }
-
                 throw LiteException.InvalidDatabase();
             }
 
+            // CreateTime is readonly
+            this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
             this.FreeEmptyPageID = _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
             this.LastPageID = _buffer.ReadUInt32(P_LAST_PAGE_ID);
             this.UserVersion = _buffer.ReadInt32(P_USER_VERSION);

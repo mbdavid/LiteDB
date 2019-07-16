@@ -29,24 +29,39 @@ namespace LiteDB.Engine
                 // if no problem in open database, it's already in v8
                 return false;
             }
-            catch(LiteException ex) when (ex.ErrorCode == LiteException.INVALID_DATABASE_VERSION)
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.INVALID_DATABASE)
             {
                 var backup = FileHelper.GetSufixFile(filename, "-backup", true);
 
-                File.Move(filename, backup);
+                settings.Filename = FileHelper.GetSufixFile(filename, "-temp", true);
 
-                using (var engine = new LiteEngine(settings))
-                using (var stream = new FileStream(backup, FileMode.Open, FileAccess.Read))
+                try
                 {
-                    engine.Rebuild(new FileReaderV7(stream, password));
+                    // current versions works only converting from v7
+                    using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                    using (var reader = new FileReaderV7(stream, password))
+                    using (var engine = new LiteEngine(settings))
+                    {
+                        engine.Rebuild(reader);
 
-                    engine.Checkpoint();
+                        engine.Checkpoint();
+                    }
+
+                    // rename source filename to backup name
+                    File.Move(filename, backup);
+
+                    // rename temp file into filename
+                    File.Move(settings.Filename, filename);
+                }
+                catch (Exception)
+                {
+                    FileHelper.TryDelete(settings.Filename);
+
+                    throw;
                 }
 
                 return true;
             }
-
-            return false;
         }
     }
 }

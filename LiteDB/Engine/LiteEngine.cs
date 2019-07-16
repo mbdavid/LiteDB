@@ -65,9 +65,7 @@ namespace LiteDB.Engine
         /// </summary>
         public LiteEngine(EngineSettings settings)
         {
-            if (settings == null) throw new ArgumentNullException(nameof(settings));
-
-            _settings = settings;
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
             LOG("start initializing", "ENGINE");
 

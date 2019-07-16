@@ -16,7 +16,6 @@ namespace LiteDB
         public const int FILE_NOT_FOUND = 101;
         public const int DATABASE_SHUTDOWN = 102;
         public const int INVALID_DATABASE = 103;
-        public const int INVALID_DATABASE_VERSION = 104;
         public const int FILE_SIZE_EXCEEDED = 105;
         public const int COLLECTION_LIMIT_EXCEEDED = 106;
         public const int INDEX_DROP_ID = 108;
@@ -89,12 +88,7 @@ namespace LiteDB
 
         internal static LiteException InvalidDatabase()
         {
-            return new LiteException(INVALID_DATABASE, "File is not a valid LiteDB database or invalid password.");
-        }
-
-        internal static LiteException InvalidDatabaseVersion(int version)
-        {
-            return new LiteException(INVALID_DATABASE_VERSION, "This datafile is in version {0} and needs to be migrated. Run Upgrade method (in LiteEngine class) to migrate your data to new file version", version);
+            return new LiteException(INVALID_DATABASE, "File is not a valid LiteDB database format or contains a invalid password.");
         }
 
         internal static LiteException FileSizeExceeded(long limit)
