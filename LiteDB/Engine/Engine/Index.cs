@@ -63,6 +63,10 @@ namespace LiteDB.Engine
                         // adding index node for each value
                         foreach (var key in keys)
                         {
+                            //TODO: se o "key" for um array, não seria melhor pegar os items?? não faz sentido indexar array
+                            // lembrando que fiz isso no map também
+
+
                             // insert new index node
                             var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
 

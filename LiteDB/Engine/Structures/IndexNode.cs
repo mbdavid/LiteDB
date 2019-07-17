@@ -73,11 +73,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// Calculate how many bytes this node will need on page segment
         /// </summary>
-        public static int GetNodeLength(byte level, BsonValue key)
+        public static int GetNodeLength(byte level, BsonValue key, out int keyLength)
         {
+            keyLength = GetKeyLength(key);
+
             return INDEX_NODE_FIXED_SIZE +
                 (level * 2 * PageAddress.SIZE) + // prev/next
-                GetKeyLength(key); // key
+                keyLength; // key
         }
 
         /// <summary>

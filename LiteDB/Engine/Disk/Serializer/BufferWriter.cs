@@ -333,11 +333,13 @@ namespace LiteDB.Engine
         #region BsonDocument as SPECS
 
         /// <summary>
-        /// Write BsonArray as BSON specs
+        /// Write BsonArray as BSON specs. Returns array bytes count
         /// </summary>
-        public void WriteArray(BsonArray value, bool recalc)
+        public int WriteArray(BsonArray value, bool recalc)
         {
-            this.Write(value.GetBytesCount(recalc));
+            var bytesCount = value.GetBytesCount(recalc);
+
+            this.Write(bytesCount);
 
             for (var i = 0; i < value.Count; i++)
             {
@@ -345,14 +347,18 @@ namespace LiteDB.Engine
             }
 
             this.Write((byte)0x00);
+
+            return bytesCount;
         }
 
         /// <summary>
-        /// Write BsonDocument as BSON specs
+        /// Write BsonDocument as BSON specs. Returns document bytes count
         /// </summary>
-        public void WriteDocument(BsonDocument value, bool recalc)
+        public int WriteDocument(BsonDocument value, bool recalc)
         {
-            this.Write(value.GetBytesCount(recalc));
+            var bytesCount = value.GetBytesCount(recalc);
+
+            this.Write(bytesCount);
 
             foreach (var el in value.GetElements())
             {
@@ -360,6 +366,8 @@ namespace LiteDB.Engine
             }
 
             this.Write((byte)0x00);
+
+            return bytesCount;
         }
 
         private void WriteElement(string key, BsonValue value)

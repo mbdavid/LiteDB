@@ -122,13 +122,13 @@ namespace LiteDB
                 case BsonType.Document:
                     using (var r = new BufferReader(buffer))
                     {
-                        r.Skip(1);
+                        r.Skip(offset); // skip first byte for value.Type
                         return r.ReadDocument();
                     }
                 case BsonType.Array:
                     using (var r = new BufferReader(buffer))
                     {
-                        r.Skip(1);
+                        r.Skip(offset); // skip first byte for value.Type
                         return r.ReadArray();
                     }
 
@@ -264,14 +264,14 @@ namespace LiteDB
                 case BsonType.Document:
                     using (var w = new BufferWriter(buffer))
                     {
-                        w.Skip(1);
+                        w.Skip(offset); // skip offset from buffer
                         w.WriteDocument(value.AsDocument, true);
                     }
                     break;  
                 case BsonType.Array:
                     using (var w = new BufferWriter(buffer))
                     {
-                        w.Skip(1);
+                        w.Skip(offset); // skip offset from buffer
                         w.WriteArray(value.AsArray, true);
                     }
                     break;

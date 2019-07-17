@@ -25,7 +25,7 @@ namespace LiteDB.Engine
         public CollectionIndex CreateIndex(string name, string expr, bool unique)
         {
             // get how many butes needed fore each head/tail (both has same size)
-            var bytesLength = IndexNode.GetNodeLength(MAX_LEVEL_LENGTH, BsonValue.MinValue);
+            var bytesLength = IndexNode.GetNodeLength(MAX_LEVEL_LENGTH, BsonValue.MinValue, out var keyLength);
 
             // get a free index page for head note (x2 for head + tail)
             var indexPage = _snapshot.GetFreePage<IndexPage>(bytesLength * 2);
@@ -77,13 +77,12 @@ namespace LiteDB.Engine
         /// </summary>
         private IndexNode AddNode(CollectionIndex index, BsonValue key, PageAddress dataBlock, byte level, IndexNode last)
         {
-            var keyLength = IndexNode.GetKeyLength(key);
+            // get a free index page for head note
+            var bytesLength = IndexNode.GetNodeLength(level, key, out var keyLength);
 
             // test for index key maxlength (length must fit in 1 byte)
             if (keyLength > MAX_INDEX_KEY_LENGTH) throw LiteException.InvalidIndexKey($"Index key must be less than {MAX_INDEX_KEY_LENGTH} bytes.");
 
-            // get a free index page for head note
-            var bytesLength = IndexNode.GetNodeLength(level, key);
             var indexPage = _snapshot.GetFreePage<IndexPage>(bytesLength);
 
             // create node in buffer
