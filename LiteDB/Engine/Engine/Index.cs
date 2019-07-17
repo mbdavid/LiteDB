@@ -63,16 +63,31 @@ namespace LiteDB.Engine
                         // adding index node for each value
                         foreach (var key in keys)
                         {
-                            //TODO: se o "key" for um array, não seria melhor pegar os items?? não faz sentido indexar array
-                            // lembrando que fiz isso no map também
+                            // when index key is an array, get items inside array.
+                            // valid only for first level (if this items are another array, this arrays will be indexed as array)
+                            if (key.IsArray)
+                            {
+                                var arr = key.AsArray;
 
+                                foreach(var itemKey in arr)
+                                {
+                                    // insert new index node
+                                    var node = indexer.AddNode(index, itemKey, pkNode.DataBlock, last);
 
-                            // insert new index node
-                            var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
+                                    if (first == null) first = node;
 
-                            if (first == null) first = node;
+                                    last = node;
+                                }
+                            }
+                            else
+                            {
+                                // insert new index node
+                                var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
 
-                            last = node;
+                                if (first == null) first = node;
+
+                                last = node;
+                            }
                         }
 
                         // fix single linked-list in pkNode
