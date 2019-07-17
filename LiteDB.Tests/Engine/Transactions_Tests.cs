@@ -184,7 +184,8 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Test_Transaction_States()
         {
-            var data = DataGen.Person(1, 10);
+            var data0 = DataGen.Person(1, 10).ToArray();
+            var data1 = DataGen.Person(11, 20).ToArray();
 
             using (var db = new LiteDatabase(new MemoryStream()))
             {
@@ -196,7 +197,7 @@ namespace LiteDB.Tests.Engine
                 // but in second type transaction will be same
                 Assert.IsFalse(db.BeginTrans());
 
-                person.Insert(data);
+                person.Insert(data0);
 
                 // must commit transaction
                 Assert.IsTrue(db.Commit());
@@ -213,9 +214,9 @@ namespace LiteDB.Tests.Engine
                 Assert.IsTrue(db.Rollback());
 
                 // auto-commit
-                person.Insert(DataGen.Person().Take(20));
+                person.Insert(data1);
 
-                Assert.AreEqual(30, person.Count());
+                Assert.AreEqual(20, person.Count());
             }
         }
     }

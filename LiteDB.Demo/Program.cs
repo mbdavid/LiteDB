@@ -23,24 +23,37 @@ namespace LiteDB.Demo
 
             //var cn = @"filename=d:\appPWD.db; password=abc";
 
-            //File.Delete(@"d:\appPWD.db");
-            //File.Delete(@"d:\appPWD-log.db");
+            File.Delete(@"d:\app.db");
+            File.Delete(@"d:\app-log.db");
 
             //using (var repo = new LiteRepository(cn))
             //{
             //    repo.Database.UserVersion = 99;
             //}
-            LiteEngine.Upgrade(@"c:\git\temp\app-v4.db");
 
 
-            //using (var e = new LiteEngine(new EngineSettings { Filename = @"d:\appPWD.db", Password = "abc" }))
-            //{
-            //    e.UserVersion = 199;
-            //
-            //    e.Insert("col1", new BsonDocument[] { new BsonDocument { ["_id"] = 1, ["n"] = "Mauricio" } }, BsonAutoId.Int32);
-            //
-            //    //e.Checkpoint();
-            //}
+            var sw = new Stopwatch();
+
+            using (var e = new LiteEngine(new EngineSettings { Filename = @"d:\app.db" }))
+            {
+                sw.Start();
+
+                // insert 5.000 docs
+                //e.Insert("col1", Enumerable.Range(1, 5000).Select(x => new BsonDocument { ["_id"] = x }), BsonAutoId.Int32);
+
+                foreach(var d in Enumerable.Range(1, 5000).Select(x => new BsonDocument { ["_id"] = x }))
+                {
+                    e.Insert("col1", new BsonDocument[] { d }, BsonAutoId.Int32);
+
+                }
+
+
+                e.Checkpoint();
+                sw.Stop();
+            }
+
+
+            Console.WriteLine("Time: " + sw.ElapsedMilliseconds);
             //
             //using (var repo = new LiteRepository(cn))
             //{

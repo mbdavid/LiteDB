@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Query\Model\person.json" />
+    <EmbeddedResource Include="Utils\Json\person.json" />
     <EmbeddedResource Include="Utils\Json\zip.json" />
   </ItemGroup>
 

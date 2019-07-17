@@ -19,9 +19,28 @@ namespace LiteDB.Tests
 
                 var s = reader.ReadToEnd();
 
-                return JsonSerializer.DeserializeArray(s)
-                    .Select(x => x.AsDocument)
-                    .Select(x => BsonMapper.Global.ToObject<Person>(x));
+                var docs = JsonSerializer.DeserializeArray(s).Select(x => x.AsDocument);
+                var id = 0;
+
+                foreach (var doc in docs)
+                {
+                    yield return new Person
+                    {
+                        Id = ++id,
+                        Name = doc["name"],
+                        Age = doc["age"],
+                        Phones = doc["phone"].AsString.Split("-"),
+                        Email = doc["email"],
+                        Date = doc["date"],
+                        Active = doc["active"],
+                        Address = new Address
+                        {
+                            Street = doc["street"],
+                            City = doc["city"],
+                            State = doc["state"]
+                        }
+                    };
+                }
             }
         }
 
@@ -30,10 +49,8 @@ namespace LiteDB.Tests
         /// </summary>
         public static IEnumerable<Person> Person(int start, int end)
         {
-            foreach(var p in Person().Take(end - start + 1).Skip(start - 1))
+            foreach(var p in Person().Skip(start - 1).Take(end - start + 1))
             {
-                p.Id = start++;
-
                 yield return p;
             }
         }

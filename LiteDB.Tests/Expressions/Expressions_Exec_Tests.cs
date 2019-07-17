@@ -117,8 +117,8 @@ namespace LiteDB.Tests.Expressions
             // Multi values equals
             doc = J("{ a: 5 }");
 
-            S("ARRAY(ITEMS([3, 4, 5, 6]) => @ = $.a)").ExpectArray(false, false, true, false);
-            S("ANY(ITEMS([3, 4, 5, 6]) => @ = $.a)").ExpectValue(true);
+            S("ARRAY(ITEMS([3, 4, 5, 6]) => (@ = $.a))").ExpectArray(false, false, true, false);
+            S("ANY(ITEMS([3, 4, 5, 6]) => (@ = $.a))").ExpectValue(true);
 
             // Between
             doc = J("{ a: 50, b: 'm' }");
@@ -141,7 +141,7 @@ namespace LiteDB.Tests.Expressions
 
             doc = J("{ names: ['John', 'Joana', 'Carlos'] }");
 
-            S("ARRAY(names[*] => @ LIKE 'J%')").ExpectArray(true, true, false);
+            S("ARRAY(names[*] => (@ LIKE 'J%'))").ExpectArray(true, true, false);
             S("ARRAY(names[@ LIKE 'J%'])").ExpectArray("John", "Joana");
 
             // Array filter using root/current
@@ -153,7 +153,7 @@ namespace LiteDB.Tests.Expressions
             // MongoDB examples
             doc = J("{ '_id' : 3, 'date' : 'October 30', 'temps' : [ 18, 6, 8 ] }");
 
-            S("{ date, 'temps in Fahrenheit': ARRAY(temps[*] => @ * (9/5)+32)}")
+            S("{ date, 'temps in Fahrenheit': ARRAY(temps[*] => (@ * (9/5)+32))}")
                 .ExpectJson("{ 'date' : 'October 30', 'temps in Fahrenheit' : [ 64.4, 42.8, 46.4 ]}");
         }
 
@@ -247,7 +247,7 @@ namespace LiteDB.Tests.Expressions
             P("ARRAY(arr[@ > @0])", 3).ExpectArray(4, 5);
 
             // using map
-            P("ARRAY(ITEMS(@0) => @ + @1)", new BsonArray(new BsonValue[] { 10, 11, 12 }), 5)
+            P("ARRAY(ITEMS(@0) => (@ + @1))", new BsonArray(new BsonValue[] { 10, 11, 12 }), 5)
                 .ExpectArray(15, 16, 17);
         }
 
@@ -274,7 +274,7 @@ namespace LiteDB.Tests.Expressions
             A("JOIN(*.c, '#')").ExpectValues("First#Second#Last");
 
             // when use $ over multiple values, only first result are used
-            A("JOIN($.arr[*] => @ + 1, '-')").ExpectValues("2-3");
+            A("JOIN($.arr[*] => (@ + 1), '-')").ExpectValues("2-3");
 
             // flaten
             A("*.arr[*]").ExpectValues(1, 2, 1, 3, 5, 9, 1, 5, 5);

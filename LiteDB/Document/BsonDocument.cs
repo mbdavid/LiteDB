@@ -144,7 +144,7 @@ namespace LiteDB
 
         public void CopyTo(KeyValuePair<string, BsonValue>[] array, int arrayIndex)
         {
-            throw new NotSupportedException();
+            ((ICollection<KeyValuePair<string, BsonValue>>)this.RawValue).CopyTo(array, arrayIndex);
         }
 
         public void CopyTo(BsonDocument other)
