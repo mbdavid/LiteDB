@@ -12,7 +12,6 @@ namespace LiteDB.Engine
         /// </summary>
         public int Upsert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId)
         {
-            throw new NotImplementedException(); /*
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
@@ -31,14 +30,14 @@ namespace LiteDB.Engine
                     // first try update document (if exists _id), if not found, do insert
                     if (doc["_id"] == BsonValue.Null || this.UpdateDocument(snapshot, col, doc, indexer, data) == false)
                     {
-                        this.InsertDocument(snapshot, col, doc, autoId, indexer, data);
+                        this.InsertDocument(snapshot, doc, autoId, indexer, data);
                         count++;
                     }
                 }
                 
                 // returns how many document was inserted
                 return count;
-            });*/
+            });
         }
     }
 }

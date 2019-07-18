@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -42,11 +43,14 @@ namespace LiteDB
 
                 if (_file.Length > 0)
                 {
+                    // delete all chunks before re-write
+                    var count = _chunks.DeleteMany("_id BETWEEN { f: @0, n: 0 } AND { f: @0, n: 99999999 }", _fileId);
+
+                    ENSURE(count == _file.Chunks);
+
+                    // clear file content length+chunks
                     _file.Length = 0;
                     _file.Chunks = 0;
-
-                    // delete all chunks before re-write
-                    _chunks.DeleteMany("_id BETWEEN { f: @0, n: 0} AND {f: @0, n: @1 }", _fileId, int.MaxValue);
                 }
             }
         }

@@ -72,7 +72,10 @@ namespace LiteDB.Engine
                 {
                     IEnumerable<BsonValue> getIds()
                     {
-                        var query = new Query { Select = "_id" };
+                        // this is intresting: if _id returns an document (like in FileStorage) you can't run direct _id
+                        // field because "reader.Current" will return _id document - but not - { _id: [document] }
+                        // create inner document to ensure _id will be a document
+                        var query = new Query { Select = "{ i: _id }" };
 
                         query.Where.Add(predicate);
 
@@ -80,10 +83,12 @@ namespace LiteDB.Engine
                         {
                             while (reader.Read())
                             {
-                                yield return reader.Current.AsDocument["_id"];
+                                yield return reader.Current["i"];
                             }
                         }
                     }
+
+                    var rr = getIds().ToArray();
 
                     return this.Delete(collection, getIds());
                 }
