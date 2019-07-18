@@ -119,6 +119,20 @@ namespace LiteDB.Engine
                     // BSON format still same from all version
                     var doc = BsonSerializer.Deserialize(data);
 
+                    // change _id PK in _chunks collection
+                    if (index.Collection == "_chunks")
+                    {
+                        var parts = doc["_id"].AsString.Split('\\');
+
+                        if (!int.TryParse(parts[1], out var n)) throw LiteException.InvalidFormat("_id");
+
+                        doc["_id"] = new BsonDocument
+                        {
+                            ["f"] = parts[0],
+                            ["n"] = n
+                        };
+                    }
+
                     yield return doc;
                 }
 
