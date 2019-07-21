@@ -88,6 +88,9 @@ namespace LiteDB.Engine
                     // dispose current read-only snapshot
                     snapshot.Dispose();
 
+                    // must remove before try add again - create() method can throw lock exception
+                    _snapshots.Remove(collection);
+
                     // create new snapshot with write mode
                     _snapshots[collection] = snapshot = create();
                 }

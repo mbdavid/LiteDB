@@ -55,7 +55,11 @@ namespace LiteDB.Tests.Engine
 
                     try
                     {
-                        person.DeleteMany("1 = 1");
+                        person.Query().ToArray();
+
+                        person.Delete(1);
+
+                        //person.DeleteMany("1 = 1");
 
                         Assert.Fail("Must be locked");
                     }
