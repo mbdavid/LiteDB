@@ -75,7 +75,7 @@ namespace LiteDB.Engine
                         // this is intresting: if _id returns an document (like in FileStorage) you can't run direct _id
                         // field because "reader.Current" will return _id document - but not - { _id: [document] }
                         // create inner document to ensure _id will be a document
-                        var query = new Query { Select = "{ i: _id }" };
+                        var query = new Query { Select = "{ i: _id }", ForUpdate = true };
 
                         query.Where.Add(predicate);
 
