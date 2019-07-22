@@ -17,9 +17,7 @@
 
   <ItemGroup>
     <Compile Remove="Engine\Index_Tests.cs" />
-    <Compile Remove="Query\Aggregate_Tests.cs" />
-    <Compile Remove="Query\GroupBy_Tests.cs" />
-    <Compile Remove="Query\Include_Tests.cs" />
+    <Compile Remove="Engine\UserVersion_Tests.cs" />
   </ItemGroup>
 
   <ItemGroup>

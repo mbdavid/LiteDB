@@ -55,14 +55,14 @@ namespace LiteDB.Tests.Engine
                 col.EnsureIndex("text");
 
                 var asc = string.Join("", col.Query()
-                    .Select("text")
                     .OrderBy("text")
+                    .Select("text")
                     .ToDocuments()
                     .Select(x => x["text"].AsString));
 
                 var desc = string.Join("", col.Query()
-                    .Select("text")
                     .OrderByDescending("text")
+                    .Select("text")
                     .ToDocuments()
                     .Select(x => x["text"].AsString));
 
@@ -78,7 +78,7 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Index_With_Like()
         {
-            using (var db = new LiteDatabase(new ConnectionString()))
+            using (var db = new LiteEngine(new MemoryStream()))
             {
                 db.Insert("names", new[] {
                     new BsonDocument { ["name"] = "marcelo" },
@@ -92,7 +92,7 @@ namespace LiteDB.Tests.Engine
 
                 db.EnsureIndex("names", "idx_name", "name", false);
 
-                var all = db.ExecuteValues<string>("SELECT name FROM names");
+                var all = db.ex ("SELECT name FROM names");
 
                 // LIKE are case insensitive
 

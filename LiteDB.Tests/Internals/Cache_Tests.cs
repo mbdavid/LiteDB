@@ -68,7 +68,7 @@ namespace LiteDB.Internals
             Assert.AreEqual(0, p1.ShareCounter);
             Assert.AreEqual(0, p2.ShareCounter);
         }
-
+        
         [TestMethod]
         public void Cache_Extends()
         {
@@ -135,6 +135,13 @@ namespace LiteDB.Internals
             // keep same extends
             Assert.AreEqual(3, m.ExtendSegments);
 
+            // discard all pages
+            PageBuffer pw;
+
+            while((pw = pages.FirstOrDefault(x => x.ShareCounter == -1)) != null)
+            {
+                m.DiscardPage(pw);
+            }
         }
     }
 }
