@@ -37,7 +37,7 @@ namespace LiteDB.Tests.Engine
 
                     person.Insert(data2);
 
-                    Task.Delay(2000).Wait();
+                    Task.Delay(4000).Wait();
 
                     var count = person.Count();
 
@@ -55,11 +55,7 @@ namespace LiteDB.Tests.Engine
 
                     try
                     {
-                        person.Query().ToArray();
-
-                        person.Delete(1);
-
-                        //person.DeleteMany("1 = 1");
+                        person.DeleteMany("1 = 1");
 
                         Assert.Fail("Must be locked");
                     }
