@@ -16,6 +16,7 @@ namespace LiteDB.Tests.Engine
                 {
                     Assert.AreEqual(0, db.UserVersion);
                     db.UserVersion = 5;
+                    db.Checkpoint();
                 }
 
                 using (var db = new LiteDatabase(file.Filename))

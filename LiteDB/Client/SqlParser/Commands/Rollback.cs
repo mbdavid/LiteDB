@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LiteDB.Engine;
 
-namespace LiteDB.Engine
+namespace LiteDB
 {
     internal partial class SqlParser
     {
         /// <summary>
-        /// COMMIT [ TRANS | TRANSACTION ]
+        /// ROLLBACK [ TRANS | TRANSACTION ]
         /// </summary>
-        private BsonDataReader ParseCommit()
+        private BsonDataReader ParseRollback()
         {
             var token = _tokenizer.ReadToken().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
@@ -18,7 +19,7 @@ namespace LiteDB.Engine
                 _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
             }
 
-            var result = _engine.Commit();
+            var result = _engine.Rollback();
 
             return new BsonDataReader(result);
         }

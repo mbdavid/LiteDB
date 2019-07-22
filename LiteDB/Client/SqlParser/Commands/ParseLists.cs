@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using LiteDB.Engine;
 
-namespace LiteDB.Engine
+namespace LiteDB
 {
     internal partial class SqlParser
     {

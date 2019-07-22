@@ -1,19 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LiteDB.Engine;
 
-namespace LiteDB.Engine
+namespace LiteDB
 {
     internal partial class SqlParser
     {
         /// <summary>
-        /// VACCUM
+        /// ANALYZE [{collection0}, {collection1}, ...]
         /// </summary>
-        private BsonDataReader ParseVaccum()
+        private BsonDataReader ParseAnalyze()
         {
+            var cols = this.ParseListOfWords().ToArray();
+
+            // read eof/;
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            var result = _engine.Vaccum();
+            var result = _engine.Analyze(cols);
 
             return new BsonDataReader(result);
         }

@@ -16,11 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Engine\Index_Tests.cs" />
-    <Compile Remove="Engine\UserVersion_Tests.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="Utils\Json\person.json" />
     <None Remove="Utils\Json\zip.json" />
   </ItemGroup>

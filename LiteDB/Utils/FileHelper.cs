@@ -44,6 +44,38 @@ namespace LiteDB
         public static string GetTempFile(string filename) => GetSufixFile(filename, "-tmp", false);
 
         /// <summary>
+        /// Test if file are used by any process
+        /// </summary>
+        public static bool IsFileLocked(string filename)
+        {
+            FileStream stream = null;
+            var file = new FileInfo(filename);
+
+            try
+            {
+                stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None);
+            }
+            catch (IOException)
+            {
+                //the file is unavailable because it is:
+                //still being written to
+                //or being processed by another thread
+                //or does not exist (has already been processed)
+                return true;
+            }
+            finally
+            {
+                if (stream != null)
+                {
+                    stream.Close();
+                }
+            }
+
+            //file is not locked
+            return false;
+        }
+
+        /// <summary>
         /// Try execute some action while has lock exception
         /// </summary>
         public static bool TryExec(Action action, TimeSpan timeout)

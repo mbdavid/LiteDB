@@ -63,6 +63,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Test if this file are locked by another process (there is no way to test when Stream only)
+        /// </summary>
+        public bool IsLocked() => false;
+
+        /// <summary>
         /// Do no dispose on finish
         /// </summary>
         public bool CloseOnDispose => false;

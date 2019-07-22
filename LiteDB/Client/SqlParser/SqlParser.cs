@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LiteDB.Engine;
 using static LiteDB.Constants;
 
-namespace LiteDB.Engine
+namespace LiteDB
 {
     /// <summary>
     /// Internal class to parse and execute sql-like commands

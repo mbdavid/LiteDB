@@ -38,6 +38,11 @@ namespace LiteDB.Engine
         void Delete();
 
         /// <summary>
+        /// Test if this file are used by another process
+        /// </summary>
+        bool IsLocked();
+
+        /// <summary>
         /// Indicate that factory must be dispose on finish
         /// </summary>
         bool CloseOnDispose { get; }

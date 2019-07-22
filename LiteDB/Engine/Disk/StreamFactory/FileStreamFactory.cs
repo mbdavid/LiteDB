@@ -72,6 +72,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Test if this file are locked by another process
+        /// </summary>
+        public bool IsLocked() => FileHelper.IsFileLocked(_filename);
+
+        /// <summary>
         /// Close all stream on end
         /// </summary>
         public bool CloseOnDispose => true;

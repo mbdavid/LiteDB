@@ -1,27 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LiteDB.Engine;
 
-namespace LiteDB.Engine
+namespace LiteDB
 {
     internal partial class SqlParser
     {
         /// <summary>
-        /// RENAME COLLECTION {collection} TO {newName}
+        /// DELETE {collection} WHERE {whereExpr}
         /// </summary>
-        private BsonDataReader ParseRename()
+        private BsonDataReader ParseDelete()
         {
-            _tokenizer.ReadToken().Expect("COLLECTION");
-
             var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
 
-            _tokenizer.ReadToken().Expect("TO");
+            _tokenizer.ReadToken().Expect("WHERE");
 
-            var newName = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
+            var where = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            var result = _engine.RenameCollection(collection, newName);
+            var result = _engine.DeleteMany(collection, where);
 
             return new BsonDataReader(result);
         }

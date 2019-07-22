@@ -302,6 +302,10 @@ namespace LiteDB.Engine
 
             // other disposes
             _cache.Dispose();
+
+            ENSURE(_dataFactory.IsLocked() == false, "datafile must be released");
+            ENSURE(_dataFactory.IsLocked() == false, "logfile must be released");
+
         }
     }
 }

@@ -7,122 +7,29 @@ using System.Linq;
 namespace LiteDB
 {
     /// <summary>
-    /// Class to read void, one or a collection of BsonValues. Used in SQL execution commands and query returns. Use local data source (IEnumerable[BsonDocument])
+    /// Implement some Enumerable methods to IBsonDataReader
     /// </summary>
-    public class BsonDataReader : IBsonDataReader
+    public static class BsonDataReaderExtensions
     {
-        private readonly IEnumerator<BsonValue> _source = null;
-        private readonly string _collection = null;
-        private readonly bool _hasValues;
-
-        private BsonValue _current = null;
-        private bool _isFirst;
-        private bool _disposed = false;
-
-        /// <summary>
-        /// Initialize with no value
-        /// </summary>
-        internal BsonDataReader()
+        public static IEnumerable<BsonValue> ToEnumerable(this IBsonDataReader reader)
         {
-            _hasValues = false;
-        }
-
-        /// <summary>
-        /// Initialize with a single value
-        /// </summary>
-        internal BsonDataReader(BsonValue value, string collection = null)
-        {
-            _current = value;
-            _isFirst = _hasValues = true;
-            _collection = collection;
-        }
-
-        /// <summary>
-        /// Initialize with an IEnumerable data source
-        /// </summary>
-        internal BsonDataReader(IEnumerable<BsonValue> values, string collection)
-        {
-            _source = values.GetEnumerator();
-            _collection = collection;
-
-            if (_source.MoveNext())
+            while (reader.Read())
             {
-                _hasValues = _isFirst = true;
-                _current = _source.Current;
+                yield return reader.Current;
             }
         }
 
-        /// <summary>
-        /// Return if has any value in result
-        /// </summary>
-        public bool HasValues => _hasValues;
+        public static BsonValue[] ToArray(this IBsonDataReader reader) => ToEnumerable(reader).ToArray();
 
-        /// <summary>
-        /// Return current value
-        /// </summary>
-        public BsonValue Current => _current;
+        public static IList<BsonValue> ToList(this IBsonDataReader reader) => ToEnumerable(reader).ToList();
 
-        /// <summary>
-        /// Return collection name
-        /// </summary>
-        public string Collection => _collection;
+        public static BsonValue First(this IBsonDataReader reader) => ToEnumerable(reader).First();
 
-        /// <summary>
-        /// Move cursor to next result. Returns true if read was possible
-        /// </summary>
-        public bool Read()
-        {
-            if (!_hasValues) return false;
+        public static BsonValue FirstOrDefault(this IBsonDataReader reader) => ToEnumerable(reader).FirstOrDefault();
 
-            if (_isFirst)
-            {
-                _isFirst = false;
-                return true;
-            }
-            else
-            {
-                if (_source != null)
-                {
-                    var read = _source.MoveNext();
-                    _current = _source.Current;
-                    return read;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-        
-        public BsonValue this[string field]
-        {
-            get
-            {
-                return _current.AsDocument[field] ?? BsonValue.Null;
-            }
-        }
+        public static BsonValue Single(this IBsonDataReader reader) => ToEnumerable(reader).Single();
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed) return;
+        public static BsonValue SingleOrDefault(this IBsonDataReader reader) => ToEnumerable(reader).SingleOrDefault();
 
-            //if (disposing)
-            {
-                _source?.Dispose();
-            }
-
-            _disposed = true;
-        }
-
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~BsonDataReader()
-        {
-            this.Dispose(false);
-        }
     }
 }

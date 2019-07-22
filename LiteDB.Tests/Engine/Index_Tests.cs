@@ -20,7 +20,7 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Index_With_No_Name()
         {
-            using (var db = new LiteDatabase(new MemoryStream()))
+            using (var db = new LiteDatabase("filename=:memory:"))
             {
                 var users = db.GetCollection("users");
                 var indexes = db.GetCollection("$indexes");
@@ -41,7 +41,7 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Index_Order()
         {
-            using (var db = new LiteDatabase(new MemoryStream()))
+            using (var db = new LiteDatabase("filename=:memory:"))
             {
                 var col = db.GetCollection("col");
                 var indexes = db.GetCollection("$indexes");
@@ -78,9 +78,11 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Index_With_Like()
         {
-            using (var db = new LiteEngine(new MemoryStream()))
+            using (var db = new LiteDatabase("filename=:memory:"))
             {
-                db.Insert("names", new[] {
+                var col = db.GetCollection("names", BsonAutoId.Int32);
+
+                col.Insert(new[] {
                     new BsonDocument { ["name"] = "marcelo" },
                     new BsonDocument { ["name"] = "mauricio" },
                     new BsonDocument { ["name"] = "Mauricio" },
@@ -88,35 +90,35 @@ namespace LiteDB.Tests.Engine
                     new BsonDocument { ["name"] = "MAURICIO" },
                     new BsonDocument { ["name"] = "mauRO" },
                     new BsonDocument { ["name"] = "ANA" }
-                }, BsonAutoId.Int32);
+                });
 
-                db.EnsureIndex("names", "idx_name", "name", false);
+                col.EnsureIndex("idx_name", "name", false);
 
-                var all = db.ex ("SELECT name FROM names");
+                var all = db.Execute("SELECT name FROM names").ToArray();
 
                 // LIKE are case insensitive
 
-                var r0 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'Mau%'");
-                var r1 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'MAU%'");
-                var r2 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'mau%'");
+                var r0 = db.Execute("SELECT name FROM names WHERE name LIKE 'Mau%'").ToArray();
+                var r1 = db.Execute("SELECT name FROM names WHERE name LIKE 'MAU%'").ToArray();
+                var r2 = db.Execute("SELECT name FROM names WHERE name LIKE 'mau%'").ToArray();
 
                 Assert.AreEqual(5, r0.Length);
                 Assert.AreEqual(5, r1.Length);
                 Assert.AreEqual(5, r2.Length);
 
                 // only `mauricio´
-                var r3 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'ma%ci%'");
-                var r4 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'maUriCIO");
+                var r3 = db.Execute("SELECT name FROM names WHERE name LIKE 'ma%ci%'").ToArray();
+                var r4 = db.Execute("SELECT name FROM names WHERE name LIKE 'maUriCIO").ToArray();
 
                 Assert.AreEqual(4, r3.Length);
                 Assert.AreEqual(4, r4.Length);
 
-                var r5 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'marc_o");
+                var r5 = db.Execute("SELECT name FROM names WHERE name LIKE 'marc_o").ToArray();
 
                 Assert.AreEqual(0, r5.Length);
 
                 // `marcelo`
-                var r6 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'marc__o");
+                var r6 = db.Execute("SELECT name FROM names WHERE name LIKE 'marc__o").ToArray();
 
                 Assert.AreEqual(1, r6.Length);
 
