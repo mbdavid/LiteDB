@@ -80,6 +80,9 @@ namespace LiteDB.Engine
                 // read page with no cache ref (has a own PageBuffer) - do not Release() support
                 var buffer = _disk.ReadFull(FileOrigin.Data).First();
 
+                // if first byte are 1 this datafile are encrypted but has do defined password to open
+                if (buffer[0] == 1) throw new LiteException(0, "This data file is encrypted and needs a password to open");
+
                 _header = new HeaderPage(buffer);
 
                 // initialize wal-index service

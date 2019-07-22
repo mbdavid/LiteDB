@@ -69,38 +69,7 @@ namespace LiteDB.Studio
             _connectionString = connectionString;
 
             // checks for database upgrade
-            try
-            {
-                _codeCompletion.UpdateCodeCompletion(_db);
-            }
-            catch (LiteException ex) when (ex.ErrorCode == LiteException.INVALID_DATABASE)
-            {
-                var confirm = MessageBox.Show(
-                    "This datafile are not valid as current LiteDB format. Do you want try to upgrade? (this operation will backup your database first)",
-                    "Upgrade",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question);
-
-                _db.Dispose();
-                _db = null;
-
-                if (confirm == DialogResult.Yes)
-                {
-                    LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
-
-                    MessageBox.Show("Datafile upgraded successfully", "Upgrade", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-
-                    _db = new LiteDatabase(connectionString);
-
-                    _codeCompletion.UpdateCodeCompletion(_db);
-                }
-                else
-                {
-                    MessageBox.Show("Aborted operation", "Upgrade", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-
-                    throw ex;
-                }
-            }
+            _codeCompletion.UpdateCodeCompletion(_db);
 
             btnConnect.Text = "Disconnect";
 
@@ -500,27 +469,47 @@ namespace LiteDB.Studio
 
         private void BtnConnect_Click(object sender, EventArgs e)
         {
-            try
+            if (_db == null)
             {
-                if (_db == null)
+                var dialog = new ConnectionForm(_connectionString ?? new ConnectionString());
+
+                dialog.ShowDialog();
+
+                if (dialog.DialogResult != DialogResult.OK) return;
+
+                try
                 {
-                    var dialog = new ConnectionForm(_connectionString ?? new ConnectionString());
-
-                    dialog.ShowDialog();
-
-                    if (dialog.DialogResult == DialogResult.OK)
-                    {
-                        this.Connect(dialog.ConnectionString);
-                    }
+                    this.Connect(dialog.ConnectionString);
                 }
-                else
+                catch (LiteException ex) when (ex.ErrorCode == LiteException.INVALID_DATABASE)
                 {
+                    _db.Dispose();
+                    _db = null;
+
+                    var confirm = MessageBox.Show(
+                        "This datafile are not valid as current LiteDB format. Do you want try to upgrade? (this operation will backup your database first)",
+                        "Upgrade",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+
+                    if (confirm != DialogResult.Yes) return;
+
+                    LiteEngine.Upgrade(dialog.ConnectionString.Filename, dialog.ConnectionString.Password);
+
+                    MessageBox.Show("Datafile upgraded successfully", "Upgrade", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
+                    this.Connect(dialog.ConnectionString);
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show(exception.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
                     this.Disconnect();
                 }
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.Disconnect();
             }
         }
 

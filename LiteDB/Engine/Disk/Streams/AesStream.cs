@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using static LiteDB.Constants;
 
@@ -40,21 +41,28 @@ namespace LiteDB.Engine
         {
             _stream = stream;
 
+            var isNew = _stream.Length == 0;
+
             // new file? create new salt
-            if (_stream.Length == 0)
+            if (isNew)
             {
                 this.Salt = NewSalt();
 
+                // first byte =1 means this datafile is encrypted
+                _stream.WriteByte(1);
                 _stream.Write(this.Salt, 0, ENCRYPTION_SALT_SIZE);
             }
             else
             {
                 this.Salt = new byte[ENCRYPTION_SALT_SIZE];
 
+                // checks if this datafile are encrypted
+                var isEncrypted = _stream.ReadByte();
+
+                if (isEncrypted != 1) throw new LiteException(0, "This data file is not encrypted");
+
                 _stream.Read(this.Salt, 0, ENCRYPTION_SALT_SIZE);
             }
-
-            _stream.Position = PAGE_SIZE;
 
             _aes = Aes.Create();
             _aes.Padding = PaddingMode.None;
@@ -78,6 +86,30 @@ namespace LiteDB.Engine
             _writer = _stream.CanWrite ?
                 new CryptoStream(_stream, _encryptor, CryptoStreamMode.Write) :
                 null;
+
+            // set stream to password checking
+            _stream.Position = 32;
+
+            var checkBuffer = new byte[32];
+
+            // fill checkBuffer with encrypted 1 to check when open
+            if (isNew)
+            {
+                checkBuffer.Fill(1, 0, checkBuffer.Length);
+
+                _writer.Write(checkBuffer, 0, checkBuffer.Length);
+            }
+            else
+            { 
+                _reader.Read(checkBuffer, 0, checkBuffer.Length);
+
+                if (!checkBuffer.All(x => x == 1))
+                {
+                    throw new LiteException(0, "Invalid password");
+                }
+            }
+
+            _stream.Position = PAGE_SIZE;
         }
 
         /// <summary>
@@ -90,9 +122,6 @@ namespace LiteDB.Engine
 
             var r = _reader.Read(array, offset, count);
 
-            //if (!_reader.HasFlushedFinalBlock)
-                //_reader.FlushFinalBlock();
-
             return r;
         }
 
@@ -104,12 +133,7 @@ namespace LiteDB.Engine
             ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
             ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
 
-            //if (!_writer.HasFlushedFinalBlock)
-            //    _writer.FlushFinalBlock();
-
             _writer.Write(array, offset, count);
-
-
         }
 
         protected override void Dispose(bool disposing)
