@@ -12,7 +12,7 @@ before_install:
 
 script:
   - dotnet restore ./LiteDB/LiteDB.csproj
-  - dotnet build ./LiteDB/LiteDB.csproj -f netstandard1.3
+  - dotnet build ./LiteDB/LiteDB.csproj -f netstandard2.0
   - dotnet restore ./LiteDB.Tests/LiteDB.Tests.csproj
   - dotnet build ./LiteDB.Tests/LiteDB.Tests.csproj
   - dotnet test ./LiteDB.Tests/LiteDB.Tests.csproj --logger:console;verbosity=normal
