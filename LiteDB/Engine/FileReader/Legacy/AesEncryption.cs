@@ -8,7 +8,7 @@ namespace LiteDB
     /// <summary>
     /// Encryption AES wrapper to encrypt data pages
     /// </summary>
-    internal class AesEncryption
+    internal class AesEncryption : IDisposable
     {
         private Aes _aes;
 
@@ -48,13 +48,13 @@ namespace LiteDB
         /// <summary>
         /// Decrypt and byte array returning a new byte array
         /// </summary>
-        public byte[] Decrypt(byte[] encryptedValue)
+        public byte[] Decrypt(byte[] encryptedValue, int offset = 0, int count = -1)
         {
             using (var decryptor = _aes.CreateDecryptor())
             using (var stream = new MemoryStream())
             using (var crypto = new CryptoStream(stream, decryptor, CryptoStreamMode.Write))
             {
-                crypto.Write(encryptedValue, 0, encryptedValue.Length);
+                crypto.Write(encryptedValue, offset, count == -1 ? encryptedValue.Length : count);
                 crypto.FlushFinalBlock();
                 stream.Position = 0;
                 var decryptedBytes = new Byte[stream.Length];

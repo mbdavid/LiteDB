@@ -57,7 +57,6 @@ namespace LiteDB.Engine
 
                 throw;
             }
-
         }
     }
 }

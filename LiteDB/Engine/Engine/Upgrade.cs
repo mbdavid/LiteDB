@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -20,48 +22,78 @@ namespace LiteDB.Engine
                 Password = password
             };
 
-            try
+            var backup = FileHelper.GetSufixFile(filename, "-backup", true);
+
+            settings.Filename = FileHelper.GetSufixFile(filename, "-temp", true);
+
+            var buffer = new byte[PAGE_SIZE * 2];
+            IFileReader reader;
+
+            using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
             {
-                var engine = new LiteEngine(settings);
+                // read first 16k
+                stream.Read(buffer, 0, buffer.Length);
 
-                engine.Dispose();
+                // checks if v8 without password
+                if (Encoding.UTF8.GetString(buffer, HeaderPage.P_HEADER_INFO, HeaderPage.HEADER_INFO.Length) == HeaderPage.HEADER_INFO &&
+                    buffer[HeaderPage.P_FILE_VERSION] == HeaderPage.FILE_VERSION)
+                {
+                    return false;
+                }
 
-                // if no problem in open database, it's already in v8
-                return false;
-            }
-            catch (LiteException ex) when (ex.ErrorCode == LiteException.INVALID_DATABASE)
-            {
-                var backup = FileHelper.GetSufixFile(filename, "-backup", true);
+                // checks if v8 with password
+                if (buffer[0] == 1)
+                {
+                    // get salt buffer
+                    var salt = new byte[ENCRYPTION_SALT_SIZE];
 
-                settings.Filename = FileHelper.GetSufixFile(filename, "-temp", true);
+                    Buffer.BlockCopy(buffer, 1, salt, 0, ENCRYPTION_SALT_SIZE);
+
+                    using (var crypto = new AesEncryption(password, salt))
+                    {
+                        var header = crypto.Decrypt(buffer, PAGE_SIZE, PAGE_SIZE);
+
+                        if (Encoding.UTF8.GetString(header, HeaderPage.P_HEADER_INFO, HeaderPage.HEADER_INFO.Length) == HeaderPage.HEADER_INFO &&
+                            header[HeaderPage.P_FILE_VERSION] == HeaderPage.FILE_VERSION)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                // checks if v7 (plain or encrypted)
+                if (Encoding.UTF8.GetString(buffer, 25, HeaderPage.HEADER_INFO.Length) == HeaderPage.HEADER_INFO &&
+                    buffer[52] == 7)
+                {
+                    reader = new FileReaderV7(stream, password);
+                }
+                else
+                {
+                    throw new LiteException(0, "Invalid data file format to upgrade");
+                }
 
                 try
                 {
-                    // current versions works only converting from v7
-                    using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
-                    using (var reader = new FileReaderV7(stream, password))
                     using (var engine = new LiteEngine(settings))
                     {
                         engine.Rebuild(reader);
 
                         engine.Checkpoint();
                     }
-
-                    // rename source filename to backup name
-                    File.Move(filename, backup);
-
-                    // rename temp file into filename
-                    File.Move(settings.Filename, filename);
                 }
-                catch (Exception)
+                finally
                 {
-                    FileHelper.TryDelete(settings.Filename);
-
-                    throw;
+                    reader.Dispose();
                 }
-
-                return true;
             }
+
+            // rename source filename to backup name
+            File.Move(filename, backup);
+
+            // rename temp file into filename
+            File.Move(settings.Filename, filename);
+
+            return true;
         }
     }
 }

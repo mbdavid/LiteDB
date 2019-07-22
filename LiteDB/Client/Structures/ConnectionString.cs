@@ -58,6 +58,12 @@ namespace LiteDB
         public bool ReadOnly { get; set; } = false;
 
         /// <summary>
+        /// "upgrade": Check if data file is an old version and convert before open (default: false)
+        /// Supported in [Local] connection type
+        /// </summary>
+        public bool Upgrade { get; set; } = false;
+
+        /// <summary>
         /// Initialize empty connection string
         /// </summary>
         public ConnectionString()
@@ -93,6 +99,7 @@ namespace LiteDB
             this.LimitSize = _values.GetFileSize(@"limit size", this.LimitSize);
             this.UtcDate = _values.GetValue("utc", this.UtcDate);
             this.ReadOnly = _values.GetValue("readonly", this.ReadOnly);
+            this.Upgrade = _values.GetValue("upgrade", this.Upgrade);
         }
 
         /// <summary>

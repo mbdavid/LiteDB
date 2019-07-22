@@ -68,7 +68,6 @@ namespace LiteDB.Studio
 
             _connectionString = connectionString;
 
-            // checks for database upgrade
             _codeCompletion.UpdateCodeCompletion(_db);
 
             btnConnect.Text = "Disconnect";
@@ -479,25 +478,6 @@ namespace LiteDB.Studio
 
                 try
                 {
-                    this.Connect(dialog.ConnectionString);
-                }
-                catch (LiteException ex) when (ex.ErrorCode == LiteException.INVALID_DATABASE)
-                {
-                    _db.Dispose();
-                    _db = null;
-
-                    var confirm = MessageBox.Show(
-                        "This datafile are not valid as current LiteDB format. Do you want try to upgrade? (this operation will backup your database first)",
-                        "Upgrade",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Question);
-
-                    if (confirm != DialogResult.Yes) return;
-
-                    LiteEngine.Upgrade(dialog.ConnectionString.Filename, dialog.ConnectionString.Password);
-
-                    MessageBox.Show("Datafile upgraded successfully", "Upgrade", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-
                     this.Connect(dialog.ConnectionString);
                 }
                 catch (Exception exception)

@@ -43,6 +43,11 @@ namespace LiteDB
 
             _mapper = mapper ?? BsonMapper.Global;
 
+            if (connectionString.Upgrade)
+            {
+                LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
+            }
+
             _engine = new Lazy<ILiteEngine>(connectionString.CreateEngine);
         }
 

@@ -74,7 +74,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Test if this file are locked by another process
         /// </summary>
-        public bool IsLocked() => FileHelper.IsFileLocked(_filename);
+        public bool IsLocked() => this.Exists() && FileHelper.IsFileLocked(_filename);
 
         /// <summary>
         /// Close all stream on end

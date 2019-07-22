@@ -27,8 +27,8 @@ namespace LiteDB.Engine
 
         #region Buffer Field Positions
 
-        private const int P_HEADER_INFO = 32;  // 32-58 (27 bytes)
-        private const int P_FILE_VERSION = 59; // 59-59 (1 byte)
+        public const int P_HEADER_INFO = 32;  // 32-58 (27 bytes)
+        public const int P_FILE_VERSION = 59; // 59-59 (1 byte)
         private const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63 (4 bytes)
         private const int P_LAST_PAGE_ID = 64; // 64-67 (4 bytes)
         private const int P_CREATION_TIME = 68; // 68-75 (8 bytes)

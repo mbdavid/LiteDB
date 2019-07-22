@@ -31,11 +31,6 @@ namespace LiteDB
         public const int ENCRYPTION_SALT_SIZE = 16;
 
         /// <summary>
-        /// Position in disk to write SALT bytes - first byte from second page (Page #0001) - This is a fake-page that will only store encryption salt (never change)
-        /// </summary>
-        public const int P_ENCRYPTION_SALT = PAGE_SIZE;
-
-        /// <summary>
         /// Define ShareCounter buffer as writable
         /// </summary>
         public static int BUFFER_WRITABLE = -1;

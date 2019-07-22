@@ -42,6 +42,7 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.txtFilename = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.chkUpgrade = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.txtPassword = new System.Windows.Forms.TextBox();
             this.txtTimeout = new System.Windows.Forms.TextBox();
@@ -164,6 +165,7 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.chkUpgrade);
             this.groupBox3.Controls.Add(this.label1);
             this.groupBox3.Controls.Add(this.txtPassword);
             this.groupBox3.Controls.Add(this.txtTimeout);
@@ -180,6 +182,16 @@
             this.groupBox3.TabIndex = 29;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Parameters";
+            // 
+            // chkUpgrade
+            // 
+            this.chkUpgrade.AutoSize = true;
+            this.chkUpgrade.Location = new System.Drawing.Point(257, 111);
+            this.chkUpgrade.Name = "chkUpgrade";
+            this.chkUpgrade.Size = new System.Drawing.Size(213, 19);
+            this.chkUpgrade.TabIndex = 33;
+            this.chkUpgrade.Text = "Upgrade data file if version is earlier";
+            this.chkUpgrade.UseVisualStyleBackColor = true;
             // 
             // label1
             // 
@@ -292,5 +304,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtPassword;
+        private System.Windows.Forms.CheckBox chkUpgrade;
     }
 }

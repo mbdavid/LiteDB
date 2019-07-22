@@ -33,20 +33,20 @@ namespace LiteDB.Engine
 
             if (password == null && header["salt"].AsBinary.IsFullZero() == false)
             {
-                throw new LiteException(0, "Current datafile requires password");
+                throw new LiteException(0, "Current data file requires password");
             }
             else if (password != null)
             {
                 if (header["salt"].AsBinary.IsFullZero())
                 {
-                    throw new LiteException(0, "Current datafile has no encryption - do not use password");
+                    throw new LiteException(0, "Current data file has no encryption - do not use password");
                 }
 
                 var hash = AesEncryption.HashSHA1(password);
 
                 if (hash.SequenceEqual(header["password"].AsBinary) == false)
                 {
-                    throw new LiteException(0, "Invalid database password");
+                    throw new LiteException(0, "Invalid password");
                 }
             }
 
