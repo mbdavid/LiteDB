@@ -62,9 +62,46 @@ namespace LiteDB.Studio
             };
         }
 
-        public void Connect(ConnectionString connectionString)
+        private async Task<LiteDatabase> AsyncConnect(ConnectionString connectionString)
         {
-            _db = new LiteDatabase(connectionString);
+            return await Task.Run(() =>
+            {
+                var db = new LiteDatabase(connectionString);
+
+                var openDb = db.UserVersion;
+
+                return db;
+            });
+        }
+
+        public async void Connect(ConnectionString connectionString)
+        {
+            lblCursor.Text = "Opening " + connectionString.Filename;
+            lblElapsed.Text = "Converting...";
+            prgRunning.Style = ProgressBarStyle.Marquee;
+            btnConnect.Enabled = false;
+
+            try
+            {
+                _db = await this.AsyncConnect(connectionString);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                return;
+            }
+            finally
+            {
+                lblCursor.Text = "";
+                lblElapsed.Text = "";
+                prgRunning.Style = ProgressBarStyle.Blocks;
+                btnConnect.Enabled = true;
+            }
+
+            btnConnect.Enabled = true;
+            lblCursor.Text = "";
+            prgRunning.Style = ProgressBarStyle.Blocks;
 
             _connectionString = connectionString;
 
@@ -75,7 +112,6 @@ namespace LiteDB.Studio
             this.UIState(true);
 
             tabSql.TabPages.Add("+", "+");
-
             this.LoadTreeView();
             this.AddNewTab("");
 
@@ -105,6 +141,7 @@ namespace LiteDB.Studio
 
             tvwDatabase.Nodes.Clear();
             tvwDatabase.Focus();
+
 
             _db?.Dispose();
             _db = null;
@@ -476,16 +513,7 @@ namespace LiteDB.Studio
 
                 if (dialog.DialogResult != DialogResult.OK) return;
 
-                try
-                {
-                    this.Connect(dialog.ConnectionString);
-                }
-                catch (Exception exception)
-                {
-                    MessageBox.Show(exception.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                    this.Disconnect();
-                }
+                this.Connect(dialog.ConnectionString);
             }
             else
             {
