@@ -163,27 +163,39 @@ namespace LiteDB
         public bool Is(string value, bool ignoreCase = true)
         {
             return 
-                this.Type == TokenType.Word &&
-                value.Equals(this.Value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+                Type == TokenType.Word &&
+                value.Equals(Value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
-        public bool IsOperand =>
-            this.Type == TokenType.Percent ||
-            this.Type == TokenType.Slash ||
-            this.Type == TokenType.Asterisk ||
-            this.Type == TokenType.Plus ||
-            this.Type == TokenType.Minus ||
-            this.Type == TokenType.Equals ||
-            this.Type == TokenType.Greater ||
-            this.Type == TokenType.GreaterOrEquals ||
-            this.Type == TokenType.Less ||
-            this.Type == TokenType.LessOrEquals ||
-            this.Type == TokenType.NotEquals ||
-            (this.Type == TokenType.Word && _keywords.Contains(this.Value));
+        public bool IsOperand
+        {
+            get
+            {
+                switch (Type)
+                {
+                    case TokenType.Percent:
+                    case TokenType.Slash:
+                    case TokenType.Asterisk:
+                    case TokenType.Plus:
+                    case TokenType.Minus:
+                    case TokenType.Equals:
+                    case TokenType.Greater:
+                    case TokenType.GreaterOrEquals:
+                    case TokenType.Less:
+                    case TokenType.LessOrEquals:
+                    case TokenType.NotEquals:
+                        return true;
+                    case TokenType.Word:
+                        return _keywords.Contains(Value);
+                    default:
+                        return false;
+                }
+            }
+        }
 
         public override string ToString()
         {
-            return this.Value + " (" + this.Type + ")";
+            return Value + " (" + Type + ")";
         }
     }
 
@@ -232,13 +244,9 @@ namespace LiteDB
         public static bool IsWordChar(char c, bool first)
         {
             if (first)
-            {
                 return char.IsLetter(c) || c == '_' || c == '$';
-            }
-            else
-            {
-                return char.IsLetterOrDigit(c) || c == '_' || c == '$';
-            }
+
+            return char.IsLetterOrDigit(c) || c == '_' || c == '$';
         }
 
         /// <summary>
