@@ -67,5 +67,18 @@ namespace LiteDB.Studio.Forms
                 txtFilename.Text = openFileDialog.FileName;
             }
         }
+
+        private void chkReadonly_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkReadonly.Checked)
+            {
+                chkUpgrade.Checked = false;
+                chkUpgrade.Enabled = false;
+            }
+            else
+            {
+                chkUpgrade.Enabled = true;
+            }
+        }
     }
 }

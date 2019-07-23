@@ -34,31 +34,12 @@ namespace LiteDB.Engine
                 // read first 16k
                 stream.Read(buffer, 0, buffer.Length);
 
-                // checks if v8 without password
-                if (Encoding.UTF8.GetString(buffer, HeaderPage.P_HEADER_INFO, HeaderPage.HEADER_INFO.Length) == HeaderPage.HEADER_INFO &&
-                    buffer[HeaderPage.P_FILE_VERSION] == HeaderPage.FILE_VERSION)
+                // checks if v8 plain data or encrypted (first byte = 1)
+                if ((Encoding.UTF8.GetString(buffer, HeaderPage.P_HEADER_INFO, HeaderPage.HEADER_INFO.Length) == HeaderPage.HEADER_INFO &&
+                    buffer[HeaderPage.P_FILE_VERSION] == HeaderPage.FILE_VERSION) ||
+                    buffer[0] == 1)
                 {
                     return false;
-                }
-
-                // checks if v8 with password
-                if (buffer[0] == 1)
-                {
-                    // get salt buffer
-                    var salt = new byte[ENCRYPTION_SALT_SIZE];
-
-                    Buffer.BlockCopy(buffer, 1, salt, 0, ENCRYPTION_SALT_SIZE);
-
-                    using (var crypto = new AesEncryption(password, salt))
-                    {
-                        var header = crypto.Decrypt(buffer, PAGE_SIZE, PAGE_SIZE);
-
-                        if (Encoding.UTF8.GetString(header, HeaderPage.P_HEADER_INFO, HeaderPage.HEADER_INFO.Length) == HeaderPage.HEADER_INFO &&
-                            header[HeaderPage.P_FILE_VERSION] == HeaderPage.FILE_VERSION)
-                        {
-                            return false;
-                        }
-                    }
                 }
 
                 // checks if v7 (plain or encrypted)

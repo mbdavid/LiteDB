@@ -109,9 +109,9 @@
             // btnOpen
             // 
             this.btnOpen.Image = global::LiteDB.Studio.Properties.Resources.folder_explore;
-            this.btnOpen.Location = new System.Drawing.Point(527, 25);
+            this.btnOpen.Location = new System.Drawing.Point(527, 28);
             this.btnOpen.Name = "btnOpen";
-            this.btnOpen.Size = new System.Drawing.Size(28, 27);
+            this.btnOpen.Size = new System.Drawing.Size(28, 24);
             this.btnOpen.TabIndex = 3;
             this.toolTip.SetToolTip(this.btnOpen, "Open existing datafile");
             this.btnOpen.UseVisualStyleBackColor = true;
@@ -186,6 +186,8 @@
             // chkUpgrade
             // 
             this.chkUpgrade.AutoSize = true;
+            this.chkUpgrade.Checked = true;
+            this.chkUpgrade.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkUpgrade.Location = new System.Drawing.Point(257, 111);
             this.chkUpgrade.Name = "chkUpgrade";
             this.chkUpgrade.Size = new System.Drawing.Size(213, 19);
@@ -228,6 +230,7 @@
             this.chkReadonly.TabIndex = 27;
             this.chkReadonly.Text = "Read only";
             this.chkReadonly.UseVisualStyleBackColor = true;
+            this.chkReadonly.CheckedChanged += new System.EventHandler(this.chkReadonly_CheckedChanged);
             // 
             // label4
             // 

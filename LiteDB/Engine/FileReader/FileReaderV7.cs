@@ -96,52 +96,55 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<BsonDocument> GetDocuments(IndexInfo index)
         {
-            var indexPage = this.ReadPage(index.HeadPageID);
-            var node = indexPage["nodes"][0].AsDocument;
+            var indexPages = this.VisitIndexPages(index.HeadPageID);
 
-            while (true)
+            foreach(var indexPageID in indexPages)
             {
-                var dataBlock = node["dataBlock"];
-                var next = node["next"];
+                var indexPage = this.ReadPage(indexPageID);
 
-                // if datablock link to a data page
-                if (dataBlock["pageID"].AsInt32 != -1)
+                foreach(var node in indexPage["nodes"].AsArray)
                 {
-                    // read dataPage and data block
-                    var dataPage = this.ReadPage((uint)dataBlock["pageID"].AsInt32);
-                    var block = dataPage["blocks"].AsArray.Single(x => x["index"] == dataBlock["index"]).AsDocument;
+                    var dataBlock = node["dataBlock"];
 
-                    // read byte[] from block or from extend pages
-                    var data = block["extendPageID"] == -1 ?
-                        block["data"].AsBinary :
-                        this.ReadExtendData((uint)block["extendPageID"].AsInt32);
-
-                    // BSON format still same from all version
-                    var doc = BsonSerializer.Deserialize(data);
-
-                    // change _id PK in _chunks collection
-                    if (index.Collection == "_chunks")
+                    // if datablock link to a data page
+                    if (dataBlock["pageID"].AsInt32 != -1)
                     {
-                        var parts = doc["_id"].AsString.Split('\\');
+                        // read dataPage and data block
+                        var dataPage = this.ReadPage((uint)dataBlock["pageID"].AsInt32);
 
-                        if (!int.TryParse(parts[1], out var n)) throw LiteException.InvalidFormat("_id");
+                        if (dataPage["pageType"].AsInt32 != 4) continue;
 
-                        doc["_id"] = new BsonDocument
+                        var block = dataPage["blocks"].AsArray.FirstOrDefault(x => x["index"] == dataBlock["index"]).AsDocument;
+
+                        if (block == null) continue;
+
+                        // read byte[] from block or from extend pages
+                        var data = block["extendPageID"] == -1 ?
+                            block["data"].AsBinary :
+                            this.ReadExtendData((uint)block["extendPageID"].AsInt32);
+
+                        if (data.Length == 0) continue;
+
+                        // BSON format still same from all version
+                        var doc = BsonSerializer.Deserialize(data);
+
+                        // change _id PK in _chunks collection
+                        if (index.Collection == "_chunks")
                         {
-                            ["f"] = parts[0],
-                            ["n"] = n
-                        };
+                            var parts = doc["_id"].AsString.Split('\\');
+
+                            if (!int.TryParse(parts[1], out var n)) throw LiteException.InvalidFormat("_id");
+
+                            doc["_id"] = new BsonDocument
+                            {
+                                ["f"] = parts[0],
+                                ["n"] = n
+                            };
+                        }
+
+                        yield return doc;
                     }
-
-                    yield return doc;
                 }
-
-                // if no more index node, exit
-                if (next["pageID"].AsInt32 == -1) break;
-
-                // read next indexNode
-                indexPage = this.ReadPage((uint)next["pageID"].AsInt32);
-                node = indexPage["nodes"].AsArray.Single(x => x["index"] == next["index"]).AsDocument;
             }
         }
 
@@ -150,6 +153,8 @@ namespace LiteDB.Engine
         /// </summary>
         private BsonDocument ReadPage(uint pageID)
         {
+            if (pageID * V7_PAGE_SIZE > _stream.Length) return null;
+
             _stream.Position = pageID * V7_PAGE_SIZE; // v7 uses 4k page size
 
             _stream.Read(_buffer, 0, V7_PAGE_SIZE);
@@ -280,8 +285,12 @@ namespace LiteDB.Engine
                         ["index"] = (int)reader.ReadUInt16()
                     };
 
-                    // skip Prev[0]
-                    reader.ReadBytes(6);
+                    // reading Prev[0]
+                    node["prev"] = new BsonDocument
+                    {
+                        ["pageID"] = (int)reader.ReadUInt32(),
+                        ["index"] = (int)reader.ReadUInt16()
+                    };
 
                     // reading Next[0]
                     node["next"] = new BsonDocument
@@ -347,6 +356,8 @@ namespace LiteDB.Engine
                 {
                     var page = this.ReadPage(extendPageID);
 
+                    if (page["pageType"].AsInt32 != 5) return new byte[0];
+
                     buffer.Write(page["data"].AsBinary, 0, page["itemCount"].AsInt32);
 
                     extendPageID = (uint)page["nextPageID"].AsInt32;
@@ -354,6 +365,36 @@ namespace LiteDB.Engine
 
                 return buffer.ToArray();
             }
+        }
+
+        /// <summary>
+        /// Visit all index pages by starting index page. Get a list with all index pages from a collection
+        /// </summary>
+        private HashSet<uint> VisitIndexPages(uint startPageID)
+        {
+            var toVisit = new Queue<uint>(new uint[] { startPageID });
+            var visited = new HashSet<uint>();
+
+            while(toVisit.Count > 0)
+            {
+                var indexPageID = toVisit.Dequeue();
+                var indexPage = this.ReadPage(indexPageID);
+
+                if (indexPage == null || indexPage["pageType"] != 3) continue;
+
+                visited.Add(indexPageID);
+
+                foreach(var node in indexPage["nodes"].AsArray)
+                {
+                    var prev = (uint)node["prev"]["pageID"].AsInt32;
+                    var next = (uint)node["next"]["pageID"].AsInt32;
+
+                    if (!visited.Contains(prev)) toVisit.Enqueue(prev);
+                    if (!visited.Contains(next)) toVisit.Enqueue(next);
+                }
+            }
+
+            return visited;
         }
 
         public void Dispose()
