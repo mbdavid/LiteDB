@@ -15,6 +15,7 @@ namespace LiteDB.Engine
         public static bool Upgrade(string filename, string password = null)
         {
             if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(filename));
+            if (!File.Exists(filename)) return false;
 
             var settings = new EngineSettings
             {
