@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -14,7 +15,7 @@ namespace LiteDB
         /// <summary>
         /// Create a temp filename based on original filename - checks if file exists (if exists, append counter number)
         /// </summary>
-        public static string GetTempFile(string filename, string suffix = "-temp", bool checkIfExists = true)
+        public static string GetSufixFile(string filename, string suffix = "-temp", bool checkIfExists = true)
         {
             var count = 0;
             var temp = Path.Combine(Path.GetDirectoryName(filename), 
@@ -30,6 +31,72 @@ namespace LiteDB
             }
 
             return temp;
+        }
+
+        /// <summary>
+        /// Get LOG file based on data file
+        /// </summary>
+        public static string GetLogFile(string filename) => GetSufixFile(filename, "-log", false);
+
+        /// <summary>
+        /// Get TEMP file based on data file
+        /// </summary>
+        public static string GetTempFile(string filename) => GetSufixFile(filename, "-tmp", false);
+
+        /// <summary>
+        /// Test if file are used by any process
+        /// </summary>
+        public static bool IsFileLocked(string filename)
+        {
+            FileStream stream = null;
+            var file = new FileInfo(filename);
+
+            try
+            {
+                stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None);
+            }
+            catch (IOException)
+            {
+                //the file is unavailable because it is:
+                //still being written to
+                //or being processed by another thread
+                //or does not exist (has already been processed)
+                return true;
+            }
+            finally
+            {
+                if (stream != null)
+                {
+                    stream.Close();
+                }
+            }
+
+            //file is not locked
+            return false;
+        }
+
+        /// <summary>
+        /// Try execute some action while has lock exception
+        /// </summary>
+        public static bool TryExec(Action action, TimeSpan timeout)
+        {
+            var timer = DateTime.UtcNow.Add(timeout);
+
+            do
+            {
+                try
+                {
+                    action();
+                    return true;
+                }
+                catch (IOException ex)
+                {
+                    ex.WaitIfLocked(25);
+                }
+            }
+            while (DateTime.UtcNow < timer);
+
+            return false;
         }
 
         /// <summary>
@@ -49,27 +116,39 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Try execute some action while has lock exception
+        /// Convert storage unit string "1gb", "10 mb", "80000" to long bytes
         /// </summary>
-        public static void TryExec(Action action, TimeSpan timeout)
+        public static long ParseFileSize(string size)
         {
-            var timer = DateTime.UtcNow.Add(timeout);
+            var match = Regex.Match(size, @"^(\d+)\s*([tgmk])?(b|byte|bytes)?$", RegexOptions.IgnoreCase);
 
-            do
+            if (!match.Success) return 0;
+
+            var num = Convert.ToInt64(match.Groups[1].Value);
+
+            switch (match.Groups[2].Value.ToLower())
             {
-                try
-                {
-                    action();
-                    return;
-                }
-                catch (IOException ex)
-                {
-                    ex.WaitIfLocked(25);
-                }
+                case "t": return num * 1024L * 1024L * 1024L * 1024L;
+                case "g": return num * 1024L * 1024L * 1024L;
+                case "m": return num * 1024L * 1024L;
+                case "k": return num * 1024L;
+                case "": return num;
             }
-            while (DateTime.UtcNow < timer);
 
-            throw LiteException.LockTimeout(timeout);
+            return 0;
+        }
+
+        /// <summary>
+        /// Format a long file length to pretty file unit
+        /// </summary>
+        public static string FormatFileSize(long byteCount)
+        {
+            var suf = new string[] { "B", "KB", "MB", "GB", "TB" }; //Longs run out around EB
+            if (byteCount == 0) return "0" + suf[0];
+            var bytes = Math.Abs(byteCount);
+            var place = Convert.ToInt64(Math.Floor(Math.Log(bytes, 1024)));
+            var num = Math.Round(bytes / Math.Pow(1024, place), 1);
+            return (Math.Sign(byteCount) * num).ToString() + suf[place];
         }
     }
 }

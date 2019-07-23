@@ -1,54 +1,88 @@
+﻿using LiteDB;
+using LiteDB.Engine;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
-using LiteDB;
+using System.Threading.Tasks;
 
 namespace LiteDB.Demo
 {
-    public class Program
+    class Program
     {
-        [STAThread]
         static void Main(string[] args)
         {
-            var orig = @"C:\Git\LiteDB\LiteDB.Shell\bin\Debug\net40\teste.db";
+            Console.WriteLine("LITE DB v5");
+            Console.WriteLine("===========================================================");
+
+            //var cn = @"filename=d:\appPWD.db; password=abc";
+
+            File.Delete(@"d:\app.db");
+            File.Delete(@"d:\app-log.db");
+
+            //using (var repo = new LiteRepository(cn))
+            //{
+            //    repo.Database.UserVersion = 99;
+            //}
 
 
+            var sw = new Stopwatch();
 
-            using (var db = new LiteEngine(orig))
+            using (var e = new LiteEngine(new EngineSettings { Filename = @"d:\app.db" }))
             {
-                var col = db.GetCollectionNames().First();
+                sw.Start();
 
-                var tt = db.FindAll(col).ToArray();
+                // insert 5.000 docs
+                //e.Insert("col1", Enumerable.Range(1, 5000).Select(x => new BsonDocument { ["_id"] = x }), BsonAutoId.Int32);
 
-                var c = db.FindOne("DataObjects_1", Query.EQ("_id", "qyeyeW.1oMJK5"));
+                foreach(var d in Enumerable.Range(1, 5000).Select(x => new BsonDocument { ["_id"] = x }))
+                {
+                    e.Insert("col1", new BsonDocument[] { d }, BsonAutoId.Int32);
 
-                
+                }
 
-                Console.WriteLine(c == null);
 
+                e.Checkpoint();
+                sw.Stop();
             }
-                //{
-                //    // reading all database
-                //    foreach (var col in db.GetCollectionNames())
-                //    {
-                //        Console.WriteLine("Collection: " + col);
-                //    
-                //    
-                //        foreach (var doc in db.Find(col, Query.All("Token.LastUsedOn")).Take(10))
-                //        {
-                //            Console.WriteLine(JsonSerializer.Serialize(doc, true));
-                //            // ok
-                //        }
-                //    }
-                //}
 
 
-                Console.WriteLine("End.");
+            Console.WriteLine("Time: " + sw.ElapsedMilliseconds);
+            //
+            //using (var repo = new LiteRepository(cn))
+            //{
+            //    var u = repo.Database.UserVersion;
+            //
+            //    Console.WriteLine(u);
+            //
+            //    var mau = repo.FirstOrDefault<BsonDocument>(x => x["_id"] == 1, "col1");
+            //    //
+            //    Console.WriteLine("dados:" + mau["n"].AsString);
+            //
+            //}
+
+
+
+            Console.WriteLine(" ===========================================================");
+            Console.WriteLine("End");
             Console.ReadKey();
         }
     }
+
+    public class User
+    {
+        public int Id { get; set; }
+        public string City { get; set; }
+        public string Name { get; set; }
+        public List<User> Children { get; set; }
+    }
+
+
+
 }

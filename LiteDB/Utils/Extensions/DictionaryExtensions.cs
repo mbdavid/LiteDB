@@ -1,29 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
     internal static class DictionaryExtensions
     {
-        /// <summary>
-        /// Get free index based on dictionary count number (if is in use, move to next number)
-        /// </summary>
-        public static ushort NextIndex<T>(this Dictionary<ushort, T> dict)
-        {
-            if (dict.Count == 0) return 0;
-
-            var next = (ushort)dict.Count;
-
-            while (dict.ContainsKey(next))
-            {
-                next++;
-            }
-
-            return next;
-        }
-
         public static T GetOrDefault<K, T>(this IDictionary<K, T> dict, K key, T defaultValue = default(T))
         {
             if (dict.TryGetValue(key, out T result))
@@ -34,35 +18,42 @@ namespace LiteDB
             return defaultValue;
         }
 
+        public static T GetOrAdd<K, T>(this IDictionary<K, T> dict, K key, Func<K, T> valueFactoy)
+        {
+            if (dict.TryGetValue(key, out var value) == false)
+            {
+                value = valueFactoy(key);
+
+                dict.Add(key, value);
+            }
+
+            return value;
+        }
+
         public static void ParseKeyValue(this IDictionary<string, string> dict, string connectionString)
         {
-            var s = new StringScanner(connectionString);
+            var s = new Tokenizer(connectionString);
 
-            while(!s.HasTerminated)
+            while(!s.EOF)
             {
-                var key = s.Scan(@"(.*?)=", 1).Trim();
-                var value = "";
-                s.Scan(@"\s*");
-
-                if (s.Match("\""))
-                {
-                    // read a value inside an string " (remove escapes)
-                    value = s.Scan(@"""((?:\\""|.)*?)""", 1).Replace("\\\"", "\"");
-                    s.Scan(@"\s*;?\s*");
-                }
-                else
-                {
-                    // read value
-                    value = s.Scan(@"(.*?);\s*", 1).Trim();
-
-                    // read last part
-                    if (value.Length == 0)
-                    {
-                        value = s.Scan(".*").Trim();
-                    }
-                }
+                var key = Read(TokenType.Equals);
+                var value = Read(TokenType.SemiColon);
 
                 dict[key] = value;
+            }
+
+            string Read(TokenType delim)
+            {
+                var sb = new StringBuilder();
+                var token = s.ReadToken();
+
+                while (token.Type != TokenType.EOF && token.Type != delim)
+                {
+                    sb.Append(token.Value);
+                    token = s.ReadToken(false);
+                }
+
+                return sb.ToString().Trim();
             }
         }
 
@@ -73,13 +64,19 @@ namespace LiteDB
         {
             try
             {
-                string value;
-
-                if (dict.TryGetValue(key, out value) == false) return defaultValue;
+                if (dict.TryGetValue(key, out var value) == false) return defaultValue;
 
                 if (typeof(T) == typeof(TimeSpan))
                 {
-                    return (T)(object)TimeSpan.Parse(value);
+                    // if timespan are numbers only, convert as seconds
+                    if (Regex.IsMatch(value, @"^\d$", RegexOptions.Compiled))
+                    {
+                        return (T)(object)TimeSpan.FromSeconds(Convert.ToInt32(value));
+                    }
+                    else
+                    {
+                        return (T)(object)TimeSpan.Parse(value);
+                    }
                 }
                 else if (typeof(T).GetTypeInfo().IsEnum)
                 {
@@ -92,7 +89,8 @@ namespace LiteDB
             }
             catch (Exception)
             {
-                throw new LiteException("Invalid connection string value type for [" + key + "]");
+                //TODO: fix string connection parser
+                throw new LiteException(0, $"Invalid connection string value type for `{key}`");
             }
         }
 

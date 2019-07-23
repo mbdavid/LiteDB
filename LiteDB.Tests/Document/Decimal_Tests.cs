@@ -13,7 +13,7 @@ namespace LiteDB.Tests.Document
     public class Decimal_Tests
     {
         [TestMethod]
-        public void BsonValueDecimal()
+        public void BsonValue_New_Decimal_Type()
         {
             var d0 = 0m;
             var d1 = 1m;
@@ -37,8 +37,8 @@ namespace LiteDB.Tests.Document
 
             Assert.AreEqual(d0, x0["A"].AsDecimal);
             Assert.AreEqual(d1, x1["A"].AsDecimal);
-            Assert.AreEqual(dmin, xmin["A"].AsDecimal);
-            Assert.AreEqual(dmax, xmax["A"].AsDecimal);
+            Assert.AreEqual(dmin.AsDecimal, xmin["A"].AsDecimal);
+            Assert.AreEqual(dmax.AsDecimal, xmax["A"].AsDecimal);
 
         }
     }

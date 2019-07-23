@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using LiteDB.Engine;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 
 namespace LiteDB.Tests.Engine
@@ -11,13 +12,14 @@ namespace LiteDB.Tests.Engine
         {
             using (var file = new TempFile())
             {
-                using (var db = new LiteEngine(file.Filename))
+                using (var db = new LiteDatabase(file.Filename))
                 {
                     Assert.AreEqual(0, db.UserVersion);
                     db.UserVersion = 5;
+                    db.Checkpoint();
                 }
 
-                using (var db = new LiteEngine(file.Filename))
+                using (var db = new LiteDatabase(file.Filename))
                 {
                     Assert.AreEqual(5, db.UserVersion);
                 }

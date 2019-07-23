@@ -11,6 +11,20 @@
     <NoWarn>1701;1702;1705;1591;0618</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <Compile Remove="Internals\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Utils\Json\person.json" />
+    <None Remove="Utils\Json\zip.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Utils\Json\person.json" />
+    <EmbeddedResource Include="Utils\Json\zip.json" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="1.1.11" />

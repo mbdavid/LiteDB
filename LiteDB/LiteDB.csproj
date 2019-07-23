@@ -1,18 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-    <TargetFrameworks>netstandard1.3;netstandard2.0</TargetFrameworks>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <TargetFrameworks>net35;net40;netstandard1.3;netstandard2.0</TargetFrameworks>
-  </PropertyGroup>
-
   <PropertyGroup>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <PackageId>LiteDB</PackageId>
-    <Version>4.1.5</Version>
-    <AssemblyVersion>4.1.5.0</AssemblyVersion>
-    <FileVersion>4.1.5</FileVersion>
-    <VersionPrefix>4.1.5</VersionPrefix>
+    <AssemblyVersion>5.0.0.0</AssemblyVersion>
+    <FileVersion>5.0.0</FileVersion>
+    <VersionPrefix>5.0.0</VersionPrefix>
     <Authors>Maurício David</Authors>
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
@@ -33,51 +26,155 @@
     <NoWarn>1701;1702;1705;1591;0618</NoWarn>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LiteDB.xml</DocumentationFile>
     <SignAssembly Condition="'$(OS)'=='Windows_NT'">true</SignAssembly>
-    <AssemblyOriginatorKeyFile>LiteDB.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile Condition="'$(Configuration)' == 'Release'">LiteDB.snk</AssemblyOriginatorKeyFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
+  
   <!--
   == All variables ==
   HAVE_APP_DOMAIN
   HAVE_PROCESS
   HAVE_ENVIRONMENT
-  HAVE_FLUSH_DISK
-  HAVE_SYNC_OVER_ASYNC
-  HAVE_LOCK
-  HAVE_THREAD_ID
   HAVE_TYPE_INFO
-  HAVE_EXPRESSION_ASSIGN
   HAVE_TASK_DELAY
-  HAVE_ATTR_DEFINED
   -->
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
-    <DefineConstants>NET35;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT;HAVE_LOCK;HAVE_THREAD_ID;HAVE_ATTR_DEFINED</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
-    <DefineConstants>NET40;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT;HAVE_FLUSH_DISK;HAVE_LOCK;HAVE_THREAD_ID;HAVE_EXPRESSION_ASSIGN;HAVE_ATTR_DEFINED</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
-    <DefineConstants>NETSTANDARD13;HAVE_FLUSH_DISK;HAVE_SYNC_OVER_ASYNC;HAVE_TYPE_INFO;HAVE_EXPRESSION_ASSIGN;HAVE_TASK_DELAY</DefineConstants>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
+    <DefineConstants>NET40;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT;</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>NETSTANDARD20;HAVE_FLUSH_DISK;HAVE_SYNC_OVER_ASYNC;HAVE_LOCK;HAVE_TYPE_INFO;HAVE_EXPRESSION_ASSIGN;HAVE_TASK_DELAY;HAVE_ATTR_DEFINED</DefineConstants>
+    <DefineConstants>NETSTANDARD20;HAVE_TYPE_INFO;HAVE_TASK_DELAY;</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net35' OR '$(TargetFramework)' == 'net40'">
+  <!-- Begin References -->
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <Reference Include="System" />
+    <Reference Include="System.Runtime" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3' OR '$(TargetFramework)' == 'netstandard2.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Reflection" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.1" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+  </ItemGroup>
+  
+  <!-- End References -->
+
+  <ItemGroup>
+    <Compile Remove="Client\**" />
+    <Compile Remove="Database\**" />
+    <Compile Remove="Engine\Engine\**" />
+    <Compile Remove="Engine\Services\**" />
+    <Compile Remove="Mapper\**" />
+    <Compile Remove="Repository\**" />
+    <Compile Remove="Shell\**" />
+    <Compile Remove="Storage\**" />
+    <EmbeddedResource Remove="Client\**" />
+    <EmbeddedResource Remove="Database\**" />
+    <EmbeddedResource Remove="Engine\Engine\**" />
+    <EmbeddedResource Remove="Engine\Services\**" />
+    <EmbeddedResource Remove="Mapper\**" />
+    <EmbeddedResource Remove="Repository\**" />
+    <EmbeddedResource Remove="Shell\**" />
+    <EmbeddedResource Remove="Storage\**" />
+    <None Remove="Client\**" />
+    <None Remove="Database\**" />
+    <None Remove="Engine\Engine\**" />
+    <None Remove="Engine\Services\**" />
+    <None Remove="Mapper\**" />
+    <None Remove="Repository\**" />
+    <None Remove="Shell\**" />
+    <None Remove="Storage\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Client\Database\Collections\Aggregate.cs" />
+    <Compile Include="Client\Database\Collections\Delete.cs" />
+    <Compile Include="Client\Database\Collections\Find.cs" />
+    <Compile Include="Client\Database\Collections\Include.cs" />
+    <Compile Include="Client\Database\Collections\Index.cs" />
+    <Compile Include="Client\Database\Collections\Insert.cs" />
+    <Compile Include="Client\Database\Collections\Update.cs" />
+    <Compile Include="Client\Database\Collections\Upsert.cs" />
+    <Compile Include="Client\Database\ILiteQueryable.cs" />
+    <Compile Include="Client\Database\LiteCollection.cs" />
+    <Compile Include="Client\Database\LiteDatabase.cs" />
+    <Compile Include="Client\Database\LiteQueryable.cs" />
+    <Compile Include="Client\Database\LiteRepository.cs" />
+    <Compile Include="Client\Mapper\Attributes\BsonFieldAttribute.cs" />
+    <Compile Include="Client\Mapper\Attributes\BsonIdAttribute.cs" />
+    <Compile Include="Client\Mapper\Attributes\BsonIgnoreAttribute.cs" />
+    <Compile Include="Client\Mapper\Attributes\BsonRefAttribute.cs" />
+    <Compile Include="Client\Mapper\BsonMapper.cs" />
+    <Compile Include="Client\Mapper\BsonMapper.Deserialize.cs" />
+    <Compile Include="Client\Mapper\BsonMapper.Serialize.cs" />
+    <Compile Include="Client\Mapper\EntityBuilder.cs" />
+    <Compile Include="Client\Mapper\EntityMapper.cs" />
+    <Compile Include="Client\Mapper\Linq\LinqExpressionVisitor.cs" />
+    <Compile Include="Client\Mapper\Linq\ParameterExpressionVisitor.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\BsonValueResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\ConvertResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\DateTimeResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\EnumerableResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\GuidResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\ITypeResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\MathResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\NumberResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\ObjectIdResolver.cs" />
+    <Compile Include="Client\Mapper\Linq\TypeResolver\StringResolver.cs" />
+    <Compile Include="Client\Mapper\MemberMapper.cs" />
+    <Compile Include="Client\Mapper\Reflection\Reflection.cs" />
+    <Compile Include="Client\Mapper\Reflection\Reflection.Expression.cs" />
+    <Compile Include="Client\SqlParser\Commands\Analyze.cs" />
+    <Compile Include="Client\SqlParser\Commands\Begin.cs" />
+    <Compile Include="Client\SqlParser\Commands\Checkpoint.cs" />
+    <Compile Include="Client\SqlParser\Commands\Commit.cs" />
+    <Compile Include="Client\SqlParser\Commands\Create.cs" />
+    <Compile Include="Client\SqlParser\Commands\Delete.cs" />
+    <Compile Include="Client\SqlParser\Commands\Drop.cs" />
+    <Compile Include="Client\SqlParser\Commands\Insert.cs" />
+    <Compile Include="Client\SqlParser\Commands\ParseLists.cs" />
+    <Compile Include="Client\SqlParser\Commands\Rename.cs" />
+    <Compile Include="Client\SqlParser\Commands\Rollback.cs" />
+    <Compile Include="Client\SqlParser\Commands\Select.cs" />
+    <Compile Include="Client\SqlParser\Commands\Update.cs" />
+    <Compile Include="Client\SqlParser\Commands\Vaccum.cs" />
+    <Compile Include="Client\SqlParser\SqlParser.cs" />
+    <Compile Include="Client\Storage\LiteFileInfo.cs" />
+    <Compile Include="Client\Storage\LiteFileStream.cs" />
+    <Compile Include="Client\Storage\LiteFileStream.Read.cs" />
+    <Compile Include="Client\Storage\LiteFileStream.Write.cs" />
+    <Compile Include="Client\Storage\LiteStorage.cs" />
+    <Compile Include="Client\Structures\ConnectionString.cs" />
+    <Compile Include="Client\Structures\ConnectionType.cs" />
+    <Compile Include="Client\Structures\Query.cs" />
+    <Compile Include="Engine\Engine\Analyze.cs" />
+    <Compile Include="Engine\Engine\Collection.cs" />
+    <Compile Include="Engine\Engine\Upgrade.cs" />
+    <Compile Include="Engine\Engine\UserVersion.cs" />
+    <Compile Include="Engine\Engine\Delete.cs" />
+    <Compile Include="Engine\Engine\Index.cs" />
+    <Compile Include="Engine\Engine\Sequence.cs" />
+    <Compile Include="Engine\Engine\Insert.cs" />
+    <Compile Include="Engine\Engine\Query.cs" />
+    <Compile Include="Engine\Engine\SystemCollections.cs" />
+    <Compile Include="Engine\Engine\Transaction.cs" />
+    <Compile Include="Engine\Engine\Update.cs" />
+    <Compile Include="Engine\Engine\Upsert.cs" />
+    <Compile Include="Engine\Engine\Vaccum.cs" />
+    <Compile Include="Engine\Services\CollectionService.cs" />
+    <Compile Include="Engine\Services\DataService.cs" />
+    <Compile Include="Engine\Services\IndexService.cs" />
+    <Compile Include="Engine\Services\LockService.cs" />
+    <Compile Include="Engine\Services\SnapShot.cs" />
+    <Compile Include="Engine\Services\TransactionService.cs" />
+    <Compile Include="Engine\Services\WalIndexService.cs" />
   </ItemGroup>
 
   <ItemGroup>

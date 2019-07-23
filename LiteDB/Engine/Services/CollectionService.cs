@@ -1,159 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using static LiteDB.Constants;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     internal class CollectionService
     {
-        private PageService _pager;
-        private IndexService _indexer;
-        private DataService _data;
-        private TransactionService _trans;
-        private Logger _log;
+        private readonly HeaderPage _header;
+        private readonly Snapshot _snapshot;
+        private readonly TransactionPages _transPages;
 
-        public CollectionService(PageService pager, IndexService indexer, DataService data, TransactionService trans, Logger log)
+        public CollectionService(HeaderPage header, Snapshot snapshot, TransactionPages transPages)
         {
-            _pager = pager;
-            _indexer = indexer;
-            _data = data;
-            _trans = trans;
-            _log = log;
+            _snapshot = snapshot;
+            _header = header;
+            _transPages = transPages;
         }
 
         /// <summary>
-        /// Get a exist collection. Returns null if not exists
+        /// Get collection page instance (or create a new one)
         /// </summary>
-        public CollectionPage Get(string name)
+        public void Get(string name, bool addIfNotExists, ref CollectionPage collectionPage)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
+            // get collection pageID from header
+            var pageID = _header.GetCollectionPageID(name);
 
-            var header = _pager.GetPage<HeaderPage>(0);
-
-            uint pageID;
-
-            if (header.CollectionPages.TryGetValue(name, out pageID))
+            if (pageID != uint.MaxValue)
             {
-                return _pager.GetPage<CollectionPage>(pageID);
+                collectionPage = _snapshot.GetPage<CollectionPage>(pageID);
             }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Add a new collection. Check if name the not exists
-        /// </summary>
-        public CollectionPage Add(string name)
-        {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
-            if (!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat(name);
-
-            _log.Write(Logger.COMMAND, "creating new collection '{0}'", name);
-
-            // get header marked as dirty because I will use header after (and NewPage can get another header instance)
-            var header = _pager.GetPage<HeaderPage>(0);
-
-            // check limit count (8 bytes per collection = 4 to string length, 4 for uint pageID)
-            if (header.CollectionPages.Sum(x => x.Key.Length + 8) + name.Length + 8 >= CollectionPage.MAX_COLLECTIONS_SIZE)
+            else if (addIfNotExists)
             {
-                throw LiteException.CollectionLimitExceeded(CollectionPage.MAX_COLLECTIONS_SIZE);
-            }
-
-            // get new collection page (marked as dirty)
-            var col = _pager.NewPage<CollectionPage>();
-
-            // add this page to header page collection
-            header.CollectionPages.Add(name, col.PageID);
-
-            col.CollectionName = name;
-
-            // set header page as dirty
-            _pager.SetDirty(header);
-
-            // create PK index
-            var pk = _indexer.CreateIndex(col);
-
-            pk.Field = "_id";
-            pk.Expression = "$._id";
-            pk.Unique = true;
-
-            return col;
-        }
-
-        /// <summary>
-        /// Get all collections pages
-        /// </summary>
-        public IEnumerable<CollectionPage> GetAll()
-        {
-            var header = _pager.GetPage<HeaderPage>(0);
-
-            foreach (var pageID in header.CollectionPages.Values)
-            {
-                yield return _pager.GetPage<CollectionPage>(pageID);
+                this.Add(name, ref collectionPage);
             }
         }
 
         /// <summary>
-        /// Drop a collection - remove all data pages + indexes pages
+        /// Add a new collection. Check if name the not exists. Create only in transaction page - will update header only in commit
         /// </summary>
-        public void Drop(CollectionPage col)
+        private void Add(string name, ref CollectionPage collectionPage)
         {
-            // add all pages to delete
-            var pages = new HashSet<uint>();
+            if (Encoding.UTF8.GetByteCount(name) > _header.GetAvaiableCollectionSpace()) throw LiteException.InvalidCollectionName(name, "There is no space in header for more collections");
+            if (!name.IsWord()) throw LiteException.InvalidCollectionName(name, "Use only [a-Z$_]");
+            if (name.StartsWith("$")) throw LiteException.InvalidCollectionName(name, "Collection can't starts with `$` (reserved for system collections)");
 
-            // search for all data page and index page
-            foreach (var index in col.GetIndexes(true))
-            {
-                // get all nodes from index
-                var nodes = _indexer.FindAll(index, Query.Ascending);
+            // create new collection page
+            collectionPage = _snapshot.NewPage<CollectionPage>();
+            var pageID = collectionPage.PageID;
 
-                foreach (var node in nodes)
-                {
-                    // if is PK index, add dataPages
-                    if (index.Slot == 0)
-                    {
-                        pages.Add(node.DataBlock.PageID);
+            // insert collection name/pageID in header only in commit operation
+            _transPages.Commit += (h) => h.InsertCollection(name, pageID);
 
-                        // read datablock to check if there is any extended page
-                        var block = _data.GetBlock(node.DataBlock);
+            // create first index (_id pk) (must pass collectionPage because snapshot contains null in CollectionPage prop)
+            var indexer = new IndexService(_snapshot);
 
-                        if (block.ExtendPageID != uint.MaxValue)
-                        {
-                            _pager.DeletePage(block.ExtendPageID, true);
-                        }
-                    }
-
-                    // memory checkpoint
-                    _trans.CheckPoint();
-
-                    // add index page to delete list page
-                    pages.Add(node.Position.PageID);
-                }
-
-                // remove head+tail nodes in all indexes
-                pages.Add(index.HeadNode.PageID);
-                pages.Add(index.TailNode.PageID);
-            }
-
-            // and now, lets delete all this pages
-            foreach (var pageID in pages)
-            {
-                // delete page
-                _pager.DeletePage(pageID);
-
-                // memory checkpoint
-                _trans.CheckPoint();
-            }
-
-            // get header page to remove from collection list links
-            var header = _pager.GetPage<HeaderPage>(0);
-
-            header.CollectionPages.Remove(col.CollectionName);
-
-            // set header as dirty after remove
-            _pager.SetDirty(header);
-
-            _pager.DeletePage(col.PageID);
+            indexer.CreateIndex("_id", "$._id", true);
         }
     }
 }

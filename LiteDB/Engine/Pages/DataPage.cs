@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using static LiteDB.Constants;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// The DataPage thats stores object data.
@@ -9,108 +11,77 @@ namespace LiteDB
     internal class DataPage : BasePage
     {
         /// <summary>
-        /// Page type = Extend
+        /// Read existing DataPage in buffer
         /// </summary>
-        public override PageType PageType { get { return PageType.Data; } }
+        public DataPage(PageBuffer buffer)
+            : base(buffer)
+        {
+            if (this.PageType != PageType.Data) throw new LiteException(0, $"Invalid DataPage buffer on {PageID}");
+        }
 
         /// <summary>
-        /// If a Data Page has less that free space, it's considered full page for new items. Can be used only for update (DataPage) ~ 50% PAGE_AVAILABLE_BYTES
-        /// This value is used for minimize
+        /// Create new DataPage
         /// </summary>
-        public const int DATA_RESERVED_BYTES = PAGE_AVAILABLE_BYTES / 2;
-
-        /// <summary>
-        /// Returns all data blocks - Each block has one object
-        /// </summary>
-        private Dictionary<ushort, DataBlock> _dataBlocks = new Dictionary<ushort, DataBlock>();
-
-        public Dictionary<ushort, DataBlock> DataBlocks => _dataBlocks;
-
-        public DataPage(uint pageID)
-            : base(pageID)
+        public DataPage(PageBuffer buffer, uint pageID)
+            : base(buffer, pageID, PageType.Data)
         {
         }
 
         /// <summary>
-        /// Get datablock from internal blocks collection
+        /// Get single DataBlock
         /// </summary>
-        public DataBlock GetBlock(ushort index)
+        public DataBlock GetBlock(byte index)
         {
-            return _dataBlocks[index];
+            var segment = base.Get(index);
+
+            return new DataBlock(this, index, segment);
         }
 
         /// <summary>
-        /// Add new data block into this page, update counter + free space
+        /// Insert new DataBlock. Use extend to indicate document sequence (document are large than PAGE_SIZE)
         /// </summary>
-        public void AddBlock(DataBlock block)
+        public DataBlock InsertBlock(int bytesLength, bool extend)
         {
-            var index = _dataBlocks.NextIndex();
+            var segment = base.Insert((ushort)(bytesLength + DataBlock.DATA_BLOCK_FIXED_SIZE), out var index);
 
-            block.Position = new PageAddress(this.PageID, index);
-
-            this.ItemCount++;
-            this.FreeBytes -= block.Length;
-
-            _dataBlocks.Add(index, block);
+            return new DataBlock(this, index, segment, extend, PageAddress.Empty);
         }
 
         /// <summary>
-        /// Update byte array from existing data block. Update free space too
+        /// Update current block returning data block to be fill
         /// </summary>
-        public void UpdateBlockData(DataBlock block, byte[] data)
+        public DataBlock UpdateBlock(DataBlock currentBlock, int bytesLength)
         {
-            this.FreeBytes = this.FreeBytes + block.Data.Length - data.Length;
+            var segment = base.Update(currentBlock.Position.Index, (ushort)(bytesLength + DataBlock.DATA_BLOCK_FIXED_SIZE));
 
-            block.Data = data;
+            return new DataBlock(this, currentBlock.Position.Index, segment, currentBlock.Extend, currentBlock.NextBlock);
         }
 
         /// <summary>
-        /// Remove data block from this page. Update counters and free space
+        /// Delete single data block inside this page
         /// </summary>
-        public void DeleteBlock(DataBlock block)
+        public void DeleteBlock(byte index)
         {
-            this.ItemCount--;
-            this.FreeBytes += block.Length;
-
-            _dataBlocks.Remove(block.Position.Index);
+            base.Delete(index);
         }
 
         /// <summary>
-        /// Get block counter from this page
+        /// Get all block positions inside this page that are not extend blocks (initial data block)
         /// </summary>
-        public int BlocksCount => _dataBlocks.Count;
-
-        #region Read/Write pages
-
-        protected override void ReadContent(ByteReader reader)
+        public IEnumerable<PageAddress> GetBlocks(bool onlyDataBlock)
         {
-            _dataBlocks = new Dictionary<ushort, DataBlock>(ItemCount);
-
-            for (var i = 0; i < ItemCount; i++)
+            foreach(var index in base.GetUsedIndexs())
             {
-                var block = new DataBlock();
+                var slotPosition = BasePage.CalcPositionAddr(index);
+                var position = _buffer.ReadUInt16(slotPosition);
 
-                block.Page = this;
-                block.Position = new PageAddress(this.PageID, reader.ReadUInt16());
-                block.ExtendPageID = reader.ReadUInt32();
-                var size = reader.ReadUInt16();
-                block.Data = reader.ReadBytes(size);
+                var extend = _buffer.ReadBool(position + DataBlock.P_EXTEND);
 
-                _dataBlocks.Add(block.Position.Index, block);
+                if (onlyDataBlock == false || extend == false)
+                {
+                    yield return new PageAddress(this.PageID, index);
+                }
             }
         }
-
-        protected override void WriteContent(ByteWriter writer)
-        {
-            foreach (var block in _dataBlocks.Values)
-            {
-                writer.Write(block.Position.Index);
-                writer.Write(block.ExtendPageID);
-                writer.Write((ushort)block.Data.Length);
-                writer.Write(block.Data);
-            }
-        }
-
-        #endregion
     }
 }

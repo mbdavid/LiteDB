@@ -15,14 +15,11 @@ namespace LiteDB
         /// <summary>
         /// Json serialize a BsonValue into a String
         /// </summary>
-        public static string Serialize(BsonValue value, bool pretty = false, bool writeBinary = true)
+        public static string Serialize(BsonValue value)
         {
             var sb = new StringBuilder();
 
-            using (var w = new StringWriter(sb))
-            {
-                Serialize(value ?? BsonValue.Null, w, pretty, writeBinary);
-            }
+            Serialize(value, sb);
 
             return sb.ToString();
         }
@@ -30,12 +27,24 @@ namespace LiteDB
         /// <summary>
         /// Json serialize a BsonValue into a TextWriter
         /// </summary>
-        public static void Serialize(BsonValue value, TextWriter writer, bool pretty = false, bool writeBinary = true)
+        public static void Serialize(BsonValue value, TextWriter writer)
         {
-            var w = new JsonWriter(writer);
-            w.Pretty = pretty;
-            w.WriteBinary = writeBinary;
-            w.Serialize(value ?? BsonValue.Null);
+            var json = new JsonWriter(writer);
+
+            json.Serialize(value ?? BsonValue.Null);
+        }
+
+        /// <summary>
+        /// Json serialize a BsonValue into a StringBuilder
+        /// </summary>
+        public static void Serialize(BsonValue value, StringBuilder sb)
+        {
+            using (var writer = new StringWriter(sb))
+            {
+                var w = new JsonWriter(writer);
+
+                w.Serialize(value ?? BsonValue.Null);
+            }
         }
 
         #endregion
@@ -67,27 +76,6 @@ namespace LiteDB
             var jr = new JsonReader(reader);
 
             return jr.Deserialize();
-        }
-
-        /// <summary>
-        /// Deserialize a json using a StringScanner and returns BsonValue
-        /// </summary>
-        public static BsonValue Deserialize(StringScanner s)
-        {
-            if (s == null) throw new ArgumentNullException(nameof(s));
-
-            if (s.HasTerminated) return BsonValue.Null;
-
-            using (var sr = new StringReader(s.ToString()))
-            {
-                var reader = new JsonReader(sr);
-
-                var value = reader.Deserialize();
-
-                s.Seek((int)(reader.Position - 1));
-
-                return value;
-            }
         }
 
         /// <summary>

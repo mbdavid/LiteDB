@@ -12,30 +12,30 @@ namespace LiteDB.Tests.Document
     [TestClass]
     public class Document_Test
     {
+        //** [TestMethod]
+        //** public void Document_Implicit_Convert()
+        //** {
+        //**     var obj = new Dictionary<string, object>()
+        //**     {
+        //**         { "int", 123 },
+        //**         { "arr", new object[] { 3.0, 2, 1, "zero", false } },
+        //**         { "doc", new Dictionary<string, object>()
+        //**             {
+        //**                 { "a", "a" },
+        //**                 { "b", new int[] { 0 } },
+        //**             }
+        //**         }
+        //**     };
+        //** 
+        //**     var doc = new BsonValue(obj);
+        //** 
+        //**     var json = JsonSerializer.Serialize(doc);
+        //** 
+        //**     Assert.AreEqual("{\"int\":123,\"arr\":[3.0,2,1,\"zero\",false],\"doc\":{\"a\":\"a\",\"b\":[0]}}", json);
+        //** }
+
         [TestMethod]
-        public void Document_ImplicitConvert_Test()
-        {
-            var obj = new Dictionary<string, object>()
-            {
-                { "int", 123 },
-                { "arr", new object[] { 3.0, 2, 1, "zero", false } },
-                { "doc", new Dictionary<string, object>()
-                    {
-                        { "a", "a" },
-                        { "b", new int[] { 0 } },
-                    }
-                }
-            };
-
-            var doc = new BsonValue(obj);
-
-            var json = JsonSerializer.Serialize(doc, false, true);
-
-            Assert.AreEqual("{\"int\":123,\"arr\":[3.0,2,1,\"zero\",false],\"doc\":{\"a\":\"a\",\"b\":[0]}}", json);
-        }
-
-        [TestMethod]
-        public void Document_copies_properties_to_KeyValue_array()
+        public void Document_Copies_Properties_To_KeyValue_Array()
         {
             // ARRANGE
             // create a Bson document with all possible value types
@@ -58,12 +58,25 @@ namespace LiteDB.Tests.Document
 
             var result = new KeyValuePair<string, BsonValue>[document.Count()];
             document.CopyTo(result, 0);
+        }
 
-            // ASSERT
-            // all BsonValue instances have been added to the array by reference
+        [TestMethod]
+        public void Value_Index_From_BsonValue()
+        {
+            var arr = JsonSerializer.Deserialize("[0, 1, 2, 3]");
+            var doc = JsonSerializer.Deserialize("{a:1,b:2,c:3}");
 
-            //TODO: implement get from another way
-            // Assert.IsTrue(result.All(kv => object.ReferenceEquals(document.Get(kv.Key), kv.Value)));
+            Assert.AreEqual(0, arr[0].RawValue);
+            Assert.AreEqual(3, arr[3].RawValue);
+
+            Assert.AreEqual(1, doc["a"].RawValue);
+            Assert.AreEqual(3, doc["c"].RawValue);
+
+            arr[1] = 111;
+            doc["b"] = 222;
+
+            Assert.AreEqual(111, arr[1].RawValue);
+            Assert.AreEqual(222, doc["b"].RawValue);
         }
     }
 }

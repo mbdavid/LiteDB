@@ -1,72 +1,97 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
         /// <summary>
-        /// Implement delete command based on _id value. Returns true if deleted
+        /// Implements delete based on IDs enumerable
         /// </summary>
-        public bool Delete(string collection, BsonValue id)
-        {
-            return this.Delete(collection, Query.EQ("_id", id)) == 1;
-        }
-
-        /// <summary>
-        /// Implements delete based on a query result
-        /// </summary>
-        public int Delete(string collection, Query query)
+        public int Delete(string collection, IEnumerable<BsonValue> ids)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
-            if (query == null) throw new ArgumentNullException(nameof(query));
+            if (ids == null) throw new ArgumentNullException(nameof(ids));
 
-            return this.Transaction<int>(collection, false, (col) =>
+            return this.AutoTransaction(transaction =>
             {
-                if (col == null) return 0;
+                var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
+                var col = snapshot.CollectionPage;
+                var data = new DataService(snapshot);
+                var indexer = new IndexService(snapshot);
 
-                _log.Write(Logger.COMMAND, "delete documents in '{0}'", collection);
-
-                var nodes = query.Run(col, _indexer);
-
-                _log.Write(Logger.QUERY, "{0} :: {1}", collection, query);
+                if (snapshot.CollectionPage == null) return 0;
 
                 var count = 0;
+                var pk = snapshot.CollectionPage.PK;
 
-                foreach (var node in nodes)
+                foreach (var id in ids)
                 {
-                    // checks if cache are full
-                    _trans.CheckPoint();
+                    var pkNode = indexer.Find(pk, id, false, LiteDB.Query.Ascending);
 
-                    // if use filter need deserialize document
-                    if (query.UseFilter)
-                    {
-                        var buffer = _data.Read(node.DataBlock);
-                        var doc = _bsonReader.Deserialize(buffer).AsDocument;
+                    // if pk not found, continue
+                    if (pkNode == null) continue;
 
-                        if (query.FilterDocument(doc) == false) continue;
-                    }
-
-                    _log.Write(Logger.COMMAND, "delete document :: _id = {0}", node.Key.RawValue);
-
-                    // get all indexes nodes from this data block
-                    var allNodes = _indexer.GetNodeList(node, true).ToArray();
-
-                    // lets remove all indexes that point to this in dataBlock
-                    foreach (var linkNode in allNodes)
-                    {
-                        var index = col.Indexes[linkNode.Slot];
-
-                        _indexer.Delete(index, linkNode.Position);
-                    }
+                    // delete all nodes (start in pk node)
+                    indexer.DeleteAll(pkNode.Position);
 
                     // remove object data
-                    _data.Delete(col, node.DataBlock);
+                    data.Delete(pkNode.DataBlock);
+
+                    transaction.Safepoint();
 
                     count++;
                 }
 
                 return count;
+            });
+        }
+
+        /// <summary>
+        /// Implements delete based on filter expression
+        /// </summary>
+        public int DeleteMany(string collection, BsonExpression predicate)
+        {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+            return this.AutoTransaction(transaction =>
+            {
+                // do optimization for when using "_id = value" key
+                if (predicate.Type == BsonExpressionType.Equal && 
+                    predicate.Left.Type == BsonExpressionType.Path && 
+                    predicate.Left.Source == "$._id" && 
+                    predicate.Right.IsValue)
+                {
+                    var id = predicate.Right.Execute().First();
+
+                    return this.Delete(collection, new BsonValue[] { id });
+                }
+                else
+                {
+                    IEnumerable<BsonValue> getIds()
+                    {
+                        // this is intresting: if _id returns an document (like in FileStorage) you can't run direct _id
+                        // field because "reader.Current" will return _id document - but not - { _id: [document] }
+                        // create inner document to ensure _id will be a document
+                        var query = new Query { Select = "{ i: _id }", ForUpdate = true };
+
+                        query.Where.Add(predicate);
+
+                        using (var reader = this.Query(collection, query))
+                        {
+                            while (reader.Read())
+                            {
+                                yield return reader.Current["i"];
+                            }
+                        }
+                    }
+
+                    var rr = getIds().ToArray();
+
+                    return this.Delete(collection, getIds());
+                }
             });
         }
     }

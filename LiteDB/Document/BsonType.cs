@@ -3,7 +3,7 @@
     /// <summary>
     /// All supported BsonTypes in sort order
     /// </summary>
-    public enum BsonType
+    public enum BsonType : byte
     {
         MinValue = 0,
 

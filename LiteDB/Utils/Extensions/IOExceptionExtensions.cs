@@ -15,7 +15,8 @@ namespace LiteDB
         {
             var errorCode = Marshal.GetHRForException(ex) & ((1 << 16) - 1);
 
-            return errorCode == ERROR_SHARING_VIOLATION ||
+            return 
+                errorCode == ERROR_SHARING_VIOLATION ||
                 errorCode == ERROR_LOCK_VIOLATION;
         }
 

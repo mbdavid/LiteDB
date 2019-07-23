@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "LiteDB.Shell": {
-      "commandName": "Project",
-      "commandLineArgs": "bin/Debug/net40/Game.db"
-    }
-  }
-}
