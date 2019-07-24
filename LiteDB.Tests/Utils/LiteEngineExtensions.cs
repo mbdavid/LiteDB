@@ -1,11 +1,6 @@
 ﻿using LiteDB.Engine;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB.Tests
 {
@@ -13,12 +8,12 @@ namespace LiteDB.Tests
     {
         public static int Insert(this LiteEngine engine, string collection, BsonDocument doc, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
-            return engine.Insert(collection, new BsonDocument[] { doc }, autoId);
+            return engine.Insert(collection, new BsonDocument[] {doc}, autoId);
         }
 
         public static int Update(this LiteEngine engine, string collection, BsonDocument doc)
         {
-            return engine.Update(collection, new BsonDocument[] { doc });
+            return engine.Update(collection, new BsonDocument[] {doc});
         }
 
         public static List<BsonDocument> Find(this LiteEngine engine, string collection, BsonExpression where)

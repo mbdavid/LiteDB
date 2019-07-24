@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB.Tests
 {
-
     public class Person : IEqualityComparer<Person>, IComparable<Person>
     {
         public int Id { get; set; }

@@ -1,19 +1,9 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using LiteDB.Engine;
-
-//** namespace LiteDB.Tests.Engine
+﻿//** namespace LiteDB.Tests.Engine
 //** {
 //**     [TestClass]
 //**     public class Shrink_Tests
 //**     {
-//**         [TestMethod]
+//**         [Fact]
 //**         public void Shrink_After_DropCollection()
 //**         {
 //**             using (var file = new TempFile())
@@ -31,18 +21,18 @@ using LiteDB.Engine;
 //**                 var r = db.Shrink();
 //** 
 //**                 // only header page
-//**                 Assert.AreEqual(8192, size - r);
+//**                 Assert.Equal(8192, size - r);
 //**             }
 //**         }
 //** 
-//**         [TestMethod]
+//**         [Fact]
 //**         public void Shrink_Large_Files()
 //**         {
 //**             // do some tests
 //**             void DoTest(LiteDatabase db, LiteCollection<Zip> col)
 //**             {
-//**                 Assert.AreEqual(1, col.Count());
-//**                 Assert.AreEqual(99, db.UserVersion);
+//**                 Assert.Equal(1, col.Count());
+//**                 Assert.Equal(99, db.UserVersion);
 //**             };
 //** 
 //**             using (var file = new TempFile())
@@ -58,22 +48,22 @@ using LiteDB.Engine;
 //**                     var inserted = col.Insert(DataGen.Zip()); // 29.353 docs
 //**                     var deleted = col.DeleteMany(x => x.Id != "01001"); // delete 29.352 docs
 //** 
-//**                     Assert.AreEqual(29353, inserted);
-//**                     Assert.AreEqual(29352, deleted);
+//**                     Assert.Equal(29353, inserted);
+//**                     Assert.Equal(29352, deleted);
 //** 
-//**                     Assert.AreEqual(1, col.Count());
+//**                     Assert.Equal(1, col.Count());
 //** 
 //**                     // must checkpoint
 //**                     db.Checkpoint();
 //** 
 //**                     // file still large than 5mb (even with only 1 document)
-//**                     Assert.IsTrue(file.Size > 5 * 1024 * 1024);
+//**                     Assert.True(file.Size > 5 * 1024 * 1024);
 //** 
 //**                     // reduce datafile (use temp disk) (from LiteDatabase)
 //**                     var reduced = db.Shrink();
 //** 
 //**                     // now file are small than 50kb
-//**                     Assert.IsTrue(file.Size < 50 * 1024);
+//**                     Assert.True(file.Size < 50 * 1024);
 //** 
 //**                     DoTest(db, col);
 //**                 }
@@ -93,3 +83,4 @@ using LiteDB.Engine;
 //**         }
 //**     }
 //** }
+

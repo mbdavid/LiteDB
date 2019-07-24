@@ -1,40 +1,34 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
 using LiteDB.Engine;
 using System.Threading;
-using System.Diagnostics;
+using FluentAssertions;
+using Xunit;
 
 namespace LiteDB.Internals
 {
-    [TestClass]
     public class CacheAsync_Tests
     {
-        [TestMethod]
+        [Fact]
         public void CacheAsync_Thread_ShareCounter()
         {
             // Set()   - Seta true - Se estiver bloqueado, vai liberar
             // Reset() - Seta false - Quando chegar no proximo Wait() vai aguardar
             // Wait()  - Trava a thread SE estiver false (Reset) - Passa reto se estiver true (Set)
-            var wa = new ManualResetEventSlim(true); 
+            var wa = new ManualResetEventSlim(true);
             var wb = new ManualResetEventSlim(false);
 
             // serialize 2 threads
-            void serialize(ManualResetEventSlim toBlock, ManualResetEventSlim toFree) 
+            void serialize(ManualResetEventSlim toBlock, ManualResetEventSlim toFree)
             {
                 toBlock?.Reset();
                 toFree.Set();
                 toBlock?.Wait();
-            };
+            }
 
-            var disk = new DiskService(new EngineSettings { DataStream = new MemoryStream(), MemorySegmentSize = 10 });
+            ;
+
+            var disk = new DiskService(new EngineSettings {DataStream = new MemoryStream(), MemorySegmentSize = 10});
 
             var ta = new Task(() =>
             {
@@ -46,7 +40,7 @@ namespace LiteDB.Internals
 
                 p0.UserVersion = 25;
 
-                disk.WriteAsync(new PageBuffer[] { p0.UpdateBuffer() });
+                disk.WriteAsync(new PageBuffer[] {p0.UpdateBuffer()});
 
                 // (1 ->) jump to thread B
                 serialize(wa, wb);
@@ -56,7 +50,6 @@ namespace LiteDB.Internals
 
                 // (3 ->) jump to thread B
                 serialize(wa, wb);
-
             });
 
             var tb = new Task(() =>
@@ -72,23 +65,22 @@ namespace LiteDB.Internals
                 // - if 1, page already persisted on disk
                 var share = p0.ShareCounter;
 
-                Assert.IsTrue(share >= 1 && share <= 2);
+                (share >= 1 && share <= 2).Should().BeTrue();
 
                 // (2 ->) jump to thread A
                 serialize(wb, wa);
                 // (3 <-) continue from thread B
 
                 // but now, I'm sure this page was saved and thread A release
-                Assert.AreEqual(1, p0.ShareCounter);
+                p0.ShareCounter.Should().Be(1);
 
                 // let's release my page
                 p0.Release();
 
-                Assert.AreEqual(0, p0.ShareCounter);
+                p0.ShareCounter.Should().Be(0);
 
                 // release thread A
                 serialize(null, wa);
-
             });
 
             ta.Start();

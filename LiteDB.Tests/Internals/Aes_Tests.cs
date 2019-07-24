@@ -1,23 +1,14 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
+using FluentAssertions;
 using LiteDB.Engine;
-using System.Threading;
-using LiteDB.Tests;
+using Xunit;
 
 namespace LiteDB.Internals
 {
-    [TestClass]
     public class Aes_Tests
     {
-        [TestMethod]
+        [Fact]
         public void Encrypt_Decrypt_Stream()
         {
             using (var media = new MemoryStream())
@@ -50,10 +41,10 @@ namespace LiteDB.Internals
                 media.Read(output0, 0, 8192);
                 media.Read(output1, 0, 8192);
                 media.Read(output2, 0, 8192);
-                
-                Assert.IsFalse(output0.All(x => x == 100));
-                Assert.IsFalse(output1.All(x => x == 101));
-                Assert.IsFalse(output2.All(x => x == 102));
+
+                output0.All(x => x == 100).Should().BeFalse();
+                output1.All(x => x == 101).Should().BeFalse();
+                output2.All(x => x == 102).Should().BeFalse();
 
                 // read decrypted data
                 crypto.Position = 0 * 8192;
@@ -65,13 +56,10 @@ namespace LiteDB.Internals
                 crypto.Position = 1 * 8192;
                 crypto.Read(output1, 0, 8192);
 
-                Assert.IsTrue(output0.All(x => x == 100));
-                Assert.IsTrue(output1.All(x => x == 101));
-                Assert.IsTrue(output2.All(x => x == 102));
-
-
+                output0.All(x => x == 100).Should().BeTrue();
+                output1.All(x => x == 101).Should().BeTrue();
+                output2.All(x => x == 102).Should().BeTrue();
             }
-
         }
     }
 }

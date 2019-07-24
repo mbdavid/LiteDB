@@ -1,21 +1,11 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using LiteDB.Engine;
+﻿using System.Linq;
+using Xunit;
 
 namespace LiteDB.Tests.Query
 {
-    [TestClass]
     public class Where_Tests : Person_Tests
     {
-        [TestMethod]
+        [Fact]
         public void Query_Where_With_Parameter()
         {
             var r0 = local
@@ -29,7 +19,7 @@ namespace LiteDB.Tests.Query
             AssertEx.ArrayEqual(r0, r1, true);
         }
 
-        [TestMethod]
+        [Fact]
         public void Query_Multi_Where_With_Like()
         {
             var r0 = local
@@ -45,7 +35,7 @@ namespace LiteDB.Tests.Query
             AssertEx.ArrayEqual(r0, r1, true);
         }
 
-        [TestMethod]
+        [Fact]
         public void Query_Single_Where_With_And()
         {
             var r0 = local
@@ -59,7 +49,7 @@ namespace LiteDB.Tests.Query
             AssertEx.ArrayEqual(r0, r1, true);
         }
 
-        [TestMethod]
+        [Fact]
         public void Query_Single_Where_With_Or_And_In()
         {
             var r0 = local

@@ -1,23 +1,19 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
+﻿using System.Collections.Generic;
+using Xunit;
 
 namespace LiteDB.Tests.Expressions
 {
-    [TestClass]
     public class Expressions_Tests
     {
-        [TestMethod]
+        [Fact]
         public void Expressions_Constants()
         {
-            BsonValue K(string s) { return BsonExpression.Create(s).ExecuteScalar(); };
+            BsonValue K(string s)
+            {
+                return BsonExpression.Create(s).ExecuteScalar();
+            }
+
+            ;
 
             K(@"123").ExpectValue(123);
             K(@"null").ExpectValue(BsonValue.Null);
@@ -32,10 +28,15 @@ namespace LiteDB.Tests.Expressions
             K(@"{a:true,i:0}").ExpectJson("{a:true,i:0}");
         }
 
-        [TestMethod]
+        [Fact]
         public void Expression_Fields()
         {
-            IEnumerable<string> F(string s) { return BsonExpression.Create(s).Fields; };
+            IEnumerable<string> F(string s)
+            {
+                return BsonExpression.Create(s).Fields;
+            }
+
+            ;
 
             // simple case
             F("$.Name").ExpectValues("Name");
@@ -83,10 +84,15 @@ namespace LiteDB.Tests.Expressions
             F("FIRST(* => (@._id + $.name)) + _id)").ExpectValues("$", "name", "_id");
         }
 
-        [TestMethod]
+        [Fact]
         public void Expression_Immutable()
         {
-            bool I(string s) { return BsonExpression.Create(s).IsImmutable; };
+            bool I(string s)
+            {
+                return BsonExpression.Create(s).IsImmutable;
+            }
+
+            ;
 
             // some immutable expression
             I("_id").ExpectValue(true);
@@ -100,10 +106,15 @@ namespace LiteDB.Tests.Expressions
             I("_id > @0").ExpectValue(false);
         }
 
-        [TestMethod]
+        [Fact]
         public void Expression_Type()
         {
-            BsonExpressionType T(string s) { return BsonExpression.Create(s).Type; };
+            BsonExpressionType T(string s)
+            {
+                return BsonExpression.Create(s).Type;
+            }
+
+            ;
 
             T("1").ExpectValue(BsonExpressionType.Int);
             T("-1").ExpectValue(BsonExpressionType.Int);
@@ -154,10 +165,15 @@ namespace LiteDB.Tests.Expressions
             T("*._id").ExpectValue(BsonExpressionType.Map);
         }
 
-        [TestMethod]
+        [Fact]
         public void Expression_Format()
         {
-            string F(string s) { return BsonExpression.Create(s).Source; };
+            string F(string s)
+            {
+                return BsonExpression.Create(s).Source;
+            }
+
+            ;
 
             F("_id").ExpectValue("$._id");
 
@@ -200,7 +216,6 @@ namespace LiteDB.Tests.Expressions
 
             // parameters
             F("items[ @0 ].price = 9").ExpectValue("$.items[@0].price=9");
-
         }
     }
 }

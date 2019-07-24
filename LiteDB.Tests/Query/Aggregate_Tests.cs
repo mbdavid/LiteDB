@@ -34,66 +34,67 @@
 //            db.Dispose();
 //        }
 
-//        [TestMethod]
+//        [Fact]
 //        public void Query_Aggregate_Min_Max()
 //        {
 //            // indexed
-//            Assert.AreEqual(
+//            Assert.Equal(
 //                person.Min(x => x["age"].AsInt32),
 //                db.Min("person", "age").AsInt32);
 
-//            Assert.AreEqual(
+//            Assert.Equal(
 //                person.Max(x => x["age"].AsInt32),
 //                db.Max("person", "age").AsInt32);
 
 //            // full query
-//            Assert.AreEqual(
+//            Assert.Equal(
 //                person.Min(x => x["name"].AsString),
 //                db.Min("person", "name").AsString);
 
-//            Assert.AreEqual(
+//            Assert.Equal(
 //                person.Max(x => x["name"].AsString),
 //                db.Max("person", "name").AsString);
 //        }
 
-//        [TestMethod]
+//        [Fact]
 //        public void Query_Count_With_Filter()
 //        {
-//            Assert.AreEqual(
+//            Assert.Equal(
 //                person.LongCount(),
 //                db.Count("person"));
 
-//            Assert.AreEqual(
+//            Assert.Equal(
 //                person.Count(x => x["age"] > 20),
 //                db.Count("person", "age > 20"));
 
 //            // length
-//            Assert.AreEqual(
+//            Assert.Equal(
 //                person.Count(x => x["name"].AsString.Length > 20),
 //                db.Count("person", "LENGTH(name) > 20"));
 //        }
 
-//        [TestMethod]
+//        [Fact]
 //        public void Query_Sum_With_Filter()
 //        {
 //            // sum
-//            Assert.AreEqual(
+//            Assert.Equal(
 //                person.Sum(x => x["age"].AsInt32),
 //                db.Query("person").SelectAll("SUM(age)").ExecuteScalar().AsInt32);
 
 //            // with filter
-//            Assert.AreEqual(
+//            Assert.Equal(
 //                person.Where(x => x["active"].AsBoolean).Sum(x => x["age"].AsInt32),
 //                db.Query("person").Where("active = true").SelectAll("SUM(age)").ExecuteScalar().AsInt32);
 //        }
 
-//        [TestMethod]
+//        [Fact]
 //        public void Query_Exists_With_Filter()
 //        {
 //            // using expression
-//            Assert.AreEqual(
+//            Assert.Equal(
 //                person.Any(x => x["age"].AsInt32 == 99),
 //                db.Exists("person", "age = 99"));
 //        }
 //    }
 //}
+

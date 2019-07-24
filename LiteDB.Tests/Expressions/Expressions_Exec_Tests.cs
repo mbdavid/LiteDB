@@ -1,26 +1,24 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
+using Xunit;
 
 namespace LiteDB.Tests.Expressions
 {
-    [TestClass]
     public class ExpressionsExec_Tests
     {
         public BsonDocument J(string j) => JsonSerializer.Deserialize(j).AsDocument;
 
-        [TestMethod]
+        [Fact]
         public void Expressions_Scalar_Path()
         {
             BsonDocument doc;
-            BsonValue S(string s) { return BsonExpression.Create(s).ExecuteScalar(doc); };
+
+            BsonValue S(string s)
+            {
+                return BsonExpression.Create(s).ExecuteScalar(doc);
+            }
+
+            ;
 
             // direct path navigation
             doc = J("{ a: 1, b: null, c: true, d:[1,2], e:{d:4} }");
@@ -87,17 +85,19 @@ namespace LiteDB.Tests.Expressions
 
             S("{ 'a b', z:  null }").ExpectJson("{ \"a b\": 1, z: null }");
             S("{ 'c' }").ExpectJson("{ c: 2 }");
-
-
-
-
         }
 
-        [TestMethod]
+        [Fact]
         public void Expressions_Scalar_Operator()
         {
             BsonDocument doc;
-            BsonValue S(string s, params BsonValue[] args) { return BsonExpression.Create(s, args).ExecuteScalar(doc); };
+
+            BsonValue S(string s, params BsonValue[] args)
+            {
+                return BsonExpression.Create(s, args).ExecuteScalar(doc);
+            }
+
+            ;
 
             // Operators order
             doc = J("{ a: 1, b: 2, c: 3 }");
@@ -157,11 +157,17 @@ namespace LiteDB.Tests.Expressions
                 .ExpectJson("{ 'date' : 'October 30', 'temps in Fahrenheit' : [ 64.4, 42.8, 46.4 ]}");
         }
 
-        [TestMethod]
+        [Fact]
         public void Expressions_Scalar_Methods()
         {
             BsonDocument doc;
-            BsonValue S(string s, params BsonValue[] args) { return BsonExpression.Create(s, args).ExecuteScalar(doc); };
+
+            BsonValue S(string s, params BsonValue[] args)
+            {
+                return BsonExpression.Create(s, args).ExecuteScalar(doc);
+            }
+
+            ;
 
             doc = J("{}");
 
@@ -225,14 +231,19 @@ namespace LiteDB.Tests.Expressions
             S("LENGTH(b)").ExpectValue(3);
             S("LENGTH(arr)").ExpectValue(3);
             S("LENGTH($)").ExpectValue(5);
-
         }
 
-        [TestMethod]
+        [Fact]
         public void Expressions_Scalar_Parameters()
         {
             BsonDocument doc;
-            BsonValue P(string s, params BsonValue[] args) { return BsonExpression.Create(s, args).ExecuteScalar(doc); };
+
+            BsonValue P(string s, params BsonValue[] args)
+            {
+                return BsonExpression.Create(s, args).ExecuteScalar(doc);
+            }
+
+            ;
 
             doc = J("{ arr: [1, 2, 3, 4, 5 ] }");
 
@@ -247,15 +258,21 @@ namespace LiteDB.Tests.Expressions
             P("ARRAY(arr[@ > @0])", 3).ExpectArray(4, 5);
 
             // using map
-            P("ARRAY(ITEMS(@0) => (@ + @1))", new BsonArray(new BsonValue[] { 10, 11, 12 }), 5)
+            P("ARRAY(ITEMS(@0) => (@ + @1))", new BsonArray(new BsonValue[] {10, 11, 12}), 5)
                 .ExpectArray(15, 16, 17);
         }
 
-        [TestMethod]
+        [Fact]
         public void Expressions_Enumerable_Expr()
         {
             List<BsonDocument> docs;
-            IEnumerable<BsonValue> A(string s, params BsonValue[] args) { return BsonExpression.Create(s, args).Execute(docs); };
+
+            IEnumerable<BsonValue> A(string s, params BsonValue[] args)
+            {
+                return BsonExpression.Create(s, args).Execute(docs);
+            }
+
+            ;
 
             docs = new List<BsonDocument>()
             {
