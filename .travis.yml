@@ -7,8 +7,6 @@ matrix:
       dotnet: 2.2.301
       mono: none
       dist: bionic
-before_install:
-  - ./.travis/before-install-$TRAVIS_OS_NAME.sh
 
 script:
   - dotnet restore ./LiteDB/LiteDB.csproj
