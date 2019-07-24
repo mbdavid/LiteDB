@@ -11,7 +11,6 @@ namespace LiteDB.Engine
         private IEnumerable<BsonDocument> SysDump(FileOrigin origin)
         {
             var collections = _header.GetCollections().ToDictionary(x => x.Value, x => x.Key);
-            var versions = new Dictionary<long, int>();
 
             foreach (var buffer in _disk.ReadFull(origin))
             {

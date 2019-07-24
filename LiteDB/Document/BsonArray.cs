@@ -36,7 +36,7 @@ namespace LiteDB
             this.AddRange(items);
         }
 
-        internal new IList<BsonValue> RawValue => base.RawValue as List<BsonValue>;
+        internal new IList<BsonValue> RawValue => (List<BsonValue>)base.RawValue;
 
         public override BsonValue this[int index]
         {
@@ -56,6 +56,27 @@ namespace LiteDB
 
         public void Add(BsonValue item) => this.RawValue.Add(item ?? BsonValue.Null);
 
+        public void AddRange<TCollection>(TCollection collection)
+            where TCollection : ICollection<BsonValue>
+        {
+            if(collection == null)
+                throw new ArgumentNullException(nameof(collection));
+
+            var list = (List<BsonValue>)base.RawValue;
+
+            var listEmptySpace = list.Capacity - list.Count;
+            if (listEmptySpace < collection.Count)
+            {
+                list.Capacity += collection.Count;
+            }
+
+            foreach (var bsonValue in collection)
+            {
+                list.Add(bsonValue ?? Null);    
+            }
+            
+        }
+        
         public void AddRange(IEnumerable<BsonValue> items)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
@@ -115,7 +136,7 @@ namespace LiteDB
             return JsonSerializer.Serialize(this);
         }
 
-        private int _length = 0;
+        private int _length;
 
         internal override int GetBytesCount(bool recalc)
         {
