@@ -17,14 +17,14 @@ namespace LiteDB.Engine
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
-                var col = snapshot.CollectionPage;
+                var collectionPage = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);
 
-                if (snapshot.CollectionPage == null) return 0;
+                if (collectionPage == null) return 0;
 
                 var count = 0;
-                var pk = snapshot.CollectionPage.PK;
+                var pk = collectionPage.PK;
 
                 foreach (var id in ids)
                 {
@@ -87,8 +87,6 @@ namespace LiteDB.Engine
                             }
                         }
                     }
-
-                    var rr = getIds().ToArray();
 
                     return this.Delete(collection, getIds());
                 }
