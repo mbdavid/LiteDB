@@ -66,10 +66,14 @@ namespace LiteDB
 
             var listEmptySpace = list.Capacity - list.Count;
             if (listEmptySpace < collection.Count)
+            {
                 list.Capacity += collection.Count;
-            
+            }
+
             foreach (var bsonValue in collection)
+            {
                 list.Add(bsonValue ?? Null);    
+            }
             
         }
         

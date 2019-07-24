@@ -163,15 +163,15 @@ namespace LiteDB
         public bool Is(string value, bool ignoreCase = true)
         {
             return 
-                Type == TokenType.Word &&
-                value.Equals(Value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+                this.Type == TokenType.Word &&
+                value.Equals(this.Value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
         public bool IsOperand
         {
             get
             {
-                switch (Type)
+                switch (this.Type)
                 {
                     case TokenType.Percent:
                     case TokenType.Slash:
@@ -244,7 +244,9 @@ namespace LiteDB
         public static bool IsWordChar(char c, bool first)
         {
             if (first)
+            {
                 return char.IsLetter(c) || c == '_' || c == '$';
+            }
 
             return char.IsLetterOrDigit(c) || c == '_' || c == '$';
         }
