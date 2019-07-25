@@ -167,23 +167,35 @@ namespace LiteDB
                 value.Equals(this.Value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
-        public bool IsOperand =>
-            this.Type == TokenType.Percent ||
-            this.Type == TokenType.Slash ||
-            this.Type == TokenType.Asterisk ||
-            this.Type == TokenType.Plus ||
-            this.Type == TokenType.Minus ||
-            this.Type == TokenType.Equals ||
-            this.Type == TokenType.Greater ||
-            this.Type == TokenType.GreaterOrEquals ||
-            this.Type == TokenType.Less ||
-            this.Type == TokenType.LessOrEquals ||
-            this.Type == TokenType.NotEquals ||
-            (this.Type == TokenType.Word && _keywords.Contains(this.Value));
+        public bool IsOperand
+        {
+            get
+            {
+                switch (this.Type)
+                {
+                    case TokenType.Percent:
+                    case TokenType.Slash:
+                    case TokenType.Asterisk:
+                    case TokenType.Plus:
+                    case TokenType.Minus:
+                    case TokenType.Equals:
+                    case TokenType.Greater:
+                    case TokenType.GreaterOrEquals:
+                    case TokenType.Less:
+                    case TokenType.LessOrEquals:
+                    case TokenType.NotEquals:
+                        return true;
+                    case TokenType.Word:
+                        return _keywords.Contains(Value);
+                    default:
+                        return false;
+                }
+            }
+        }
 
         public override string ToString()
         {
-            return this.Value + " (" + this.Type + ")";
+            return Value + " (" + Type + ")";
         }
     }
 
@@ -235,10 +247,8 @@ namespace LiteDB
             {
                 return char.IsLetter(c) || c == '_' || c == '$';
             }
-            else
-            {
-                return char.IsLetterOrDigit(c) || c == '_' || c == '$';
-            }
+
+            return char.IsLetterOrDigit(c) || c == '_' || c == '$';
         }
 
         /// <summary>

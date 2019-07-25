@@ -206,7 +206,6 @@ namespace LiteDB.Engine
             {
                 // get length before starts (avoid grow during loop)
                 var length = this.GetLength(origin);
-                var slice = new BufferSlice(buffer, 0, PAGE_SIZE);
 
                 stream.Position = 0;
 

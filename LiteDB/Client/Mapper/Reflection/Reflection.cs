@@ -113,9 +113,9 @@ namespace LiteDB
             // works only for generics (if type is not generic, returns same type)
             var t = type.GetTypeInfo();
 
-            if (!type.GetTypeInfo().IsGenericType) return type;
+            if (!t.IsGenericType) return type;
 
-            return type.GetTypeInfo().GetGenericArguments()[0];
+            return t.GetGenericArguments()[0];
         }
 
         public static Type GetGenericListOfType(Type type)

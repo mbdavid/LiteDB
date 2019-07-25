@@ -93,7 +93,7 @@ namespace LiteDB
         /// <summary>
         /// Copy Int16 bytes direct into buffer
         /// </summary>
-        public unsafe static void ToBytes(this Int16 value, byte[] array, int startIndex)
+        public static unsafe void ToBytes(this Int16 value, byte[] array, int startIndex)
         {
             fixed (byte* ptr = &array[startIndex])
             {
@@ -104,7 +104,7 @@ namespace LiteDB
         /// <summary>
         /// Copy Int32 bytes direct into buffer
         /// </summary>
-        public unsafe static void ToBytes(this Int32 value, byte[] array, int startIndex)
+        public static unsafe void ToBytes(this Int32 value, byte[] array, int startIndex)
         {
             fixed (byte* ptr = &array[startIndex])
             {
@@ -115,7 +115,7 @@ namespace LiteDB
         /// <summary>
         /// Copy Int64 bytes direct into buffer
         /// </summary>
-        public unsafe static void ToBytes(this Int64 value, byte[] array, int startIndex)
+        public static unsafe void ToBytes(this Int64 value, byte[] array, int startIndex)
         {
             fixed (byte* ptr = &array[startIndex])
             {
@@ -126,7 +126,7 @@ namespace LiteDB
         /// <summary>
         /// Copy UInt16 bytes direct into buffer
         /// </summary>
-        public unsafe static void ToBytes(this UInt16 value, byte[] array, int startIndex)
+        public static unsafe void ToBytes(this UInt16 value, byte[] array, int startIndex)
         {
             fixed (byte* ptr = &array[startIndex])
             {
@@ -137,7 +137,7 @@ namespace LiteDB
         /// <summary>
         /// Copy UInt32 bytes direct into buffer
         /// </summary>
-        public unsafe static void ToBytes(this UInt32 value, byte[] array, int startIndex)
+        public static unsafe void ToBytes(this UInt32 value, byte[] array, int startIndex)
         {
             fixed (byte* ptr = &array[startIndex])
             {
@@ -148,7 +148,7 @@ namespace LiteDB
         /// <summary>
         /// Copy Int64 bytes direct into buffer
         /// </summary>
-        public unsafe static void ToBytes(this UInt64 value, byte[] array, int startIndex)
+        public static unsafe void ToBytes(this UInt64 value, byte[] array, int startIndex)
         {
             fixed (byte* ptr = &array[startIndex])
             {
@@ -159,7 +159,7 @@ namespace LiteDB
         /// <summary>
         /// Copy Single bytes direct into buffer
         /// </summary>
-        public unsafe static void ToBytes(this Single value, byte[] array, int startIndex)
+        public static unsafe void ToBytes(this Single value, byte[] array, int startIndex)
         {
             fixed (byte* ptr = &array[startIndex])
             {
@@ -170,7 +170,7 @@ namespace LiteDB
         /// <summary>
         /// Copy Double bytes direct into buffer
         /// </summary>
-        public unsafe static void ToBytes(this Double value, byte[] array, int startIndex)
+        public static unsafe void ToBytes(this Double value, byte[] array, int startIndex)
         {
             fixed (byte* ptr = &array[startIndex])
             {
