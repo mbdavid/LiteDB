@@ -197,7 +197,7 @@ namespace LiteDB.Engine
         public IEnumerable<PageBuffer> ReadFull(FileOrigin origin)
         {
             // do not use MemoryCache factory - reuse same buffer array (one page per time)
-            var buffer = BufferPool.Rent(PAGE_SIZE);
+            var buffer = BufferPool.RentPageSizeBuff();
 
             var pool = origin == FileOrigin.Log ? _logPool : _dataPool;
             var stream = pool.Rent();
@@ -225,7 +225,7 @@ namespace LiteDB.Engine
             }
             finally
             {
-                BufferPool.Return(buffer);
+                BufferPool.ReturnPageSizeBuff(buffer);
                 pool.Return(stream);
             }
         }

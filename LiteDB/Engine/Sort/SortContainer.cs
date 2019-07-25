@@ -113,7 +113,7 @@ namespace LiteDB.Engine
         /// </summary>
         private IEnumerable<BufferSlice> GetSourceFromStream(Stream stream)
         {
-            var bytes = BufferPool.Rent(PAGE_SIZE);
+            var bytes = BufferPool.RentPageSizeBuff();
             var buffer = new BufferSlice(bytes, 0, PAGE_SIZE);
 
             while (_readPosition < _size)
@@ -127,7 +127,7 @@ namespace LiteDB.Engine
                 yield return buffer;
             }
 
-            BufferPool.Return(bytes);
+            BufferPool.ReturnPageSizeBuff(bytes);
         }
 
         public static int GetKeyLength(BsonValue key)

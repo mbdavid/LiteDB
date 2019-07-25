@@ -34,5 +34,17 @@ namespace LiteDB.Engine
                 _bytePool.Return(buffer);
             }
         }
+
+        public static byte[] RentPageSizeBuff()
+        {
+            // TODO
+            // Can not use Rent For PAGE_SIZE. because. this buffer store in BufferSlice and use, after return
+            // May be create Buffer Slice like Disposable and create wrapper for pool array
+            return new byte[Constants.PAGE_SIZE];
+        }
+
+        public static void ReturnPageSizeBuff(byte[] buff)
+        {
+        }
     }
 }
