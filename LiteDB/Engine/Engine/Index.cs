@@ -43,6 +43,8 @@ namespace LiteDB.Engine
                     return false;
                 }
 
+                LOG($"create index `{collection}.{name}`", "COMMAND");
+
                 // create index head
                 var index = indexer.CreateIndex(name, expression.Source, unique);
                 var count = 0u;

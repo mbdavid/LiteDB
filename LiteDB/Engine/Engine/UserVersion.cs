@@ -23,6 +23,8 @@ namespace LiteDB.Engine
 
                 if (_locker.IsInTransaction) throw LiteException.AlreadyExistsTransaction();
 
+                LOG($"change userVersion to `{value}`", "COMMAND");
+
                 // do a inside transaction to edit UserVersion on commit event
                 this.AutoTransaction(transaction =>
                 {

@@ -88,6 +88,16 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Log a message using Debug.WriteLine only if conditional = true
+        /// </summary>
+        [DebuggerHidden]
+        [Conditional("DEBUG")]
+        public static void LOG(bool conditional, string message, string category)
+        {
+            if (conditional) LOG(message, category);
+        }
+
+        /// <summary>
         /// Ensure condition is true, otherwise stop execution (for Debug proposes only)
         /// </summary>
         [DebuggerHidden]
