@@ -19,7 +19,7 @@ namespace LiteDB
 
             var pdb = new Rfc2898DeriveBytes(password, salt);
 
-            using (pdb as IDisposable)
+            using (pdb)
             {
                 _aes.Key = pdb.GetBytes(32);
                 _aes.IV = pdb.GetBytes(16);
@@ -91,10 +91,13 @@ namespace LiteDB
 
         public void Dispose()
         {
-            if (_aes != null)
+            if (_aes == null)
             {
-                _aes = null;
+                return;
             }
+
+            _aes.Dispose();
+            _aes = null;
         }
     }
 }

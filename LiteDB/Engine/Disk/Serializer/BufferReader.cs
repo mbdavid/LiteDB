@@ -443,7 +443,7 @@ namespace LiteDB.Engine
 
             var doc = new BsonDocument();
 
-            while (_position < end && (remaining == null || remaining?.Count > 0))
+            while (_position < end && (remaining == null || remaining.Count > 0))
             {
                 var value = this.ReadElement(remaining, out string name);
 

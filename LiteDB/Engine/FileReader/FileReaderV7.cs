@@ -18,7 +18,7 @@ namespace LiteDB.Engine
         private readonly Stream _stream;
         private readonly AesEncryption _aes;
 
-        private byte[] _buffer = new byte[V7_PAGE_SIZE];
+        private byte[] _buffer;
 
         public int UserVersion { get; set; }
 
@@ -26,6 +26,7 @@ namespace LiteDB.Engine
         {
             _stream = stream;
 
+            _buffer = BufferPool.Rent(V7_PAGE_SIZE);
             // only userVersion was avaiable in old file format versions
             var header = this.ReadPage(0);
 
@@ -399,6 +400,8 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
+            BufferPool.Return(_buffer);
+            _buffer = null;
         }
     }
 }

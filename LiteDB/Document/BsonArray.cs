@@ -59,8 +59,10 @@ namespace LiteDB
         public void AddRange<TCollection>(TCollection collection)
             where TCollection : ICollection<BsonValue>
         {
-            if(collection == null)
+            if (collection == null)
+            {
                 throw new ArgumentNullException(nameof(collection));
+            }
 
             var list = (List<BsonValue>)base.RawValue;
 

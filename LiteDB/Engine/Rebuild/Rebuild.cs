@@ -26,8 +26,6 @@ namespace LiteDB.Engine
 
             try
             {
-                var transactionID = transaction.TransactionID;
-
                 foreach (var collection in reader.GetCollections())
                 {
                     // first create all user indexes (exclude _id index)
@@ -47,7 +45,8 @@ namespace LiteDB.Engine
                 }
 
                 // update user version on commit
-                transaction.Pages.Commit += h => h.UserVersion = reader.UserVersion;
+                var userVersion = reader.UserVersion;
+                transaction.Pages.Commit += h => h.UserVersion = userVersion;
 
                 this.Commit();
             }

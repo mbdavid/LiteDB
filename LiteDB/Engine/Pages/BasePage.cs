@@ -225,7 +225,6 @@ namespace LiteDB.Engine
             this.IsDirty = true;
 
             this.PageType = PageType.Empty;
-            this.ItemsCount = 0;
             this.PrevPageID = uint.MaxValue;
             this.NextPageID = uint.MaxValue;
 

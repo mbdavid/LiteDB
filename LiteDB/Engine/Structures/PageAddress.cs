@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace LiteDB.Engine
@@ -8,7 +7,7 @@ namespace LiteDB.Engine
     /// Represents a page address inside a page structure - index could be byte offset position OR index in a list (6 bytes)
     /// </summary>
     [DebuggerStepThrough]
-    public struct PageAddress
+    public struct PageAddress : IEquatable<PageAddress>
     {
         public const int SIZE = 5;
 
@@ -31,14 +30,17 @@ namespace LiteDB.Engine
 
         public override bool Equals(object obj)
         {
-            var other = (PageAddress)obj;
+            return obj is PageAddress other && Equals(other);
+        }
 
-            return this.PageID == other.PageID && this.Index == other.Index;
+        public bool Equals(PageAddress other)
+        {
+            return PageID == other.PageID && Index == other.Index;
         }
 
         public static bool operator ==(PageAddress lhs, PageAddress rhs)
         {
-            return lhs.PageID == rhs.PageID && lhs.Index == rhs.Index;
+            return lhs.Equals(rhs);
         }
 
         public static bool operator !=(PageAddress lhs, PageAddress rhs)

@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace LiteDB.Engine
 {
     /// <summary>
     /// Represents a page position after save in disk. Used in WAL files where PageID do not match with PagePosition
     /// </summary>
-    internal struct PagePosition
+    internal struct PagePosition : IEquatable<PagePosition>
     {
         public static PagePosition Empty => new PagePosition(uint.MaxValue, long.MaxValue);
 
@@ -27,9 +26,12 @@ namespace LiteDB.Engine
 
         public override bool Equals(object obj)
         {
-            var other = (PagePosition)obj;
+            return obj is PagePosition other && Equals(other);
+        }
 
-            return this.PageID == other.PageID && this.Position == other.PageID;
+        public bool Equals(PagePosition other)
+        {
+            return PageID == other.PageID && Position == other.Position;
         }
 
         public override int GetHashCode()

@@ -70,7 +70,7 @@ namespace LiteDB.Engine
 
             var pdb = new Rfc2898DeriveBytes(password, this.Salt);
 
-            using (pdb as IDisposable)
+            using (pdb)
             {
                 _aes.Key = pdb.GetBytes(32);
                 _aes.IV = pdb.GetBytes(16);
@@ -90,7 +90,7 @@ namespace LiteDB.Engine
             // set stream to password checking
             _stream.Position = 32;
 
-            var checkBuffer = new byte[32];
+            var checkBuffer = BufferPool.Rent(32);
 
             // fill checkBuffer with encrypted 1 to check when open
             if (isNew)
@@ -98,6 +98,7 @@ namespace LiteDB.Engine
                 checkBuffer.Fill(1, 0, checkBuffer.Length);
 
                 _writer.Write(checkBuffer, 0, checkBuffer.Length);
+                BufferPool.Return(checkBuffer);
             }
             else
             { 
@@ -105,8 +106,11 @@ namespace LiteDB.Engine
 
                 if (!checkBuffer.All(x => x == 1))
                 {
+                    BufferPool.Return(checkBuffer);
                     throw new LiteException(0, "Invalid password");
                 }
+
+                BufferPool.Return(checkBuffer);
             }
 
             _stream.Position = PAGE_SIZE;
