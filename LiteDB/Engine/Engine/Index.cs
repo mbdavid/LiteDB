@@ -45,6 +45,7 @@ namespace LiteDB.Engine
 
                 // create index head
                 var index = indexer.CreateIndex(name, expression.Source, unique);
+                var count = 0u;
 
                 // read all objects (read from PK index)
                 foreach (var pkNode in new IndexAll("_id", LiteDB.Query.Ascending).Run(col, indexer))
@@ -98,8 +99,12 @@ namespace LiteDB.Engine
                         }
                     }
 
+                    count++;
+
                     transaction.Safepoint();
                 }
+
+                index.KeyCount = count;
 
                 return true;
             });
