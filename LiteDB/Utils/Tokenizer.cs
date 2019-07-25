@@ -195,7 +195,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return Value + " (" + Type + ")";
+            return this.Value + " (" + this.Type + ")";
         }
     }
 

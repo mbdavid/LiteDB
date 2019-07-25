@@ -121,10 +121,10 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Shutdown process:
-        /// - Try do checkpoint (if defined as true)
-        /// - Dispose disks (no more can even read data from disk/cache)
-        /// - Dispose locker
-        /// (in DEBUG mode you can get some ENSURE "Release" problems, but it's ok)
+        /// - Stop any new transaction
+        /// - Stop operation loops over database (throw in SafePoint)
+        /// - Wait for writer queue
+        /// - Close disks
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {

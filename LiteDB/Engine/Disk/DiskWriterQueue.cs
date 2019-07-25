@@ -54,6 +54,7 @@ namespace LiteDB.Engine
         public void EnqueuePage(PageBuffer page)
         {
             ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
+            ENSURE(_running, "should not add new page in shutdown process [to-review]"); //TODO: review this
 
             _queue.Enqueue(page);
         }
@@ -124,7 +125,7 @@ namespace LiteDB.Engine
 
             var count = 0;
 
-            while (_queue.TryDequeue(out var page) && _running)
+            while (_queue.TryDequeue(out var page) /*&& _running*/)
             {
                 ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
 
@@ -141,9 +142,6 @@ namespace LiteDB.Engine
 
             // after this I will have 100% sure data are safe on log file
             _stream.FlushToDisk();
-
-            // when queue finish, test if has no more items on queue
-            if (_queue.Count > 0) this.ExecuteQueue();
         }
 
         public void Dispose()
@@ -153,16 +151,14 @@ namespace LiteDB.Engine
             // stop running async task in next while check
             _running = false;
 
-            _waiter.Set();
+            // wait for all 
+            this.Wait();
 
             // wait async task finish before dispose
             _thread.Join();
 
             _waiter.Dispose();
             _writing.Dispose();
-
-            // if still have any page in queue, run synchronized
-            this.ExecuteQueue();
 
             ENSURE(_queue.Count == 0, "must have no pages in queue before Dispose");
         }

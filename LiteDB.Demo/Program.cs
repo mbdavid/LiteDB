@@ -21,10 +21,10 @@ namespace LiteDB.Demo
             Console.WriteLine("LITE DB v5");
             Console.WriteLine("===========================================================");
 
-            File.Delete(@"d:\test.litedb");
-            File.Delete(@"d:\test-log.litedb");
+            File.Delete(@"c:\git\temp\test.litedb");
+            File.Delete(@"c:\git\temp\test-log.litedb");
 
-            var file = @"d:\test.litedb";
+            var file = @"c:\git\temp\test.litedb";
 
             using (var db = new LiteDatabase(file))
             {
