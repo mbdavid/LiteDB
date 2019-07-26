@@ -151,14 +151,15 @@ namespace LiteDB.Engine
             // stop running async task in next while check
             _running = false;
 
-            // wait for all 
-            this.Wait();
+            _waiter.Set();
 
             // wait async task finish before dispose
             _thread.Join();
 
             _waiter.Dispose();
             _writing.Dispose();
+
+            this.ExecuteQueue();
 
             ENSURE(_queue.Count == 0, "must have no pages in queue before Dispose");
         }

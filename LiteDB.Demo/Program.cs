@@ -25,6 +25,7 @@ namespace LiteDB.Demo
             File.Delete(@"d:\test-1m-log.db");
 
             var file = @"d:\test-1m.db";
+            var sw = new Stopwatch();
 
             using (var db = new LiteDatabase(file))
             {
@@ -41,7 +42,29 @@ namespace LiteDB.Demo
                     });
                 }
 
+                // -----------------
+
+                sw.Restart();
+
                 col.Insert(tmp);
+
+                Console.WriteLine("Insert: " + sw.Elapsed);
+
+                // -----------------
+
+                sw.Restart();
+
+                db.Checkpoint();
+
+                Console.WriteLine("Checkpoint: " + sw.Elapsed);
+
+                // -----------------
+
+                sw.Restart();
+
+                col.EnsureIndex(x => x.DateTime);
+
+                Console.WriteLine("EnsureIndex: " + sw.Elapsed);
             }
 
             Console.WriteLine(" ===========================================================");

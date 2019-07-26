@@ -77,7 +77,7 @@ namespace LiteDB.Studio
         public async void Connect(ConnectionString connectionString)
         {
             lblCursor.Text = "Opening " + connectionString.Filename;
-            lblElapsed.Text = "Converting...";
+            lblElapsed.Text = "Reading...";
             prgRunning.Style = ProgressBarStyle.Marquee;
             btnConnect.Enabled = false;
 
@@ -118,12 +118,8 @@ namespace LiteDB.Studio
             txtSql.Focus();
         }
 
-        private void Disconnect()
+        private async void Disconnect()
         {
-            btnConnect.Text = "Connect";
-
-            this.UIState(false);
-
             foreach (var tab in tabSql.TabPages.Cast<TabPage>().Where(x => x.Name != "+").ToArray())
             {
                 var task = tab.Tag as TaskData;
@@ -140,11 +136,30 @@ namespace LiteDB.Studio
             txtParameters.Clear();
 
             tvwDatabase.Nodes.Clear();
+
+            btnConnect.Text = "Connect";
+
+            this.UIState(false);
+
             tvwDatabase.Focus();
 
+            tlbMain.Enabled = false;
+            lblCursor.Text = "Closing...";
 
-            _db?.Dispose();
-            _db = null;
+            try
+            {
+                await Task.Run(() =>
+                {
+                    _db?.Dispose();
+                    _db = null;
+                });
+
+                lblCursor.Text = "";
+                tlbMain.Enabled = true;
+            }
+            catch (Exception)
+            {
+            }
         }
 
         private void UIState(bool enabled)

@@ -80,6 +80,8 @@ namespace LiteDB.Engine
                                     if (first == null) first = node;
 
                                     last = node;
+
+                                    count++;
                                 }
                             }
                             else
@@ -90,6 +92,8 @@ namespace LiteDB.Engine
                                 if (first == null) first = node;
 
                                 last = node;
+
+                                count++;
                             }
                         }
 
@@ -100,8 +104,6 @@ namespace LiteDB.Engine
                             pkNode.SetNextNode(first.Position);
                         }
                     }
-
-                    count++;
 
                     transaction.Safepoint();
                 }

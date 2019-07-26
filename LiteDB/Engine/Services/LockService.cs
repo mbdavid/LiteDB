@@ -180,8 +180,8 @@ namespace LiteDB.Engine
         /// </summary>
         public bool TryEnterExclusive()
         {
-            // checks if engine was open in readonly mode
-            if (_readonly) throw new LiteException(0, "This operation are not support because engine was open in reaodnly mode");
+            // if is readonly or already in a transaction
+            if (_readonly || _transaction.IsReadLockHeld) return false;
 
             // wait finish all transactions before enter in reserved mode
             if (_transaction.TryEnterWriteLock(10) == false) return false;

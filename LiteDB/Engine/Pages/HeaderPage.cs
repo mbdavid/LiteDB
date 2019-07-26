@@ -21,7 +21,6 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Datafile specification version
-        /// This data still at same position as v4 (FILE_VERSION=7)
         /// </summary>
         public const byte FILE_VERSION = 8;
 
