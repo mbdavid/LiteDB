@@ -175,7 +175,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Do checkpoint operation to copy log pages into data file. Return how many transactions was commited inside data file
         /// </summary>
-        public void Checkpoint()
+        public void Checkpoint(bool shutdown)
         {
             // get original log length
             var logLength = _disk.GetLength(FileOrigin.Log);
@@ -183,11 +183,19 @@ namespace LiteDB.Engine
             // no log file, just exit
             if (logLength == 0) return;
 
-            LOG($"checkpoint", "WAL");
-
             // for safe, lock all database (read/write) before run checkpoint operation
             // future versions can be smarter and avoid lock (be more like SQLite checkpoint)
-            _locker.EnterReserved(true);
+            if (shutdown)
+            {
+                // shutdown mode only try enter in exclusive mode... if not possible, exit without checkpoint
+                if (_locker.TryEnterExclusive() == false) return;
+            }
+            else
+            {
+                _locker.EnterReserved(true);
+            }
+
+            LOG($"checkpoint", "WAL");
 
             // wait all pages write on disk
             _disk.Queue.Wait();

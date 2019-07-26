@@ -117,14 +117,14 @@ namespace LiteDB.Engine
         /// <summary>
         /// Run checkpoint command to copy log file into data file
         /// </summary>
-        public void Checkpoint() => _walIndex.Checkpoint();
+        public void Checkpoint() => _walIndex.Checkpoint(false);
 
         /// <summary>
         /// Shutdown process:
-        /// - Try do checkpoint (if defined as true)
-        /// - Dispose disks (no more can even read data from disk/cache)
-        /// - Dispose locker
-        /// (in DEBUG mode you can get some ENSURE "Release" problems, but it's ok)
+        /// - Stop any new transaction
+        /// - Stop operation loops over database (throw in SafePoint)
+        /// - Wait for writer queue
+        /// - Close disks
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
@@ -136,6 +136,9 @@ namespace LiteDB.Engine
             {
                 // stop running all transactions
                 _transactions.ForEach((x, i) => i.Value.Abort());
+
+                // try checkpoint
+                _walIndex.Checkpoint(true);
 
                 // close all disk connections
                 _disk?.Dispose();

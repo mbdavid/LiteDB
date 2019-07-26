@@ -33,6 +33,8 @@ namespace LiteDB.Engine
                     // do not use "col" local variable because `WriteMode()` clear _collectionPage instance
                     if (snapshot.CollectionPage == null) return 0;
 
+                    LOG($"analyze `{collection}`", "COMMAND");
+
                     var indexer = new IndexService(snapshot);
                     var indexes = snapshot.CollectionPage.GetCollectionIndexes().ToArray();
 

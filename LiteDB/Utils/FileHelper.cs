@@ -65,10 +65,7 @@ namespace LiteDB
             }
             finally
             {
-                if (stream != null)
-                {
-                    stream.Close();
-                }
+                stream?.Close();
             }
 
             //file is not locked
@@ -143,7 +140,7 @@ namespace LiteDB
         /// </summary>
         public static string FormatFileSize(long byteCount)
         {
-            var suf = new string[] { "B", "KB", "MB", "GB", "TB" }; //Longs run out around EB
+            var suf = new[] { "B", "KB", "MB", "GB", "TB" }; //Longs run out around EB
             if (byteCount == 0) return "0" + suf[0];
             var bytes = Math.Abs(byteCount);
             var place = Convert.ToInt64(Math.Floor(Math.Log(bytes, 1024)));

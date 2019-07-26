@@ -51,6 +51,8 @@ namespace LiteDB.Engine
 
             if (transacion.OpenCursors > 0) throw new LiteException(0, "This thread contains an open cursors/query. Close cursors before Begin()");
 
+            LOG(isNew, $"begin trans", "COMMAND");
+
             return isNew;
         }
 

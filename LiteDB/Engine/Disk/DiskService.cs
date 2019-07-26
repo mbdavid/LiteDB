@@ -197,7 +197,8 @@ namespace LiteDB.Engine
         public IEnumerable<PageBuffer> ReadFull(FileOrigin origin)
         {
             // do not use MemoryCache factory - reuse same buffer array (one page per time)
-            var buffer = BufferPool.Rent(PAGE_SIZE);
+            // do not use BufferPool because header page can't be shared (byte[] is used inside page return)
+            var buffer = new byte[PAGE_SIZE];
 
             var pool = origin == FileOrigin.Log ? _logPool : _dataPool;
             var stream = pool.Rent();
@@ -206,7 +207,6 @@ namespace LiteDB.Engine
             {
                 // get length before starts (avoid grow during loop)
                 var length = this.GetLength(origin);
-                var slice = new BufferSlice(buffer, 0, PAGE_SIZE);
 
                 stream.Position = 0;
 
@@ -226,13 +226,12 @@ namespace LiteDB.Engine
             }
             finally
             {
-                BufferPool.Return(buffer);
                 pool.Return(stream);
             }
         }
 
         /// <summary>
-        /// Write pages inside disk with no async queue. This pages are not cached and are not shared - WORKS FOR DATA FILE ONLY
+        /// Write pages DIRECT in disk with NO queue. This pages are not cached and are not shared - WORKS FOR DATA FILE ONLY
         /// </summary>
         public void Write(IEnumerable<PageBuffer> pages, FileOrigin origin)
         {

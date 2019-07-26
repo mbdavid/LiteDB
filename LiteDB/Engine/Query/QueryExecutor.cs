@@ -81,6 +81,8 @@ namespace LiteDB.Engine
                 // if execution is just to get explan plan, return as single document result
                 if (executionPlan)
                 {
+                    LOG($"explain `{_collection}`", "COMMAND");
+
                     yield return queryPlan.GetExecutionPlan();
 
                     if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
@@ -90,6 +92,8 @@ namespace LiteDB.Engine
 
                     yield break;
                 }
+
+                LOG($"query `{_collection}`", "COMMAND");
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
                 var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot));

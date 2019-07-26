@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace LiteDB
 {
@@ -85,7 +84,7 @@ namespace LiteDB
         }
     }
 
-    internal class LastItem<T>
+    internal struct LastItem<T>
     {
         public T Item { get; set; }
         public bool IsLast { get; set; }

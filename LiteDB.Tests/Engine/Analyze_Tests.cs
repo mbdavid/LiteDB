@@ -37,10 +37,12 @@ namespace LiteDB.Tests.Engine
                 // testing for just-created indexes (always be zero)
                 Assert.AreEqual(0, indexes["_id"]["keyCount"].AsInt32);
                 Assert.AreEqual(0, indexes["_id"]["uniqueKeyCount"].AsInt32);
-                Assert.AreEqual(0, indexes["city"]["keyCount"].AsInt32);
                 Assert.AreEqual(0, indexes["city"]["uniqueKeyCount"].AsInt32);
-                Assert.AreEqual(0, indexes["loc"]["keyCount"].AsInt32);
                 Assert.AreEqual(0, indexes["loc"]["uniqueKeyCount"].AsInt32);
+
+                // but indexes created after data exists will count
+                Assert.AreEqual(100, indexes["city"]["keyCount"].AsInt32);
+                Assert.AreEqual(200, indexes["loc"]["keyCount"].AsInt32);
 
                 db.Analyze("zip");
 

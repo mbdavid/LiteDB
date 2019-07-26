@@ -43,8 +43,11 @@ namespace LiteDB.Engine
                     return false;
                 }
 
+                LOG($"create index `{collection}.{name}`", "COMMAND");
+
                 // create index head
                 var index = indexer.CreateIndex(name, expression.Source, unique);
+                var count = 0u;
 
                 // read all objects (read from PK index)
                 foreach (var pkNode in new IndexAll("_id", LiteDB.Query.Ascending).Run(col, indexer))
@@ -77,6 +80,8 @@ namespace LiteDB.Engine
                                     if (first == null) first = node;
 
                                     last = node;
+
+                                    count++;
                                 }
                             }
                             else
@@ -87,6 +92,8 @@ namespace LiteDB.Engine
                                 if (first == null) first = node;
 
                                 last = node;
+
+                                count++;
                             }
                         }
 
@@ -100,6 +107,8 @@ namespace LiteDB.Engine
 
                     transaction.Safepoint();
                 }
+
+                index.KeyCount = count;
 
                 return true;
             });
