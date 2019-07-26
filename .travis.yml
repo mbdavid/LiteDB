@@ -1,12 +1,18 @@
-sudo: required
-
 language: csharp
+mono: none
+sudo: required
+dotnet: 2.2.301
+
 matrix:
   include:
     - os: linux
-      dotnet: 2.2.301
-      mono: none
       dist: bionic
+    - os: osx
+
+env:
+  global:
+    - DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+    - DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
 script:
   - dotnet restore ./LiteDB/LiteDB.csproj
