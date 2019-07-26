@@ -231,7 +231,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write pages inside disk with no async queue. This pages are not cached and are not shared - WORKS FOR DATA FILE ONLY
+        /// Write pages DIRECT in disk with NO queue. This pages are not cached and are not shared - WORKS FOR DATA FILE ONLY
         /// </summary>
         public void Write(IEnumerable<PageBuffer> pages, FileOrigin origin)
         {

@@ -117,7 +117,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Run checkpoint command to copy log file into data file
         /// </summary>
-        public void Checkpoint() => _walIndex.Checkpoint();
+        public void Checkpoint() => _walIndex.Checkpoint(false);
 
         /// <summary>
         /// Shutdown process:
@@ -136,6 +136,9 @@ namespace LiteDB.Engine
             {
                 // stop running all transactions
                 _transactions.ForEach((x, i) => i.Value.Abort());
+
+                // try checkpoint
+                _walIndex.Checkpoint(true);
 
                 // close all disk connections
                 _disk?.Dispose();

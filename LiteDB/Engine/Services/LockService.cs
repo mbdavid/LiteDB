@@ -173,6 +173,33 @@ namespace LiteDB.Engine
             }
         }
 
+
+        /// <summary>
+        /// Try enter in exclusive mode (same as ReservedMode) - if not possible, just exit with false (do not wait and no exceptions)
+        /// Use ExitReserved(true) to exit
+        /// </summary>
+        public bool TryEnterExclusive()
+        {
+            // checks if engine was open in readonly mode
+            if (_readonly) throw new LiteException(0, "This operation are not support because engine was open in reaodnly mode");
+
+            // wait finish all transactions before enter in reserved mode
+            if (_transaction.TryEnterWriteLock(10) == false) return false;
+
+            ENSURE(_transaction.RecursiveReadCount == 0, "must have no other transaction here");
+
+            // reserved locker in write lock
+            if (_reserved.TryEnterWriteLock(10) == false)
+            {
+                // exit transaction write lock
+                _transaction.ExitWriteLock();
+
+                return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Exit reserved/exclusive lock
         /// </summary>
