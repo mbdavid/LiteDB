@@ -1,21 +1,23 @@
-sudo: required
-
 language: csharp
+mono: none
+sudo: required
+dotnet: 2.2.301
+
 matrix:
   include:
     - os: linux
-      dotnet: 2.2.105
-      mono: none
       dist: bionic
-before_install:
-  - ./.travis/before-install-$TRAVIS_OS_NAME.sh
+    - os: osx
+
+env:
+  global:
+    - DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+    - DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
 script:
   - dotnet restore ./LiteDB/LiteDB.csproj
   - dotnet build ./LiteDB/LiteDB.csproj -f netstandard2.0
-  - dotnet restore ./LiteDB.Tests/LiteDB.Tests.csproj
-  - dotnet build ./LiteDB.Tests/LiteDB.Tests.csproj
-  - dotnet test ./LiteDB.Tests/LiteDB.Tests.csproj --logger:console;verbosity=normal
+  - dotnet test ./LiteDB.Tests/LiteDB.Tests.csproj --logger:console --verbosity=minimal
 
 notifications:
   email: false  

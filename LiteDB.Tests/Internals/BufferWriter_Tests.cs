@@ -1,22 +1,15 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
+﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
 using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
+using FluentAssertions;
 using LiteDB.Engine;
-using System.Threading;
+using Xunit;
 
 namespace LiteDB.Internals
 {
-    [TestClass]
     public class BufferWriter_Tests
     {
-        [TestMethod]
+        [Fact]
         public void Buffer_Write_String()
         {
             var source = new BufferSlice(new byte[1000], 0, 1000);
@@ -26,10 +19,10 @@ namespace LiteDB.Internals
             using (var w = new BufferWriter(source))
             {
                 w.WriteString("abc123", false);
-                Assert.AreEqual(6, w.Position);
+                w.Position.Should().Be(6);
             }
 
-            Assert.AreEqual("abc123", Encoding.UTF8.GetString(source.Array, 0, 6));
+            Encoding.UTF8.GetString(source.Array, 0, 6).Should().Be("abc123");
 
             source.Fill(0);
 
@@ -40,12 +33,12 @@ namespace LiteDB.Internals
                 w.WriteString("abc123", true);
             }
 
-            Assert.AreEqual(7, source.ReadInt32(0));
-            Assert.AreEqual("abc123", source.ReadString(4, 6));
-            Assert.AreEqual('\0', (char)source.ReadByte(10));
+            source.ReadInt32(0).Should().Be(7);
+            source.ReadString(4, 6).Should().Be("abc123");
+            ((char) source.ReadByte(10)).Should().Be('\0');
         }
 
-        [TestMethod]
+        [Fact]
         public void Buffer_Write_Numbers()
         {
             var source = new BufferSlice(new byte[1000], 0, 1000);
@@ -84,33 +77,52 @@ namespace LiteDB.Internals
 
             var p = 0;
 
-            Assert.AreEqual(int.MaxValue, source.ReadInt32(p)); p += 4;
-            Assert.AreEqual(uint.MaxValue, source.ReadUInt32(p)); p += 4;
-            Assert.AreEqual(long.MaxValue, source.ReadInt64(p)); p += 8;
-            Assert.AreEqual(double.MaxValue, source.ReadDouble(p)); p += 8;
-            Assert.AreEqual(decimal.MaxValue, source.ReadDecimal(p)); p += 16;
+            source.ReadInt32(p).Should().Be(int.MaxValue);
+            p += 4;
+            source.ReadUInt32(p).Should().Be(uint.MaxValue);
+            p += 4;
+            source.ReadInt64(p).Should().Be(long.MaxValue);
+            p += 8;
+            source.ReadDouble(p).Should().Be(double.MaxValue);
+            p += 8;
+            source.ReadDecimal(p).Should().Be(decimal.MaxValue);
+            p += 16;
 
-            Assert.AreEqual(int.MinValue, source.ReadInt32(p)); p += 4;
-            Assert.AreEqual(uint.MinValue, source.ReadUInt32(p)); p += 4;
-            Assert.AreEqual(long.MinValue, source.ReadInt64(p)); p += 8;
-            Assert.AreEqual(double.MinValue, source.ReadDouble(p)); p += 8;
-            Assert.AreEqual(decimal.MinValue, source.ReadDecimal(p)); p += 16;
+            source.ReadInt32(p).Should().Be(int.MinValue);
+            p += 4;
+            source.ReadUInt32(p).Should().Be(uint.MinValue);
+            p += 4;
+            source.ReadInt64(p).Should().Be(long.MinValue);
+            p += 8;
+            source.ReadDouble(p).Should().Be(double.MinValue);
+            p += 8;
+            source.ReadDecimal(p).Should().Be(decimal.MinValue);
+            p += 16;
 
-            Assert.AreEqual(0, source.ReadInt32(p)); p += 4;
-            Assert.AreEqual(0u, source.ReadUInt32(p)); p += 4;
-            Assert.AreEqual(0L, source.ReadInt64(p)); p += 8;
-            Assert.AreEqual(0d, source.ReadDouble(p)); p += 8;
-            Assert.AreEqual(0m, source.ReadDecimal(p)); p += 16;
+            source.ReadInt32(p).Should().Be(0);
+            p += 4;
+            source.ReadUInt32(p).Should().Be(0u);
+            p += 4;
+            source.ReadInt64(p).Should().Be(0L);
+            p += 8;
+            source.ReadDouble(p).Should().Be(0d);
+            p += 8;
+            source.ReadDecimal(p).Should().Be(0m);
+            p += 16;
 
-            Assert.AreEqual(1990, source.ReadInt32(p)); p += 4;
-            Assert.AreEqual(1990u, source.ReadUInt32(p)); p += 4;
-            Assert.AreEqual(1990L, source.ReadInt64(p)); p += 8;
-            Assert.AreEqual(1990d, source.ReadDouble(p)); p += 8;
-            Assert.AreEqual(1990m, source.ReadDecimal(p)); p += 16;
-
+            source.ReadInt32(p).Should().Be(1990);
+            p += 4;
+            source.ReadUInt32(p).Should().Be(1990u);
+            p += 4;
+            source.ReadInt64(p).Should().Be(1990L);
+            p += 8;
+            source.ReadDouble(p).Should().Be(1990d);
+            p += 8;
+            source.ReadDecimal(p).Should().Be(1990m);
+            p += 16;
         }
 
-        [TestMethod]
+        [Fact]
         public void Buffer_Write_Types()
         {
             var source = new BufferSlice(new byte[1000], 0, 1000);
@@ -136,21 +148,31 @@ namespace LiteDB.Internals
 
             var p = 0;
 
-            Assert.AreEqual(true, source.ReadBool(p)); p += 1;
-            Assert.AreEqual(false, source.ReadBool(p)); p += 1;
-            Assert.AreEqual(DateTime.MinValue, source.ReadDateTime(p)); p += 8;
-            Assert.AreEqual(DateTime.MaxValue, source.ReadDateTime(p)); p += 8;
-            Assert.AreEqual(d, source.ReadDateTime(p)); p += 8;
-            Assert.AreEqual(Guid.Empty, source.ReadGuid(p)); p += 16;
-            Assert.AreEqual(g, source.ReadGuid(p)); p += 16;
-            Assert.AreEqual(ObjectId.Empty, source.ReadObjectId(p)); p += 12;
-            Assert.AreEqual(o, source.ReadObjectId(p)); p += 12;
-            Assert.AreEqual(PageAddress.Empty, source.ReadPageAddress(p)); p += PageAddress.SIZE;
-            Assert.AreEqual(new PageAddress(199, 0), source.ReadPageAddress(p)); p += PageAddress.SIZE;
-
+            source.ReadBool(p).Should().BeTrue();
+            p += 1;
+            source.ReadBool(p).Should().BeFalse();
+            p += 1;
+            source.ReadDateTime(p).Should().Be(DateTime.MinValue);
+            p += 8;
+            source.ReadDateTime(p).Should().Be(DateTime.MaxValue);
+            p += 8;
+            source.ReadDateTime(p).Should().Be(d);
+            p += 8;
+            source.ReadGuid(p).Should().Be(Guid.Empty);
+            p += 16;
+            source.ReadGuid(p).Should().Be(g);
+            p += 16;
+            source.ReadObjectId(p).Should().Be(ObjectId.Empty);
+            p += 12;
+            source.ReadObjectId(p).Should().Be(o);
+            p += 12;
+            source.ReadPageAddress(p).Should().Be(PageAddress.Empty);
+            p += PageAddress.SIZE;
+            source.ReadPageAddress(p).Should().Be(new PageAddress(199, 0));
+            p += PageAddress.SIZE;
         }
 
-        [TestMethod]
+        [Fact]
         public void Buffer_Write_Overflow()
         {
             var data = new byte[50];
@@ -168,10 +190,10 @@ namespace LiteDB.Internals
                 w.Write(new byte[50].Fill(99, 0, 50), 0, 50);
             }
 
-            Assert.IsTrue(data.All(x => x == 99));
+            data.All(x => x == 99).Should().BeTrue();
         }
 
-        [TestMethod]
+        [Fact]
         public void Buffer_Bson()
         {
             var source = new BufferSlice(new byte[1000], 0, 1000);
@@ -185,8 +207,8 @@ namespace LiteDB.Internals
                 ["double"] = double.MaxValue,
                 ["decimal"] = decimal.MaxValue,
                 ["string"] = "String",
-                ["document"] = new BsonDocument { ["_id"] = 1 },
-                ["array"] = new BsonArray { 1, 2, 3 },
+                ["document"] = new BsonDocument {["_id"] = 1},
+                ["array"] = new BsonArray {1, 2, 3},
                 ["binary"] = new byte[50].Fill(255, 0, 49),
                 ["objectId"] = ObjectId.NewObjectId(),
                 ["guid"] = Guid.NewGuid(),
@@ -199,16 +221,16 @@ namespace LiteDB.Internals
             {
                 w.WriteDocument(doc, true);
 
-                Assert.AreEqual(307, w.Position);
+                w.Position.Should().Be(307);
             }
 
             using (var r = new BufferReader(source, true))
             {
                 var reader = r.ReadDocument();
 
-                Assert.AreEqual(307, r.Position);
+                r.Position.Should().Be(307);
 
-                Assert.AreEqual(JsonSerializer.Serialize(doc), JsonSerializer.Serialize(reader));
+                JsonSerializer.Serialize(reader).Should().Be(JsonSerializer.Serialize(doc));
             }
         }
     }

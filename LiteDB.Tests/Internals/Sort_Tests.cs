@@ -1,25 +1,18 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
+using FluentAssertions;
 using LiteDB.Engine;
-using System.Threading;
-using LiteDB.Tests;
+using Xunit;
 
 namespace LiteDB.Internals
 {
-    [TestClass]
     public class Sort_Tests
     {
         private IStreamFactory _factory = new StreamFactory(new MemoryStream(), null);
 
-        [TestMethod]
+        [Fact]
         public void Sort_String_Asc()
         {
             var source = Enumerable.Range(0, 2000)
@@ -32,19 +25,19 @@ namespace LiteDB.Internals
             {
                 s.Insert(source);
 
-                Assert.AreEqual(2000, s.Count);
-                Assert.AreEqual(2, s.Containers.Count);
+                s.Count.Should().Be(2000);
+                s.Containers.Count.Should().Be(2);
 
-                Assert.AreEqual(1905, s.Containers.ElementAt(0).Count);
-                Assert.AreEqual(95, s.Containers.ElementAt(1).Count);
+                s.Containers.ElementAt(0).Count.Should().Be(1905);
+                s.Containers.ElementAt(1).Count.Should().Be(95);
 
                 var output = s.Sort().ToArray();
 
-                CollectionAssert.AreEqual(source.OrderBy(x => x.Key).ToArray(), output);
+                output.Should().Equal(source.OrderBy(x => x.Key).ToArray());
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Sort_Int_Desc()
         {
             var rnd = new Random();
@@ -58,16 +51,16 @@ namespace LiteDB.Internals
             {
                 s.Insert(source);
 
-                Assert.AreEqual(20000, s.Count);
-                Assert.AreEqual(3, s.Containers.Count);
+                s.Count.Should().Be(20000);
+                s.Containers.Count.Should().Be(3);
 
-                Assert.AreEqual(8192, s.Containers.ElementAt(0).Count);
-                Assert.AreEqual(8192, s.Containers.ElementAt(1).Count);
-                Assert.AreEqual(3616, s.Containers.ElementAt(2).Count);
+                s.Containers.ElementAt(0).Count.Should().Be(8192);
+                s.Containers.ElementAt(1).Count.Should().Be(8192);
+                s.Containers.ElementAt(2).Count.Should().Be(3616);
 
                 var output = s.Sort().ToArray();
 
-                CollectionAssert.AreEqual(source.OrderByDescending(x => x.Key).ToArray(), output);
+                output.Should().Equal(source.OrderByDescending(x => x.Key).ToArray());
             }
         }
     }

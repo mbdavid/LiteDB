@@ -59,7 +59,7 @@
 //            db.Dispose();
 //        }
 
-//        [TestMethod]
+//        [Fact]
 //        public void Query_Include_Address()
 //        {
 //            var json = "[{'_id':1,'name':'Mauricio','address':{'_id':1,'street':'Ipiranga','nr':6609,'city':{'$id':1,'$ref':'city'}}},{'_id':2,'name':'Carlos','address':{'_id':1,'street':'Ipiranga','nr':6609,'city':{'$id':1,'$ref':'city'}}},{'_id':3,'name':'Joao','address':{'_id':3,'street':'Brigadeiro Faria Lima','nr':1100,'city':{'$id':3,'$ref':'city'}}},{'_id':4,'name':'Juliano','address':{'_id':3,'street':'Brigadeiro Faria Lima','nr':1100,'city':{'$id':3,'$ref':'city'}}},{'_id':5,'name':'Mauro','address':{'_id':3,'street':'Brigadeiro Faria Lima','nr':1100,'city':{'$id':3,'$ref':'city'}}},{'_id':6,'name':'Moacir','address':{'_id':4,'street':'Copacabana','nr':1,'cit':{'$id':4,'$ref':'city'}}},{'_id':7,'name':'Neimar','address':{'_id':5,'street':'Travessa do Ouvidor','nr':225,'city':{'$id':5,'$ref':'city'}}}]";
@@ -70,10 +70,10 @@
 //                .ToArray()
 //                .ToBsonArray();
 
-//            Assert.AreEqual(r0, r1);
+//            Assert.Equal(r0, r1);
 //        }
 
-//        [TestMethod]
+//        [Fact]
 //        public void Query_Include_Address_And_City()
 //        {
 //            var json = "[{'_id':1,'name':'Mauricio','address':{'_id':1,'street':'Ipiranga','nr':6609,'city':{'_id':1,'name':'Porto Alegre','state':'RS'}}},{'_id':2,'name':'Carlos','address':{'_id':1,'street':'Ipiranga','nr':6609,'city':{'_id':1,'name':'Porto Alegre','state':'RS'}}},{'_id':3,'name':'Joao','address':{'_id':3,'street':'Brigadeiro Faria Lima','nr':1100,'city':{'_id':3,'name':'S\u00e3o Paulo','state':'SP'}}},{'_id':4,'name':'Juliano','address':{'_id':3,'street':'Brigadeiro Faria Lima','nr':1100,'city':{'_id':3,'name':'S\u00e3o Paulo','state':'SP'}}},{'_id':5,'name':'Mauro','address':{'_id':3,'street':'Brigadeiro Faria Lima','nr':1100,'city':{'_id':3,'name':'S\u00e3o Paulo','state':'SP'}}},{'_id':6,'name':'Moacir','address':{'_id':4,'street':'Copacabana','nr':1,'cit':{'$id':4,'$ref':'city'}}},{'_id':7,'name':'Neimar','address':{'_id':5,'street':'Travessa do Ouvidor','nr':225,'city':{'_id':5,'name':'Niteroi','state':'RJ'}}}]";
@@ -85,7 +85,8 @@
 //                .ToArray()
 //                .ToBsonArray();
 
-//            Assert.AreEqual(r0, r1);
+//            Assert.Equal(r0, r1);
 //        }
 //    }
 //}
+

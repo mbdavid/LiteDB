@@ -1,21 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
+﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using LiteDB.Engine;
-using System.Threading;
 using System.Linq.Expressions;
 using System.Diagnostics;
+using FluentAssertions;
+using Xunit;
 
 namespace LiteDB.Tests.Mapper
 {
-    [TestClass]
     public class LinqEval_Tests
     {
         #region Model
@@ -46,20 +38,21 @@ namespace LiteDB.Tests.Mapper
 
         public enum PhoneType
         {
-            Mobile, Landline
+            Mobile,
+            Landline
         }
 
         #endregion
 
         private BsonMapper _mapper = new BsonMapper();
 
-        [TestMethod]
+        [Fact]
         public void Linq_Date_Eval()
         {
             // remove milliseconds from now (BSON format do not support milliseconds)
             var now = DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss"));
 
-            var u = new User { Date = now };
+            var u = new User {Date = now};
 
             // date properties
             Eval(u, x => x.Date.Year, u.Date.Year);
@@ -84,10 +77,10 @@ namespace LiteDB.Tests.Mapper
             Eval(u, x => x.Date.Year + DateTime.Today.Year, u.Date.Year + DateTime.Today.Year);
         }
 
-        [TestMethod]
+        [Fact]
         public void Linq_Predicate_Eval()
         {
-            var u = new User { Id = 1, Active = false };
+            var u = new User {Id = 1, Active = false};
 
             Eval(u, x => x.Id == 1, true);
             Eval(u, x => x.Id != 1, false);
@@ -107,13 +100,12 @@ namespace LiteDB.Tests.Mapper
             Eval(u, x => !x.Active, true);
             Eval(u, x => !x.Active && !x.Active, true);
             Eval(u, x => x.Active || !x.Active, true);
-
         }
 
-        [TestMethod]
+        [Fact]
         public void Linq_Document_Navigation_Eval()
         {
-            var u = new User { Id = 1, Name = "John", Address = new Address { Number = 123, Street = "Ipiranga" } };
+            var u = new User {Id = 1, Name = "John", Address = new Address {Number = 123, Street = "Ipiranga"}};
 
             // return root $
             Eval(u, x => x, u);
@@ -126,27 +118,28 @@ namespace LiteDB.Tests.Mapper
             Eval(u, x => "Name: " + x.Name, "Name: John");
         }
 
-        [TestMethod]
+        [Fact]
         public void Linq_Math_Eval()
         {
-            var u = new User { Id = 5 };
+            var u = new User {Id = 5};
 
             Eval(u, x => u.Id + 10 * 2, 25);
             Eval(u, x => (u.Id + 10) * 2, 30);
 
             Eval(u, x => Math.Abs(u.Id - 20), 15);
-            Eval(u, x => Math.Round((double)u.Id / 3, 2), 1.67);
+            Eval(u, x => Math.Round((double) u.Id / 3, 2), 1.67);
         }
 
-        [TestMethod]
+        [Fact]
         public void Linq_Array_Navigation_Eval()
         {
             var u = new User
             {
-                Phones = new List<Phone> {
-                    new Phone { Number = 1, Prefix = 10, Type = PhoneType.Mobile },
-                    new Phone { Number = 2, Prefix = 20, Type = PhoneType.Mobile },
-                    new Phone { Number = 3, Prefix = 30, Type = PhoneType.Landline },
+                Phones = new List<Phone>
+                {
+                    new Phone {Number = 1, Prefix = 10, Type = PhoneType.Mobile},
+                    new Phone {Number = 2, Prefix = 20, Type = PhoneType.Mobile},
+                    new Phone {Number = 3, Prefix = 30, Type = PhoneType.Landline},
                 }
             };
 
@@ -157,7 +150,6 @@ namespace LiteDB.Tests.Mapper
             //** Eval(u, x => x.Phones.Items(0).Number, 1);
             //** Eval(u, x => x.Phones.Items(-1).Number, 3);
             //** Eval(u, x => x.Phones.Items(z => z.Prefix >= 20).Number, 2, 3);
-
         }
 
 
@@ -173,13 +165,13 @@ namespace LiteDB.Tests.Mapper
             var results = expression.Execute(doc).ToArray();
             var index = 0;
 
-            Assert.AreEqual(expect.Length, results.Length);
+            results.Length.Should().Be(expect.Length);
 
-            foreach(var result in results)
+            foreach (var result in results)
             {
                 var exp = _mapper.Serialize(typeof(K), expect[index++]);
 
-                Assert.AreEqual(exp, result);
+                result.Should().Be(exp);
             }
         }
     }

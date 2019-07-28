@@ -1,18 +1,17 @@
-﻿using LiteDB.Engine;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.IO;
+﻿using FluentAssertions;
+using LiteDB.Engine;
+using Xunit;
 
 namespace LiteDB.Tests.Engine
 {
-    [TestClass]
     public class Update_Tests
     {
-        [TestMethod]
+        [Fact]
         public void Update_IndexNodes()
         {
             using (var db = new LiteEngine())
             {
-                var doc = new BsonDocument { ["_id"] = 1, ["name"] = "Mauricio", ["phones"] = new BsonArray() { "51", "11" } };
+                var doc = new BsonDocument {["_id"] = 1, ["name"] = "Mauricio", ["phones"] = new BsonArray() {"51", "11"}};
 
                 db.Insert("col1", doc);
 
@@ -20,7 +19,7 @@ namespace LiteDB.Tests.Engine
                 db.EnsureIndex("col1", "idx_phones", "phones[*]", false);
 
                 doc["name"] = "David";
-                doc["phones"] = new BsonArray() { "11", "25" };
+                doc["phones"] = new BsonArray() {"11", "25"};
 
                 db.Update("col1", doc);
 
@@ -30,12 +29,12 @@ namespace LiteDB.Tests.Engine
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Update_ExtendBlocks()
         {
             using (var db = new LiteEngine())
             {
-                var doc = new BsonDocument { ["_id"] = 1, ["d"] = new byte[1000] };
+                var doc = new BsonDocument {["_id"] = 1, ["d"] = new byte[1000]};
 
                 db.Insert("col1", doc);
 
@@ -46,7 +45,7 @@ namespace LiteDB.Tests.Engine
 
                 var page3 = db.GetPageLog(3);
 
-                Assert.AreEqual(7828, page3["freeBytes"].AsInt32);
+                page3["freeBytes"].AsInt32.Should().Be(7828);
 
                 // big (same page)
                 doc["d"] = new byte[2000];
@@ -55,7 +54,7 @@ namespace LiteDB.Tests.Engine
 
                 page3 = db.GetPageLog(3);
 
-                Assert.AreEqual(6128, page3["freeBytes"].AsInt32);
+                page3["freeBytes"].AsInt32.Should().Be(6128);
 
                 // big (extend page)
                 doc["d"] = new byte[20000];
@@ -66,9 +65,9 @@ namespace LiteDB.Tests.Engine
                 var page4 = db.GetPageLog(4);
                 var page5 = db.GetPageLog(5);
 
-                Assert.AreEqual(0, page3["freeBytes"].AsInt32);
-                Assert.AreEqual(0, page4["freeBytes"].AsInt32);
-                Assert.AreEqual(4428, page5["freeBytes"].AsInt32);
+                page3["freeBytes"].AsInt32.Should().Be(0);
+                page4["freeBytes"].AsInt32.Should().Be(0);
+                page5["freeBytes"].AsInt32.Should().Be(4428);
 
                 // small (shrink page)
                 doc["d"] = new byte[10000];
@@ -79,9 +78,9 @@ namespace LiteDB.Tests.Engine
                 page4 = db.GetPageLog(4);
                 page5 = db.GetPageLog(5);
 
-                Assert.AreEqual(0, page3["freeBytes"].AsInt32);
-                Assert.AreEqual(6278, page4["freeBytes"].AsInt32);
-                Assert.AreEqual("Empty", page5["pageType"].AsString);
+                page3["freeBytes"].AsInt32.Should().Be(0);
+                page4["freeBytes"].AsInt32.Should().Be(6278);
+                page5["pageType"].AsString.Should().Be("Empty");
             }
         }
     }
