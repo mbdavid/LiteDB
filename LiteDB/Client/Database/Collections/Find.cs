@@ -34,6 +34,20 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Find documents inside a collection using query definition.
+        /// </summary>
+        public IEnumerable<T> Find(Query query, int skip = 0, int limit = int.MaxValue)
+        {
+            if (query == null) throw new ArgumentNullException(nameof(query));
+
+            query.Offset = skip;
+            query.Limit = limit;
+
+            return new LiteQueryable<T>(_engine.Value, _mapper, _collection, query)
+                .ToEnumerable();
+        }
+
+        /// <summary>
         /// Find documents inside a collection using predicate expression.
         /// </summary>
         public IEnumerable<T> Find(Expression<Func<T, bool>> predicate, int skip = 0, int limit = int.MaxValue) => this.Find(_mapper.GetExpression(predicate), skip, limit);
@@ -71,6 +85,11 @@ namespace LiteDB
         /// Find the first document using predicate expression. Returns null if not found
         /// </summary>
         public T FindOne(Expression<Func<T, bool>> predicate) => this.FindOne(_mapper.GetExpression(predicate));
+
+        /// <summary>
+        /// Find the first document using defined query structure. Returns null if not found
+        /// </summary>
+        public T FindOne(Query query) => this.Find(query).FirstOrDefault();
 
         /// <summary>
         /// Returns all documents inside collection order by _id index.
