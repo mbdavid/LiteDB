@@ -65,7 +65,7 @@ using(var db = new LiteDatabase(@"MyData.db"))
     var col = db.GetCollection<Customer>("customers");
 
     // Create your new customer instance
-	var customer = new Customer
+    var customer = new Customer
     { 
         Name = "John Doe", 
         Phones = new string[] { "8000-0000", "9000-0000" }, 
