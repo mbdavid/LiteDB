@@ -56,7 +56,13 @@ namespace LiteDB
         public const int MAX_DOCUMENT_SIZE = 250 * (DataService.MAX_DATA_BYTES_PER_PAGE);
 
         /// <summary>
-        /// Max pages in a transaction before persist on disk and clear transaction local pages
+        /// Define how many transactions can be open simultaneously
+        /// </summary>
+        public const int MAX_OPEN_TRANSACTIONS = 100; // 100
+
+        /// <summary>
+        /// Define how many pages all transaction will consume, in memory, before persist in disk. This amount are shared across all open transactions
+        /// 100,000 ~= 1Gb memory
         /// </summary>
         public const int MAX_TRANSACTION_SIZE = 100_000; // 100_000 (default) - 1000 (for tests)
 

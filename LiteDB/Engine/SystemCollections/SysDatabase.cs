@@ -44,6 +44,15 @@ namespace LiteDB.Engine
                 ["pagesInUse"] = _disk.Cache.PagesInUse,
             };
 
+            doc["transactions"] = new BsonDocument
+            {
+                ["open"] = _monitor.Transactions.Count,
+                ["maxOpenTransactions"] = MAX_OPEN_TRANSACTIONS,
+                ["initialTransactionSize"] = _monitor.InitialSize,
+                ["availableSize"] = _monitor.FreePages,
+                ["maxTransactionSize"] = _settings.MaxTransactionSize
+            };
+
             yield return doc;
         }
     }

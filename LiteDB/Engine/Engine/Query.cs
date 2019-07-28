@@ -30,7 +30,7 @@ namespace LiteDB.Engine
                 collection = sys.Name;
             }
 
-            var exec = new QueryExecutor(this, collection, query, source);
+            var exec = new QueryExecutor(this, _monitor, _sortDisk, _settings.UtcDate, collection, query, source);
 
             return exec.ExecuteQuery();
         }

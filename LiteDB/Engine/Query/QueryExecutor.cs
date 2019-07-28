@@ -11,13 +11,19 @@ namespace LiteDB.Engine
     internal class QueryExecutor
     {
         private readonly LiteEngine _engine;
+        private readonly TransactionMonitor _monitor;
+        private readonly SortDisk _sortDisk;
+        private readonly bool _utcDate;
         private readonly string _collection;
         private readonly Query _query;
         private readonly IEnumerable<BsonDocument> _source;
 
-        public QueryExecutor(LiteEngine engine, string collection, Query query, IEnumerable<BsonDocument> source)
+        public QueryExecutor(LiteEngine engine, TransactionMonitor monitor, SortDisk sortDisk, bool utcDate, string collection, Query query, IEnumerable<BsonDocument> source)
         {
             _engine = engine;
+            _monitor = monitor;
+            _sortDisk = sortDisk;
+            _utcDate = utcDate;
             _collection = collection;
             _query = query;
 
@@ -42,7 +48,7 @@ namespace LiteDB.Engine
         /// </summary>
         internal BsonDataReader ExecuteQuery(bool executionPlan)
         {
-            var transaction = _engine.GetTransaction(true, out var isNew);
+            var transaction = _monitor.GetTransaction(true, out var isNew);
 
             transaction.OpenCursors++;
 
@@ -99,7 +105,7 @@ namespace LiteDB.Engine
                 var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot));
 
                 // get current query pipe: normal or groupby pipe
-                using (var pipe = queryPlan.GetPipe(transaction, snapshot, _engine.SortDisk, _engine.Settings.UtcDate))
+                using (var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _utcDate))
                 {
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>

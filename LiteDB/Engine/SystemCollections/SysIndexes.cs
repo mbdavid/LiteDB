@@ -10,7 +10,7 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysIndexes()
         {
-            var transaction = this.GetTransaction(true, out var isNew);
+            var transaction = _monitor.GetTransaction(true, out var isNew);
 
             try
             {

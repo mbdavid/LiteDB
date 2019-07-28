@@ -10,7 +10,7 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysSnapshots()
         {
-            foreach (var transaction in _transactions.Values)
+            foreach (var transaction in _monitor.Transactions)
             {
                 foreach (var snapshot in transaction.Snapshots)
                 {

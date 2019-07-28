@@ -19,8 +19,8 @@ namespace LiteDB.Engine
         private readonly LockService _locker;
         private readonly DiskService _disk;
         private readonly DiskReader _reader;
-        private readonly int _maxTransactionSize;
         private readonly WalIndexService _walIndex;
+        private readonly TransactionMonitor _monitor;
 
         // transaction controls
         private readonly Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
@@ -42,6 +42,9 @@ namespace LiteDB.Engine
         public DateTime StartTime => _startTime;
         public IEnumerable<Snapshot> Snapshots => _snapshots.Values;
 
+        // get/set
+        public int MaxTransactionSize { get; set; }
+
         /// <summary>
         /// Get/Set how many open cursor this transaction are running
         /// </summary>
@@ -52,15 +55,17 @@ namespace LiteDB.Engine
         /// </summary>
         public bool ExplicitTransaction { get; set; } = false;
 
-        public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, int maxTransactionSize, Action<uint> done)
+        public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, int maxTransactionSize, TransactionMonitor monitor, Action<uint> done)
         {
             // retain instances
             _header = header;
             _locker = locker;
             _disk = disk;
             _walIndex = walIndex;
-            _maxTransactionSize = maxTransactionSize;
+            _monitor = monitor;
             _done = done;
+
+            this.MaxTransactionSize = maxTransactionSize;
 
             // create new transactionID
             _transactionID = walIndex.NextTransactionID();
@@ -114,7 +119,7 @@ namespace LiteDB.Engine
         {
             if (_disposed) throw new LiteException(0, "Engine is in shutdown process");
 
-            if (_transPages.TransactionSize >= _maxTransactionSize)
+            if (_monitor.CheckSafepoint(this))
             {
                 LOG($"safepoint flushing transaction pages: {_transPages.TransactionSize}", "TRANSACTION");
 

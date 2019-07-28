@@ -22,7 +22,7 @@ namespace LiteDB.Engine
             var indexes = reader.GetIndexes().ToArray();
 
             // begin transaction and get TransactionID
-            var transaction = this.GetTransaction(true, out var isNew);
+            var transaction = _monitor.GetTransaction(true, out var isNew);
 
             try
             {
