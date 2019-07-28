@@ -72,18 +72,18 @@ using(var db = new LiteDatabase(@"MyData.db"))
         Age = 39,
         IsActive = true
     };
-    
+
     // Create unique index in Name field
     col.EnsureIndex(x => x.Name, true);
-	
+
     // Insert new customer document (Id will be auto-incremented)
     col.Insert(customer);
-	
+
     // Update a document inside a collection
     customer.Name = "Joana Doe";
-	
+
     col.Update(customer);
-	
+
     // Use LINQ to query documents (with no index)
     var results = col.Find(x => x.Age > 20);
 }
