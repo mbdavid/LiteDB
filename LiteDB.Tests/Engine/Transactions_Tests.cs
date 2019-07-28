@@ -60,7 +60,7 @@ namespace LiteDB.Tests.Engine
 
 
         [Fact]
-        public void Transaction_Avoid_Drity_Read()
+        public void Transaction_Avoid_Dirty_Read()
         {
             var data1 = DataGen.Person(1, 100).ToArray();
             var data2 = DataGen.Person(101, 200).ToArray();
@@ -90,11 +90,11 @@ namespace LiteDB.Tests.Engine
                 });
 
                 // task B will not open transaction and will wait 250ms before and count collection - 
-                // at this time, task A already insert +100 document but here I cann't see (are not commited yet)
+                // at this time, task A already insert +100 document but here I can't see (are not committed yet)
                 // after task A finish, I can see now all 200 documents
                 var tb = new Task(() =>
                 {
-                    Task.Delay(250).Wait();
+                    Task.Delay(500).Wait();
 
                     var count = person.Count();
 
@@ -103,7 +103,7 @@ namespace LiteDB.Tests.Engine
 
                     ta.Wait();
 
-                    // read 200 documets
+                    // read 200 documents
                     count = person.Count();
 
                     count.Should().Be(data1.Length + data2.Length);
@@ -147,7 +147,7 @@ namespace LiteDB.Tests.Engine
                 {
                     db.BeginTrans();
 
-                    Task.Delay(250).Wait();
+                    Task.Delay(500).Wait();
 
                     var count = person.Count();
 
@@ -156,7 +156,7 @@ namespace LiteDB.Tests.Engine
 
                     ta.Wait();
 
-                    // keep reading 100 documets because i'm still in same transaction
+                    // keep reading 100 documents because i'm still in same transaction
                     count = person.Count();
 
                     count.Should().Be(data1.Length);
