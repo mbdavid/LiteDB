@@ -2,14 +2,14 @@
 
 [![Join the chat at https://gitter.im/mbdavid/LiteDB](https://badges.gitter.im/mbdavid/LiteDB.svg)](https://gitter.im/mbdavid/LiteDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build status](https://ci.appveyor.com/api/projects/status/sfe8he0vik18m033?svg=true)](https://ci.appveyor.com/project/mbdavid/litedb) [![Build Status](https://travis-ci.org/mbdavid/LiteDB.svg?branch=master)](https://travis-ci.org/mbdavid/LiteDB)
 
-> Master branch contains v5 beta - if you want old version, go to for git tags
+> Master branch contains the v5 beta - if you want an older version, go to the git tags
 
 LiteDB is a small, fast and lightweight NoSQL embedded database. 
 
 - Serverless NoSQL Document Store
-- Simple API similar to MongoDB
+- Simple API, similar to MongoDB
 - 100% C# code for .NET 4.5 / NETStandard 2.0 in a single DLL (less than 300kb)
-- Thread safe
+- Thread-safe
 - ACID with full transaction support
 - Data recovery after write failure (WAL log file)
 - Datafile encryption using DES (AES) cryptography
@@ -27,7 +27,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 ## New v5
 
-Take a look on all [new version v5 here](#v5)
+Take a look at the all [new version v5 here](#v5)
 
 ![LiteDB Studio](https://pbs.twimg.com/media/D_142rzWwAECJDd?format=jpg&name=900x900)
 
@@ -105,7 +105,7 @@ public class Order
 // Re-use mapper from global instance
 var mapper = BsonMapper.Global;
 
-// "Produts" and "Customer" are from other collections (not embedded document)
+// "Products" and "Customer" are from other collections (not embedded document)
 mapper.Entity<Order>()
     .DbRef(x => x.Customer, "customers")   // 1 to 1/0 reference
     .DbRef(x => x.Products, "products")    // 1 to Many reference
@@ -161,7 +161,7 @@ Copyright (c) 2019 - Maurício David
 
 # <a name="v5"></a> LiteDB v5
 
-More than one year of hard working, v5 are comming!
+After more than a year of hard working, v5 is comming!
 
 > What's new in v5?
 
@@ -202,22 +202,22 @@ More than one year of hard working, v5 are comming!
     - MapReduce using GroupBy/Having
    
 - New Native UI - LiteDB.Studio
-    - WinForms app to manipulate database
+    - WinForms app to manipulate the database
     - Based on SQL commands
     - Show results in grid or as text
     - Multi tabs, multi threads, multi transactions
 
-> What was droped?
+> What was dropped?
 
-- Single process only - optimazed for multi thread (open file as exclusive mode)
-- Drop .NET 3.5/4.0 - works only in .NET 4.5+ and .NETStandard 2.0
+- Single process only - optimized for multi thread (open file as exclusive mode)
+- Dropped .NET 3.5/4.0 - works only in .NET 4.5+ and .NETStandard 2.0
 - Shell commands (use SQL commands)
     
 .. but still...   
  
 - Embedded support
 - Single database file 
-- Single DLL, no dependency and 100% C#
+- Single DLL, no dependencies and 100% C#
 - 100% free open source
     
-> Roadmap: first beta version will be released in Aug/2019
+> Roadmap: The first beta version will be released in Aug/2019
