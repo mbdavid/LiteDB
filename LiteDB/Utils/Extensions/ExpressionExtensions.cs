@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Text;
 using System.Text.RegularExpressions;
+using static LiteDB.Constants;
 
 namespace LiteDB
 {
