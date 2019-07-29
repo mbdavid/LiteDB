@@ -1,27 +1,18 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using LiteDB.Engine;
+using Xunit;
 
 namespace LiteDB.Tests.Query
 {
-    [TestClass]
-    public class GroupBy_Tests
+    public class GroupBy_Tests : IDisposable
     {
         private Person[] local;
 
         private LiteDatabase db;
         private LiteCollection<Person> collection;
 
-        [TestInitialize]
-        public void Init()
+        public GroupBy_Tests()
         {
             local = DataGen.Person(1, 1000).ToArray();
 
@@ -32,13 +23,7 @@ namespace LiteDB.Tests.Query
             collection.EnsureIndex(x => x.Age);
         }
 
-        [TestCleanup]
-        public void CleanUp()
-        {
-            db.Dispose();
-        }
-
-        [TestMethod]
+        [Fact(Skip = "Commented out")]
         public void Query_GroupBy_State_With_Count()
         {
             //** var r0 = local
@@ -55,12 +40,12 @@ namespace LiteDB.Tests.Query
             //** 
             //** foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
             //** {
-            //**     Assert.AreEqual(r.left.State, r.right.State);
-            //**     Assert.AreEqual(r.left.Count, r.right.Count);
+            //**     Assert.Equal(r.left.State, r.right.State);
+            //**     Assert.Equal(r.left.Count, r.right.Count);
             //** }
         }
 
-        [TestMethod]
+        [Fact(Skip = "Commented out")]
         public void Query_GroupBy_State_With_Sum_Age()
         {
             //** var r0 = local
@@ -77,12 +62,12 @@ namespace LiteDB.Tests.Query
             //** 
             //** foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
             //** {
-            //**     Assert.AreEqual(r.left.State, r.right.State);
-            //**     Assert.AreEqual(r.left.Sum, r.right.Sum);
+            //**     Assert.Equal(r.left.State, r.right.State);
+            //**     Assert.Equal(r.left.Sum, r.right.Sum);
             //** }
         }
 
-        [TestMethod]
+        [Fact(Skip = "Commented out")]
         public void Query_GroupBy_Func()
         {
             //** var r0 = local
@@ -99,12 +84,12 @@ namespace LiteDB.Tests.Query
             //** 
             //** foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
             //** {
-            //**     Assert.AreEqual(r.left.Year, r.right.Year);
-            //**     Assert.AreEqual(r.left.Count, r.right.Count);
+            //**     Assert.Equal(r.left.Year, r.right.Year);
+            //**     Assert.Equal(r.left.Count, r.right.Count);
             //** }
         }
 
-        [TestMethod]
+        [Fact(Skip = "Commented out")]
         public void Query_GroupBy_With_Array_Aggregation()
         {
             //** // quite complex group by query
@@ -124,11 +109,16 @@ namespace LiteDB.Tests.Query
             //**     .ToArray();
             //** 
             //** // test first only
-            //** Assert.AreEqual(5, r[0].Users.Length);
-            //** Assert.AreEqual("imperdiet.us", r[0].Domain);
-            //** Assert.AreEqual("delilah", r[0].Users[0].Login);
-            //** Assert.AreEqual("Dahlia Warren", r[0].Users[0].Name);
-            //** Assert.AreEqual(24, r[0].Users[0].Age);
+            //** Assert.Equal(5, r[0].Users.Length);
+            //** Assert.Equal("imperdiet.us", r[0].Domain);
+            //** Assert.Equal("delilah", r[0].Users[0].Login);
+            //** Assert.Equal("Dahlia Warren", r[0].Users[0].Name);
+            //** Assert.Equal(24, r[0].Users[0].Age);
+        }
+
+        public void Dispose()
+        {
+            db?.Dispose();
         }
     }
 }

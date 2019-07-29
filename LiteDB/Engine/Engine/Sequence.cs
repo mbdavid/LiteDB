@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -19,6 +20,30 @@ namespace LiteDB
         /// Indicate when a query must execute in descending order
         /// </summary>
         public const int Descending = -1;
+
+        /// <summary>
+        /// Returns all documents
+        /// </summary>
+        public static Query All()
+        {
+            return new Query();
+        }
+
+        /// <summary>
+        /// Returns all documents
+        /// </summary>
+        public static Query All(int order = Ascending)
+        {
+            return new Query { Order = order };
+        }
+
+        /// <summary>
+        /// Returns all documents
+        /// </summary>
+        public static Query All(string field, int order = Ascending)
+        {
+            return new Query { OrderBy = field, Order = order };
+        }
 
         /// <summary>
         /// Returns all documents that value are equals to value (=)

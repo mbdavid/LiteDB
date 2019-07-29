@@ -1,18 +1,11 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
+﻿using FluentAssertions;
+using Xunit;
 
 namespace LiteDB.Tests.Document
 {
-    [TestClass]
     public class Implicit_Tests
     {
-        [TestMethod]
+        [Fact]
         public void BsonValue_Implicit_Convert()
         {
             int i = int.MaxValue;
@@ -23,13 +16,13 @@ namespace LiteDB.Tests.Document
             BsonValue bl = l;
             BsonValue bu = u;
 
-            Assert.IsTrue(bi.IsInt32);
-            Assert.IsTrue(bl.IsInt64);
-            Assert.IsTrue(bu.IsDouble);
+            bi.IsInt32.Should().BeTrue();
+            bl.IsInt64.Should().BeTrue();
+            bu.IsDouble.Should().BeTrue();
 
-            Assert.AreEqual(i, bi.AsInt32);
-            Assert.AreEqual(l, bl.AsInt64);
-            Assert.AreEqual(u, bu.AsDouble);
+            bi.AsInt32.Should().Be(i);
+            bl.AsInt64.Should().Be(l);
+            bu.AsDouble.Should().Be(u);
         }
     }
 }

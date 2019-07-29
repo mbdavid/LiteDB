@@ -1,23 +1,12 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using LiteDB.Engine;
-using System.Threading;
-using System.Linq.Expressions;
+﻿using System.Linq;
+using FluentAssertions;
+using Xunit;
 
 namespace LiteDB.Tests.Engine
 {
-    [TestClass]
     public class Index_Tests
     {
-        [TestMethod]
+        [Fact]
         public void Index_With_No_Name()
         {
             using (var db = new LiteDatabase("filename=:memory:"))
@@ -25,20 +14,20 @@ namespace LiteDB.Tests.Engine
                 var users = db.GetCollection("users");
                 var indexes = db.GetCollection("$indexes");
 
-                users.Insert(new BsonDocument { ["name"] = new BsonDocument { ["first"] = "John", ["last"] = "Doe" } });
-                users.Insert(new BsonDocument { ["name"] = new BsonDocument { ["first"] = "Marco", ["last"] = "Pollo" } });
+                users.Insert(new BsonDocument {["name"] = new BsonDocument {["first"] = "John", ["last"] = "Doe"}});
+                users.Insert(new BsonDocument {["name"] = new BsonDocument {["first"] = "Marco", ["last"] = "Pollo"}});
 
                 // no index name defined
                 users.EnsureIndex("name.last");
                 users.EnsureIndex("$.name.first", true);
 
                 // default name: remove all non-[a-z] chars
-                Assert.IsNotNull(indexes.FindOne("collection = 'users' AND name = 'namelast'"));
-                Assert.IsNotNull(indexes.FindOne("collection = 'users' AND name = 'namefirst'"));
+                indexes.Invoking(indexCol => indexCol.FindOne("collection = 'users' AND name = 'namelast'")).Should().NotBeNull();
+                indexes.Invoking(indexCol => indexCol.FindOne("collection = 'users' AND name = 'namefirst'")).Should().NotBeNull();
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Index_Order()
         {
             using (var db = new LiteDatabase("filename=:memory:"))
@@ -46,11 +35,11 @@ namespace LiteDB.Tests.Engine
                 var col = db.GetCollection("col");
                 var indexes = db.GetCollection("$indexes");
 
-                col.Insert(new BsonDocument { { "text", "D" } });
-                col.Insert(new BsonDocument { { "text", "A" } });
-                col.Insert(new BsonDocument { { "text", "E" } });
-                col.Insert(new BsonDocument { { "text", "C" } });
-                col.Insert(new BsonDocument { { "text", "B" } });
+                col.Insert(new BsonDocument {{"text", "D"}});
+                col.Insert(new BsonDocument {{"text", "A"}});
+                col.Insert(new BsonDocument {{"text", "E"}});
+                col.Insert(new BsonDocument {{"text", "C"}});
+                col.Insert(new BsonDocument {{"text", "B"}});
 
                 col.EnsureIndex("text");
 
@@ -66,30 +55,31 @@ namespace LiteDB.Tests.Engine
                     .ToDocuments()
                     .Select(x => x["text"].AsString));
 
-                Assert.AreEqual("ABCDE", asc);
-                Assert.AreEqual("EDCBA", desc);
+                asc.Should().Be("ABCDE");
+                desc.Should().Be("EDCBA");
 
                 var rr = indexes.Query().ToList();
 
-                Assert.AreEqual(1, indexes.Count("name = 'text'"));
+                indexes.Count("name = 'text'").Should().Be(1);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Index_With_Like()
         {
             using (var db = new LiteDatabase("filename=:memory:"))
             {
                 var col = db.GetCollection("names", BsonAutoId.Int32);
 
-                col.Insert(new[] {
-                    new BsonDocument { ["name"] = "marcelo" },
-                    new BsonDocument { ["name"] = "mauricio" },
-                    new BsonDocument { ["name"] = "Mauricio" },
-                    new BsonDocument { ["name"] = "MAUricio" },
-                    new BsonDocument { ["name"] = "MAURICIO" },
-                    new BsonDocument { ["name"] = "mauRO" },
-                    new BsonDocument { ["name"] = "ANA" }
+                col.Insert(new[]
+                {
+                    new BsonDocument {["name"] = "marcelo"},
+                    new BsonDocument {["name"] = "mauricio"},
+                    new BsonDocument {["name"] = "Mauricio"},
+                    new BsonDocument {["name"] = "MAUricio"},
+                    new BsonDocument {["name"] = "MAURICIO"},
+                    new BsonDocument {["name"] = "mauRO"},
+                    new BsonDocument {["name"] = "ANA"}
                 });
 
                 col.EnsureIndex("idx_name", "name", false);
@@ -102,26 +92,25 @@ namespace LiteDB.Tests.Engine
                 var r1 = db.Execute("SELECT name FROM names WHERE name LIKE 'MAU%'").ToArray();
                 var r2 = db.Execute("SELECT name FROM names WHERE name LIKE 'mau%'").ToArray();
 
-                Assert.AreEqual(5, r0.Length);
-                Assert.AreEqual(5, r1.Length);
-                Assert.AreEqual(5, r2.Length);
+                r0.Length.Should().Be(5);
+                r1.Length.Should().Be(5);
+                r2.Length.Should().Be(5);
 
                 // only `mauricio´
                 var r3 = db.Execute("SELECT name FROM names WHERE name LIKE 'ma%ci%'").ToArray();
                 var r4 = db.Execute("SELECT name FROM names WHERE name LIKE 'maUriCIO").ToArray();
 
-                Assert.AreEqual(4, r3.Length);
-                Assert.AreEqual(4, r4.Length);
+                r3.Length.Should().Be(4);
+                r4.Length.Should().Be(4);
 
                 var r5 = db.Execute("SELECT name FROM names WHERE name LIKE 'marc_o").ToArray();
 
-                Assert.AreEqual(0, r5.Length);
+                r5.Length.Should().Be(0);
 
                 // `marcelo`
                 var r6 = db.Execute("SELECT name FROM names WHERE name LIKE 'marc__o").ToArray();
 
-                Assert.AreEqual(1, r6.Length);
-
+                r6.Length.Should().Be(1);
             }
         }
     }

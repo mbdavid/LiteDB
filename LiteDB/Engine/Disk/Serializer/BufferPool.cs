@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {

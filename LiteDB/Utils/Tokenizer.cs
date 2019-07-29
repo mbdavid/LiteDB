@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -195,7 +196,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return Value + " (" + Type + ")";
+            return this.Value + " (" + this.Type + ")";
         }
     }
 

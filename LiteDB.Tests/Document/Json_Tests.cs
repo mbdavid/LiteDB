@@ -1,9 +1,9 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
+using FluentAssertions;
+using Xunit;
 
 namespace LiteDB.Tests.Document
 {
-    [TestClass]
     public class Json_Tests
     {
         private BsonDocument CreateDoc()
@@ -33,7 +33,7 @@ namespace LiteDB.Tests.Document
             return doc;
         }
 
-        [TestMethod]
+        [Fact]
         public void Json_To_Document()
         {
             var o = CreateDoc();
@@ -42,12 +42,12 @@ namespace LiteDB.Tests.Document
 
             var doc = JsonSerializer.Deserialize(json).AsDocument;
 
-            Assert.AreEqual(o["Special"].AsString, doc["Special"].AsString);
-            Assert.AreEqual(o["Date"].AsDateTime, doc["Date"].AsDateTime);
-            Assert.AreEqual(o["CustomerId"].AsGuid, doc["CustomerId"].AsGuid);
-            Assert.AreEqual(o["Items"].AsArray.Count, doc["Items"].AsArray.Count);
-            Assert.AreEqual(123, doc["_id"].AsInt32);
-            Assert.AreEqual(o["_id"].AsInt64, doc["_id"].AsInt64);
+            doc["Special"].AsString.Should().Be(o["Special"].AsString);
+            doc["Date"].AsDateTime.Should().Be(o["Date"].AsDateTime);
+            doc["CustomerId"].AsGuid.Should().Be(o["CustomerId"].AsGuid);
+            doc["Items"].AsArray.Count.Should().Be(o["Items"].AsArray.Count);
+            doc["_id"].AsInt32.Should().Be(123);
+            doc["_id"].AsInt64.Should().Be(o["_id"].AsInt64);
         }
     }
 }

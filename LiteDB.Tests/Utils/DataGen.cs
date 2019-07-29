@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB.Tests
 {
@@ -49,7 +47,7 @@ namespace LiteDB.Tests
         /// </summary>
         public static IEnumerable<Person> Person(int start, int end)
         {
-            foreach(var p in Person().Skip(start - 1).Take(end - start + 1))
+            foreach (var p in Person().Skip(start - 1).Take(end - start + 1))
             {
                 yield return p;
             }

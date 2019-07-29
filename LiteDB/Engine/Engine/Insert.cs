@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -22,6 +23,8 @@ namespace LiteDB.Engine
                 var count = 0;
                 var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
+
+                LOG($"insert `{collection}`", "COMMAND");
 
                 foreach (var doc in docs)
                 {

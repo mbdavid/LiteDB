@@ -1,22 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
+﻿using System.Linq;
+using FluentAssertions;
 using LiteDB.Engine;
-using System.Threading;
+using Xunit;
 
 namespace LiteDB.Internals
 {
-    [TestClass]
     public class HeaderPage_Tests
     {
-        [TestMethod]
+        [Fact]
         public void HeaderPage_Collections()
         {
             var data = new byte[Constants.PAGE_SIZE];
@@ -31,25 +22,25 @@ namespace LiteDB.Internals
             header.InsertCollection("my-col1", 1);
             header.InsertCollection("my-col2", 2);
 
-            Assert.AreEqual(2, header.GetCollections().Count());
-            Assert.AreEqual(1, (int)header.GetCollectionPageID("my-col1"));
-            Assert.AreEqual(2, (int)header.GetCollectionPageID("my-col2"));
-            Assert.AreEqual(7981, header.GetAvaiableCollectionSpace());
+            header.GetCollections().Count().Should().Be(2);
+            ((int) header.GetCollectionPageID("my-col1")).Should().Be(1);
+            ((int) header.GetCollectionPageID("my-col2")).Should().Be(2);
+            header.GetAvaiableCollectionSpace().Should().Be(7981);
 
             header.UpdateBuffer();
 
             // read header
             var h2 = new HeaderPage(buffer);
 
-            Assert.AreEqual(2, h2.GetCollections().Count());
-            Assert.AreEqual(1, (int)h2.GetCollectionPageID("my-col1"));
-            Assert.AreEqual(2, (int)h2.GetCollectionPageID("my-col2"));
-            Assert.AreEqual(7981, h2.GetAvaiableCollectionSpace());
+            h2.GetCollections().Count().Should().Be(2);
+            ((int) h2.GetCollectionPageID("my-col1")).Should().Be(1);
+            ((int) h2.GetCollectionPageID("my-col2")).Should().Be(2);
+            h2.GetAvaiableCollectionSpace().Should().Be(7981);
 
             buffer.ShareCounter = 0;
         }
 
-        [TestMethod]
+        [Fact]
         public void HeaderPage_Savepoint()
         {
             var data = new byte[Constants.PAGE_SIZE];
@@ -64,7 +55,7 @@ namespace LiteDB.Internals
             header.InsertCollection("my-col1", 1);
             header.InsertCollection("my-col2", 2);
 
-            Assert.AreEqual(2, header.GetCollections().Count());
+            header.GetCollections().Count().Should().Be(2);
 
             // savepoint alse execute UpdateBuffer
             var sp = header.Savepoint();
@@ -74,12 +65,12 @@ namespace LiteDB.Internals
 
             header.UpdateBuffer();
 
-            Assert.AreEqual(0, header.GetCollections().Count());
+            header.GetCollections().Count().Should().Be(0);
 
             // now, restore header
             header.Restore(sp);
 
-            Assert.AreEqual(2, header.GetCollections().Count());
+            header.GetCollections().Count().Should().Be(2);
 
             buffer.ShareCounter = 0;
         }

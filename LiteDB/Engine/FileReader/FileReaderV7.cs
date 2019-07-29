@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -373,12 +374,15 @@ namespace LiteDB.Engine
         /// </summary>
         private HashSet<uint> VisitIndexPages(uint startPageID)
         {
-            var toVisit = new Queue<uint>(new uint[] { startPageID });
+            var toVisit = new HashSet<uint>(new uint[] { startPageID });
             var visited = new HashSet<uint>();
 
             while(toVisit.Count > 0)
             {
-                var indexPageID = toVisit.Dequeue();
+                var indexPageID = toVisit.First();
+
+                toVisit.Remove(indexPageID);
+
                 var indexPage = this.ReadPage(indexPageID);
 
                 if (indexPage == null || indexPage["pageType"] != 3) continue;
@@ -390,8 +394,8 @@ namespace LiteDB.Engine
                     var prev = (uint)node["prev"]["pageID"].AsInt32;
                     var next = (uint)node["next"]["pageID"].AsInt32;
 
-                    if (!visited.Contains(prev)) toVisit.Enqueue(prev);
-                    if (!visited.Contains(next)) toVisit.Enqueue(next);
+                    if (!visited.Contains(prev)) toVisit.Add(prev);
+                    if (!visited.Contains(next)) toVisit.Add(next);
                 }
             }
 

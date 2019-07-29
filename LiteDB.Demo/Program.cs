@@ -21,53 +21,51 @@ namespace LiteDB.Demo
             Console.WriteLine("LITE DB v5");
             Console.WriteLine("===========================================================");
 
-            //var cn = @"filename=d:\appPWD.db; password=abc";
+            File.Delete(@"d:\test-1m.db");
+            File.Delete(@"d:\test-1m-log.db");
 
-            File.Delete(@"d:\app.db");
-            File.Delete(@"d:\app-log.db");
-
-            //using (var repo = new LiteRepository(cn))
-            //{
-            //    repo.Database.UserVersion = 99;
-            //}
-
-
+            var file = @"d:\test-1m.db";
             var sw = new Stopwatch();
 
-            using (var e = new LiteEngine(new EngineSettings { Filename = @"d:\app.db" }))
+            using (var db = new LiteDatabase(file))
             {
-                sw.Start();
+                var col = db.GetCollection<Event>("event");
 
-                // insert 5.000 docs
-                //e.Insert("col1", Enumerable.Range(1, 5000).Select(x => new BsonDocument { ["_id"] = x }), BsonAutoId.Int32);
+                var tmp = new List<Event>();
 
-                foreach(var d in Enumerable.Range(1, 5000).Select(x => new BsonDocument { ["_id"] = x }))
+                for (var i = 0; i < 1_000_000; i++)
                 {
-                    e.Insert("col1", new BsonDocument[] { d }, BsonAutoId.Int32);
-
+                    tmp.Add(new Event()
+                    {
+                        Data = "the quick brown fox jumps over the lazy dog",
+                        DateTime = DateTime.Now
+                    });
                 }
 
+                // -----------------
 
-                e.Checkpoint();
-                sw.Stop();
+                sw.Restart();
+
+                col.Insert(tmp);
+
+                Console.WriteLine("Insert: " + sw.Elapsed);
+
+                // -----------------
+
+                sw.Restart();
+
+                db.Checkpoint();
+
+                Console.WriteLine("Checkpoint: " + sw.Elapsed);
+
+                // -----------------
+
+                sw.Restart();
+
+                col.EnsureIndex(x => x.DateTime);
+
+                Console.WriteLine("EnsureIndex: " + sw.Elapsed);
             }
-
-
-            Console.WriteLine("Time: " + sw.ElapsedMilliseconds);
-            //
-            //using (var repo = new LiteRepository(cn))
-            //{
-            //    var u = repo.Database.UserVersion;
-            //
-            //    Console.WriteLine(u);
-            //
-            //    var mau = repo.FirstOrDefault<BsonDocument>(x => x["_id"] == 1, "col1");
-            //    //
-            //    Console.WriteLine("dados:" + mau["n"].AsString);
-            //
-            //}
-
-
 
             Console.WriteLine(" ===========================================================");
             Console.WriteLine("End");
@@ -83,6 +81,12 @@ namespace LiteDB.Demo
         public List<User> Children { get; set; }
     }
 
+    public class Event
+    {
+        public Guid Id { get; set; }
+        public DateTime DateTime { get; set; }
+        public string Data { get; set; }
+    }
 
 
 }

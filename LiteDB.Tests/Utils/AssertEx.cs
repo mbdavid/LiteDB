@@ -1,14 +1,12 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
+using FluentAssertions;
 
 namespace LiteDB.Tests
 {
     /// <summary>
-    /// Extension and addicional methods for debug
+    /// Extension and additional methods for debug
     /// </summary>
     public static class AssertEx
     {
@@ -16,10 +14,7 @@ namespace LiteDB.Tests
         public static void ArrayEqual<T>(T[] first, T[] second, bool sort)
             where T : IEqualityComparer<T>
         {
-            if (first.Length != second.Length)
-            {
-                Assert.Fail("Arrays with diferent item count");
-            }
+            first.Length.Should().Be(second.Length, "because arrays with diferent item count");
 
             if (sort)
             {
@@ -29,14 +24,11 @@ namespace LiteDB.Tests
 
             var index = 0;
 
-            foreach (var zip in first.Zip(second, (First, Second) => new { First, Second }))
+            foreach (var zip in first.Zip(second, (First, Second) => new {First, Second}))
             {
                 var r = zip.First.Equals(zip.First, zip.Second);
 
-                if (r == false)
-                {
-                    Assert.Fail($"Index [{index}]: values are not same: `{zip.First}` != `{zip.Second}`");
-                }
+                r.Should().BeTrue($"Index [{index}]: values are not same: `{zip.First}` != `{zip.Second}`");
 
                 index++;
             }
@@ -45,43 +37,43 @@ namespace LiteDB.Tests
         [DebuggerHidden]
         public static void ExpectValue(this BsonValue value, BsonValue expect)
         {
-            Assert.AreEqual(expect, value);
+            value.Should().Be(expect);
         }
 
         [DebuggerHidden]
         public static void ExpectValue<T>(this T value, T expect)
         {
-            Assert.AreEqual(expect, value);
+            value.Should().Be(expect);
         }
 
         [DebuggerHidden]
         public static void ExpectArray(this BsonValue value, params BsonValue[] args)
         {
-            Assert.AreEqual(new BsonArray(args), value);
+            value.Should().Be(new BsonArray(args));
         }
 
         [DebuggerHidden]
         public static void ExpectJson(this BsonValue value, string expectJson)
         {
-            Assert.AreEqual(JsonSerializer.Deserialize(expectJson), value);
+            value.Should().Be((JsonSerializer.Deserialize(expectJson)));
         }
 
         [DebuggerHidden]
         public static void ExpectValues(this IEnumerable<BsonValue> values, params BsonValue[] expectValues)
         {
-            CollectionAssert.AreEqual(expectValues, values.ToArray());
+            values.ToArray().Should().Equal(expectValues);
         }
 
         [DebuggerHidden]
         public static void ExpectValues<T>(this IEnumerable<T> values, params T[] expectValues)
         {
-            CollectionAssert.AreEqual(expectValues, values.ToArray());
+            values.ToArray().Should().Equal(expectValues);
         }
 
         [DebuggerHidden]
         public static void ExpectCount<T>(this IEnumerable<T> values, int count)
         {
-            Assert.AreEqual(count, values.Count());
+            count.Should().Be(count);
         }
     }
 }

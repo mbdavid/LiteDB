@@ -1,22 +1,14 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
+﻿using System.IO;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
+using FluentAssertions;
 using LiteDB.Engine;
-using System.Threading;
+using Xunit;
 
 namespace LiteDB.Internals
 {
-    [TestClass]
     public class Disk_Tests
     {
-        [TestMethod]
+        [Fact]
         public void Disk_Read_Write()
         {
             var settings = new EngineSettings
@@ -34,7 +26,7 @@ namespace LiteDB.Internals
             {
                 var p = disk.NewPage();
 
-                p.Fill((byte)i); // fills with 0 - 99
+                p.Fill((byte) i); // fills with 0 - 99
 
                 pages.Add(p);
             }
@@ -52,13 +44,13 @@ namespace LiteDB.Internals
             {
                 var p = reader.ReadPage(i * 8192, false, FileOrigin.Log);
 
-                Assert.IsTrue(p.All((byte)i));
+                p.All((byte) i).Should().BeTrue();
 
                 p.Release();
             }
 
             // test cache in use
-            Assert.AreEqual(0, disk.Cache.PagesInUse);
+            disk.Cache.PagesInUse.Should().Be(0);
 
             // wait all async threads
             disk.Dispose();

@@ -1,18 +1,9 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
+﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using LiteDB.Engine;
 
 namespace LiteDB.Tests.Query
 {
-    public class Person_Tests
+    public class Person_Tests : IDisposable
     {
         protected readonly Person[] local;
 
@@ -22,20 +13,15 @@ namespace LiteDB.Tests.Query
         public Person_Tests()
         {
             this.local = DataGen.Person().ToArray();
-        }
 
-        [TestInitialize]
-        public void Init()
-        {
             db = new LiteDatabase(":memory:");
             collection = db.GetCollection<Person>("person");
             collection.Insert(this.local);
         }
 
-        [TestCleanup]
-        public void CleanUp()
+        public void Dispose()
         {
-            db.Dispose();
+            db?.Dispose();
         }
     }
 }

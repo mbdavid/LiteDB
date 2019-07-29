@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -21,6 +22,8 @@ namespace LiteDB.Engine
                 var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
                 var count = 0;
+
+                LOG($"update `{collection}`", "COMMAND");
 
                 foreach (var doc in docs)
                 {

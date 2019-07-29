@@ -11,7 +11,7 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysTransactions()
         {
-            foreach (var transaction in _transactions.Values)
+            foreach (var transaction in _monitor.Transactions)
             {
                 yield return new BsonDocument
                 {
@@ -20,6 +20,7 @@ namespace LiteDB.Engine
                     ["startTime"] = transaction.StartTime,
                     ["mode"] = transaction.Mode.ToString(),
                     ["transactionSize"] = transaction.Pages.TransactionSize,
+                    ["maxTransactionSize"] = transaction.MaxTransactionSize,
                     ["pagesInLogFile"] = transaction.Pages.DirtyPages.Count,
                     ["newPages"] = transaction.Pages.NewPages.Count,
                     ["deletedPages"] = transaction.Pages.DeletedPages

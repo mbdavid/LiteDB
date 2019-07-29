@@ -1,22 +1,15 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using LiteDB.Engine;
-using System.Threading;
+using FluentAssertions;
+using Xunit;
 
 namespace LiteDB.Tests.Engine
 {
-    [TestClass]
     public class Analyze_Tests
     {
-        [TestMethod]
+        [Fact]
         public void Analyze_Collection_Count()
         {
             var zip = DataGen.Zip().Take(100).ToArray();
@@ -35,12 +28,14 @@ namespace LiteDB.Tests.Engine
                     .ToDictionary(x => x["name"].AsString, x => x, StringComparer.OrdinalIgnoreCase);
 
                 // testing for just-created indexes (always be zero)
-                Assert.AreEqual(0, indexes["_id"]["keyCount"].AsInt32);
-                Assert.AreEqual(0, indexes["_id"]["uniqueKeyCount"].AsInt32);
-                Assert.AreEqual(0, indexes["city"]["keyCount"].AsInt32);
-                Assert.AreEqual(0, indexes["city"]["uniqueKeyCount"].AsInt32);
-                Assert.AreEqual(0, indexes["loc"]["keyCount"].AsInt32);
-                Assert.AreEqual(0, indexes["loc"]["uniqueKeyCount"].AsInt32);
+                indexes["_id"]["keyCount"].AsInt32.Should().Be(0);
+                indexes["_id"]["uniqueKeyCount"].AsInt32.Should().Be(0);
+                indexes["city"]["uniqueKeyCount"].AsInt32.Should().Be(0);
+                indexes["loc"]["uniqueKeyCount"].AsInt32.Should().Be(0);
+
+                // but indexes created after data exists will count
+                indexes["city"]["keyCount"].AsInt32.Should().Be(100);
+                indexes["loc"]["keyCount"].AsInt32.Should().Be(200);
 
                 db.Analyze("zip");
 
@@ -51,14 +46,13 @@ namespace LiteDB.Tests.Engine
                 var uniqueCity = new HashSet<string>(zip.Select(x => x.City));
                 var uniqueLoc = new HashSet<double>(zip.Select(x => x.Loc[0]).Union(zip.Select(x => x.Loc[1])));
 
-                Assert.AreEqual(zip.Length, indexes["_id"]["keyCount"].AsInt32);
-                Assert.AreEqual(zip.Length, indexes["_id"]["uniqueKeyCount"].AsInt32);
+                indexes["_id"]["keyCount"].AsInt32.Should().Be(zip.Length);
+                indexes["_id"]["uniqueKeyCount"].AsInt32.Should().Be(zip.Length);
+                indexes["city"]["keyCount"].AsInt32.Should().Be(zip.Length);
+                indexes["city"]["uniqueKeyCount"].AsInt32.Should().Be(uniqueCity.Count);
 
-                Assert.AreEqual(zip.Length, indexes["city"]["keyCount"].AsInt32);
-                Assert.AreEqual(uniqueCity.Count, indexes["city"]["uniqueKeyCount"].AsInt32);
-
-                Assert.AreEqual(zip.Length * 2, indexes["loc"]["keyCount"].AsInt32);
-                Assert.AreEqual(uniqueLoc.Count, indexes["loc"]["uniqueKeyCount"].AsInt32);
+                indexes["loc"]["keyCount"].AsInt32.Should().Be(zip.Length * 2);
+                indexes["loc"]["uniqueKeyCount"].AsInt32.Should().Be(uniqueLoc.Count);
             }
         }
     }

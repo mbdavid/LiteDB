@@ -1,18 +1,12 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Linq;
+using FluentAssertions;
+using Xunit;
 
 namespace LiteDB.Tests.Document
 {
-    [TestClass]
     public class Case_Insensitive_Tests
     {
-        [TestMethod]
+        [Fact]
         public void Get_Document_Fields_Case_Insensitive()
         {
             var doc = new BsonDocument
@@ -22,21 +16,20 @@ namespace LiteDB.Tests.Document
                 ["Last Job This Year"] = "admin"
             };
 
-            Assert.AreEqual(10, doc["_id"].AsInt32);
-            Assert.AreEqual(10, doc["_ID"].AsInt32);
-            Assert.AreEqual(10, doc["_Id"].AsInt32);
+            doc["_id"].AsInt32.Should().Be(10);
+            doc["_ID"].AsInt32.Should().Be(10);
+            doc["_Id"].AsInt32.Should().Be(10);
 
-            Assert.AreEqual("John", doc["name"].AsString);
-            Assert.AreEqual("John", doc["Name"].AsString);
-            Assert.AreEqual("John", doc["NamE"].AsString);
+            doc["name"].AsString.Should().Be("John");
+            doc["Name"].AsString.Should().Be("John");
+            doc["NamE"].AsString.Should().Be("John");
 
-            Assert.AreEqual("admin", doc["Last Job This Year"].AsString);
-            Assert.AreEqual("admin", doc["last JOB this YEAR"].AsString);
+            doc["Last Job This Year"].AsString.Should().Be("admin");
+            doc["last JOB this YEAR"].AsString.Should().Be("admin");
 
             // using expr
-            Assert.AreEqual("admin", BsonExpression.Create("$.['Last Job This Year']").Execute(doc).First().AsString);
-            Assert.AreEqual("admin", BsonExpression.Create("$.['Last JOB THIS Year']").Execute(doc).First().AsString);
-
+            BsonExpression.Create("$.['Last Job This Year']").Execute(doc).First().AsString.Should().Be("admin");
+            BsonExpression.Create("$.['Last JOB THIS Year']").Execute(doc).First().AsString.Should().Be("admin");
         }
     }
 }

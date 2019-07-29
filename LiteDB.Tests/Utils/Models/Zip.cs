@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB.Tests
 {
@@ -28,9 +25,9 @@ namespace LiteDB.Tests
         public bool Equals(Zip x, Zip y)
         {
             return x.Id == y.Id &&
-                x.City == y.City &&
-                x.Loc == y.Loc &&
-                x.State == y.State;
+                   x.City == y.City &&
+                   x.Loc == y.Loc &&
+                   x.State == y.State;
         }
 
         public int GetHashCode(Zip obj)

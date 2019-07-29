@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -31,6 +32,8 @@ namespace LiteDB.Engine
 
                 // if collection do not exist, just exit
                 if (snapshot.CollectionPage == null) return false;
+
+                LOG($"drop collection `{name}`", "COMMAND");
 
                 // call drop collection service
                 snapshot.DropCollection(transaction.Safepoint);

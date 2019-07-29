@@ -56,9 +56,15 @@ namespace LiteDB
         public const int MAX_DOCUMENT_SIZE = 250 * (DataService.MAX_DATA_BYTES_PER_PAGE);
 
         /// <summary>
-        /// Max pages in a transaction before persist on disk and clear transaction local pages
+        /// Define how many transactions can be open simultaneously
         /// </summary>
-        public const int MAX_TRANSACTION_SIZE = 10000; // 10000 (default) - 1000 (for tests)
+        public const int MAX_OPEN_TRANSACTIONS = 100; // 100
+
+        /// <summary>
+        /// Define how many pages all transaction will consume, in memory, before persist in disk. This amount are shared across all open transactions
+        /// 100,000 ~= 1Gb memory
+        /// </summary>
+        public const int MAX_TRANSACTION_SIZE = 100_000; // 100_000 (default) - 1000 (for tests)
 
         /// <summary>
         /// Size, in PAGES, for each buffer array (used in MemoryStore) - Each byte array will be created with this size * PAGE_SIZE
@@ -85,6 +91,16 @@ namespace LiteDB
             var threadID = Thread.CurrentThread.ManagedThreadId;
 
             Debug.WriteLine(message, threadID + "|" + category);
+        }
+
+        /// <summary>
+        /// Log a message using Debug.WriteLine only if conditional = true
+        /// </summary>
+        [DebuggerHidden]
+        [Conditional("DEBUG")]
+        public static void LOG(bool conditional, string message, string category)
+        {
+            if (conditional) LOG(message, category);
         }
 
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -25,20 +26,14 @@ namespace LiteDB.Engine
 
         private readonly HeaderPage _header;
 
+        private readonly TransactionMonitor _monitor;
+
+        private readonly SortDisk _sortDisk;
+
         // immutable settings
         private readonly EngineSettings _settings;
 
         private bool _disposed = false;
-
-        /// <summary>
-        /// Get database initialize settings (used for Debug/UnitTest only)
-        /// </summary>
-        internal EngineSettings Settings => _settings;
-
-        /// <summary>
-        /// Get internal temporaty disk to be used in sort operation - will create a file "-tmp" when needed (used more than 1 container (800kb) of data to sort)
-        /// </summary>
-        internal SortDisk SortDisk { get; }
 
         #endregion
 
@@ -95,7 +90,10 @@ namespace LiteDB.Engine
                 }
 
                 // initialize sort temp disk
-                this.SortDisk = new SortDisk(settings.CreateTempFactory(), CONTAINER_SORT_SIZE, settings.UtcDate);
+                _sortDisk = new SortDisk(settings.CreateTempFactory(), CONTAINER_SORT_SIZE, settings.UtcDate);
+
+                // initialize transaction monitor as last service
+                _monitor = new TransactionMonitor(_header, _locker, _disk, _walIndex, _settings);
 
                 // register system collections
                 this.InitializeSystemCollections();
@@ -114,17 +112,22 @@ namespace LiteDB.Engine
 
         #endregion
 
+#if DEBUG
+        // exposes for unit tests
+        internal TransactionMonitor GetMonitor() => _monitor;
+#endif
+
         /// <summary>
         /// Run checkpoint command to copy log file into data file
         /// </summary>
-        public void Checkpoint() => _walIndex.Checkpoint();
+        public void Checkpoint() => _walIndex.Checkpoint(false);
 
         /// <summary>
         /// Shutdown process:
-        /// - Try do checkpoint (if defined as true)
-        /// - Dispose disks (no more can even read data from disk/cache)
-        /// - Dispose locker
-        /// (in DEBUG mode you can get some ENSURE "Release" problems, but it's ok)
+        /// - Stop any new transaction
+        /// - Stop operation loops over database (throw in SafePoint)
+        /// - Wait for writer queue
+        /// - Close disks
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
@@ -135,13 +138,16 @@ namespace LiteDB.Engine
             if (disposing)
             {
                 // stop running all transactions
-                _transactions.ForEach((x, i) => i.Value.Abort());
+                _monitor.Dispose();
+
+                // try checkpoint
+                _walIndex.Checkpoint(true);
 
                 // close all disk connections
                 _disk?.Dispose();
 
                 // delete sort temp file
-                this.SortDisk?.Dispose();
+                _sortDisk?.Dispose();
 
                 // dispose lockers
                 _locker?.Dispose();
