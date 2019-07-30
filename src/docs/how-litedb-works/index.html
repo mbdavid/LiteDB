@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>How LiteDB Works - Hugo Whisper Theme</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="www.example.com/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  
+  
+  
+  <link rel="stylesheet" href="/www.example.com/css/style.min.f31edf12f81d9ad5234f2b100646ce1f51e3ab0f6a37c940a43bcd79513204c3.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-single'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Docs</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.example.com/docs/bsondocument/">BsonDocument</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/changelog/">ChangeLog</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/collections/">Collections</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/concurrency/">Concurrency</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/connection-string/">Connection String</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/data-structure/">Data Structure</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/dbref/">DbRef</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/expressions/">Expressions</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/filestorage/">FileStorage</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/getting-started/">Getting Started</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.example.com/docs/how-litedb-works/">How LiteDB Works</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/indexes/">Indexes</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/object-mapping/">Object Mapping</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/queries/">Queries</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/repository-pattern/">Repository Pattern</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">How LiteDB Works</h1>
+<div class="content">
+  
+
+<h3 id="file-format">File Format</h3>
+
+<p>LiteDB is a single file database. But databases have many different types of information, like indexes, collections, documents. To manage this, LiteDB implements database pages concepts. Page is a block of same information type and has 4096 bytes. Page is the minimum read/write operation on disk file. There are 6 page types:</p>
+
+<ul>
+<li><strong>Header Page</strong>: Contains database information, like file version, data file size and pointer to free list pages. Is the first page on database (<code>PageID</code> = 0).</li>
+<li><strong>Collection Page</strong>: Each collection use one page and hold all collection information, like name, indexes, pointers and options. All collections are connected each others by a double linked list.</li>
+<li><strong>Index Page</strong>: Used to hold index nodes. LiteDB implement skip list indexes, so each node has one key and levels link pointers to others index nodes.</li>
+<li><strong>Data Page</strong>: Data page contains data blocks. Each data block represent an document serialized in BSON format. If a document is bigger than one page, data block use a link pointer to an extended page.</li>
+<li><strong>Extend Page</strong>: Big documents that need more than one page, are serialized in multiples extended pages. Extended pages are double linked to create a single data segment that to store documents. Each extend page contains only one document or a chunk of a document.</li>
+<li><strong>Empty Page</strong>: When a page is excluded becomes a empty page. Empty pages will be use on next page request (for any kind of page).</li>
+</ul>
+
+<p>Each page has a own header and content. Header is used to manage common data structure like PageID, PageType, Free Space. Content are implement different on each page type.</p>
+
+<h4 id="page-free-space">Page free space</h4>
+
+<p>Index pages and data pages contains a collection of elements (index nodes and data blocks). This pages can store data and keep with available space to more. To hold this free space on each page type, LiteDB implements free list pages.</p>
+
+<p>Free list are a double linked list, sorted by available space. When database need a page to store data use this list to search first available page. After this, <code>PagerService</code> fix page order or remove from free list if there is no more space on page.</p>
+
+<p>To create near data related, each collection contains an data free list. So, in a data page, all data blocks are of same collection. The same occurs in indexes. Each index (on each collection) contains your own free list. This solution consume more disk space but are much faster to read/write operations because data are related and near one with other. If you get all documents in a collection, database needs read less pages on disk.</p>
+
+<h3 id="limits">Limits</h3>
+
+<ul>
+<li>Collection Name:
+
+<ul>
+<li>Pattern: <code>A-Z</code>, <code>_-</code>, <code>0-9</code></li>
+<li>Maxlength of 60 chars</li>
+<li>Case insensitive</li>
+</ul></li>
+<li>Index Name:
+
+<ul>
+<li>Pattern: <code>A-Z</code>, <code>_-</code>, <code>0-9</code> (<code>.</code> for nested document)</li>
+<li>Maxlength of 60 chars</li>
+<li>Case sensitive</li>
+</ul></li>
+<li>BsonDocument Key Name:
+
+<ul>
+<li><code>A-Z</code>, <code>_-</code>, <code>0-9</code></li>
+<li>Case sensitive</li>
+</ul></li>
+<li>FileStorage FileId:
+
+<ul>
+<li>Pattern: same used in file system path/file.</li>
+<li>Case sensitive</li>
+</ul></li>
+<li>Collections: 3000 bytes to all collections names (each collection has 8 bytes of overhead)</li>
+<li>Documents per collections: <code>UInt.MaxValue</code></li>
+<li>FileStorage Max File Length: 2Gb per file</li>
+<li>Index key size: 512 bytes after BSON serialization</li>
+<li>BSON document size: no limit (but highly recommended to keep as little as possible, under 200kb)</li>
+<li>Nested Depth for BSON Documents: 20</li>
+<li>Page Size: 4096 bytes</li>
+<li>DataPage Reserved Bytes: 2039 bytes (like PCT FREE)</li>
+<li>IndexPage Reserved Bytes: 100 bytes (like PCT FREE)</li>
+<li>Database Max Length: In theory, <code>UInt.MaxValue</code> * PageSize (4096) = 16TB ~ Too big!</li>
+</ul>
+
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li class="zerostatic"><a href="https://www.zerostatic.io">www.zerostatic.io</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/www.example.com/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+  
+
+
+</body>
+
+</html>

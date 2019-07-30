@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>LiteDB5 - A .NET NoSQL Document Store in a single data file on Hugo Whisper Theme</title>
+    <link>www.example.com/</link>
+    <description>Recent content in LiteDB5 - A .NET NoSQL Document Store in a single data file on Hugo Whisper Theme</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 28 Nov 2018 15:14:39 +1000</lastBuildDate>
+    
+	<atom:link href="www.example.com/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>BsonDocument</title>
+      <link>www.example.com/api/bsondocument/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/api/bsondocument/</guid>
+      <description>The BsonDocument class is LiteDB&amp;rsquo;s implementation of documents. Internally, a BsonDocument stores key-value pairs in a Dictionary&amp;lt;string, BsonValue&amp;gt;.
+var customer = new BsonDocument(); customer[&amp;#34;_id&amp;#34;] = ObjectId.NewObjectId(); customer[&amp;#34;Name&amp;#34;] = &amp;#34;John Doe&amp;#34;; customer[&amp;#34;CreateDate&amp;#34;] = DateTime.Now; customer[&amp;#34;Phones&amp;#34;] = new BsonArray { &amp;#34;8000-0000&amp;#34;, &amp;#34;9000-000&amp;#34; }; customer[&amp;#34;IsActive&amp;#34;] = true; customer[&amp;#34;IsAdmin&amp;#34;] = new BsonValue(true); customer.Set(&amp;#34;Address.Street&amp;#34;, &amp;#34;Av. Protasio Alves, 1331&amp;#34;);  About document field keys:
+ Keys must contains only letters, numbers or _ and - Keys are case-sensitive Duplicate keys are not allowed LiteDB keeps the original key order, including mapped classes.</description>
+    </item>
+    
+    <item>
+      <title>BsonDocument</title>
+      <link>www.example.com/docs/bsondocument/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/bsondocument/</guid>
+      <description>The BsonDocument class is LiteDB&amp;rsquo;s implementation of documents. Internally, a BsonDocument stores key-value pairs in a Dictionary&amp;lt;string, BsonValue&amp;gt;.
+var customer = new BsonDocument(); customer[&amp;#34;_id&amp;#34;] = ObjectId.NewObjectId(); customer[&amp;#34;Name&amp;#34;] = &amp;#34;John Doe&amp;#34;; customer[&amp;#34;CreateDate&amp;#34;] = DateTime.Now; customer[&amp;#34;Phones&amp;#34;] = new BsonArray { &amp;#34;8000-0000&amp;#34;, &amp;#34;9000-000&amp;#34; }; customer[&amp;#34;IsActive&amp;#34;] = true; customer[&amp;#34;IsAdmin&amp;#34;] = new BsonValue(true); customer.Set(&amp;#34;Address.Street&amp;#34;, &amp;#34;Av. Protasio Alves, 1331&amp;#34;);  About document field keys:
+ Keys must contains only letters, numbers or _ and - Keys are case-sensitive Duplicate keys are not allowed LiteDB keeps the original key order, including mapped classes.</description>
+    </item>
+    
+    <item>
+      <title>ChangeLog</title>
+      <link>www.example.com/docs/changelog/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/changelog/</guid>
+      <description>New Features  Add support to NETStandard 2.0 (with support to Shared mode) New document Expression parser/executor - see Expression Wiki Support index creation with expressions
+col.EnsureIndex(x =&amp;gt; x.Name, &amp;#34;LOWER($.Name)&amp;#34;); col.EnsureIndex(&amp;#34;GrandTotal&amp;#34;, &amp;#34;SUM($.Items[*].Qtd * $.Items[*].Price)&amp;#34;);   Query with Include it´s supported in Engine level with ANY nested includes C# col.Include(x =&amp;gt; x.Users) .Include(x =&amp;gt; x.Users[0].Address) .Include(x =&amp;gt; x.Users[0].Address.City) .Find(...)   Support complex Linq queries using LinqQuery compiler (works as linq to object)</description>
+    </item>
+    
+    <item>
+      <title>Collections</title>
+      <link>www.example.com/api/collections/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/api/collections/</guid>
+      <description>BsonArray public class LiteDB.BsonArray : BsonValue, IComparable&amp;lt;BsonValue&amp;gt;, IEquatable&amp;lt;BsonValue&amp;gt;, IList&amp;lt;BsonValue&amp;gt;, ICollection&amp;lt;BsonValue&amp;gt;, IEnumerable&amp;lt;BsonValue&amp;gt;, IEnumerable  Properties
+| Type | Name | Summary | | &amp;mdash; | &amp;mdash; | &amp;mdash; | | Int32 | Count | | | Boolean | IsReadOnly | | | BsonValue | Item | | | IList&amp;lt;BsonValue&amp;gt; | RawValue | |
+Methods
+| Type | Name | Summary | | &amp;mdash; | &amp;mdash; | &amp;mdash; | | void | Add(BsonValue item) | | | void | AddRange(IEnumerable&amp;lt;BsonValue&amp;gt; items) | | | void | Clear() | | | Int32 | CompareTo(BsonValue other) | | | Boolean | Contains(BsonValue item) | | | void | CopyTo(BsonValue[] array, Int32 arrayIndex) | | | Int32 | GetBytesCount(Boolean recalc) | | | IEnumerator&amp;lt;BsonValue&amp;gt; | GetEnumerator() | | | Int32 | IndexOf(BsonValue item) | | | void | Insert(Int32 index, BsonValue item) | | | Boolean | Remove(BsonValue item) | | | void | RemoveAt(Int32 index) | | | String | ToString() | |</description>
+    </item>
+    
+    <item>
+      <title>Collections</title>
+      <link>www.example.com/docs/collections/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/collections/</guid>
+      <description>Documents are stored and organized in collections. LiteCollection is a generic class to manage collections in LiteDB. Each collection must have a unique name:
+ Contains only letters, numbers and _ Collection names are case insensitive Collection names starting with _ are reserved for internal use  The total size of all the collections names in a database is limited to 3000 bytes. If you plan to have many collections in your database, make sure to use short names for your collections.</description>
+    </item>
+    
+    <item>
+      <title>Concurrency</title>
+      <link>www.example.com/docs/concurrency/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/concurrency/</guid>
+      <description>LiteDB v4 supports both thread-safe and process-safe:
+ You can create a new instance of LiteRepository, LiteDatabase or LiteEngine in each use (process-safe) You can share a single LiteRepository, LiteDatabase or LiteEngine instance across your threads (thread-safe)  In first option (process safe), you will always work disconnected from the datafile. Each use will open datafile, lock file (read or write mode), do your operation and then close datafile. Locks are implemented using FileStream.</description>
+    </item>
+    
+    <item>
+      <title>Connection String</title>
+      <link>www.example.com/docs/connection-string/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/connection-string/</guid>
+      <description>LiteDatabase can be initialize using a string connection, with key1=value1; key2=value2; ... syntax. If there is no ; in your connection string, LiteDB assume that your connection string is Filename key. Keys are case insensitive.
+Options  Filename (string): Full path or relative path from DLL directory. Journal (bool): Enabled or disable double write check to ensure durability (default: true) Password (string): Encrypt (using AES) your datafile with a password (default: null - no encryption) Cache Size (int): Max number of pages in cache.</description>
+    </item>
+    
+    <item>
+      <title>Data Structure</title>
+      <link>www.example.com/docs/data-structure/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/data-structure/</guid>
+      <description>LiteDB stores data as documents, which are JSON-like field and value pairs. Documents are a schema-less data structure. Each document has your data and structure together.
+{ _id: 1, name: { first: &amp;#34;John&amp;#34;, last: &amp;#34;Doe&amp;#34; }, age: 37, salary: 3456.0, createdDate: { $date: &amp;#34;2014-10-30T00:00:00.00Z&amp;#34; }, phones: [&amp;#34;8000-0000&amp;#34;, &amp;#34;9000-0000&amp;#34;] }   _id contains document primary key - a unique value in collection name contains an embedded document with first and last fields age contains a Int32 value salary contains a Double value createDate contains a DateTime value phones contains an array of String  LiteDB stores documents in collections.</description>
+    </item>
+    
+    <item>
+      <title>DbRef</title>
+      <link>www.example.com/docs/dbref/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/dbref/</guid>
+      <description>LiteDB is a document database, so there is no JOIN between collections. You can use embedded documents (sub-documents) or create a reference between collections. To create this reference you can use [BsonRef] attribute or use DbRef method from fluent API mapper.
+Mapping a reference on database initialization public class Customer { public int CustomerId { get; set; } public string Name { get; set; } } public class Order { public int OrderId { get; set; } public Customer Customer { get; set; } }  If you didn&amp;rsquo;t do any mapping, when you save an Order, Customer are saved as an embedded document (with no link to any other collection).</description>
+    </item>
+    
+    <item>
+      <title>Expressions</title>
+      <link>www.example.com/docs/expressions/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/expressions/</guid>
+      <description>Expressions are path or formulas to access and modify your document data. Based on JSON path article (http://goessner.net/articles/JsonPath/), LiteDB support a near syntax to navigate in a single document. Path always returns an IEnumerable&amp;lt;BsonValue&amp;gt; in any case.
+BsonExpression are the class that parse a string expression (or path) and compile into a LINQ Expression to be fast evaluate by LiteDB. Parser uses
+ Path starts with $: $.Address.Street Int values starts with [0-9]*: 123 Double values starts with [0-9].</description>
+    </item>
+    
+    <item>
+      <title>FileStorage</title>
+      <link>www.example.com/docs/filestorage/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/filestorage/</guid>
+      <description>To keep its memory profile slim, LiteDB has a limited document size of 1Mb. For text documents, this is a huge size. But for many binary files, 1Mb is too small. LiteDB therefore implements FileStorage, a custom collection to store files and streams.
+LiteDB uses two special collections to split file content in chunks:
+ _files collection stores file reference and metadata only  { _id: &amp;#34;my-photo&amp;#34;, filename: &amp;#34;my-photo.jpg&amp;#34;, mimeType: &amp;#34;image/jpg&amp;#34;, length: { $numberLong: &amp;#34;2340000&amp;#34; }, uploadDate: { $date: &amp;#34;2015-01-01T00:00:00Z&amp;#34; }, metadata: { &amp;#34;key1&amp;#34;: &amp;#34;value1&amp;#34;, &amp;#34;key2&amp;#34;: &amp;#34;value2&amp;#34; } }   _chunks collection stores binary data in 1MB chunks.</description>
+    </item>
+    
+    <item>
+      <title>Getting Started</title>
+      <link>www.example.com/docs/getting-started/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/getting-started/</guid>
+      <description>LiteDB is a simple, fast and lightweight embedded .NET document database. LiteDB was inspired by the MongoDB database and its API is very similar to MongoDB&amp;rsquo;s official .NET API.
+How to install LiteDB is a serverless database, so there is no installation. Just copy LiteDB.dll into your Bin folder and add it as Reference. Or, if you prefer, you can install via NuGet: Install-Package LiteDB. If you are running in a web environment, make sure that your IIS user has write permission to the data folder.</description>
+    </item>
+    
+    <item>
+      <title>How LiteDB Works</title>
+      <link>www.example.com/docs/how-litedb-works/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/how-litedb-works/</guid>
+      <description>File Format LiteDB is a single file database. But databases have many different types of information, like indexes, collections, documents. To manage this, LiteDB implements database pages concepts. Page is a block of same information type and has 4096 bytes. Page is the minimum read/write operation on disk file. There are 6 page types:
+ Header Page: Contains database information, like file version, data file size and pointer to free list pages.</description>
+    </item>
+    
+    <item>
+      <title>Indexes</title>
+      <link>www.example.com/docs/indexes/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/indexes/</guid>
+      <description>LiteDB improves search performance by using indexes on document fields. Each index stores the value of a specific field ordered by the value (and type) of the field. Without an index, LiteDB must execute a query using a full document scan. Full document scans are inefficient because LiteDB must deserialize all documents to test each one by one.
+Index Implementation LiteDB uses a simple index solution: Skip Lists. Skip lists are double linked sorted list with up to 32 levels.</description>
+    </item>
+    
+    <item>
+      <title>Object Mapping</title>
+      <link>www.example.com/docs/object-mapping/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/object-mapping/</guid>
+      <description>LiteDB supports POCO classes to strongly type documents. When you get a LiteCollection instance from LiteDatabase.GetCollection&amp;lt;T&amp;gt;, &amp;lt;T&amp;gt; will be your document type. If &amp;lt;T&amp;gt; is not a BsonDocument, LiteDB internally maps your class to BsonDocument. To do this, LiteDB uses the BsonMapper class:
+// Simple strongly-typed document public class Customer { public ObjectId CustomerId { get; set; } public string Name { get; set; } public DateTime CreateDate { get; set; } public List&amp;lt;Phone&amp;gt; Phones { get; set; } public bool IsActive { get; set; } } var typedCustomerCollection = db.</description>
+    </item>
+    
+    <item>
+      <title>Queries</title>
+      <link>www.example.com/docs/queries/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/queries/</guid>
+      <description>Query filter document inside a collection in three ways:
+ Indexed based search (best option). See Indexes Full scan on BsonDocument (slower but more powerful) LINQ to object (slower but convenient)  Query implementations Query is a static class that creates a query criteria. Each method represents a different criteria operation that can be used to query documents.
+ Query.All - Returns all documents. Can be specified an index field to read in ascending or descending index order.</description>
+    </item>
+    
+    <item>
+      <title>Repository Pattern</title>
+      <link>www.example.com/docs/repository-pattern/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/repository-pattern/</guid>
+      <description>LiteRepository is a new class to access your database. LiteRepository is implemented over LiteDatabase and is just a layer to quick access your data without LiteCollection class and fluent query
+using(var db = new LiteRepository(connectionString)) { // simple access to Insert/Update/Upsert/Delete  db.Insert(new Product { ProductName = &amp;#34;Table&amp;#34;, Price = 100 }); db.Delete&amp;lt;Product&amp;gt;(x =&amp;gt; x.Price == 100); // query using fluent query  var result = db.Query&amp;lt;Order&amp;gt;() .Include(x =&amp;gt; x.Customer) // add dbref 1x1  .</description>
+    </item>
+    
+  </channel>
+</rss>

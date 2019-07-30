@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Overview on Hugo Whisper Theme</title>
+    <link>www.example.com/docs/</link>
+    <description>Recent content in Overview on Hugo Whisper Theme</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 28 Nov 2018 15:14:39 +1000</lastBuildDate>
+    
+	<atom:link href="www.example.com/docs/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Install Hugo</title>
+      <link>www.example.com/docs/install-hugo/</link>
+      <pubDate>Mon, 11 Feb 2019 19:27:37 +1000</pubDate>
+      
+      <guid>www.example.com/docs/install-hugo/</guid>
+      <description> To use this theme you will need to have Hugo installed. If you don&amp;rsquo;t already have Hugo installed please follow the official installation guide
+Check Hugo Version This theme uses Hugo Pipes to compile SCSS and minify assets. Please make sure you have the Hugo Extended version installed. If you are not using the extended version this theme will not not compile.
+hugo version</description>
+    </item>
+    
+    <item>
+      <title>Install Theme</title>
+      <link>www.example.com/docs/install-theme/</link>
+      <pubDate>Mon, 11 Feb 2019 19:27:37 +1000</pubDate>
+      
+      <guid>www.example.com/docs/install-theme/</guid>
+      <description>Create a new Hugo site hugo new site mynewsite This will create a fresh Hugo site in the folder mynewsite.
+Install theme Copy or git clone this theme into the sites themes folder mynewsite/themes
+Install with Git cd mynewsite cd themes git clone https://github.com/jugglerx/hugo-whisper-theme.git Install from .zip file You can download the .zip file located here https://github.com/JugglerX/hugo-whisper-theme/archive/master.zip.
+Extract the downloaded .zip inside the themes folder. Rename the extracted folder from hugo-whisper-theme-master -&amp;gt; hugo-whisper-theme.</description>
+    </item>
+    
+    <item>
+      <title>Configuration</title>
+      <link>www.example.com/docs/configure/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/docs/configure/</guid>
+      <description>Syntax Highlighting Whisper uses the in-built code highlighting that ships with hugo. https://gohugo.io/content-management/syntax-highlighting/
+You can insert code snippets in any markdown file by using standard code fences syntax ie:
+``` insert code here ``` You can specify the langauge by adding a declaration after the backticks
+```javascript insert code here ``` Pygments Options The following code highlighting options are configured in the config.toml
+pygmentsCodeFences = true pygmentsCodefencesGuessSyntax = true pygmentsUseClasses = true Main menu Configure the main menu by editing the config.</description>
+    </item>
+    
+    <item>
+      <title>Specimen</title>
+      <link>www.example.com/docs/specimen/</link>
+      <pubDate>Mon, 11 Feb 2019 19:27:37 +1000</pubDate>
+      
+      <guid>www.example.com/docs/specimen/</guid>
+      <description>Markdown Test Page  Headings Paragraphs Blockquotes Lists Horizontal rule Table Code Inline elements  Headings Heading one Sint sit cillum pariatur eiusmod nulla pariatur ipsum. Sit laborum anim qui mollit tempor pariatur nisi minim dolor. Aliquip et adipisicing sit sit fugiat commodo id sunt. Nostrud enim ad commodo incididunt cupidatat in ullamco ullamco Lorem cupidatat velit enim et Lorem.
+Heading two Aute officia nulla deserunt do deserunt cillum velit magna.</description>
+    </item>
+    
+    <item>
+      <title>Hugo Whisper</title>
+      <link>www.example.com/docs/example/</link>
+      <pubDate>Mon, 11 Feb 2019 19:27:37 +1000</pubDate>
+      
+      <guid>www.example.com/docs/example/</guid>
+      <description>Whisper is a minimal documentation theme built for Hugo. The design and functionality is intentionally minimal.
+Quickstart Copy or git clone this theme into the sites themes folder mynewsite/themes
+hugo new site whisper git clone https://github.com/jugglerx/hugo-whisper-theme.git Code Highlighting Whisper uses Hugo&amp;rsquo;s in-built code highlighting with a github style code highlighting theme. https://gohugo.io/content-management/syntax-highlighting/
+You can insert code snippets in any markdown file by using standard code fences syntax ie:
+function myFunction() { var x = document.</description>
+    </item>
+    
+  </channel>
+</rss>

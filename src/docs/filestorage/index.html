@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>FileStorage - Hugo Whisper Theme</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="www.example.com/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  
+  
+  
+  <link rel="stylesheet" href="/www.example.com/css/style.min.f31edf12f81d9ad5234f2b100646ce1f51e3ab0f6a37c940a43bcd79513204c3.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-single'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Docs</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.example.com/docs/bsondocument/">BsonDocument</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/changelog/">ChangeLog</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/collections/">Collections</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/concurrency/">Concurrency</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/connection-string/">Connection String</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/data-structure/">Data Structure</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/dbref/">DbRef</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/expressions/">Expressions</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.example.com/docs/filestorage/">FileStorage</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/getting-started/">Getting Started</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/how-litedb-works/">How LiteDB Works</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/indexes/">Indexes</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/object-mapping/">Object Mapping</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/queries/">Queries</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/repository-pattern/">Repository Pattern</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">FileStorage</h1>
+<div class="content">
+  <p>To keep its memory profile slim, LiteDB has a limited document size of 1Mb. For text documents, this is a huge size. But for many binary files, 1Mb is too small. LiteDB therefore implements <code>FileStorage</code>, a custom collection to store files and streams.</p>
+
+<p>LiteDB uses two special collections to split file content in chunks:</p>
+
+<ul>
+<li><code>_files</code> collection stores file reference and metadata only</li>
+</ul>
+<div class="highlight"><pre class="chroma"><code class="language-JS" data-lang="JS"><span class="p">{</span>
+    <span class="nx">_id</span><span class="o">:</span> <span class="s2">&#34;my-photo&#34;</span><span class="p">,</span>
+    <span class="nx">filename</span><span class="o">:</span> <span class="s2">&#34;my-photo.jpg&#34;</span><span class="p">,</span>
+    <span class="nx">mimeType</span><span class="o">:</span> <span class="s2">&#34;image/jpg&#34;</span><span class="p">,</span>
+    <span class="nx">length</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$numberLong</span><span class="o">:</span> <span class="s2">&#34;2340000&#34;</span> <span class="p">},</span>
+    <span class="nx">uploadDate</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$date</span><span class="o">:</span> <span class="s2">&#34;2015-01-01T00:00:00Z&#34;</span> <span class="p">},</span>
+    <span class="nx">metadata</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&#34;key1&#34;</span><span class="o">:</span> <span class="s2">&#34;value1&#34;</span><span class="p">,</span> <span class="s2">&#34;key2&#34;</span><span class="o">:</span> <span class="s2">&#34;value2&#34;</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><code>_chunks</code> collection stores binary data in 1MB chunks.</li>
+</ul>
+<div class="highlight"><pre class="chroma"><code class="language-JS" data-lang="JS"><span class="p">{</span>
+    <span class="nx">_id</span><span class="o">:</span> <span class="s2">&#34;my-photo\00001&#34;</span><span class="p">,</span>
+    <span class="nx">data</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$binary</span><span class="o">:</span> <span class="s2">&#34;VHlwZSAob3Igc ... GUpIGhlcmUuLi4&#34;</span> <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">{</span>
+    <span class="nx">_id</span><span class="o">:</span> <span class="s2">&#34;my-photo\00002&#34;</span><span class="p">,</span>
+    <span class="nx">data</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$binary</span><span class="o">:</span> <span class="s2">&#34;pGaGhlcmUuLi4 ... VHlwZSAob3Igc&#34;</span> <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">{</span>
+   <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Files are identified by an <code>_id</code> string value, with following rules:</p>
+
+<ul>
+<li>Starts with a letter, number, <code>_</code>, <code>-</code>, <code>$</code>, <code>@</code>, <code>!</code>, <code>+</code>, <code>%</code>, <code>;</code> or <code>.</code></li>
+<li>If contains a <code>/</code>, must be sequence with chars above</li>
+</ul>
+
+<p>To better organize many files, you can use <code>_id</code> as a <code>directory/file_id</code>. This will be a great solution to quickly find all files in a directory using the <code>Find</code> method.</p>
+
+<p>Example: <code>$/photos/2014/picture-01.jpg</code></p>
+
+<p>The <code>FileStorage</code> collection contains simple methods like:</p>
+
+<ul>
+<li><strong><code>Upload</code></strong>: Send file or stream to database. Can be used with file or <code>Stream</code>. If file already exists, file content is overwritten.</li>
+<li><strong><code>Download</code></strong>: Get your file from database and copy to <code>Stream</code> parameter</li>
+<li><strong><code>Delete</code></strong>: Delete a file reference and all data chunks</li>
+<li><strong><code>Find</code></strong>: Find one or many files in <code>_files</code> collection. Returns <code>LiteFileInfo</code> class, that can be download data after.</li>
+<li><strong><code>SetMetadata</code></strong>: Update stored file metadata. This method doesn&rsquo;t change the value of the stored file.  It updates the value of <code>_files.metadata</code>.</li>
+<li><strong><code>OpenRead</code></strong>: Find file by <code>_id</code> and returns a <code>LiteFileStream</code> to read file content as stream</li>
+</ul>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Upload a file from file system
+</span><span class="c1"></span><span class="n">db</span><span class="p">.</span><span class="n">FileStorage</span><span class="p">.</span><span class="n">Upload</span><span class="p">(</span><span class="s">&#34;$/photos/2014/picture-01.jpg&#34;</span><span class="p">,</span> <span class="s">@&#34;C:\Temp\picture-01.jpg&#34;</span><span class="p">);</span>
+
+<span class="c1">// Upload a file from a Stream
+</span><span class="c1"></span><span class="n">db</span><span class="p">.</span><span class="n">FileStorage</span><span class="p">.</span><span class="n">Upload</span><span class="p">(</span><span class="s">&#34;$/photos/2014/picture-01.jpg&#34;</span><span class="p">,</span> <span class="s">&#34;picture-01.jpg&#34;</span><span class="p">,</span> <span class="n">stream</span><span class="p">);</span>
+
+<span class="c1">// Find file reference only - returns null if not found
+</span><span class="c1"></span><span class="n">LiteFileInfo</span> <span class="n">file</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">FileStorage</span><span class="p">.</span><span class="n">FindById</span><span class="p">(</span><span class="s">&#34;$/photos/2014/picture-01.jpg&#34;</span><span class="p">);</span>
+
+<span class="c1">// Now, load binary data and save to file system
+</span><span class="c1"></span><span class="n">file</span><span class="p">.</span><span class="n">SaveAs</span><span class="p">(</span><span class="s">@&#34;C:\Temp\new-picture.jpg&#34;</span><span class="p">);</span>
+
+<span class="c1">// Or get binary data as Stream and copy to another Stream
+</span><span class="c1"></span><span class="n">file</span><span class="p">.</span><span class="n">CopyTo</span><span class="p">(</span><span class="n">Response</span><span class="p">.</span><span class="n">OutputStream</span><span class="p">);</span>
+
+<span class="c1">// Find all files references in a &#34;directory&#34;
+</span><span class="c1"></span><span class="kt">var</span> <span class="n">files</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">FileStorage</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="s">&#34;$/photos/2014/&#34;</span><span class="p">);</span>
+</code></pre></div>
+<p><code>FileStorage</code> does not support transactions to avoid putting all of the file in memory before storing it on disk. Transactions <em>are</em> used per chunk. Each uploaded chunk is committed in a single transaction.</p>
+
+<p><code>FileStorage</code> keeps <code>_files.length</code> at <code>0</code> when uploading each chunk. When all chunks finish uploading <code>FileStorage</code> updates <code>_files.length</code> by aggregating the size of each chunk. If you try to download a zero bytes length file, the uploaded file is corrupted. A corrupted file doesn&rsquo;t necessarily mean a corrupt database.</p>
+
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li class="zerostatic"><a href="https://www.zerostatic.io">www.zerostatic.io</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/www.example.com/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+  
+
+
+</body>
+
+</html>

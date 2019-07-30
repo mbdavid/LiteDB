@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Connection String - Hugo Whisper Theme</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="www.example.com/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  
+  
+  
+  <link rel="stylesheet" href="/www.example.com/css/style.min.f31edf12f81d9ad5234f2b100646ce1f51e3ab0f6a37c940a43bcd79513204c3.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-single'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Docs</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.example.com/docs/bsondocument/">BsonDocument</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/changelog/">ChangeLog</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/collections/">Collections</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/concurrency/">Concurrency</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.example.com/docs/connection-string/">Connection String</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/data-structure/">Data Structure</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/dbref/">DbRef</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/expressions/">Expressions</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/filestorage/">FileStorage</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/getting-started/">Getting Started</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/how-litedb-works/">How LiteDB Works</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/indexes/">Indexes</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/object-mapping/">Object Mapping</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/queries/">Queries</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/repository-pattern/">Repository Pattern</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">Connection String</h1>
+<div class="content">
+  
+
+<p>LiteDatabase can be initialize using a string connection, with <code>key1=value1; key2=value2; ...</code> syntax. If there is no <code>;</code> in your connection string, LiteDB assume that your connection string is Filename key. Keys are case insensitive.</p>
+
+<h3 id="options">Options</h3>
+
+<ul>
+<li><strong><code>Filename</code></strong> (string): Full path or relative path from DLL directory.</li>
+<li><strong><code>Journal</code></strong> (bool): Enabled or disable double write check to ensure durability (default: true)</li>
+<li><strong><code>Password</code></strong> (string): Encrypt (using AES) your datafile with a password (default: null - no encryption)</li>
+<li><strong><code>Cache Size</code></strong> (int): Max number of pages in cache. After this size, flush data to disk to avoid too memory usage (default: 5000)</li>
+<li><strong><code>Timeout</code></strong> (TimeSpan): Timeout for waiting unlock operations (thread lock and locked file)</li>
+<li><strong><code>Mode</code></strong> (Exclusive|ReadOnly|Shared): How datafile will be open (default: <code>Shared</code> in NET35/NET40/NETStandard2.0 and <code>Exclusive</code> in NETStandard1.3)</li>
+<li><strong><code>Initial Size</code></strong> (string|long): If database is new, initialize with allocated space - support KB, MB, GB (default: null)</li>
+<li><strong><code>Limit Size</code></strong> (string|long): Max limit of datafile - support KB, MB, GB (default: null)</li>
+<li><strong><code>Upgrade</code></strong> (bool): If true, try upgrade datafile from old version (v2) (default: null)</li>
+<li><strong><code>Log</code></strong> (byte): Debug messages from database - use <code>LiteDatabase.Log</code> (default: Logger.NONE)</li>
+<li><strong><code>Async</code></strong> (bool): Support &ldquo;sync over async&rdquo; file stream creation to use in UWP access any disk folder (only for NetStandard, default: false)</li>
+<li><strong><code>Flush</code></strong> (bool): Write data direct to disk avoiding OS cache (not available in NET35, default: false) (v4.1.2)</li>
+</ul>
+
+<h3 id="example">Example</h3>
+
+<p><em>App.config</em></p>
+<div class="highlight"><pre class="chroma"><code class="language-XML" data-lang="XML">    <span class="nt">&lt;connectionStrings&gt;</span>
+        <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&#34;LiteDB&#34;</span> <span class="na">connectionString=</span><span class="s">&#34;Filename=C:\database.db&#34;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/connectionStrings&gt;</span></code></pre></div>
+<p><em>C#</em></p>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#">    <span class="n">System</span><span class="p">.</span><span class="n">Configuration</span><span class="p">.</span><span class="n">ConfigurationManager</span><span class="p">.</span><span class="n">ConnectionStrings</span><span class="na">[&#34;LiteDB&#34;]</span><span class="p">.</span><span class="n">ConnectionString</span>
+</code></pre></div>
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li class="zerostatic"><a href="https://www.zerostatic.io">www.zerostatic.io</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/www.example.com/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+  
+
+
+</body>
+
+</html>

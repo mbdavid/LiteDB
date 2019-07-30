@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Overview on Hugo Whisper Theme</title>
+    <link>www.example.com/api/</link>
+    <description>Recent content in Overview on Hugo Whisper Theme</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 28 Nov 2018 15:14:39 +1000</lastBuildDate>
+    
+	<atom:link href="www.example.com/api/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>BsonDocument</title>
+      <link>www.example.com/api/bsondocument/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/api/bsondocument/</guid>
+      <description>The BsonDocument class is LiteDB&amp;rsquo;s implementation of documents. Internally, a BsonDocument stores key-value pairs in a Dictionary&amp;lt;string, BsonValue&amp;gt;.
+var customer = new BsonDocument(); customer[&amp;#34;_id&amp;#34;] = ObjectId.NewObjectId(); customer[&amp;#34;Name&amp;#34;] = &amp;#34;John Doe&amp;#34;; customer[&amp;#34;CreateDate&amp;#34;] = DateTime.Now; customer[&amp;#34;Phones&amp;#34;] = new BsonArray { &amp;#34;8000-0000&amp;#34;, &amp;#34;9000-000&amp;#34; }; customer[&amp;#34;IsActive&amp;#34;] = true; customer[&amp;#34;IsAdmin&amp;#34;] = new BsonValue(true); customer.Set(&amp;#34;Address.Street&amp;#34;, &amp;#34;Av. Protasio Alves, 1331&amp;#34;);  About document field keys:
+ Keys must contains only letters, numbers or _ and - Keys are case-sensitive Duplicate keys are not allowed LiteDB keeps the original key order, including mapped classes.</description>
+    </item>
+    
+    <item>
+      <title>Collections</title>
+      <link>www.example.com/api/collections/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.example.com/api/collections/</guid>
+      <description>BsonArray public class LiteDB.BsonArray : BsonValue, IComparable&amp;lt;BsonValue&amp;gt;, IEquatable&amp;lt;BsonValue&amp;gt;, IList&amp;lt;BsonValue&amp;gt;, ICollection&amp;lt;BsonValue&amp;gt;, IEnumerable&amp;lt;BsonValue&amp;gt;, IEnumerable  Properties
+| Type | Name | Summary | | &amp;mdash; | &amp;mdash; | &amp;mdash; | | Int32 | Count | | | Boolean | IsReadOnly | | | BsonValue | Item | | | IList&amp;lt;BsonValue&amp;gt; | RawValue | |
+Methods
+| Type | Name | Summary | | &amp;mdash; | &amp;mdash; | &amp;mdash; | | void | Add(BsonValue item) | | | void | AddRange(IEnumerable&amp;lt;BsonValue&amp;gt; items) | | | void | Clear() | | | Int32 | CompareTo(BsonValue other) | | | Boolean | Contains(BsonValue item) | | | void | CopyTo(BsonValue[] array, Int32 arrayIndex) | | | Int32 | GetBytesCount(Boolean recalc) | | | IEnumerator&amp;lt;BsonValue&amp;gt; | GetEnumerator() | | | Int32 | IndexOf(BsonValue item) | | | void | Insert(Int32 index, BsonValue item) | | | Boolean | Remove(BsonValue item) | | | void | RemoveAt(Int32 index) | | | String | ToString() | |</description>
+    </item>
+    
+  </channel>
+</rss>

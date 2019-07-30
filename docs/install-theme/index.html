@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Install Theme - Hugo Whisper Theme</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="www.example.com/favicon.png">
+
+  
+  
+  <link rel="stylesheet" href="/www.example.com/css/style.min.0bebd554481e8d67e288e9cc234868e33cdb4107d60612008df77a3566b37ff7.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-single'>
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>Home</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-getting started">
+      <a href="www.example.com/docs/">
+        <span>Getting Started</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/images/logo.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/images/logo-mobile.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>Home</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-getting started">
+      <a href="www.example.com/docs/">
+        <span>Getting Started</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Docs</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.example.com/docs/install-hugo/">Install Hugo</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.example.com/docs/install-theme/">Install Theme</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/configure/">Configuration</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/specimen/">Specimen</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/example/">Hugo Whisper</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">Install Theme</h1>
+<div class="content">
+  
+
+<h2 id="create-a-new-hugo-site">Create a new Hugo site</h2>
+<div class="highlight"><pre class="chroma">hugo new site mynewsite</pre></div>
+<p>This will create a fresh Hugo site in the folder <code>mynewsite</code>.</p>
+
+<h2 id="install-theme">Install theme</h2>
+
+<p>Copy or git clone this theme into the sites themes folder <code>mynewsite/themes</code></p>
+
+<h4 id="install-with-git">Install with Git</h4>
+<div class="highlight"><pre class="chroma">cd mynewsite
+cd themes
+git clone https://github.com/jugglerx/hugo-whisper-theme.git</pre></div>
+<h4 id="install-from-zip-file">Install from .zip file</h4>
+
+<p>You can download the .zip file located here <a href="https://github.com/JugglerX/hugo-whisper-theme/archive/master.zip">https://github.com/JugglerX/hugo-whisper-theme/archive/master.zip</a>.</p>
+
+<p>Extract the downloaded .zip inside the <code>themes</code> folder. Rename the extracted folder from <code>hugo-whisper-theme-master</code> -&gt; <code>hugo-whisper-theme</code>. You should end up with the following folder structure <code>mynewsite/themes/hugo-whisper-theme</code></p>
+
+<h2 id="add-example-content">Add example content</h2>
+
+<p>The fastest way to get started is to copy the example content and modify the included <code>config.toml</code></p>
+
+<h3 id="copy-examplesite-contents">Copy exampleSite contents</h3>
+
+<p>Copy the entire contents of the <code>exampleSite</code> folder to the root folder of your Hugo site <em>(the folder with the README.md)</em>.</p>
+
+<h3 id="update-config-toml">Update config.toml</h3>
+
+<p>After you copy the <code>config.toml</code> into the root folder of your Hugo site you will need to update the <code>baseURL</code>, <code>themesDir</code> and <code>theme</code> values in the <code>config.toml</code></p>
+<div class="highlight"><pre class="chroma">baseURL = &#34;/&#34;
+themesDir = &#34;themes&#34;
+theme = &#34;hugo-whisper-theme&#34;</pre></div>
+<h2 id="run-hugo">Run Hugo</h2>
+
+<p>After installing the theme for the first time, generate the Hugo site.</p>
+<div class="highlight"><pre class="chroma">hugo</pre></div>
+<p>For local development run Hugo&rsquo;s built-in local server.</p>
+<div class="highlight"><pre class="chroma">hugo server</pre></div>
+<p>Now enter <a href="http://localhost:1313"><code>localhost:1313</code></a> in the address bar of your browser.</p>
+
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li class="zerostatic"><a href="https://www.zerostatic.io">www.zerostatic.io</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/www.example.com/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+  
+
+
+</body>
+
+</html>

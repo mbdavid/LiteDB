@@ -1,0 +1,52 @@
+baseURL = "www.example.com"
+languageCode = "en-us"
+title = "Hugo Whisper Theme"
+themesDir = "themes"
+theme = "hugo-whisper-theme"
+
+pygmentsCodeFences = true
+pygmentsCodefencesGuessSyntax = true
+pygmentsUseClasses = true
+
+[[menu.main]]
+    name = "HOME"
+    url = "/"
+    weight = 1
+
+[[menu.main]]
+    name = "DOCS"
+    url = "/docs/"
+    weight = 2
+
+[[menu.main]]
+    name = "API"
+    url = "/api/"
+    weight = 3
+
+[[menu.main]]
+    name = "DOWNLOAD"
+    url = "https://www.nuget.org/packages/LiteDB/"
+    weight = 3
+
+[params]
+  google_analytics_id=""
+  homepage_button_link = '/docs'
+  homepage_button_text = 'Read The Docs'
+  homepage_intro = 'Whisper is a documentation theme built with Hugo. The design and functionality is intentionally minimal.'
+  homepage_image = '/images/terminal.gif'
+  mainSections = ['docs', 'api']
+
+  [params.homepage_meta_tags]
+    meta_description = "Hugo Whisper is a documentation theme built with Hugo."
+    meta_og_title = "Hugo Whisper Theme"
+    meta_og_type = "website"
+    meta_og_url = "https://hugo-whisper.netlify.com"
+    meta_og_image = "https://raw.githubusercontent.com/JugglerX/hugo-whisper-theme/master/images/tn.png"
+    meta_og_description = "Hugo Whisper is a documentation theme built with Hugo."
+    meta_twitter_card = "summary"
+    meta_twitter_site = "@zerostaticio"
+    meta_twitter_creator = "@zerostaticio"
+
+  [params.logo]
+      mobile = "logo_litedb.svg"
+      standard  = "logo_litedb.svg"

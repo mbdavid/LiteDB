@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Expressions - Hugo Whisper Theme</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="www.example.com/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  
+  
+  
+  <link rel="stylesheet" href="/www.example.com/css/style.min.f31edf12f81d9ad5234f2b100646ce1f51e3ab0f6a37c940a43bcd79513204c3.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-single'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Docs</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.example.com/docs/bsondocument/">BsonDocument</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/changelog/">ChangeLog</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/collections/">Collections</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/concurrency/">Concurrency</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/connection-string/">Connection String</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/data-structure/">Data Structure</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/dbref/">DbRef</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.example.com/docs/expressions/">Expressions</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/filestorage/">FileStorage</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/getting-started/">Getting Started</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/how-litedb-works/">How LiteDB Works</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/indexes/">Indexes</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/object-mapping/">Object Mapping</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/queries/">Queries</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/repository-pattern/">Repository Pattern</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">Expressions</h1>
+<div class="content">
+  
+
+<p>Expressions are path or formulas to access and modify your document data. Based on JSON path article (<a href="http://goessner.net/articles/JsonPath/">http://goessner.net/articles/JsonPath/</a>), LiteDB support a near syntax to navigate in a single document. Path always returns an <code>IEnumerable&lt;BsonValue&gt;</code> in any case.</p>
+
+<p><code>BsonExpression</code> are the class that parse a string expression (or path) and compile into a LINQ Expression to be fast evaluate by LiteDB. Parser uses</p>
+
+<ul>
+<li>Path starts with <code>$</code>: <code>$.Address.Street</code></li>
+<li>Int values starts with <code>[0-9]*</code>: <code>123</code></li>
+<li>Double values starts with <code>[0-9].[0-9]</code>: <code>123.45</code></li>
+<li>Strings are represented with a single quote <code>'</code>: <code>'Hello World'</code></li>
+<li>Null are just <code>null</code></li>
+<li>Bool are represented using <code>true</code> or <code>false</code> keyword.</li>
+<li>Document starts with <code>{ key1: &lt;value|expression&gt;, key2: ... }</code></li>
+<li>Arrays are represented with <code>[values, expressions, paths, ...]</code></li>
+<li>Functions are represented with <code>FUNCTION_NAME(par1, par2, ...)</code>: <code>LOWER($.Name)</code></li>
+</ul>
+
+<p>Examples:
+- <code>$.Price</code>
+- <code>$.Price + 100</code>
+- <code>SUM($.Items[*].Price)</code></p>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="kt">var</span> <span class="n">expr</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonExpression</span><span class="p">(</span><span class="s">&#34;SUM($.Items[*].Unity * $.Items[*].Price)&#34;</span><span class="p">);</span>
+<span class="kt">var</span> <span class="n">total</span> <span class="p">=</span> <span class="n">expr</span><span class="p">.</span><span class="n">Execute</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="k">true</span><span class="p">).</span><span class="n">First</span><span class="p">().</span><span class="n">AsDecimal</span><span class="p">;</span>
+</code></pre></div>
+<p>Expressions also can be used in:</p>
+
+<ul>
+<li>Create an index based on an expression:
+
+<ul>
+<li><code>collection.EnsureIndex(&quot;Name&quot;, true, &quot;LOWER($.Name)&quot;)</code></li>
+<li><code>collection.EnsureIndex(x =&gt; x.Name, true, &quot;LOWER($.Name)&quot;)</code></li>
+</ul></li>
+<li>Query documents inside a collection based on expression (full scan search)
+
+<ul>
+<li><code>Query.EQ(&quot;SUBSTRING($.Name, 0, 1)&quot;, &quot;T&quot;)</code></li>
+</ul></li>
+<li>Update shell command
+
+<ul>
+<li><code>db.customers.update $.Name = LOWER($.Name) where _id = 1</code></li>
+</ul></li>
+<li>Create new document result in SELECT shell command
+
+<ul>
+<li><code>db.customers.select { upper_titles: ARRAY(UPPER($.Books[*].Title)) } where $.Name startswith &quot;John&quot;</code></li>
+</ul></li>
+</ul>
+
+<h1 id="path">Path</h1>
+
+<ul>
+<li><code>$</code> - Root</li>
+<li><code>$.Name</code> - Name field</li>
+<li><code>$.Name.First</code> - First field from a Name subdocument<br /></li>
+<li><code>$.Books</code> - Returns book array value</li>
+<li><code>$.Books[0]</code> - Return first book inside books array</li>
+<li><code>$.Books[*]</code> - Return all books inside books array</li>
+<li><code>$.Books[*].Title</code> Return titles from all books</li>
+<li><code>$.Books[-1]</code> - Return last book inside books array</li>
+</ul>
+
+<p>Path also support expression to filter child node</p>
+
+<ul>
+<li><code>$.Books[@.Title = 'John Doe']</code> - Return all books where title is John Doe</li>
+<li><code>$.Books[@.Price &gt; 100].Title</code> - Return all titles where book price are greater than 100</li>
+</ul>
+
+<p>Inside array, <code>@</code> represent current sub document. It&rsquo;s possible use functions inside expressions too:</p>
+
+<ul>
+<li><code>$.Books[SUBSTRING(LOWER(@.Title), 0, 1) = 'j']</code> - Return all books with title starts with T or t.</li>
+</ul>
+
+<h1 id="functions">Functions</h1>
+
+<p>Functions are always works in <code>IEnumerable&lt;BsonValue&gt;</code> as input/output parameters.</p>
+
+<ul>
+<li><code>LOWER($.Name)</code> - Returns <code>IEnumerable</code> with a single element</li>
+<li><code>LOWER($.Books[*].Title)</code> - Returns <code>IEnumerable</code> with all values in lower case</li>
+</ul>
+
+<h2 id="operators">Operators</h2>
+
+<p>Operators are function to implement same math syntax. Support</p>
+
+<ul>
+<li><code>ADD(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; + &lt;right&gt;</code> (If any side are string, concat values and return as string.)</li>
+<li><code>MINUS(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; - &lt;right&gt;</code></li>
+<li><code>MULTIPLY(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; * &lt;right&gt;</code></li>
+<li><code>DIVIDE(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; / &lt;right&gt;</code></li>
+<li><code>MOD(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; % &lt;right&gt;</code></li>
+<li><code>EQ(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; = &lt;right&gt;</code></li>
+<li><code>NEQ(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; != &lt;right&gt;</code></li>
+<li><code>GT(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; &gt; &lt;right&gt;</code></li>
+<li><code>GTE(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; &gt;= &lt;right&gt;</code></li>
+<li><code>LT(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; &lt; &lt;right&gt;</code></li>
+<li><code>LTE(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; &lt;= &lt;right&gt;</code></li>
+<li><code>AND(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; &amp;&amp; &lt;right&gt;</code> (Left and right must be a boolean)</li>
+<li><code>OR(&lt;left&gt;, &lt;right&gt;)</code>: <code>&lt;left&gt; || &lt;right&gt;</code>: Left and right must be a boolean)</li>
+</ul>
+
+<h3 id="examples">Examples</h3>
+
+<ul>
+<li><code>db.dummy.select ((2 + 11 % 7)-2)/3</code> =&gt; <code>1.33333</code></li>
+<li><code>db.dummy.select 'My Id is ' + $._id</code> =&gt; <code>&quot;My Id is 1&quot;</code></li>
+
+<li><p><code>db.customers.select { info: IIF($._id &lt; 20, 'Less', 'Greater') + ' than twenty' }</code></p>
+
+<ul>
+<li><p>=&gt; <code>{ info: &quot;Less than twenty&quot; }</code></p>
+
+<h2 id="string">String</h2></li>
+</ul></li>
+</ul>
+
+<p>String function will work only if your <code>&lt;values&gt;</code> are string. Any other data type will skip results</p>
+
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>LOWER(&lt;values&gt;)</code></td>
+<td>Same <code>ToLower()</code> from <code>String</code>. Returns a string</td>
+</tr>
+
+<tr>
+<td><code>UPPER(&lt;values&gt;)</code></td>
+<td>Same <code>ToUpper()</code> from <code>String</code>. Returns a string</td>
+</tr>
+
+<tr>
+<td><code>SUBSTRING(&lt;values&gt;, &lt;index&gt;, &lt;length&gt;)</code></td>
+<td>Same <code>Substring()</code> from <code>String</code>. Returns a string</td>
+</tr>
+
+<tr>
+<td><code>LPAD(&lt;values&gt;, &lt;totalWidth&gt;, &lt;paddingChar&gt;)</code></td>
+<td>Same <code>PadLeft()</code> from <code>String</code>. Returns a string</td>
+</tr>
+
+<tr>
+<td><code>RPAD(&lt;values&gt;, &lt;totalWidth&gt;, &lt;paddingChar&gt;)</code></td>
+<td>Same <code>PadRight()</code> from <code>String</code>. Returns a string</td>
+</tr>
+
+<tr>
+<td><code>FORMAT(&lt;values&gt;, &lt;format&gt;)</code></td>
+<td>Same <code>Format()</code> from <code>String</code>. Works if any data type (use <code>RawValue</code>). Returns a string</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="aggregates">Aggregates</h2>
+
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>SUM(&lt;values&gt;)</code></td>
+<td>Sum all number values and returns a number</td>
+</tr>
+
+<tr>
+<td><code>COUNT(&lt;values&gt;)</code></td>
+<td>Count all values and returns a integer</td>
+</tr>
+
+<tr>
+<td><code>MIN(&lt;values&gt;)</code></td>
+<td>Get min value in value list</td>
+</tr>
+
+<tr>
+<td><code>MAX(&lt;values&gt;)</code></td>
+<td>Get max value in value list</td>
+</tr>
+
+<tr>
+<td><code>AVG(&lt;values&gt;)</code></td>
+<td>Calculate average in list of values</td>
+</tr>
+
+<tr>
+<td><code>FIRST(&lt;values&gt;)</code></td>
+<td>Get first value from list of values</td>
+</tr>
+
+<tr>
+<td><code>LAST(&lt;values&gt;)</code></td>
+<td>Get last value from list of values</td>
+</tr>
+
+<tr>
+<td><code>ARRAY(&lt;values&gt;)</code></td>
+<td>Convert all values into a single array</td>
+</tr>
+</tbody>
+</table>
+
+<p>All aggregates functions works in a single document and always with an IEnumerable selector of an array: (<code>SUM($.Items[*].Price)</code>)</p>
+
+<h2 id="datatype">DataType</h2>
+
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>EXTEND(&lt;src&gt;, &lt;extend&gt;)</code></td>
+<td>Copy, into source document, all field from extend document <code>EXTEND({a:1}, {b:2})</code> = <code>{a:1, b:2}</code></td>
+</tr>
+
+<tr>
+<td><code>JSON(&lt;strings&gt;)</code></td>
+<td>Deserialize string value into a <code>BsonDocument</code> value. <code>JSON('{a:1}')</code> = <code>{a:1}</code></td>
+</tr>
+
+<tr>
+<td><code>IS_MINVALUE(&lt;values&gt;)</code></td>
+<td>Return true for each value that are minvalue</td>
+</tr>
+
+<tr>
+<td><code>IS_NULL(&lt;values&gt;)</code></td>
+<td>Return true for each value that are null</td>
+</tr>
+
+<tr>
+<td><code>IS_INT32(&lt;values&gt;)</code> or <code>IS_INT(&lt;values&gt;)</code></td>
+<td>Return true for each value that are int</td>
+</tr>
+
+<tr>
+<td><code>IS_INT64(&lt;values&gt;)</code> or <code>IS_LONG(&lt;values&gt;)</code></td>
+<td>Return true for each value that are long</td>
+</tr>
+
+<tr>
+<td><code>IS_DOUBLE(&lt;values&gt;)</code></td>
+<td>Return true for each value that are double</td>
+</tr>
+
+<tr>
+<td><code>IS_DECIMAL(&lt;values&gt;)</code></td>
+<td>Return true for each value that are decimal</td>
+</tr>
+
+<tr>
+<td><code>IS_NUMBER(&lt;values&gt;)</code></td>
+<td>Return true for each value that are number</td>
+</tr>
+
+<tr>
+<td><code>IS_STRING(&lt;values&gt;)</code></td>
+<td>Return true for each value that are string</td>
+</tr>
+
+<tr>
+<td><code>IS_ARRAY(&lt;values&gt;)</code></td>
+<td>Return true for each value that are array</td>
+</tr>
+
+<tr>
+<td><code>IS_BINARY(&lt;values&gt;)</code></td>
+<td>Return true for each value that are binary</td>
+</tr>
+
+<tr>
+<td><code>IS_OBJECTID(&lt;values&gt;)</code></td>
+<td>Return true for each value that are objectid</td>
+</tr>
+
+<tr>
+<td><code>IS_GUID(&lt;values&gt;)</code></td>
+<td>Return true for each value that are guid</td>
+</tr>
+
+<tr>
+<td><code>IS_BOOLEAN(&lt;values&gt;)</code> or <code>IS_BOOL(&lt;values&gt;)</code></td>
+<td>Return true for each value that are boolean</td>
+</tr>
+
+<tr>
+<td><code>IS_DATETIME(&lt;values&gt;)</code> or <code>IS_DATE(&lt;values&gt;)</code></td>
+<td>Return true for each value that are datetime</td>
+</tr>
+
+<tr>
+<td><code>IS_MAXVALUE(&lt;values&gt;)</code></td>
+<td>Return true for each value that are maxvalue</td>
+</tr>
+
+<tr>
+<td><code>MINVALUE()</code></td>
+<td>Return new min value</td>
+</tr>
+
+<tr>
+<td><code>MAXVALUE()</code></td>
+<td>Return new max value</td>
+</tr>
+
+<tr>
+<td><code>INT32(&lt;values&gt;)</code> or <code>INT(&lt;values&gt;)</code></td>
+<td>Convert all possible values into int</td>
+</tr>
+
+<tr>
+<td><code>INT64(&lt;values&gt;)</code> or <code>LONG(&lt;values&gt;)</code></td>
+<td>Convert all possible values into long</td>
+</tr>
+
+<tr>
+<td><code>DOUBLE(&lt;values&gt;)</code></td>
+<td>Convert all possible values into double</td>
+</tr>
+
+<tr>
+<td><code>DECIMAL(&lt;values&gt;)</code></td>
+<td>Convert all possible values into decimal</td>
+</tr>
+
+<tr>
+<td><code>STRING(&lt;values&gt;)</code></td>
+<td>Convert each value as string</td>
+</tr>
+
+<tr>
+<td><code>OBJECTID()</code></td>
+<td>Return new objectid</td>
+</tr>
+
+<tr>
+<td><code>OBJECTID(&lt;values&gt;)</code></td>
+<td>Convert all possible values (string) into objectid</td>
+</tr>
+
+<tr>
+<td><code>GUID()</code></td>
+<td>Return new guid</td>
+</tr>
+
+<tr>
+<td><code>GUID(&lt;values&gt;)</code></td>
+<td>Convert all possible values (string) into guid</td>
+</tr>
+
+<tr>
+<td><code>DATETIME()</code> or <code>DATE()</code></td>
+<td>Return new date (now)</td>
+</tr>
+
+<tr>
+<td><code>DATETIME(&lt;values&gt;)</code> or <code>DATE(&lt;values&gt;)</code></td>
+<td>Convert all possible values (string) into datetime</td>
+</tr>
+
+<tr>
+<td><code>DATETIME(&lt;year&gt;, &lt;month&gt;, &lt;day&gt;)</code> or <code>DATE(&lt;year&gt;, &lt;month&gt;, &lt;day&gt;)</code></td>
+<td>Create new date based on year, month, day (int) passed</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="date">Date</h2>
+
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>YEAR(&lt;date&gt;)</code></td>
+<td>Return year (as int) from date</td>
+</tr>
+
+<tr>
+<td><code>MONTH(&lt;date&gt;)</code></td>
+<td>Return month(as int) from date</td>
+</tr>
+
+<tr>
+<td><code>DAY(&lt;date&gt;)</code></td>
+<td>Return day (as int) from date</td>
+</tr>
+
+<tr>
+<td><code>HOUR(&lt;date&gt;)</code></td>
+<td>Return hour (as int) from date</td>
+</tr>
+
+<tr>
+<td><code>MINUTE(&lt;date&gt;)</code></td>
+<td>Return minute (as int) from date</td>
+</tr>
+
+<tr>
+<td><code>SECOND(&lt;date&gt;)</code></td>
+<td>Return second (as int) from date</td>
+</tr>
+
+<tr>
+<td><code>DATEADD(&lt;datePart&gt;, &lt;number&gt;, &lt;date&gt;)</code></td>
+<td>Return new date adding internal from date</td>
+</tr>
+
+<tr>
+<td><code>DATEDIFF(&lt;datePart&gt;, &lt;dateStart&gt;, &lt;dateEnd&gt;)</code></td>
+<td>Return interval between start and end date</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="dateparts">DateParts</h3>
+
+<p>Date parts are strings used in <code>DATEADD</code> and <code>DATEDIFF</code></p>
+
+<ul>
+<li><code>y</code> or <code>year</code> = Year</li>
+<li><code>M</code> or <code>month</code> = Month</li>
+<li><code>d</code> or <code>day</code> = Day</li>
+<li><code>h</code> or <code>hour</code> = Hour</li>
+<li><code>m</code> or <code>minute</code> = Minute</li>
+<li><code>s</code> or <code>second</code> = Second</li>
+</ul>
+
+<p><code>db.orders.select { in_days: DATEDIFF('day', $.DueDate, DATE()) }</code></p>
+
+<h2 id="misc">Misc</h2>
+
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>KEYS(&lt;docs&gt;)</code></td>
+<td>Returns all keys from all documents. <code>KEYS({a:1, b:2})</code> = <code>a</code>, <code>b</code></td>
+</tr>
+
+<tr>
+<td><code>IIF(&lt;condition&gt;, &lt;ifTrue&gt;, &lt;ifFalse&gt;)</code></td>
+<td>Condition must be a boolean value</td>
+</tr>
+
+<tr>
+<td><code>LENGTH(&lt;values&gt;)</code></td>
+<td>Returns value length (String.Length or Array.Length or ByteArray.Length or Document.Keys.Length)</td>
+</tr>
+</tbody>
+</table>
+
+<p>All function are static methods from <code>BsonExpression</code>.</p>
+
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li class="zerostatic"><a href="https://www.zerostatic.io">www.zerostatic.io</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/www.example.com/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+  
+
+
+</body>
+
+</html>

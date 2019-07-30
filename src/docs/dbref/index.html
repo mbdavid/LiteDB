@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>DbRef - Hugo Whisper Theme</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="www.example.com/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  
+  
+  
+  <link rel="stylesheet" href="/www.example.com/css/style.min.f31edf12f81d9ad5234f2b100646ce1f51e3ab0f6a37c940a43bcd79513204c3.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-single'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Docs</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.example.com/docs/bsondocument/">BsonDocument</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/changelog/">ChangeLog</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/collections/">Collections</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/concurrency/">Concurrency</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/connection-string/">Connection String</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/data-structure/">Data Structure</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.example.com/docs/dbref/">DbRef</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/expressions/">Expressions</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/filestorage/">FileStorage</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/getting-started/">Getting Started</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/how-litedb-works/">How LiteDB Works</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/indexes/">Indexes</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/object-mapping/">Object Mapping</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/queries/">Queries</a>
+    </li>
+    
+    <li class="">
+      <a href="www.example.com/docs/repository-pattern/">Repository Pattern</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">DbRef</h1>
+<div class="content">
+  
+
+<p>LiteDB is a document database, so there is no JOIN between collections. You can use embedded documents (sub-documents) or create a reference between collections. To create this reference you can use <code>[BsonRef]</code> attribute or use <code>DbRef</code> method from fluent API mapper.</p>
+
+<h3 id="mapping-a-reference-on-database-initialization">Mapping a reference on database initialization</h3>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="k">public</span> <span class="k">class</span> <span class="nc">Customer</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">CustomerId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Name</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">class</span> <span class="nc">Order</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">OrderId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="n">Customer</span> <span class="n">Customer</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>If you didn&rsquo;t do any mapping, when you save an <code>Order</code>, <code>Customer</code> are saved as an embedded document (with no link to any other collection). If you change customer name in <code>Customer</code> collection this change will not affect <code>Order</code>.</p>
+<div class="highlight"><pre class="chroma"><code class="language-JS" data-lang="JS"><span class="nx">Order</span> <span class="p">=&gt;</span> <span class="p">{</span> <span class="nx">_id</span><span class="o">:</span> <span class="mi">123</span><span class="p">,</span> <span class="nx">Customer</span><span class="o">:</span> <span class="p">{</span> <span class="nx">CustomerId</span><span class="o">:</span> <span class="mi">99</span><span class="p">,</span> <span class="nx">Name</span><span class="o">:</span> <span class="s2">&#34;John Doe&#34;</span> <span class="p">}</span> <span class="p">}</span>
+</code></pre></div>
+<p>If you want store only customer reference in <code>Order</code>, you can decorate your class:</p>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="k">public</span> <span class="k">class</span> <span class="nc">Order</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">OrderId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span><span class="na">
+</span><span class="na">
+</span><span class="na">    [BsonRef(&#34;customers&#34;)]</span> <span class="c1">// where &#34;customers&#34; are Customer collection name
+</span><span class="c1"></span>    <span class="k">public</span> <span class="n">Customer</span> <span class="n">Customer</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Note that <code>BsonRef</code> decorates the full object being referenced, not an int <code>customerid</code> field that references an object in the other collection.</p>
+
+<p>Or use fluent API:</p>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="n">BsonMapper</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">Entity</span><span class="p">&lt;</span><span class="n">Order</span><span class="p">&gt;()</span>
+    <span class="p">.</span><span class="n">DbRef</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Customer</span><span class="p">,</span> <span class="s">&#34;customers&#34;</span><span class="p">);</span> <span class="c1">// where &#34;customers&#34; are Customer collection name
+</span></code></pre></div>
+<p><strong>Note:</strong> <code>Customer</code> needs to have a <code>[BsonId]</code> defined.</p>
+
+<p>Now, when you store <code>Order</code> you are storing only link reference.</p>
+<div class="highlight"><pre class="chroma"><code class="language-JS" data-lang="JS"><span class="nx">Order</span> <span class="p">=&gt;</span> <span class="p">{</span> <span class="nx">_id</span><span class="o">:</span> <span class="mi">123</span><span class="p">,</span> <span class="nx">Customer</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$id</span><span class="o">:</span> <span class="mi">4</span><span class="p">,</span> <span class="nx">$ref</span><span class="o">:</span> <span class="s2">&#34;customers&#34;</span><span class="p">}</span> <span class="p">}</span>
+</code></pre></div>
+<h3 id="querying-results">Querying results</h3>
+
+<p>When you query a document with a cross collection reference, you can auto load references using <code>Include</code> method before query.</p>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="kt">var</span> <span class="n">orders</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">&lt;</span><span class="n">Order</span><span class="p">&gt;(</span><span class="s">&#34;orders&#34;</span><span class="p">);</span>
+
+<span class="kt">var</span> <span class="n">order1</span> <span class="p">=</span> <span class="n">orders</span>
+    <span class="p">.</span><span class="n">Include</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Customer</span><span class="p">)</span>
+    <span class="p">.</span><span class="n">FindById</span><span class="p">(</span><span class="m">1</span><span class="p">);</span>
+</code></pre></div>
+<p>DbRef also support <code>List&lt;T&gt;</code> or <code>Array</code>, like:</p>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="k">public</span> <span class="k">class</span> <span class="nc">Product</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">ProductId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Name</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">decimal</span> <span class="n">Price</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">class</span> <span class="nc">Order</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">OrderId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="n">DateTime</span> <span class="n">OrderDate</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Product</span><span class="p">&gt;</span> <span class="n">Products</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">BsonMapper</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">Entity</span><span class="p">&lt;</span><span class="n">Order</span><span class="p">&gt;()</span>
+    <span class="p">.</span><span class="n">DbRef</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Products</span><span class="p">,</span> <span class="s">&#34;products&#34;</span><span class="p">);</span>
+</code></pre></div>
+<p>LiteDB will respect if your <code>Products</code> field are null or empty list when restore from datafile. If you do not use <code>Include</code> in query, classes are loaded with only <code>ID</code> set (all other properties will stay with default/null value).</p>
+
+<p>In v4, this include process occurs on BsonDocument engine level. That also support any level of include, just using <code>Path</code> syntax:</p>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="n">orders</span><span class="p">.</span><span class="n">Include</span><span class="p">(</span><span class="k">new</span> <span class="kt">string</span><span class="na">[]</span> <span class="p">{</span> <span class="s">&#34;$.Customer&#34;</span><span class="p">,</span> <span class="s">&#34;$.Products[*]&#34;</span> <span class="p">});</span>
+</code></pre></div>
+<p>If you are using in <code>LiteCollection</code> or <code>Repository</code> you can use Linq syntax too:</p>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// repository fluent syntax
+</span><span class="c1"></span><span class="n">db</span><span class="p">.</span><span class="n">Query</span><span class="p">&lt;</span><span class="n">Order</span><span class="p">&gt;()</span>
+    <span class="p">.</span><span class="n">Include</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Customer</span><span class="p">)</span>
+    <span class="p">.</span><span class="n">Include</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Products</span><span class="p">)</span>
+    <span class="p">.</span><span class="n">ToList</span><span class="p">();</span>
+</code></pre></div>
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li class="zerostatic"><a href="https://www.zerostatic.io">www.zerostatic.io</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/www.example.com/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+  
+
+
+</body>
+
+</html>

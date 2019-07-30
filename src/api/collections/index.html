@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Collections - Hugo Whisper Theme</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="www.example.com/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  
+  
+  
+  <link rel="stylesheet" href="/www.example.com/css/style.min.f31edf12f81d9ad5234f2b100646ce1f51e3ab0f6a37c940a43bcd79513204c3.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-single'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.example.com/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.example.com/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.example.com/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Api</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.example.com/api/bsondocument/">BsonDocument</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.example.com/api/collections/">Collections</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">Collections</h1>
+<div class="content">
+  
+
+<h2 id="bsonarray"><code>BsonArray</code></h2>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">BsonArray</span>
+    <span class="p">:</span> <span class="n">BsonValue</span><span class="p">,</span> <span class="n">IComparable</span><span class="p">&lt;</span><span class="n">BsonValue</span><span class="p">&gt;,</span> <span class="n">IEquatable</span><span class="p">&lt;</span><span class="n">BsonValue</span><span class="p">&gt;,</span> <span class="n">IList</span><span class="p">&lt;</span><span class="n">BsonValue</span><span class="p">&gt;,</span> <span class="n">ICollection</span><span class="p">&lt;</span><span class="n">BsonValue</span><span class="p">&gt;,</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">BsonValue</span><span class="p">&gt;,</span> <span class="n">IEnumerable</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | Count |  |
+| <code>Boolean</code> | IsReadOnly |  |
+| <code>BsonValue</code> | Item |  |
+| <code>IList&lt;BsonValue&gt;</code> | RawValue |  |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>void</code> | Add(<code>BsonValue</code> item) |  |
+| <code>void</code> | AddRange(<code>IEnumerable&lt;BsonValue&gt;</code> items) |  |
+| <code>void</code> | Clear() |  |
+| <code>Int32</code> | CompareTo(<code>BsonValue</code> other) |  |
+| <code>Boolean</code> | Contains(<code>BsonValue</code> item) |  |
+| <code>void</code> | CopyTo(<code>BsonValue[]</code> array, <code>Int32</code> arrayIndex) |  |
+| <code>Int32</code> | GetBytesCount(<code>Boolean</code> recalc) |  |
+| <code>IEnumerator&lt;BsonValue&gt;</code> | GetEnumerator() |  |
+| <code>Int32</code> | IndexOf(<code>BsonValue</code> item) |  |
+| <code>void</code> | Insert(<code>Int32</code> index, <code>BsonValue</code> item) |  |
+| <code>Boolean</code> | Remove(<code>BsonValue</code> item) |  |
+| <code>void</code> | RemoveAt(<code>Int32</code> index) |  |
+| <code>String</code> | ToString() |  |</p>
+
+<h2 id="bsonautoid"><code>BsonAutoId</code></h2>
+
+<p>All supported BsonTypes supported in AutoId insert operation</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">enum</span> <span class="n">LiteDB</span><span class="p">.</span><span class="n">BsonAutoId</span>
+    <span class="p">:</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">IComparable</span><span class="p">,</span> <span class="n">IFormattable</span><span class="p">,</span> <span class="n">IConvertible</span>
+</code></pre></div>
+<p>Enum</p>
+
+<p>| Value | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>2</code> | Int32 |  |
+| <code>3</code> | Int64 |  |
+| <code>10</code> | ObjectId |  |
+| <code>11</code> | Guid |  |</p>
+
+<h2 id="bsondatareader"><code>BsonDataReader</code></h2>
+
+<p>Class to read void, one or a collection of BsonValues. Used in SQL execution commands and query returns. Use local data source (IEnumerable[BsonDocument])</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">BsonDataReader</span>
+    <span class="p">:</span> <span class="n">IBsonDataReader</span><span class="p">,</span> <span class="n">IDisposable</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>String</code> | Collection | Return collection name |
+| <code>BsonValue</code> | Current | Return current value |
+| <code>Boolean</code> | HasValues | Return if has any value in result |
+| <code>BsonValue</code> | Item |  |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>void</code> | Dispose(<code>Boolean</code> disposing) |  |
+| <code>void</code> | Dispose() |  |
+| <code>void</code> | Finalize() |  |
+| <code>Boolean</code> | Read() | Move cursor to next result. Returns true if read was possible |</p>
+
+<h2 id="bsondocument"><code>BsonDocument</code></h2>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">BsonDocument</span>
+    <span class="p">:</span> <span class="n">BsonValue</span><span class="p">,</span> <span class="n">IComparable</span><span class="p">&lt;</span><span class="n">BsonValue</span><span class="p">&gt;,</span> <span class="n">IEquatable</span><span class="p">&lt;</span><span class="n">BsonValue</span><span class="p">&gt;,</span> <span class="n">IDictionary</span><span class="p">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">BsonValue</span><span class="p">&gt;,</span> <span class="n">ICollection</span><span class="p">&lt;</span><span class="n">KeyValuePair</span><span class="p">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">BsonValue</span><span class="p">&gt;&gt;,</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">KeyValuePair</span><span class="p">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">BsonValue</span><span class="p">&gt;&gt;,</span> <span class="n">IEnumerable</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | Count |  |
+| <code>Boolean</code> | IsReadOnly |  |
+| <code>BsonValue</code> | Item | Get/Set a field for document. Fields are case sensitive |
+| <code>ICollection&lt;String&gt;</code> | Keys |  |
+| <code>PageAddress</code> | RawId | Get/Set position of this document inside database. It&rsquo;s filled when used in Find operation. |
+| <code>Dictionary&lt;String, BsonValue&gt;</code> | RawValue |  |
+| <code>ICollection&lt;BsonValue&gt;</code> | Values |  |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>void</code> | Add(<code>String</code> key, <code>BsonValue</code> value) |  |
+| <code>void</code> | Add(<code>KeyValuePair&lt;String, BsonValue&gt;</code> item) |  |
+| <code>void</code> | Clear() |  |
+| <code>Int32</code> | CompareTo(<code>BsonValue</code> other) |  |
+| <code>Boolean</code> | Contains(<code>KeyValuePair&lt;String, BsonValue&gt;</code> item) |  |
+| <code>Boolean</code> | ContainsKey(<code>String</code> key) |  |
+| <code>void</code> | CopyTo(<code>KeyValuePair</code>2[]<code>array,</code>Int32<code>arrayIndex) |  | 
+|</code>void<code>| CopyTo(</code>BsonDocument<code>other) |  | 
+|</code>Int32<code>| GetBytesCount(</code>Boolean<code>recalc) |  | 
+|</code>IEnumerable<KeyValuePair<String, BsonValue>&gt;<code>| GetElements() | Get all document elements - Return &quot;_id&quot; as first of all (if exists) | 
+|</code>IEnumerator<KeyValuePair<String, BsonValue>&gt;<code>| GetEnumerator() |  | 
+|</code>Boolean<code>| Remove(</code>String<code>key) |  | 
+|</code>Boolean<code>| Remove(</code>KeyValuePair<String, BsonValue><code>item) |  | 
+|</code>String<code>| ToString() |  | 
+|</code>Boolean<code>| TryGetValue(</code>String<code>key,</code>BsonValue&amp;` value) |  |</p>
+
+<h2 id="bsonexpression"><code>BsonExpression</code></h2>
+
+<p>Compile and execute string expressions using BsonDocuments. Used in all document manipulation (transform, filter, indexes, updates). See <a href="https://github.com/mbdavid/LiteDB/wiki/Expressions">https://github.com/mbdavid/LiteDB/wiki/Expressions</a></p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">BsonExpression</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Expression</code> | Expression | Get transformed LINQ expression |
+| <code>HashSet&lt;String&gt;</code> | Fields | Fill this hashset with all fields used in root level of document (be used to partial deserialize) - &ldquo;$&rdquo; means all fields |
+| <code>Boolean</code> | IsAllOperator | Set if this expression are an ALL operator (used to not remove in Filter) |
+| <code>Boolean</code> | IsImmutable | If true, this expression do not change if same document/paramter are passed (only few methods change - like NOW() - or parameters) |
+| <code>Boolean</code> | IsIndexable | This expression can be indexed? To index some expression must contains fields (at least 1) and  must use only immutable methods and no parameters |
+| <code>Boolean</code> | IsPredicate | Indicate that expression evaluate to TRUE or FALSE (=, &gt;, &hellip;). OR and AND are not considered Predicate expressions  Predicate expressions must have Left/Right expressions |
+| <code>Boolean</code> | IsScalar | Indicate if this expressions returns a single value or IEnumerable value |
+| <code>Boolean</code> | IsValue | This expression has no dependency of BsonDocument so can be used as user value (when select index) |
+| <code>BsonExpression</code> | Left | In predicate expressions, indicate Left side |
+| <code>BsonDocument</code> | Parameters | Get/Set parameter values that will be used on expression execution |
+| <code>BsonExpression</code> | Right | In predicate expressions, indicate Rigth side |
+| <code>String</code> | Source | Get formatted expression |
+| <code>BsonExpressionType</code> | Type | Indicate expression type |
+| <code>Boolean</code> | UseSource | Get/Set this expression (or any inner expression) use global Source (*) |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>String</code> | DefaultFieldName() | Get default field name when need convert simple BsonValue into BsonDocument |
+| <code>IEnumerable&lt;BsonValue&gt;</code> | Execute() | Execute expression with an empty document (used only for resolve math/functions). |
+| <code>IEnumerable&lt;BsonValue&gt;</code> | Execute(<code>BsonDocument</code> root) | Execute expression with an empty document (used only for resolve math/functions). |
+| <code>IEnumerable&lt;BsonValue&gt;</code> | Execute(<code>IEnumerable&lt;BsonDocument&gt;</code> source) | Execute expression with an empty document (used only for resolve math/functions). |
+| <code>IEnumerable&lt;BsonValue&gt;</code> | Execute(<code>IEnumerable&lt;BsonDocument&gt;</code> source, <code>BsonDocument</code> root, <code>BsonValue</code> current) | Execute expression with an empty document (used only for resolve math/functions). |
+| <code>BsonValue</code> | ExecuteScalar() | Execute scalar expression with an empty document (used only for resolve math/functions). |
+| <code>BsonValue</code> | ExecuteScalar(<code>BsonDocument</code> root) | Execute scalar expression with an empty document (used only for resolve math/functions). |
+| <code>BsonValue</code> | ExecuteScalar(<code>IEnumerable&lt;BsonDocument&gt;</code> source, <code>BsonDocument</code> root, <code>BsonValue</code> current) | Execute scalar expression with an empty document (used only for resolve math/functions). |
+| <code>String</code> | ToString() |  |</p>
+
+<p>Static Fields</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>BsonExpression</code> | Root | Get root document $ expression |</p>
+
+<p>Static Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>IEnumerable&lt;MethodInfo&gt;</code> | Methods | Get all registered methods for BsonExpressions |</p>
+
+<p>Static Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>BsonExpression</code> | Create(<code>String</code> expression) | Parse string and create new instance of BsonExpression - can be cached |
+| <code>BsonExpression</code> | Create(<code>String</code> expression, <code>BsonValue[]</code> args) | Parse string and create new instance of BsonExpression - can be cached |
+| <code>BsonExpression</code> | Create(<code>String</code> expression, <code>BsonDocument</code> parameters) | Parse string and create new instance of BsonExpression - can be cached |
+| <code>BsonExpression</code> | Create(<code>Tokenizer</code> tokenizer, <code>BsonDocument</code> parameters, <code>BsonExpressionParserMode</code> mode) | Parse string and create new instance of BsonExpression - can be cached |
+| <code>MethodInfo</code> | GetMethod(<code>String</code> name, <code>Int32</code> parameterCount) | Get expression method with same name and same parameter - return null if not found |
+| <code>BsonExpression</code> | Parse(<code>Tokenizer</code> tokenizer, <code>BsonExpressionParserMode</code> mode, <code>Boolean</code> isRoot) | Parse and compile string expression and return BsonExpression |</p>
+
+<h2 id="bsonexpressiontype"><code>BsonExpressionType</code></h2>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">enum</span> <span class="n">LiteDB</span><span class="p">.</span><span class="n">BsonExpressionType</span>
+    <span class="p">:</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">IComparable</span><span class="p">,</span> <span class="n">IFormattable</span><span class="p">,</span> <span class="n">IConvertible</span>
+</code></pre></div>
+<p>Enum</p>
+
+<p>| Value | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>1</code> | Double |  |
+| <code>2</code> | Int |  |
+| <code>3</code> | String |  |
+| <code>4</code> | Boolean |  |
+| <code>5</code> | Null |  |
+| <code>6</code> | Array |  |
+| <code>7</code> | Document |  |
+| <code>8</code> | Parameter |  |
+| <code>9</code> | Call |  |
+| <code>10</code> | Path |  |
+| <code>11</code> | Modulo |  |
+| <code>12</code> | Add |  |
+| <code>13</code> | Subtract |  |
+| <code>14</code> | Multiply |  |
+| <code>15</code> | Divide |  |
+| <code>16</code> | Equal |  |
+| <code>17</code> | Like |  |
+| <code>18</code> | Between |  |
+| <code>19</code> | GreaterThan |  |
+| <code>20</code> | GreaterThanOrEqual |  |
+| <code>21</code> | LessThan |  |
+| <code>22</code> | LessThanOrEqual |  |
+| <code>23</code> | NotEqual |  |
+| <code>24</code> | In |  |
+| <code>25</code> | Or |  |
+| <code>26</code> | And |  |
+| <code>27</code> | Map |  |
+| <code>28</code> | Source |  |</p>
+
+<h2 id="bsonfieldattribute"><code>BsonFieldAttribute</code></h2>
+
+<p>Set a name to this property in BsonDocument</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">BsonFieldAttribute</span>
+    <span class="p">:</span> <span class="n">Attribute</span><span class="p">,</span> <span class="n">_Attribute</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>String</code> | Name |  |</p>
+
+<h2 id="bsonidattribute"><code>BsonIdAttribute</code></h2>
+
+<p>Indicate that property will be used as BsonDocument Id</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">BsonIdAttribute</span>
+    <span class="p">:</span> <span class="n">Attribute</span><span class="p">,</span> <span class="n">_Attribute</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Boolean</code> | AutoId |  |</p>
+
+<h2 id="bsonignoreattribute"><code>BsonIgnoreAttribute</code></h2>
+
+<p>Indicate that property will not be persist in Bson serialization</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">BsonIgnoreAttribute</span>
+    <span class="p">:</span> <span class="n">Attribute</span><span class="p">,</span> <span class="n">_Attribute</span>
+</code></pre></div>
+<h2 id="bsonmapper"><code>BsonMapper</code></h2>
+
+<p>Class that converts your entity class to/from BsonDocument  If you prefer use a new instance of BsonMapper (not Global), be sure cache this instance for better performance  Serialization rules:  - Classes must be &ldquo;public&rdquo; with a public constructor (without parameters)  - Properties must have public getter (can be read-only)  - Entity class must have Id property, [ClassName]Id property or [BsonId] attribute  - No circular references  - Fields are not valid  - IList, Array supports  - IDictionary supports (Key must be a simple datatype - converted by ChangeType)</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">BsonMapper</span>
+</code></pre></div>
+<p>Fields</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Func&lt;Type, String&gt;</code> | ResolveCollectionName | Custom resolve name collection based on Type |
+| <code>Func&lt;String, String&gt;</code> | ResolveFieldName | A resolver name for field |
+| <code>Action&lt;Type, MemberInfo, MemberMapper&gt;</code> | ResolveMember | A custom callback to change MemberInfo behavior when converting to MemberMapper.  Use mapper.ResolveMember(Type entity, MemberInfo property, MemberMapper documentMappedField)  Set FieldName to null if you want remove from mapped document |</p>
+
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Boolean</code> | EmptyStringToNull | Convert EmptyString to Null (default true) |
+| <code>Boolean</code> | IncludeFields | Get/Set that mapper must include fields (default: false) |
+| <code>Boolean</code> | IncludeNonPublic | Get/Set that mapper must include non public (private, protected and internal) (default: false) |
+| <code>Boolean</code> | SerializeNullValues | Indicate that mapper do not serialize null values (default false) |
+| <code>Boolean</code> | TrimWhitespace | Apply .Trim() in strings when serialize (default true) |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>EntityMapper</code> | BuildEntityMapper(<code>Type</code> type) | Use this method to override how your class can be, by default, mapped from entity to Bson document.  Returns an EntityMapper from each requested Type |
+| <code>T</code> | Deserialize(<code>BsonValue</code> value) | Deserialize a BsonValue to .NET object typed in T |
+| <code>Object</code> | Deserialize(<code>Type</code> type, <code>BsonValue</code> value) | Deserialize a BsonValue to .NET object typed in T |
+| <code>EntityBuilder&lt;T&gt;</code> | Entity() | Map your entity class to BsonDocument using fluent API |
+| <code>EntityMapper</code> | GetEntityMapper(<code>Type</code> type) | Get property mapper between typed .NET class and BsonDocument - Cache results |
+| <code>BsonExpression</code> | GetExpression(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> predicate) | Resolve LINQ expression into BsonExpression |
+| <code>BsonExpression</code> | GetExtendExpression(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> predicate) | Resolve LINQ expression into BsonExpression |
+| <code>MemberInfo</code> | GetIdMember(<code>IEnumerable&lt;MemberInfo&gt;</code> members) | Gets MemberInfo that refers to Id from a document object. |
+| <code>IEnumerable&lt;MemberInfo&gt;</code> | GetTypeMembers(<code>Type</code> type) | Returns all member that will be have mapper between POCO class to document |
+| <code>void</code> | RegisterType(<code>Func&lt;T, BsonValue&gt;</code> serialize, <code>Func&lt;BsonValue, T&gt;</code> deserialize) | Register a custom type serializer/deserialize function |
+| <code>void</code> | RegisterType(<code>Type</code> type, <code>Func&lt;Object, BsonValue&gt;</code> serialize, <code>Func&lt;BsonValue, Object&gt;</code> deserialize) | Register a custom type serializer/deserialize function |
+| <code>BsonValue</code> | Serialize(<code>T</code> obj) | Serialize to BsonValue any .NET object based on T type (using mapping rules) |
+| <code>BsonValue</code> | Serialize(<code>Type</code> type, <code>Object</code> obj) | Serialize to BsonValue any .NET object based on T type (using mapping rules) |
+| <code>BsonValue</code> | Serialize(<code>Type</code> type, <code>Object</code> obj, <code>Int32</code> depth) | Serialize to BsonValue any .NET object based on T type (using mapping rules) |
+| <code>BsonDocument</code> | ToDocument(<code>Type</code> type, <code>Object</code> entity) | Serialize a entity class to BsonDocument |
+| <code>BsonDocument</code> | ToDocument(<code>T</code> entity) | Serialize a entity class to BsonDocument |
+| <code>Object</code> | ToObject(<code>Type</code> type, <code>BsonDocument</code> doc) | Deserialize a BsonDocument to entity class |
+| <code>T</code> | ToObject(<code>BsonDocument</code> doc) | Deserialize a BsonDocument to entity class |
+| <code>BsonMapper</code> | UseCamelCase() | Use lower camel case resolution for convert property names to field names |
+| <code>BsonMapper</code> | UseLowerCaseDelimiter(<code>Char</code> delimiter = _) | Uses lower camel case with delimiter to convert property names to field names |</p>
+
+<p>Static Fields</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>BsonMapper</code> | Global | Global instance used when no BsonMapper are passed in LiteDatabase ctor |</p>
+
+<p>Static Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>void</code> | RegisterDbRef(<code>BsonMapper</code> mapper, <code>MemberMapper</code> member, <code>String</code> collection) | Register a property mapper as DbRef to serialize/deserialize only document reference _id |</p>
+
+<h2 id="bsonrefattribute"><code>BsonRefAttribute</code></h2>
+
+<p>Indicate that field are not persisted inside this document but it&rsquo;s a reference for another document (DbRef)</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">BsonRefAttribute</span>
+    <span class="p">:</span> <span class="n">Attribute</span><span class="p">,</span> <span class="n">_Attribute</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>String</code> | Collection |  |</p>
+
+<h2 id="bsonserializer"><code>BsonSerializer</code></h2>
+
+<p>Class to call method for convert BsonDocument to/from byte[] - based on <a href="http://bsonspec.org/spec.html">http://bsonspec.org/spec.html</a>  In v5 this class use new BufferRead/Writer to work with byte[] segments. This class are just a shortchut</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">BsonSerializer</span>
+</code></pre></div>
+<p>Static Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>BsonDocument</code> | Deserialize(<code>Byte[]</code> buffer, <code>Boolean</code> utcDate = False, <code>HashSet&lt;String&gt;</code> fields = null) | Deserialize binary data into BsonDocument |
+| <code>Byte[]</code> | Serialize(<code>BsonDocument</code> doc) | Serialize BsonDocument into a binary array |</p>
+
+<h2 id="bsontype"><code>BsonType</code></h2>
+
+<p>All supported BsonTypes in sort order</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">enum</span> <span class="n">LiteDB</span><span class="p">.</span><span class="n">BsonType</span>
+    <span class="p">:</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">IComparable</span><span class="p">,</span> <span class="n">IFormattable</span><span class="p">,</span> <span class="n">IConvertible</span>
+</code></pre></div>
+<p>Enum</p>
+
+<p>| Value | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>0</code> | MinValue |  |
+| <code>1</code> | Null |  |
+| <code>2</code> | Int32 |  |
+| <code>3</code> | Int64 |  |
+| <code>4</code> | Double |  |
+| <code>5</code> | Decimal |  |
+| <code>6</code> | String |  |
+| <code>7</code> | Document |  |
+| <code>8</code> | Array |  |
+| <code>9</code> | Binary |  |
+| <code>10</code> | ObjectId |  |
+| <code>11</code> | Guid |  |
+| <code>12</code> | Boolean |  |
+| <code>13</code> | DateTime |  |
+| <code>14</code> | MaxValue |  |</p>
+
+<h2 id="bsonvalue"><code>BsonValue</code></h2>
+
+<p>Represent a Bson Value used in BsonDocument</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">BsonValue</span>
+    <span class="p">:</span> <span class="n">IComparable</span><span class="p">&lt;</span><span class="n">BsonValue</span><span class="p">&gt;,</span> <span class="n">IEquatable</span><span class="p">&lt;</span><span class="n">BsonValue</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>BsonArray</code> | AsArray |  |
+| <code>Byte[]</code> | AsBinary |  |
+| <code>Boolean</code> | AsBoolean |  |
+| <code>DateTime</code> | AsDateTime |  |
+| <code>Decimal</code> | AsDecimal |  |
+| <code>BsonDocument</code> | AsDocument |  |
+| <code>Double</code> | AsDouble |  |
+| <code>Guid</code> | AsGuid |  |
+| <code>Int32</code> | AsInt32 |  |
+| <code>Int64</code> | AsInt64 |  |
+| <code>ObjectId</code> | AsObjectId |  |
+| <code>String</code> | AsString |  |
+| <code>Boolean</code> | IsArray |  |
+| <code>Boolean</code> | IsBinary |  |
+| <code>Boolean</code> | IsBoolean |  |
+| <code>Boolean</code> | IsDateTime |  |
+| <code>Boolean</code> | IsDecimal |  |
+| <code>Boolean</code> | IsDocument |  |
+| <code>Boolean</code> | IsDouble |  |
+| <code>Boolean</code> | IsGuid |  |
+| <code>Boolean</code> | IsInt32 |  |
+| <code>Boolean</code> | IsInt64 |  |
+| <code>Boolean</code> | IsMaxValue |  |
+| <code>Boolean</code> | IsMinValue |  |
+| <code>Boolean</code> | IsNull |  |
+| <code>Boolean</code> | IsNumber |  |
+| <code>Boolean</code> | IsObjectId |  |
+| <code>Boolean</code> | IsString |  |
+| <code>BsonValue</code> | Item | Get/Set a field for document. Fields are case sensitive - Works only when value are document |
+| <code>BsonValue</code> | Item | Get/Set a field for document. Fields are case sensitive - Works only when value are document |
+| <code>Object</code> | RawValue | Get internal .NET value object |
+| <code>BsonType</code> | Type | Indicate BsonType of this BsonValue |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | CompareTo(<code>BsonValue</code> other) |  |
+| <code>Boolean</code> | Equals(<code>BsonValue</code> other) |  |
+| <code>Boolean</code> | Equals(<code>Object</code> obj) |  |
+| <code>Int32</code> | GetBytesCount(<code>Boolean</code> recalc) | Returns how many bytes this BsonValue will consume when converted into binary BSON  If recalc = false, use cached length value (from Array/Document only) |
+| <code>Int32</code> | GetBytesCountElement(<code>String</code> key, <code>BsonValue</code> value) | Get how many bytes one single element will used in BSON format |
+| <code>Int32</code> | GetHashCode() |  |
+| <code>String</code> | ToString() |  |</p>
+
+<p>Static Fields</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>BsonValue</code> | MaxValue | Represent a MaxValue bson type |
+| <code>BsonValue</code> | MinValue | Represent a MinValue bson type |
+| <code>BsonValue</code> | Null | Represent a Null bson type |
+| <code>DateTime</code> | UnixEpoch |  |</p>
+
+<p>Static Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>BsonDocument</code> | DbRef(<code>BsonValue</code> id, <code>String</code> collection) | Create a new document used in DbRef =&gt; { $id: id, $ref: collection } |</p>
+
+<h2 id="connectionmode"><code>ConnectionMode</code></h2>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">enum</span> <span class="n">LiteDB</span><span class="p">.</span><span class="n">ConnectionMode</span>
+    <span class="p">:</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">IComparable</span><span class="p">,</span> <span class="n">IFormattable</span><span class="p">,</span> <span class="n">IConvertible</span>
+</code></pre></div>
+<p>Enum</p>
+
+<p>| Value | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>0</code> | Exclusive |  |
+| <code>1</code> | Shared |  |</p>
+
+<h2 id="connectionstring"><code>ConnectionString</code></h2>
+
+<p>Manage ConnectionString to connect and create databases. Connection string are NameValue using Name1=Value1; Name2=Value2</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">ConnectionString</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>String</code> | Filename | &ldquo;filename&rdquo;: Full path or relative path from DLL directory  Supported in [Local, Shared] connection type |
+| <code>Int64</code> | InitialSize | &ldquo;initial size&rdquo;: If database is new, initialize with allocated space - support KB, MB, GB (default: 0 bytes)  Supported in [Local, Shared] connection type |
+| <code>String</code> | Item | Get value from parsed connection string. Returns null if not found |
+| <code>Int64</code> | LimitSize | &ldquo;limit size&rdquo;: Max limit of datafile - support KB, MB, GB (default: long.MaxValue - no limit)  Supported in [Local, Shared] connection type |
+| <code>ConnectionMode</code> | Mode | &ldquo;type&rdquo;: Return how engine will be open (default: Local) |
+| <code>String</code> | Password | &ldquo;password&rdquo;: Database password used to encrypt/decypted data pages |
+| <code>Boolean</code> | ReadOnly | &ldquo;readonly&rdquo;: Open datafile in readonly mode (default: false)  Supported in [Local, Shared] connection type |
+| <code>TimeSpan</code> | Timeout | &ldquo;timeout&rdquo;: Timeout for waiting unlock operations (default: 1 minute)  Supported in [Local, Shared] connection type |
+| <code>Boolean</code> | UtcDate | &ldquo;utc&rdquo;: Returns date in UTC timezone from BSON deserialization (default: false - LocalTime)  Supported in [Local, Shared] connection type |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>ILiteEngine</code> | CreateEngine() | Create ILiteEngine instance according string connection parameters. For now, only Local/Shared are supported |</p>
+
+<h2 id="entitybuilder-t"><code>EntityBuilder&lt;T&gt;</code></h2>
+
+<p>Helper class to modify your entity mapping to document. Can be used instead attribute decorates</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">EntityBuilder</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>EntityBuilder&lt;T&gt;</code> | DbRef(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> property, <code>String</code> collection = null) | Define a subdocument (or a list of) as a reference |
+| <code>EntityBuilder&lt;T&gt;</code> | Field(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> property, <code>String</code> field) | Define a custom name for a property when mapping to document |
+| <code>EntityBuilder&lt;T&gt;</code> | Id(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> property, <code>Boolean</code> autoId = True) | Define which property is your document id (primary key). Define if this property supports auto-id |
+| <code>EntityBuilder&lt;T&gt;</code> | Ignore(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> property) | Define which property will not be mapped to document |</p>
+
+<h2 id="entitymapper"><code>EntityMapper</code></h2>
+
+<p>Class to map entity class to BsonDocument</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">EntityMapper</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Type</code> | ForType | Indicate which Type this entity mapper is |
+| <code>MemberMapper</code> | Id | Indicate which member is _id |
+| <code>List&lt;MemberMapper&gt;</code> | Members | List all type members that will be mapped to/from BsonDocument |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>MemberMapper</code> | GetMember(<code>Expression</code> expr) | Resolve expression to get member mapped |</p>
+
+<h2 id="ibsondatareader"><code>IBsonDataReader</code></h2>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">interface</span> <span class="n">LiteDB</span><span class="p">.</span><span class="n">IBsonDataReader</span>
+    <span class="p">:</span> <span class="n">IDisposable</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>String</code> | Collection |  |
+| <code>BsonValue</code> | Current |  |
+| <code>Boolean</code> | HasValues |  |
+| <code>BsonValue</code> | Item |  |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Boolean</code> | Read() |  |</p>
+
+<h2 id="ilitequeryable-t"><code>ILiteQueryable&lt;T&gt;</code></h2>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">interface</span> <span class="n">LiteDB</span><span class="p">.</span><span class="n">ILiteQueryable</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span>
+    <span class="p">:</span> <span class="n">ILiteQueryableResult</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>ILiteQueryable&lt;T&gt;</code> | ForUpdate() |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | GroupBy(<code>BsonExpression</code> keySelector) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | GroupBy(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> keySelector) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Having(<code>BsonExpression</code> predicate) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Having(<code>Expression&lt;Func&lt;IEnumerable&lt;T&gt;, Boolean&gt;&gt;</code> keySelector) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Include(<code>BsonExpression</code> path) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Include(<code>List&lt;BsonExpression&gt;</code> paths) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Include(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> path) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Limit(<code>Int32</code> limit) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Offset(<code>Int32</code> offset) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | OrderBy(<code>BsonExpression</code> keySelector, <code>Int32</code> order = 1) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | OrderBy(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> keySelector, <code>Int32</code> order = 1) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | OrderByDescending(<code>BsonExpression</code> keySelector) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | OrderByDescending(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> keySelector) |  |
+| <code>ILiteQueryableResult&lt;BsonDocument&gt;</code> | Select(<code>BsonExpression</code> selector) |  |
+| <code>ILiteQueryableResult&lt;K&gt;</code> | Select(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> selector) |  |
+| <code>ILiteQueryableResult&lt;K&gt;</code> | SelectAll(<code>Expression&lt;Func&lt;IEnumerable&lt;T&gt;, K&gt;&gt;</code> selector) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Skip(<code>Int32</code> offset) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Where(<code>BsonExpression</code> predicate) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Where(<code>String</code> predicate, <code>BsonDocument</code> parameters) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Where(<code>String</code> predicate, <code>BsonValue[]</code> args) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Where(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate) |  |</p>
+
+<h2 id="ilitequeryableresult-t"><code>ILiteQueryableResult&lt;T&gt;</code></h2>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">interface</span> <span class="n">LiteDB</span><span class="p">.</span><span class="n">ILiteQueryableResult</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | Count() |  |
+| <code>IBsonDataReader</code> | ExecuteReader() |  |
+| <code>Boolean</code> | Exists() |  |
+| <code>T</code> | First() |  |
+| <code>T</code> | FirstOrDefault() |  |
+| <code>BsonDocument</code> | GetPlan() |  |
+| <code>Int32</code> | Into(<code>String</code> newCollection, <code>BsonAutoId</code> autoId = ObjectId) |  |
+| <code>Int64</code> | LongCount() |  |
+| <code>T</code> | Single() |  |
+| <code>T</code> | SingleOrDefault() |  |
+| <code>T[]</code> | ToArray() |  |
+| <code>IEnumerable&lt;BsonDocument&gt;</code> | ToDocuments() |  |
+| <code>IEnumerable&lt;T&gt;</code> | ToEnumerable() |  |
+| <code>List&lt;T&gt;</code> | ToList() |  |</p>
+
+<h2 id="jsonreader"><code>JsonReader</code></h2>
+
+<p>A class that read a json string using a tokenizer (without regex)</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">JsonReader</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int64</code> | Position |  |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>BsonValue</code> | Deserialize() |  |
+| <code>IEnumerable&lt;BsonValue&gt;</code> | DeserializeArray() |  |
+| <code>BsonValue</code> | ReadValue(<code>Token</code> token) |  |</p>
+
+<h2 id="jsonserializer"><code>JsonSerializer</code></h2>
+
+<p>Static class for serialize/deserialize BsonDocuments into json extended format</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">JsonSerializer</span>
+</code></pre></div>
+<p>Static Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>BsonValue</code> | Deserialize(<code>String</code> json) | Deserialize a Json string into a BsonValue |
+| <code>BsonValue</code> | Deserialize(<code>TextReader</code> reader) | Deserialize a Json string into a BsonValue |
+| <code>IEnumerable&lt;BsonValue&gt;</code> | DeserializeArray(<code>String</code> json) | Deserialize a json array as an IEnumerable of BsonValue |
+| <code>IEnumerable&lt;BsonValue&gt;</code> | DeserializeArray(<code>TextReader</code> reader) | Deserialize a json array as an IEnumerable of BsonValue |
+| <code>String</code> | Serialize(<code>BsonValue</code> value) | Json serialize a BsonValue into a String |
+| <code>void</code> | Serialize(<code>BsonValue</code> value, <code>TextWriter</code> writer) | Json serialize a BsonValue into a String |
+| <code>void</code> | Serialize(<code>BsonValue</code> value, <code>StringBuilder</code> sb) | Json serialize a BsonValue into a String |</p>
+
+<h2 id="jsonwriter"><code>JsonWriter</code></h2>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">JsonWriter</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | Indent | Get/Set indent size |
+| <code>Boolean</code> | Pretty | Get/Set if writer must print pretty (with new line/indent) |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>void</code> | Serialize(<code>BsonValue</code> value) | Serialize value into text writer |</p>
+
+<h2 id="litecollection-t"><code>LiteCollection&lt;T&gt;</code></h2>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">LiteCollection</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>String</code> | Name | Get collection name |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | Count() | Get document count using property on collection. |
+| <code>Int32</code> | Count(<code>BsonExpression</code> predicate) | Get document count using property on collection. |
+| <code>Int32</code> | Count(<code>String</code> predicate, <code>BsonDocument</code> parameters) | Get document count using property on collection. |
+| <code>Int32</code> | Count(<code>String</code> predicate, <code>BsonValue[]</code> args) | Get document count using property on collection. |
+| <code>Int32</code> | Count(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate) | Get document count using property on collection. |
+| <code>Boolean</code> | Delete(<code>BsonValue</code> id) | Delete a single document on collection based on _id index. Returns true if document was deleted |
+| <code>Int32</code> | DeleteMany(<code>BsonExpression</code> predicate) | Delete all documents based on predicate expression. Returns how many documents was deleted |
+| <code>Int32</code> | DeleteMany(<code>String</code> predicate, <code>BsonDocument</code> parameters) | Delete all documents based on predicate expression. Returns how many documents was deleted |
+| <code>Int32</code> | DeleteMany(<code>String</code> predicate, <code>BsonValue[]</code> args) | Delete all documents based on predicate expression. Returns how many documents was deleted |
+| <code>Int32</code> | DeleteMany(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate) | Delete all documents based on predicate expression. Returns how many documents was deleted |
+| <code>Boolean</code> | DropIndex(<code>String</code> name) | Drop index and release slot for another index |
+| <code>Boolean</code> | EnsureIndex(<code>String</code> name, <code>BsonExpression</code> expression, <code>Boolean</code> unique = False) | Create a new permanent index in all documents inside this collections if index not exists already. Returns true if index was created or false if already exits |
+| <code>Boolean</code> | EnsureIndex(<code>BsonExpression</code> expression, <code>Boolean</code> unique = False) | Create a new permanent index in all documents inside this collections if index not exists already. Returns true if index was created or false if already exits |
+| <code>Boolean</code> | EnsureIndex(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> keySelector, <code>Boolean</code> unique = False) | Create a new permanent index in all documents inside this collections if index not exists already. Returns true if index was created or false if already exits |
+| <code>Boolean</code> | EnsureIndex(<code>String</code> name, <code>Expression&lt;Func&lt;T, K&gt;&gt;</code> keySelector, <code>Boolean</code> unique = False) | Create a new permanent index in all documents inside this collections if index not exists already. Returns true if index was created or false if already exits |
+| <code>Boolean</code> | Exists(<code>BsonExpression</code> predicate) | Returns true if query returns any document. This method does not deserialize any document. Needs indexes on query expression |
+| <code>Boolean</code> | Exists(<code>String</code> predicate, <code>BsonDocument</code> parameters) | Returns true if query returns any document. This method does not deserialize any document. Needs indexes on query expression |
+| <code>Boolean</code> | Exists(<code>String</code> predicate, <code>BsonValue[]</code> args) | Returns true if query returns any document. This method does not deserialize any document. Needs indexes on query expression |
+| <code>Boolean</code> | Exists(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate) | Returns true if query returns any document. This method does not deserialize any document. Needs indexes on query expression |
+| <code>IEnumerable&lt;T&gt;</code> | Find(<code>BsonExpression</code> predicate, <code>Int32</code> skip = 0, <code>Int32</code> limit = 2147483647) | Find documents inside a collection using predicate expression. |
+| <code>IEnumerable&lt;T&gt;</code> | Find(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate, <code>Int32</code> skip = 0, <code>Int32</code> limit = 2147483647) | Find documents inside a collection using predicate expression. |
+| <code>IEnumerable&lt;T&gt;</code> | FindAll() | Returns all documents inside collection order by _id index. |
+| <code>T</code> | FindById(<code>BsonValue</code> id) | Find a document using Document Id. Returns null if not found. |
+| <code>T</code> | FindOne(<code>BsonExpression</code> predicate) | Find the first document using predicate expression. Returns null if not found |
+| <code>T</code> | FindOne(<code>String</code> predicate, <code>BsonDocument</code> parameters) | Find the first document using predicate expression. Returns null if not found |
+| <code>T</code> | FindOne(<code>BsonExpression</code> predicate, <code>BsonValue[]</code> args) | Find the first document using predicate expression. Returns null if not found |
+| <code>T</code> | FindOne(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate) | Find the first document using predicate expression. Returns null if not found |
+| <code>LiteCollection&lt;T&gt;</code> | Include(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> keySelector) | Run an include action in each document returned by Find(), FindById(), FindOne() and All() methods to load DbRef documents  Returns a new Collection with this action included |
+| <code>LiteCollection&lt;T&gt;</code> | Include(<code>BsonExpression</code> keySelector) | Run an include action in each document returned by Find(), FindById(), FindOne() and All() methods to load DbRef documents  Returns a new Collection with this action included |
+| <code>BsonValue</code> | Insert(<code>T</code> document) | Insert a new entity to this collection. Document Id must be a new value in collection - Returns document Id |
+| <code>void</code> | Insert(<code>BsonValue</code> id, <code>T</code> document) | Insert a new entity to this collection. Document Id must be a new value in collection - Returns document Id |
+| <code>Int32</code> | Insert(<code>IEnumerable&lt;T&gt;</code> docs) | Insert a new entity to this collection. Document Id must be a new value in collection - Returns document Id |
+| <code>Int64</code> | LongCount() | Get document count using property on collection. |
+| <code>Int64</code> | LongCount(<code>BsonExpression</code> predicate) | Get document count using property on collection. |
+| <code>Int64</code> | LongCount(<code>String</code> predicate, <code>BsonDocument</code> parameters) | Get document count using property on collection. |
+| <code>Int64</code> | LongCount(<code>String</code> predicate, <code>BsonValue[]</code> args) | Get document count using property on collection. |
+| <code>Int64</code> | LongCount(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate) | Get document count using property on collection. |
+| <code>BsonValue</code> | Max(<code>BsonExpression</code> keySelector) | Returns the max value from specified key value in collection |
+| <code>BsonValue</code> | Max() | Returns the max value from specified key value in collection |
+| <code>K</code> | Max(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> keySelector) | Returns the max value from specified key value in collection |
+| <code>BsonValue</code> | Min(<code>BsonExpression</code> keySelector) | Returns the min value from specified key value in collection |
+| <code>BsonValue</code> | Min() | Returns the min value from specified key value in collection |
+| <code>K</code> | Min(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> keySelector) | Returns the min value from specified key value in collection |
+| <code>ILiteQueryable&lt;T&gt;</code> | Query() | Return a new LiteQueryable to build more complex queries |
+| <code>Boolean</code> | Update(<code>T</code> document) | Update a document in this collection. Returns false if not found document in collection |
+| <code>Boolean</code> | Update(<code>BsonValue</code> id, <code>T</code> document) | Update a document in this collection. Returns false if not found document in collection |
+| <code>Int32</code> | Update(<code>IEnumerable&lt;T&gt;</code> documents) | Update a document in this collection. Returns false if not found document in collection |
+| <code>Int32</code> | UpdateMany(<code>BsonExpression</code> transform, <code>BsonExpression</code> predicate) | Update many documents based on transform expression. This expression must return a new document that will be replaced over current document (according with predicate).  Eg: col.UpdateMany(&ldquo;{ Name: UPPER($.Name), Age }&ldquo;, &ldquo;_id &gt; 0&rdquo;) |
+| <code>Int32</code> | UpdateMany(<code>Expression&lt;Func&lt;T, T&gt;&gt;</code> extend, <code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate) | Update many documents based on transform expression. This expression must return a new document that will be replaced over current document (according with predicate).  Eg: col.UpdateMany(&ldquo;{ Name: UPPER($.Name), Age }&ldquo;, &ldquo;_id &gt; 0&rdquo;) |
+| <code>Boolean</code> | Upsert(<code>T</code> document) | Insert or Update a document in this collection. |
+| <code>Int32</code> | Upsert(<code>IEnumerable&lt;T&gt;</code> documents) | Insert or Update a document in this collection. |
+| <code>Boolean</code> | Upsert(<code>BsonValue</code> id, <code>T</code> document) | Insert or Update a document in this collection. |</p>
+
+<h2 id="litedatabase"><code>LiteDatabase</code></h2>
+
+<p>The LiteDB database. Used for create a LiteDB instance and use all storage resources. It&rsquo;s the database connection</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">LiteDatabase</span>
+    <span class="p">:</span> <span class="n">IDisposable</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>LiteStorage&lt;String&gt;</code> | FileStorage | Returns a special collection for storage files/stream inside datafile. Use _files and _chunks collection names. FileId is implemented as string. Use &ldquo;GetStorage&rdquo; for custom options |
+| <code>BsonMapper</code> | Mapper | Get current instance of BsonMapper used in this database instance (can be BsonMapper.Global) |
+| <code>Int32</code> | UserVersion | Get/Set database user version - use this version number to control database change model |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | Analyze(<code>String[]</code> collections) | Analyze indexes in collections to better index choose decision |
+| <code>Boolean</code> | BeginTrans() | Initialize a new transaction. Transaction are created &ldquo;per-thread&rdquo;. There is only one single transaction per thread.  Return true if transaction was created or false if current thread already in a transaction. |
+| <code>void</code> | Checkpoint() | Do database checkpoint. Copy all commited transaction from log file into datafile. |
+| <code>Boolean</code> | CollectionExists(<code>String</code> name) | Checks if a collection exists on database. Collection name is case insensitive |
+| <code>Boolean</code> | Commit() | Commit current transaction |
+| <code>void</code> | Dispose() |  |
+| <code>Boolean</code> | DropCollection(<code>String</code> name) | Drop a collection and all data + indexes |
+| <code>IBsonDataReader</code> | Execute(<code>TextReader</code> commandReader, <code>BsonDocument</code> parameters = null) | Execute SQL commands and return as data reader. |
+| <code>IBsonDataReader</code> | Execute(<code>String</code> command, <code>BsonDocument</code> parameters = null) | Execute SQL commands and return as data reader. |
+| <code>IBsonDataReader</code> | Execute(<code>String</code> command, <code>BsonValue[]</code> args) | Execute SQL commands and return as data reader. |
+| <code>LiteCollection&lt;T&gt;</code> | GetCollection(<code>String</code> name) | Get a collection using a entity class as strong typed document. If collection does not exits, create a new one. |
+| <code>LiteCollection&lt;T&gt;</code> | GetCollection() | Get a collection using a entity class as strong typed document. If collection does not exits, create a new one. |
+| <code>LiteCollection&lt;T&gt;</code> | GetCollection(<code>BsonAutoId</code> autoId) | Get a collection using a entity class as strong typed document. If collection does not exits, create a new one. |
+| <code>LiteCollection&lt;BsonDocument&gt;</code> | GetCollection(<code>String</code> name, <code>BsonAutoId</code> autoId = ObjectId) | Get a collection using a entity class as strong typed document. If collection does not exits, create a new one. |
+| <code>IEnumerable&lt;String&gt;</code> | GetCollectionNames() | Get all collections name inside this database. |
+| <code>LiteStorage&lt;TFileId&gt;</code> | GetStorage(<code>String</code> filesCollection = _files, <code>String</code> chunksCollection = _chunks) | Get new instance of Storage using custom FileId type, custom &ldquo;_files&rdquo; collection name and custom &ldquo;_chunks&rdquo; collection. LiteDB support multiples file storages (using different files/chunks collection names) |
+| <code>Boolean</code> | RenameCollection(<code>String</code> oldName, <code>String</code> newName) | Rename a collection. Returns false if oldName does not exists or newName already exists |
+| <code>Boolean</code> | Rollback() | Rollback current transaction |
+| <code>Int32</code> | Vaccum() | Analyze all database to find-and-fix non linked empty pages |</p>
+
+<h2 id="liteexception"><code>LiteException</code></h2>
+
+<p>The main exception for LiteDB</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">LiteException</span>
+    <span class="p">:</span> <span class="n">Exception</span><span class="p">,</span> <span class="n">ISerializable</span><span class="p">,</span> <span class="n">_Exception</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | ErrorCode |  |
+| <code>Int64</code> | Position |  |</p>
+
+<p>Static Fields</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | ALREADY_EXISTS_COLLECTION_NAME |  |
+| <code>Int32</code> | ALREADY_OPEN_DATAFILE |  |
+| <code>Int32</code> | COLLECTION_ALREADY_EXIST |  |
+| <code>Int32</code> | COLLECTION_LIMIT_EXCEEDED |  |
+| <code>Int32</code> | COLLECTION_NOT_FOUND |  |
+| <code>Int32</code> | DATABASE_SHUTDOWN |  |
+| <code>Int32</code> | DOCUMENT_MAX_DEPTH |  |
+| <code>Int32</code> | FILE_NOT_FOUND |  |
+| <code>Int32</code> | FILE_SIZE_EXCEEDED |  |
+| <code>Int32</code> | INDEX_ALREADY_EXIST |  |
+| <code>Int32</code> | INDEX_DROP_ID |  |
+| <code>Int32</code> | INDEX_DUPLICATE_KEY |  |
+| <code>Int32</code> | INDEX_NAME_LIMIT_EXCEEDED |  |
+| <code>Int32</code> | INDEX_NOT_FOUND |  |
+| <code>Int32</code> | INVALID_COLLECTION_NAME |  |
+| <code>Int32</code> | INVALID_COMMAND |  |
+| <code>Int32</code> | INVALID_CTOR |  |
+| <code>Int32</code> | INVALID_DATA_TYPE |  |
+| <code>Int32</code> | INVALID_DATABASE |  |
+| <code>Int32</code> | INVALID_DBREF |  |
+| <code>Int32</code> | INVALID_EXPRESSION_TYPE |  |
+| <code>Int32</code> | INVALID_FORMAT |  |
+| <code>Int32</code> | INVALID_INDEX_KEY |  |
+| <code>Int32</code> | INVALID_INDEX_NAME |  |
+| <code>Int32</code> | INVALID_TRANSACTION_STATE |  |
+| <code>Int32</code> | INVALID_TYPED_NAME |  |
+| <code>Int32</code> | INVALID_UPDATE_FIELD |  |
+| <code>Int32</code> | LOCK_TIMEOUT |  |
+| <code>Int32</code> | PROPERTY_NOT_MAPPED |  |
+| <code>Int32</code> | PROPERTY_READ_WRITE |  |
+| <code>Int32</code> | TEMP_ENGINE_ALREADY_DEFINED |  |
+| <code>Int32</code> | UNEXPECTED_TOKEN |  |</p>
+
+<p>Static Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>LiteException</code> | AlreadyExistsCollectionName(<code>String</code> newName) |  |
+| <code>LiteException</code> | AlreadyExistsTransaction() |  |
+| <code>LiteException</code> | AlreadyOpenDatafile(<code>String</code> filename) |  |
+| <code>LiteException</code> | CollectionAlreadyExist(<code>String</code> key) |  |
+| <code>LiteException</code> | CollectionLimitExceeded(<code>Int32</code> limit) |  |
+| <code>LiteException</code> | CollectionLockerNotFound(<code>String</code> collection) |  |
+| <code>LiteException</code> | CollectionNotFound(<code>String</code> key) |  |
+| <code>LiteException</code> | DatabaseShutdown() |  |
+| <code>LiteException</code> | DocumentMaxDepth(<code>Int32</code> depth, <code>Type</code> type) |  |
+| <code>LiteException</code> | FileNotFound(<code>Object</code> fileId) |  |
+| <code>LiteException</code> | FileSizeExceeded(<code>Int64</code> limit) |  |
+| <code>LiteException</code> | IndexAlreadyExist(<code>String</code> name) |  |
+| <code>LiteException</code> | IndexDropId() |  |
+| <code>LiteException</code> | IndexDuplicateKey(<code>String</code> field, <code>BsonValue</code> key) |  |
+| <code>LiteException</code> | IndexNameLimitExceeded(<code>Int32</code> limit) |  |
+| <code>LiteException</code> | IndexNotFound(<code>String</code> name) |  |
+| <code>LiteException</code> | InvalidCollectionName(<code>String</code> name, <code>String</code> reason) |  |
+| <code>LiteException</code> | InvalidCommand(<code>String</code> command) |  |
+| <code>LiteException</code> | InvalidCtor(<code>Type</code> type, <code>Exception</code> inner) |  |
+| <code>LiteException</code> | InvalidDatabase() |  |
+| <code>LiteException</code> | InvalidDataType(<code>String</code> field, <code>BsonValue</code> value) |  |
+| <code>LiteException</code> | InvalidDbRef(<code>String</code> path) |  |
+| <code>LiteException</code> | InvalidExpressionType(<code>BsonExpression</code> expr, <code>BsonExpressionType</code> type) |  |
+| <code>LiteException</code> | InvalidExpressionTypePredicate(<code>BsonExpression</code> expr) |  |
+| <code>LiteException</code> | InvalidFormat(<code>String</code> field) |  |
+| <code>LiteException</code> | InvalidIndexKey(<code>String</code> text) |  |
+| <code>LiteException</code> | InvalidIndexName(<code>String</code> name, <code>String</code> collection, <code>String</code> reason) |  |
+| <code>LiteException</code> | InvalidTypedName(<code>String</code> type) |  |
+| <code>LiteException</code> | InvalidUpdateField(<code>String</code> field) |  |
+| <code>LiteException</code> | LockTimeout(<code>String</code> mode, <code>TimeSpan</code> ts) |  |
+| <code>LiteException</code> | LockTimeout(<code>String</code> mode, <code>String</code> collection, <code>TimeSpan</code> ts) |  |
+| <code>LiteException</code> | PropertyNotMapped(<code>String</code> name) |  |
+| <code>LiteException</code> | PropertyReadWrite(<code>PropertyInfo</code> prop) |  |
+| <code>LiteException</code> | TempEngineAlreadyDefined() |  |
+| <code>LiteException</code> | UnexpectedToken(<code>Token</code> token, <code>String</code> expected = null) |  |
+| <code>LiteException</code> | UnexpectedToken(<code>String</code> message, <code>Token</code> token) |  |</p>
+
+<h2 id="litefileinfo-tfileid"><code>LiteFileInfo&lt;TFileId&gt;</code></h2>
+
+<p>Represents a file inside storage collection</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">LiteFileInfo</span><span class="p">&lt;</span><span class="n">TFileId</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | Chunks |  |
+| <code>String</code> | Filename |  |
+| <code>TFileId</code> | Id |  |
+| <code>Int64</code> | Length |  |
+| <code>BsonDocument</code> | Metadata |  |
+| <code>String</code> | MimeType |  |
+| <code>DateTime</code> | UploadDate |  |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>void</code> | CopyTo(<code>Stream</code> stream) | Copy file content to another stream |
+| <code>LiteFileStream&lt;TFileId&gt;</code> | OpenRead() | Open file stream to read from database |
+| <code>LiteFileStream&lt;TFileId&gt;</code> | OpenWrite() | Open file stream to write to database |
+| <code>void</code> | SaveAs(<code>String</code> filename, <code>Boolean</code> overwritten = True) | Save file content to a external file |
+| <code>void</code> | SetReference(<code>BsonValue</code> fileId, <code>LiteCollection&lt;LiteFileInfo&lt;TFileId&gt;&gt;</code> files, <code>LiteCollection&lt;BsonDocument&gt;</code> chunks) |  |</p>
+
+<h2 id="litefilestream-tfileid"><code>LiteFileStream&lt;TFileId&gt;</code></h2>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">LiteFileStream</span><span class="p">&lt;</span><span class="n">TFileId</span><span class="p">&gt;</span>
+    <span class="p">:</span> <span class="n">Stream</span><span class="p">,</span> <span class="n">IDisposable</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Boolean</code> | CanRead |  |
+| <code>Boolean</code> | CanSeek |  |
+| <code>Boolean</code> | CanWrite |  |
+| <code>LiteFileInfo&lt;TFileId&gt;</code> | FileInfo | Get file information |
+| <code>Int64</code> | Length |  |
+| <code>Int64</code> | Position |  |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>void</code> | Dispose(<code>Boolean</code> disposing) |  |
+| <code>void</code> | Finalize() |  |
+| <code>void</code> | Flush() |  |
+| <code>Int32</code> | Read(<code>Byte[]</code> buffer, <code>Int32</code> offset, <code>Int32</code> count) |  |
+| <code>Int64</code> | Seek(<code>Int64</code> offset, <code>SeekOrigin</code> origin) |  |
+| <code>void</code> | SetLength(<code>Int64</code> value) |  |
+| <code>void</code> | Write(<code>Byte[]</code> buffer, <code>Int32</code> offset, <code>Int32</code> count) |  |</p>
+
+<p>Static Fields</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | MAX_CHUNK_SIZE | Number of bytes on each chunk document to store |</p>
+
+<h2 id="litequeryable-t"><code>LiteQueryable&lt;T&gt;</code></h2>
+
+<p>An IQueryable-like class to write fluent query in documents in collection.</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">LiteQueryable</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span>
+    <span class="p">:</span> <span class="n">ILiteQueryable</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;,</span> <span class="n">ILiteQueryableResult</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | Count() | Execute Count methos in filter query |
+| <code>IBsonDataReader</code> | ExecuteReader() | Execute query and returns resultset as generic BsonDataReader |
+| <code>Boolean</code> | Exists() | Returns true/false if query returns any result |
+| <code>T</code> | First() | Returns first document of resultset |
+| <code>T</code> | FirstOrDefault() | Returns first document of resultset or null if resultset are empty |
+| <code>ILiteQueryable&lt;T&gt;</code> | ForUpdate() | Execute query locking collection in write mode. This is avoid any other thread change results after read document and before transaction ends |
+| <code>BsonDocument</code> | GetPlan() | Get execution plan over current query definition to see how engine will execute query |
+| <code>ILiteQueryable&lt;T&gt;</code> | GroupBy(<code>BsonExpression</code> keySelector) | Groups the documents of resultset according to a specified key selector expression (support only one GroupBy) |
+| <code>ILiteQueryable&lt;T&gt;</code> | GroupBy(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> keySelector) | Groups the documents of resultset according to a specified key selector expression (support only one GroupBy) |
+| <code>ILiteQueryable&lt;T&gt;</code> | Having(<code>BsonExpression</code> predicate) | Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having) |
+| <code>ILiteQueryable&lt;T&gt;</code> | Having(<code>Expression&lt;Func&lt;IEnumerable&lt;T&gt;, Boolean&gt;&gt;</code> predicate) | Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having) |
+| <code>ILiteQueryable&lt;T&gt;</code> | Include(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> path) | Load cross reference documents from path expression (DbRef reference) |
+| <code>ILiteQueryable&lt;T&gt;</code> | Include(<code>BsonExpression</code> path) | Load cross reference documents from path expression (DbRef reference) |
+| <code>ILiteQueryable&lt;T&gt;</code> | Include(<code>List&lt;BsonExpression&gt;</code> paths) | Load cross reference documents from path expression (DbRef reference) |
+| <code>Int32</code> | Into(<code>String</code> newCollection, <code>BsonAutoId</code> autoId = ObjectId) |  |
+| <code>ILiteQueryable&lt;T&gt;</code> | Limit(<code>Int32</code> limit) | Return a specified number of contiguous documents from start of resultset |
+| <code>Int64</code> | LongCount() | Execute Count methos in filter query |
+| <code>ILiteQueryable&lt;T&gt;</code> | Offset(<code>Int32</code> offset) | Bypasses a specified number of documents in resultset and retun the remaining documents (same as Skip) |
+| <code>ILiteQueryable&lt;T&gt;</code> | OrderBy(<code>BsonExpression</code> keySelector, <code>Int32</code> order = 1) | Sort the documents of resultset in ascending (or descending) order according to a key (support only one OrderBy) |
+| <code>ILiteQueryable&lt;T&gt;</code> | OrderBy(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> keySelector, <code>Int32</code> order = 1) | Sort the documents of resultset in ascending (or descending) order according to a key (support only one OrderBy) |
+| <code>ILiteQueryable&lt;T&gt;</code> | OrderByDescending(<code>BsonExpression</code> keySelector) | Sort the documents of resultset in descending order according to a key (support only one OrderBy) |
+| <code>ILiteQueryable&lt;T&gt;</code> | OrderByDescending(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> keySelector) | Sort the documents of resultset in descending order according to a key (support only one OrderBy) |
+| <code>ILiteQueryableResult&lt;BsonDocument&gt;</code> | Select(<code>BsonExpression</code> selector) | Transform input document into a new output document. Can be used with each document, group by or all source |
+| <code>ILiteQueryableResult&lt;K&gt;</code> | Select(<code>Expression&lt;Func&lt;T, K&gt;&gt;</code> selector) | Transform input document into a new output document. Can be used with each document, group by or all source |
+| <code>ILiteQueryableResult&lt;K&gt;</code> | SelectAll(<code>Expression&lt;Func&lt;IEnumerable&lt;T&gt;, K&gt;&gt;</code> selector) | Project all documents inside a single expression. Output will be a single document or one document per group (used in GroupBy) |
+| <code>T</code> | Single() | Returns the only document of resultset, and throw an exception if there not exactly one document in the sequence |
+| <code>T</code> | SingleOrDefault() | Returns the only document of resultset, or null if resultset are empty; this method throw an exception if there not exactly one document in the sequence |
+| <code>ILiteQueryable&lt;T&gt;</code> | Skip(<code>Int32</code> offset) | Bypasses a specified number of documents in resultset and retun the remaining documents (same as Offset) |
+| <code>T[]</code> | ToArray() | Execute query and return results as an Array |
+| <code>IEnumerable&lt;BsonDocument&gt;</code> | ToDocuments() | Execute query and return resultset as IEnumerable of documents |
+| <code>IEnumerable&lt;T&gt;</code> | ToEnumerable() | Execute query and return resultset as IEnumerable of T. If T is a ValueType or String, return values only (not documents) |
+| <code>List&lt;T&gt;</code> | ToList() | Execute query and return results as a List |
+| <code>ILiteQueryable&lt;T&gt;</code> | Where(<code>BsonExpression</code> predicate) | Filters a sequence of documents based on a predicate expression |
+| <code>ILiteQueryable&lt;T&gt;</code> | Where(<code>String</code> predicate, <code>BsonDocument</code> parameters) | Filters a sequence of documents based on a predicate expression |
+| <code>ILiteQueryable&lt;T&gt;</code> | Where(<code>String</code> predicate, <code>BsonValue[]</code> args) | Filters a sequence of documents based on a predicate expression |
+| <code>ILiteQueryable&lt;T&gt;</code> | Where(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate) | Filters a sequence of documents based on a predicate expression |</p>
+
+<h2 id="literepository"><code>LiteRepository</code></h2>
+
+<p>The LiteDB repository pattern. A simple way to access your documents in a single class with fluent query api</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">LiteRepository</span>
+    <span class="p">:</span> <span class="n">IDisposable</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>LiteDatabase</code> | Database | Get database instance |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Boolean</code> | Delete(<code>BsonValue</code> id, <code>String</code> collectionName = null) | Delete entity based on _id key |
+| <code>Int32</code> | DeleteMany(<code>BsonExpression</code> predicate, <code>String</code> collectionName = null) | Delete entity based on Query |
+| <code>Int32</code> | DeleteMany(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate, <code>String</code> collectionName = null) | Delete entity based on Query |
+| <code>void</code> | Dispose() |  |
+| <code>List&lt;T&gt;</code> | Fetch(<code>BsonExpression</code> predicate, <code>String</code> collectionName = null) | Execute Query[T].Where(predicate).ToList(); |
+| <code>List&lt;T&gt;</code> | Fetch(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate, <code>String</code> collectionName = null) | Execute Query[T].Where(predicate).ToList(); |
+| <code>T</code> | First(<code>BsonExpression</code> predicate, <code>String</code> collectionName = null) | Execute Query[T].Where(predicate).First(); |
+| <code>T</code> | First(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate, <code>String</code> collectionName = null) | Execute Query[T].Where(predicate).First(); |
+| <code>T</code> | FirstOrDefault(<code>BsonExpression</code> predicate, <code>String</code> collectionName = null) | Execute Query[T].Where(predicate).FirstOrDefault(); |
+| <code>T</code> | FirstOrDefault(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate, <code>String</code> collectionName = null) | Execute Query[T].Where(predicate).FirstOrDefault(); |
+| <code>void</code> | Insert(<code>T</code> entity, <code>String</code> collectionName = null) | Insert a new document into collection. Document Id must be a new value in collection - Returns document Id |
+| <code>Int32</code> | Insert(<code>IEnumerable&lt;T&gt;</code> entities, <code>String</code> collectionName = null) | Insert a new document into collection. Document Id must be a new value in collection - Returns document Id |
+| <code>ILiteQueryable&lt;T&gt;</code> | Query(<code>String</code> collectionName = null) | Returns new instance of LiteQueryable that provides all method to query any entity inside collection. Use fluent API to apply filter/includes an than run any execute command, like ToList() or First() |
+| <code>T</code> | Single(<code>BsonExpression</code> predicate, <code>String</code> collectionName = null) | Execute Query[T].Where(predicate).Single(); |
+| <code>T</code> | Single(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate, <code>String</code> collectionName = null) | Execute Query[T].Where(predicate).Single(); |
+| <code>T</code> | SingleById(<code>BsonValue</code> id, <code>String</code> collectionName = null) | Search for a single instance of T by Id. Shortcut from Query.SingleById |
+| <code>T</code> | SingleOrDefault(<code>BsonExpression</code> predicate, <code>String</code> collectionName = null) | Execute Query[T].Where(predicate).SingleOrDefault(); |
+| <code>T</code> | SingleOrDefault(<code>Expression&lt;Func&lt;T, Boolean&gt;&gt;</code> predicate, <code>String</code> collectionName = null) | Execute Query[T].Where(predicate).SingleOrDefault(); |
+| <code>Boolean</code> | Update(<code>T</code> entity, <code>String</code> collectionName = null) | Update a document into collection. Returns false if not found document in collection |
+| <code>Int32</code> | Update(<code>IEnumerable&lt;T&gt;</code> entities, <code>String</code> collectionName = null) | Update a document into collection. Returns false if not found document in collection |
+| <code>Boolean</code> | Upsert(<code>T</code> entity, <code>String</code> collectionName = null) | Insert or Update a document based on _id key. Returns true if insert entity or false if update entity |
+| <code>Int32</code> | Upsert(<code>IEnumerable&lt;T&gt;</code> entities, <code>String</code> collectionName = null) | Insert or Update a document based on _id key. Returns true if insert entity or false if update entity |</p>
+
+<h2 id="litestorage-tfileid"><code>LiteStorage&lt;TFileId&gt;</code></h2>
+
+<p>Storage is a special collection to store files and streams.</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">LiteStorage</span><span class="p">&lt;</span><span class="n">TFileId</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Boolean</code> | Delete(<code>TFileId</code> id) | Delete a file inside datafile and all metadata related |
+| <code>LiteFileInfo&lt;TFileId&gt;</code> | Download(<code>TFileId</code> id, <code>Stream</code> stream) | Copy all file content to a steam |
+| <code>LiteFileInfo&lt;TFileId&gt;</code> | Download(<code>TFileId</code> id, <code>String</code> filename, <code>Boolean</code> overwritten) | Copy all file content to a steam |
+| <code>Boolean</code> | Exists(<code>TFileId</code> id) | Returns if a file exisits in database |
+| <code>IEnumerable&lt;LiteFileInfo&lt;TFileId&gt;&gt;</code> | Find(<code>BsonExpression</code> predicate) | Find all files that match with predicate expression. |
+| <code>IEnumerable&lt;LiteFileInfo&lt;TFileId&gt;&gt;</code> | Find(<code>String</code> predicate, <code>BsonDocument</code> parameters) | Find all files that match with predicate expression. |
+| <code>IEnumerable&lt;LiteFileInfo&lt;TFileId&gt;&gt;</code> | Find(<code>String</code> predicate, <code>BsonValue[]</code> args) | Find all files that match with predicate expression. |
+| <code>IEnumerable&lt;LiteFileInfo&lt;TFileId&gt;&gt;</code> | Find(<code>Expression&lt;Func&lt;LiteFileInfo&lt;TFileId&gt;, Boolean&gt;&gt;</code> predicate) | Find all files that match with predicate expression. |
+| <code>IEnumerable&lt;LiteFileInfo&lt;TFileId&gt;&gt;</code> | FindAll() | Find all files inside file collections |
+| <code>LiteFileInfo&lt;TFileId&gt;</code> | FindById(<code>TFileId</code> id) | Find a file inside datafile and returns LiteFileInfo instance. Returns null if not found |
+| <code>LiteFileStream&lt;TFileId&gt;</code> | OpenRead(<code>TFileId</code> id) | Load data inside storage and returns as Stream |
+| <code>LiteFileStream&lt;TFileId&gt;</code> | OpenWrite(<code>TFileId</code> id, <code>String</code> filename, <code>BsonDocument</code> metadata = null) | Open/Create new file storage and returns linked Stream to write operations. |
+| <code>Boolean</code> | SetMetadata(<code>TFileId</code> id, <code>BsonDocument</code> metadata) | Update metadata on a file. File must exist. |
+| <code>LiteFileInfo&lt;TFileId&gt;</code> | Upload(<code>TFileId</code> id, <code>String</code> filename, <code>Stream</code> stream, <code>BsonDocument</code> metadata = null) | Upload a file based on stream data |
+| <code>LiteFileInfo&lt;TFileId&gt;</code> | Upload(<code>TFileId</code> id, <code>String</code> filename) | Upload a file based on stream data |</p>
+
+<h2 id="membermapper"><code>MemberMapper</code></h2>
+
+<p>Internal representation for a .NET member mapped to BsonDocument</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">MemberMapper</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Boolean</code> | AutoId | If member is Id, indicate that are AutoId |
+| <code>Type</code> | DataType | Member returns data type |
+| <code>Func&lt;BsonValue, BsonMapper, Object&gt;</code> | Deserialize | When used, can define a deserialization function from bson value |
+| <code>String</code> | FieldName | Converted document field name |
+| <code>GenericGetter</code> | Getter | Delegate method to get value from entity instance |
+| <code>Boolean</code> | IsDbRef | Is this property an DbRef? Must implement Serialize/Deserialize delegates |
+| <code>Boolean</code> | IsList | Indicate that this property contains an list of elements (IEnumerable) |
+| <code>String</code> | MemberName | Member name |
+| <code>Func&lt;Object, BsonMapper, BsonValue&gt;</code> | Serialize | When used, can be define a serialization function from entity class to bson value |
+| <code>GenericSetter</code> | Setter | Delegate method to set value to entity instance |
+| <code>Type</code> | UnderlyingType | When property is an array of items, gets underlying type (otherwise is same type of PropertyType) |</p>
+
+<h2 id="objectid"><code>ObjectId</code></h2>
+
+<p>Represent a 12-bytes BSON type used in document Id</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">ObjectId</span>
+    <span class="p">:</span> <span class="n">IComparable</span><span class="p">&lt;</span><span class="n">ObjectId</span><span class="p">&gt;,</span> <span class="n">IEquatable</span><span class="p">&lt;</span><span class="n">ObjectId</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>DateTime</code> | CreationTime | Get creation time |
+| <code>Int32</code> | Increment | Get increment |
+| <code>Int32</code> | Machine | Get machine number |
+| <code>Int16</code> | Pid | Get pid number |
+| <code>Int32</code> | Timestamp | Get timestamp |</p>
+
+<p>Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | CompareTo(<code>ObjectId</code> other) | Compares two instances of ObjectId |
+| <code>Boolean</code> | Equals(<code>ObjectId</code> other) | Checks if this ObjectId is equal to the given object. Returns true  if the given object is equal to the value of this instance.  Returns false otherwise. |
+| <code>Boolean</code> | Equals(<code>Object</code> other) | Checks if this ObjectId is equal to the given object. Returns true  if the given object is equal to the value of this instance.  Returns false otherwise. |
+| <code>Int32</code> | GetHashCode() | Returns a hash code for this instance. |
+| <code>void</code> | ToByteArray(<code>Byte[]</code> bytes, <code>Int32</code> startIndex) | Represent ObjectId as 12 bytes array |
+| <code>Byte[]</code> | ToByteArray() | Represent ObjectId as 12 bytes array |
+| <code>String</code> | ToString() |  |</p>
+
+<p>Static Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>ObjectId</code> | Empty | A zero 12-bytes ObjectId |</p>
+
+<p>Static Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>ObjectId</code> | NewObjectId() | Creates a new ObjectId. |</p>
+
+<h2 id="query"><code>Query</code></h2>
+
+<p>Represent full query options</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">LiteDB</span><span class="p">.</span><span class="n">Query</span>
+</code></pre></div>
+<p>Properties</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Boolean</code> | ExplainPlan |  |
+| <code>Boolean</code> | ForUpdate |  |
+| <code>BsonExpression</code> | GroupBy |  |
+| <code>BsonExpression</code> | Having |  |
+| <code>List&lt;BsonExpression&gt;</code> | Includes |  |
+| <code>String</code> | Into |  |
+| <code>BsonAutoId</code> | IntoAutoId |  |
+| <code>Int32</code> | Limit |  |
+| <code>Int32</code> | Offset |  |
+| <code>Int32</code> | Order |  |
+| <code>BsonExpression</code> | OrderBy |  |
+| <code>BsonExpression</code> | Select |  |
+| <code>List&lt;BsonExpression&gt;</code> | Where |  |</p>
+
+<p>Static Fields</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>Int32</code> | Ascending | Indicate when a query must execute in ascending order |
+| <code>Int32</code> | Descending | Indicate when a query must execute in descending order |</p>
+
+<p>Static Methods</p>
+
+<p>| Type | Name | Summary |
+| &mdash; | &mdash; | &mdash; |
+| <code>BsonExpression</code> | And(<code>BsonExpression</code> left, <code>BsonExpression</code> right) | Returns document that exists in BOTH queries results. If both queries has indexes, left query has index preference (other side will be run in full scan) |
+| <code>BsonExpression</code> | And(<code>BsonExpression[]</code> queries) | Returns document that exists in BOTH queries results. If both queries has indexes, left query has index preference (other side will be run in full scan) |
+| <code>BsonExpression</code> | Between(<code>String</code> field, <code>BsonValue</code> start, <code>BsonValue</code> end) | Returns all document that values are between &ldquo;start&rdquo; and &ldquo;end&rdquo; values (BETWEEN) |
+| <code>BsonExpression</code> | Contains(<code>String</code> field, <code>String</code> value) | Returns all documents that contains value (CONTAINS) |
+| <code>BsonExpression</code> | EQ(<code>String</code> field, <code>BsonValue</code> value) | Returns all documents that value are equals to value (=) |
+| <code>BsonExpression</code> | GT(<code>String</code> field, <code>BsonValue</code> value) | Returns all document that value are greater than value (&gt;) |
+| <code>BsonExpression</code> | GTE(<code>String</code> field, <code>BsonValue</code> value) | Returns all documents that value are greater than or equals value (&gt;=) |
+| <code>BsonExpression</code> | In(<code>String</code> field, <code>BsonArray</code> value) | Returns all documents that has value in values list (IN) |
+| <code>BsonExpression</code> | In(<code>String</code> field, <code>BsonValue[]</code> values) | Returns all documents that has value in values list (IN) |
+| <code>BsonExpression</code> | In(<code>String</code> field, <code>IEnumerable&lt;BsonValue&gt;</code> values) | Returns all documents that has value in values list (IN) |
+| <code>BsonExpression</code> | LT(<code>String</code> field, <code>BsonValue</code> value) | Returns all documents that value are less than value (&lt;) |
+| <code>BsonExpression</code> | LTE(<code>String</code> field, <code>BsonValue</code> value) | Returns all documents that value are less than or equals value (&lt;=) |
+| <code>BsonExpression</code> | Not(<code>String</code> field, <code>BsonValue</code> value) | Returns all documents that are not equals to value (not equals) |
+| <code>BsonExpression</code> | Or(<code>BsonExpression</code> left, <code>BsonExpression</code> right) | Returns documents that exists in ANY queries results (Union). |
+| <code>BsonExpression</code> | Or(<code>BsonExpression[]</code> queries) | Returns documents that exists in ANY queries results (Union). |
+| <code>BsonExpression</code> | StartsWith(<code>String</code> field, <code>String</code> value) | Returns all documents that starts with value (LIKE) |</p>
+
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li class="zerostatic"><a href="https://www.zerostatic.io">www.zerostatic.io</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/www.example.com/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+  
+
+
+</body>
+
+</html>
