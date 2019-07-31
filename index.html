@@ -19,10 +19,12 @@
 <meta name="twitter:creator" content="@zerostaticio" />
 
   <link rel="icon" href="www.example.com/favicon.png">
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
   
   
-  <link rel="stylesheet" href="/www.example.com/css/style.min.0bebd554481e8d67e288e9cc234868e33cdb4107d60612008df77a3566b37ff7.css">
+  
+  <link rel="stylesheet" href="/www.example.com/css/style.min.f31edf12f81d9ad5234f2b100646ce1f51e3ab0f6a37c940a43bcd79513204c3.css">
   
 
   
@@ -30,25 +32,38 @@
 </head>
 
 <body class='page page-home'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
   <div id="main-menu-mobile" class="main-menu-mobile">
   <ul>
     
     
     <li class="menu-item-home active">
       <a href="www.example.com/">
-        <span>Home</span>
+        <span>HOME</span>
       </a>
     </li>
     
-    <li class="menu-item-getting started">
+    <li class="menu-item-docs">
       <a href="www.example.com/docs/">
-        <span>Getting Started</span>
+        <span>DOCS</span>
       </a>
     </li>
     
     <li class="menu-item-api">
       <a href="www.example.com/api/">
         <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
       </a>
     </li>
     
@@ -58,10 +73,10 @@
     <div class='header'>
   <div class="container">
     <div class="logo">
-      <a href="www.example.com"><img alt="Logo" src="/www.example.com/images/logo.svg" /></a>
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
     </div>
     <div class="logo-mobile">
-      <a href="www.example.com"><img alt="Logo" src="/www.example.com/images/logo-mobile.svg" /></a>
+      <a href="www.example.com"><img alt="Logo" src="/www.example.com/logo_litedb.svg" /></a>
     </div>
     <div id="main-menu" class="main-menu">
   <ul>
@@ -69,19 +84,25 @@
     
     <li class="menu-item-home active">
       <a href="www.example.com/">
-        <span>Home</span>
+        <span>HOME</span>
       </a>
     </li>
     
-    <li class="menu-item-getting started">
+    <li class="menu-item-docs">
       <a href="www.example.com/docs/">
-        <span>Getting Started</span>
+        <span>DOCS</span>
       </a>
     </li>
     
     <li class="menu-item-api">
       <a href="www.example.com/api/">
         <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
       </a>
     </li>
     
@@ -100,25 +121,40 @@
     
     
     
+    
+    
 
     
     
+<div class="strip" style="background-color: #171F26; padding: 20px;color: #BCBEC0">
+  <div style="text-align: center; font-size: 40px; font-weight: bold; padding: 50px 0 10px">Embedded NoSQL database for .NET</div>
+  <div style="font-size: 20px; text-align: center; font-weight: 300; padding: 0;">An open source MongoDB-like database with zero configuration - mobile ready</div>
+
+  <div class="install">
+    <span>> Install-Package LiteDB</span><a href="https://www.nuget.org/packages/LiteDB"><i class="fa fa-arrow-right"></i></a>
+  </div>
+
+  <div class="social-buttons">
+    <iframe src="http://ghbtns.com/github-btn.html?user=mbdavid&amp;repo=LiteDB&amp;type=star&amp;count=true" class="social-share"></iframe>
+    <iframe src="http://ghbtns.com/github-btn.html?user=mbdavid&amp;repo=LiteDB&amp;type=fork&amp;count=true" class="social-share"></iframe>
+  </div>
+
+</div>
+
 <div class="strip">
   <div class="container pt-4 pb-16">
     <div class="row">
       <div class="col-12">
-        <h1 class="title">Hugo Whisper Docs</h1>
+        <h1 class="title" style="display: none">LiteDB - A .NET NoSQL Document Store in a single data file</h1>
         <div class="content">
           
           
 
-<h2 id="litedb-v5-a-net-nosql-document-store-in-a-single-data-file">LiteDB v5 - A .NET NoSQL Document Store in a single data file</h2>
-
 <blockquote>
-<p>Master branch contains v5 beta - if you want old version, go to for git tags</p>
+<p>LiteDB is serverless database delivered in a single DLL, fully written in .NET C# managed code and compatible with .NET Full 4.x, NETStandard 2.0, .NET Core 2 and Xamarin.</p>
 </blockquote>
 
-<p>LiteDB is a small, fast and lightweight NoSQL embedded database.</p>
+<h3 id="some-features">Some features</h3>
 
 <ul>
 <li>Serverless NoSQL Document Store</li>

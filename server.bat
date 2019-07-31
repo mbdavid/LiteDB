@@ -1,2 +1,1 @@
-@cd src
-..\hugo server
+@hugo -s src server
