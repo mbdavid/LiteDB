@@ -67,6 +67,12 @@ namespace LiteDB.Engine
         public bool ReadOnly { get; set; } = false;
 
         /// <summary>
+        /// When LOG file get are bigger than checkpoint size (in pages), do a soft checkpoint (and also do a checkpoint at shutdown)
+        /// Checkpoint = 0 means no auto-checkpoint and no shutdown checkpoint
+        /// </summary>
+        public int Checkpoint { get; set; } = 1000;
+
+        /// <summary>
         /// Size, in PAGES, for each buffer array (used in MemoryStore) - Each byte array will be created with this size * PAGE_SIZE. 
         /// Should be > 100 (800kb) - Default: 1000 (8Mb each segment)
         /// </summary>

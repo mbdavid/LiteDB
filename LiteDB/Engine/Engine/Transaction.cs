@@ -89,6 +89,14 @@ namespace LiteDB.Engine
 
                 throw;
             }
+            finally
+            {
+                // do auto-checkpoint if enabled (default: 1000 pages)
+                if (_settings.Checkpoint > 0 && _disk.GetLength(FileOrigin.Log) > (_settings.Checkpoint * PAGE_SIZE))
+                {
+                    _walIndex.Checkpoint(true);
+                }
+            }
         }
     }
 }

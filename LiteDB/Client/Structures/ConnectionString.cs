@@ -13,19 +13,17 @@ namespace LiteDB
         private readonly Dictionary<string, string> _values;
 
         /// <summary>
-        /// "type": Return how engine will be open (default: Local)
+        /// "type": Return how engine will be open (default: Direct)
         /// </summary>
-        public ConnectionMode Mode { get; set; } = ConnectionMode.Exclusive;
+        public ConnectionMode Mode { get; set; } = ConnectionMode.Embedded;
 
         /// <summary>
         /// "filename": Full path or relative path from DLL directory
-        /// Supported in [Local, Shared] connection type
         /// </summary>
         public string Filename { get; set; } = "";
 
         /// <summary>
         /// "timeout": Timeout for waiting unlock operations (default: 1 minute)
-        /// Supported in [Local, Shared] connection type
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
 
@@ -36,31 +34,26 @@ namespace LiteDB
 
         /// <summary>
         /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: 0 bytes)
-        /// Supported in [Local, Shared] connection type
         /// </summary>
         public long InitialSize { get; set; } = 0;
 
         /// <summary>
         /// "limit size": Max limit of datafile - support KB, MB, GB (default: long.MaxValue - no limit)
-        /// Supported in [Local, Shared] connection type
         /// </summary>
         public long LimitSize { get; set; } = long.MaxValue;
 
         /// <summary>
         /// "utc": Returns date in UTC timezone from BSON deserialization (default: false - LocalTime)
-        /// Supported in [Local, Shared] connection type
         /// </summary>
         public bool UtcDate { get; set; } = false;
 
         /// <summary>
         /// "readonly": Open datafile in readonly mode (default: false)
-        /// Supported in [Local, Shared] connection type
         /// </summary>
         public bool ReadOnly { get; set; } = false;
 
         /// <summary>
         /// "upgrade": Check if data file is an old version and convert before open (default: false)
-        /// Supported in [Local] connection type
         /// </summary>
         public bool Upgrade { get; set; } = false;
 
@@ -125,7 +118,7 @@ namespace LiteDB
             };
 
             // create engine implementation as Connection Type
-            if (this.Mode == ConnectionMode.Exclusive)
+            if (this.Mode == ConnectionMode.Embedded)
             {
                 return new LiteEngine(settings);
             }
