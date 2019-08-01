@@ -13,6 +13,7 @@ namespace LiteDB
         /// </summary>
         private BsonDataReader ParseInsert()
         {
+            _tokenizer.ReadToken().Expect("INSERT");
             _tokenizer.ReadToken().Expect("INTO");
 
             var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;

@@ -23,12 +23,18 @@ namespace LiteDB
         ///  [ OFFSET {number} ]
         ///     [ FOR UPDATE ]
         /// </summary>
-        private IBsonDataReader ParseSelect(bool explain)
+        private IBsonDataReader ParseSelect()
         {
             // initialize query definition
-            var query = new Query { ExplainPlan = explain };
+            var query = new Query();
 
-            var token = _tokenizer.LookAhead();
+            var token = _tokenizer.ReadToken();
+
+            query.ExplainPlan = token.Is("EXPLAIN");
+
+            if (query.ExplainPlan) token = _tokenizer.ReadToken();
+
+            token.Expect("SELECT");
 
             // read required SELECT <expr> and convert into single expression
             query.Select = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.SelectDocument);

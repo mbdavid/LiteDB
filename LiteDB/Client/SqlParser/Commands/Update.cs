@@ -17,6 +17,8 @@ namespace LiteDB
         /// </summary>
         private BsonDataReader ParseUpadate()
         {
+            _tokenizer.ReadToken().Expect("UPDATE");
+
             var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
             _tokenizer.ReadToken().Expect("SET");
 

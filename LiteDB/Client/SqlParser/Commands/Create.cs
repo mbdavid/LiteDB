@@ -13,6 +13,8 @@ namespace LiteDB
         /// </summary>
         private BsonDataReader ParseCreate()
         {
+            _tokenizer.ReadToken().Expect("CREATE");
+
             var token = _tokenizer.ReadToken().Expect(TokenType.Word);
             var unique = token.Is("UNIQUE");
 

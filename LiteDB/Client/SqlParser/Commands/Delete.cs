@@ -13,6 +13,8 @@ namespace LiteDB
         /// </summary>
         private BsonDataReader ParseDelete()
         {
+            _tokenizer.ReadToken().Expect("DELETE");
+
             var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
 
             _tokenizer.ReadToken().Expect("WHERE");

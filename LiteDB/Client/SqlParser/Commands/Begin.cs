@@ -13,6 +13,8 @@ namespace LiteDB
         /// </summary>
         private BsonDataReader ParseBegin()
         {
+            _tokenizer.ReadToken().Expect("BEGIN");
+
             var token = _tokenizer.ReadToken().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
             if (token.Is("TRANS") || token.Is("TRANSACTION"))
