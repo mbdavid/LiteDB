@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <PackageId>LiteDB</PackageId>
-    <AssemblyVersion>5.0.0.0</AssemblyVersion>
+    <AssemblyVersion>5.0.0</AssemblyVersion>
     <FileVersion>5.0.0</FileVersion>
     <VersionPrefix>5.0.0</VersionPrefix>
     <Authors>Maurício David</Authors>
@@ -13,6 +13,7 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <Title>LiteDB</Title>
     <PackageId>LiteDB</PackageId>
+    <PackageVersion>5.0.0-alpha</PackageVersion>
     <PackageTags>database nosql embedded</PackageTags>
     <PackageIconUrl>http://www.litedb.org/img/logo_64x64.png</PackageIconUrl>
     <PackageProjectUrl>https://www.litedb.org</PackageProjectUrl>
@@ -36,7 +37,6 @@
   HAVE_PROCESS
   HAVE_ENVIRONMENT
   HAVE_TYPE_INFO
-  HAVE_TASK_DELAY
   -->
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
@@ -48,7 +48,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>NETSTANDARD20;HAVE_TYPE_INFO;HAVE_TASK_DELAY;</DefineConstants>
+    <DefineConstants>NETSTANDARD20;HAVE_TYPE_INFO;</DefineConstants>
   </PropertyGroup>
 
   <!-- Begin References -->

@@ -307,7 +307,7 @@
             // lblCursor
             // 
             this.lblCursor.Name = "lblCursor";
-            this.lblCursor.Size = new System.Drawing.Size(682, 17);
+            this.lblCursor.Size = new System.Drawing.Size(713, 17);
             this.lblCursor.Spring = true;
             this.lblCursor.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -610,6 +610,7 @@
             this.Controls.Add(this.stbStatus);
             this.Controls.Add(this.splitMain);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "MainForm";

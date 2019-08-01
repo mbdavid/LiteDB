@@ -31,6 +31,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>LiteDB.Studio.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -337,6 +340,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\disk.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="LiteDB.Studio.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

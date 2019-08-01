@@ -21,32 +21,22 @@ namespace LiteDB
                 errorCode == ERROR_LOCK_VIOLATION;
         }
 
-        public static void WaitIfLocked(this IOException ex, int timer)
+        /// <summary>
+        /// Wait current thread for N milliseconds if exception is about Locking
+        /// </summary>
+        public static void WaitIfLocked(this IOException ex, int timerInMilliseconds)
         {
             if (ex.IsLocked())
             {
-                if (timer > 0)
+                if (timerInMilliseconds > 0)
                 {
-                    WaitFor(timer);
+                    System.Threading.Tasks.Task.Delay(timerInMilliseconds).Wait();
                 }
             }
             else
             {
                 throw ex;
             }
-        }
-
-        /// <summary>
-        /// WaitFor function used in all platforms
-        /// </summary>
-        public static void WaitFor(int ms)
-        {
-            // http://stackoverflow.com/questions/12641223/thread-sleep-replacement-in-net-for-windows-store
-#if HAVE_TASK_DELAY
-            System.Threading.Tasks.Task.Delay(ms).Wait();
-#else
-            System.Threading.Thread.Sleep(ms);
-#endif
         }
     }
 }
