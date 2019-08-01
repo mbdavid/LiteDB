@@ -287,23 +287,6 @@ namespace LiteDB
             return _engine.Value.Analyze(collections);
         }
 
-        /// <summary>
-        /// Analyze all database to find-and-fix non linked empty pages
-        /// </summary>
-        public int Vaccum()
-        {
-            return _engine.Value.Vaccum();
-        }
-
-        /// <summary>
-        /// Get/Set database user version - use this version number to control database change model
-        /// </summary>
-        public int UserVersion
-        {
-            get => _engine.Value.UserVersion;
-            set => _engine.Value.UserVersion = value;
-        }
-
         #endregion
 
         public void Dispose()

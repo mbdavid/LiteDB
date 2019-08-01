@@ -66,11 +66,7 @@ namespace LiteDB.Studio
         {
             return await Task.Run(() =>
             {
-                var db = new LiteDatabase(connectionString);
-
-                var openDb = db.UserVersion;
-
-                return db;
+                return new LiteDatabase(connectionString);
             });
         }
 

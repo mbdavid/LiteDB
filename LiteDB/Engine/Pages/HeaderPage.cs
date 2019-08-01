@@ -31,8 +31,7 @@ namespace LiteDB.Engine
         private const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63 (4 bytes)
         private const int P_LAST_PAGE_ID = 64; // 64-67 (4 bytes)
         private const int P_CREATION_TIME = 68; // 68-75 (8 bytes)
-        private const int P_USER_VERSION = 76; // 76-79 (4 bytes)
-        // reserved 80-95 (16 bytes)
+        // reserved 76-95 (20 bytes)
         private const int P_COLLECTIONS = 96; // 96-8095 (8000 bytes)
         // reserved 8096-8191 (96 bytes)
 
@@ -56,11 +55,6 @@ namespace LiteDB.Engine
         public DateTime CreationTime { get; private set; }
 
         /// <summary>
-        /// UserVersion int - for user get/set database version changes
-        /// </summary>
-        public int UserVersion { get; set; }
-
-        /// <summary>
         /// All collections names/link pointers are stored inside this document
         /// </summary>
         private BsonDocument _collections;
@@ -80,7 +74,6 @@ namespace LiteDB.Engine
             this.CreationTime = DateTime.UtcNow;
             this.FreeEmptyPageID = uint.MaxValue;
             this.LastPageID = 0;
-            this.UserVersion = 0;
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
             _buffer.Write(HEADER_INFO, P_HEADER_INFO);
@@ -118,7 +111,6 @@ namespace LiteDB.Engine
             this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
             this.FreeEmptyPageID = _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
             this.LastPageID = _buffer.ReadUInt32(P_LAST_PAGE_ID);
-            this.UserVersion = _buffer.ReadInt32(P_USER_VERSION);
 
             // create new buffer area to store BsonDocument collections
             var area = _buffer.Slice(P_COLLECTIONS, COLLECTIONS_SIZE);
@@ -135,7 +127,6 @@ namespace LiteDB.Engine
         {
             _buffer.Write(this.FreeEmptyPageID, P_FREE_EMPTY_PAGE_ID);
             _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
-            _buffer.Write(this.UserVersion, P_USER_VERSION);
 
             // update collection only if needed
             if (_isCollectionsChanged)

@@ -138,7 +138,6 @@
     <Compile Include="Client\SqlParser\Commands\Rollback.cs" />
     <Compile Include="Client\SqlParser\Commands\Select.cs" />
     <Compile Include="Client\SqlParser\Commands\Update.cs" />
-    <Compile Include="Client\SqlParser\Commands\Vaccum.cs" />
     <Compile Include="Client\SqlParser\SqlParser.cs" />
     <Compile Include="Client\Storage\LiteFileInfo.cs" />
     <Compile Include="Client\Storage\LiteFileStream.cs" />
@@ -151,7 +150,6 @@
     <Compile Include="Engine\Engine\Analyze.cs" />
     <Compile Include="Engine\Engine\Collection.cs" />
     <Compile Include="Engine\Engine\Upgrade.cs" />
-    <Compile Include="Engine\Engine\UserVersion.cs" />
     <Compile Include="Engine\Engine\Delete.cs" />
     <Compile Include="Engine\Engine\Index.cs" />
     <Compile Include="Engine\Engine\Sequence.cs" />
@@ -161,7 +159,6 @@
     <Compile Include="Engine\Engine\Transaction.cs" />
     <Compile Include="Engine\Engine\Update.cs" />
     <Compile Include="Engine\Engine\Upsert.cs" />
-    <Compile Include="Engine\Engine\Vaccum.cs" />
     <Compile Include="Engine\Services\CollectionService.cs" />
     <Compile Include="Engine\Services\DataService.cs" />
     <Compile Include="Engine\Services\IndexService.cs" />

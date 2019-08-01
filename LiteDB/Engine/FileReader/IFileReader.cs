@@ -8,8 +8,6 @@ namespace LiteDB.Engine
     /// </summary>
     interface IFileReader : IDisposable
     {
-        int UserVersion { get; }
-
         IEnumerable<string> GetCollections();
         IEnumerable<IndexInfo> GetIndexes();
         IEnumerable<BsonDocument> GetDocuments(IndexInfo index);

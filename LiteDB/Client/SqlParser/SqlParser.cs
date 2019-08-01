@@ -43,7 +43,6 @@ namespace LiteDB
 
                 case "ANALYZE": return this.ParseAnalyze();
                 case "CHECKPOINT": return this.ParseCheckpoint();
-                case "VACCUM": return this.ParseVaccum();
 
                 case "BEGIN": return this.ParseBegin();
                 case "ROLLBACK": return this.ParseRollback();

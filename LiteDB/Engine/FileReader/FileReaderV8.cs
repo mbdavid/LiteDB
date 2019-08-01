@@ -15,8 +15,6 @@ namespace LiteDB.Engine
     {
         private LiteEngine _engine;
 
-        public int UserVersion { get; set; }
-
         public FileReaderV8(string filename, string password)
         {
             _engine = new LiteEngine(new EngineSettings
@@ -26,8 +24,6 @@ namespace LiteDB.Engine
                 ReadOnly = true,
                 LogStream = new MemoryStream() // never will be used... it's a readonly database
             });
-
-            this.UserVersion = _engine.UserVersion;
         }
 
         /// <summary>

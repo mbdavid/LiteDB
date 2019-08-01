@@ -46,9 +46,6 @@ namespace LiteDB.Engine
                     this.Insert(collection, docs, BsonAutoId.ObjectId);
                 }
 
-                // update user version on commit
-                transaction.Pages.Commit += h => h.UserVersion = reader.UserVersion;
-
                 this.Commit();
             }
             catch
