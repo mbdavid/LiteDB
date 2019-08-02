@@ -58,7 +58,10 @@ namespace LiteDB.Studio
             // stop all threads
             this.FormClosing += (s, e) =>
             {
-                this.Disconnect();
+                if(_db != null)
+                {
+                    this.Disconnect();
+                }
             };
         }
 
@@ -144,11 +147,8 @@ namespace LiteDB.Studio
 
             try
             {
-                await Task.Run(() =>
-                {
-                    _db?.Dispose();
-                    _db = null;
-                });
+                _db?.Dispose();
+                _db = null;
 
                 lblCursor.Text = "";
                 tlbMain.Enabled = true;
@@ -162,6 +162,7 @@ namespace LiteDB.Studio
         {
             splitRight.Visible = enabled;
             tabSql.Visible = enabled;
+            tvwDatabase.Visible = enabled;
 
             btnRefresh.Enabled = enabled;
             tabSql.Enabled = enabled;
