@@ -15,15 +15,9 @@ namespace LiteDB.Engine
     {
         private LiteEngine _engine;
 
-        public FileReaderV8(string filename, string password)
+        public FileReaderV8(LiteEngine engine)
         {
-            _engine = new LiteEngine(new EngineSettings
-            {
-                Filename = filename,
-                Password = password,
-                ReadOnly = true,
-                LogStream = new MemoryStream() // never will be used... it's a readonly database
-            });
+            _engine = engine;
         }
 
         /// <summary>
@@ -71,7 +65,7 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            _engine.Dispose();
+            // do not dispose current engine
         }
     }
 }

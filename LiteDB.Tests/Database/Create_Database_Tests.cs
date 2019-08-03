@@ -17,7 +17,7 @@ namespace LiteDB.Tests.Database
 
             using (var file = new TempFile())
             {
-                using (var db = new LiteDatabase("filename=" + file.Filename + ";initial size=40kb"))
+                using (var db = new LiteDatabase("filename=" + file.Filename + ";initial size=" + initial))
                 {
                     var col = db.GetCollection("col");
 
@@ -31,12 +31,12 @@ namespace LiteDB.Tests.Database
                     col.Insert(new BsonDocument { ["_id"] = 1 }); // use 3 pages to this
 
                     file.Size.Should().Be(initial);
+
+                    // ok, now shrink and test if file are minimal size
+                    //** db.Shrink();
+                    //** 
+                    //** file.Size.Should().Be(minimal);
                 }
-
-                // ok, now shrink and test if file are minimal size
-                LiteEngine.Shrink(file.Filename);
-
-                file.Size.Should().Be(minimal);
             }
         }
     }

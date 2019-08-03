@@ -75,9 +75,6 @@
             this.mnuInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuImport = new System.Windows.Forms.ToolStripMenuItem();
-            this.mnuCheckpoint = new System.Windows.Forms.ToolStripMenuItem();
-            this.mnuVaccum = new System.Windows.Forms.ToolStripMenuItem();
-            this.mnuShrink = new System.Windows.Forms.ToolStripMenuItem();
             this.imgCodeCompletion = new System.Windows.Forms.ImageList(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
@@ -536,59 +533,31 @@
             this.ctxMenuRoot.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.mnuInfo,
             this.toolStripSeparator3,
-            this.mnuImport,
-            this.mnuCheckpoint,
-            this.mnuVaccum,
-            this.mnuShrink});
+            this.mnuImport});
             this.ctxMenuRoot.Name = "ctxMenu";
-            this.ctxMenuRoot.Size = new System.Drawing.Size(171, 120);
+            this.ctxMenuRoot.Size = new System.Drawing.Size(181, 76);
             this.ctxMenuRoot.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenuRoot_ItemClicked);
             // 
             // mnuInfo
             // 
             this.mnuInfo.Image = global::LiteDB.Studio.Properties.Resources.information;
             this.mnuInfo.Name = "mnuInfo";
-            this.mnuInfo.Size = new System.Drawing.Size(170, 22);
+            this.mnuInfo.Size = new System.Drawing.Size(180, 22);
             this.mnuInfo.Tag = "SELECT $ FROM $database;";
             this.mnuInfo.Text = "Database Info";
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(167, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(177, 6);
             // 
             // mnuImport
             // 
             this.mnuImport.Image = global::LiteDB.Studio.Properties.Resources.layout_add;
             this.mnuImport.Name = "mnuImport";
-            this.mnuImport.Size = new System.Drawing.Size(170, 22);
+            this.mnuImport.Size = new System.Drawing.Size(180, 22);
             this.mnuImport.Tag = "SELECT $\\n  INTO new_col\\n  FROM $file_json(\'C:/temp/file.json\');";
             this.mnuImport.Text = "Import from JSON";
-            // 
-            // mnuCheckpoint
-            // 
-            this.mnuCheckpoint.Image = global::LiteDB.Studio.Properties.Resources.application_put;
-            this.mnuCheckpoint.Name = "mnuCheckpoint";
-            this.mnuCheckpoint.Size = new System.Drawing.Size(170, 22);
-            this.mnuCheckpoint.Tag = "CHECKPOINT;";
-            this.mnuCheckpoint.Text = "Checkpoint";
-            // 
-            // mnuVaccum
-            // 
-            this.mnuVaccum.Image = global::LiteDB.Studio.Properties.Resources.brick;
-            this.mnuVaccum.Name = "mnuVaccum";
-            this.mnuVaccum.Size = new System.Drawing.Size(170, 22);
-            this.mnuVaccum.Tag = "VACCUM;";
-            this.mnuVaccum.Text = "Vaccum";
-            // 
-            // mnuShrink
-            // 
-            this.mnuShrink.Image = global::LiteDB.Studio.Properties.Resources.compress;
-            this.mnuShrink.Name = "mnuShrink";
-            this.mnuShrink.Size = new System.Drawing.Size(170, 22);
-            this.mnuShrink.Tag = "";
-            this.mnuShrink.Text = "Shrink";
-            this.mnuShrink.Click += new System.EventHandler(this.mnuShrink_Click);
             // 
             // imgCodeCompletion
             // 
@@ -677,12 +646,9 @@
         private System.Windows.Forms.TabPage tabParameters;
         private System.Windows.Forms.ToolStripMenuItem mnuExplanPlan;
         private System.Windows.Forms.ContextMenuStrip ctxMenuRoot;
-        private System.Windows.Forms.ToolStripMenuItem mnuShrink;
-        private System.Windows.Forms.ToolStripMenuItem mnuVaccum;
         private System.Windows.Forms.ToolStripMenuItem mnuInfo;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem mnuRename;
-        private System.Windows.Forms.ToolStripMenuItem mnuCheckpoint;
         private System.Windows.Forms.ToolStripMenuItem mnuExport;
         private System.Windows.Forms.ToolStripMenuItem mnuQueryCount;
         private System.Windows.Forms.ToolStripMenuItem mnuImport;

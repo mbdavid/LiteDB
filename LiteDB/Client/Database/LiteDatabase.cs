@@ -269,7 +269,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Analyze/Vaccum/Checkpoint/UserVersion
+        #region Analyze/Checkpoint/Shrink
 
         /// <summary>
         /// Do database checkpoint. Copy all commited transaction from log file into datafile. 

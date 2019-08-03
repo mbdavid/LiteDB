@@ -21,7 +21,8 @@ namespace LiteDB.Engine
             var settings = new EngineSettings
             {
                 Filename = filename,
-                Password = password
+                Password = password,
+                Checkpoint = 0
             };
 
             var backup = FileHelper.GetSufixFile(filename, "-backup", true);
