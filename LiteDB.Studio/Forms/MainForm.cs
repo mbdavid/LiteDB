@@ -117,7 +117,7 @@ namespace LiteDB.Studio
             txtSql.Focus();
         }
 
-        private async void Disconnect()
+        private void Disconnect()
         {
             foreach (var tab in tabSql.TabPages.Cast<TabPage>().Where(x => x.Name != "+").ToArray())
             {

@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using Xunit;
 
-namespace LiteDB.Tests.Query
+namespace LiteDB.Tests.QueryTest
 {
     public class GroupBy_Tests : IDisposable
     {

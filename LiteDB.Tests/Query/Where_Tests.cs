@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Xunit;
 
-namespace LiteDB.Tests.Query
+namespace LiteDB.Tests.QueryTest
 {
     public class Where_Tests : Person_Tests
     {

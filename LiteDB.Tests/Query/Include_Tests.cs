@@ -10,7 +10,7 @@
 //using System.Text.RegularExpressions;
 //using LiteDB.Engine;
 
-//namespace LiteDB.Tests.Query
+//namespace LiteDB.Tests.QueryTest
 //{
 //    [TestClass]
 //    public class Include_Tests

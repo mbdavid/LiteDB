@@ -6,11 +6,15 @@ namespace LiteDB.Tests.Database
 {
     public class Crud_Tests
     {
+        #region Model 
+
         public class User
         {
             public int Id { get; set; }
             public string Name { get; set; }
         }
+
+        #endregion
 
         [Fact]
         public void Insert_With_AutoId()

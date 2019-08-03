@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace LiteDB.Tests.Query
+namespace LiteDB.Tests.QueryTest
 {
     public class Person_Tests : IDisposable
     {

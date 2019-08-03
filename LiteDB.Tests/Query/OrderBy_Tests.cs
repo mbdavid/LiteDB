@@ -2,7 +2,7 @@
 using FluentAssertions;
 using Xunit;
 
-namespace LiteDB.Tests.Query
+namespace LiteDB.Tests.QueryTest
 {
     public class OrderBy_Tests : Person_Tests
     {
