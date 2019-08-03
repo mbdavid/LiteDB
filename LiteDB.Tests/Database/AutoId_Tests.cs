@@ -136,7 +136,7 @@ namespace LiteDB.Tests.Database
                 // test if was changed
                 cs_int.FindOne(x => x.Id == cint_3.Id).Name.Should().Be(cint_3.Name);
                 cs_long.FindOne(x => x.Id == clong_3.Id).Name.Should().Be(clong_3.Name);
-                cs_guid.FindOne(x => x.Id == cguid_3.Id).Should().Be(cguid_3.Name);
+                cs_guid.FindOne(x => x.Id == cguid_3.Id).Name.Should().Be(cguid_3.Name);
                 cs_oid.FindOne(x => x.Id == coid_3.Id).Name.Should().Be(coid_3.Name);
                 cs_str.FindOne(x => x.Id == cstr_3.Id).Name.Should().Be(cstr_3.Name);
 
@@ -197,8 +197,8 @@ namespace LiteDB.Tests.Database
                 // create an index in name field
                 col.EnsureIndex("LowerName", "LOWER($.Name)");
 
-                var mark = col.FindOne(Query.EQ("LowerName", "mark twain"));
-                var jack = col.FindOne(Query.EQ("LowerName", "jack london"));
+                var mark = col.FindOne(Query.EQ("LOWER($.Name)", "mark twain"));
+                var jack = col.FindOne(Query.EQ("LOWER($.Name)", "jack london"));
 
                 // checks if auto-id is a ObjectId
                 mark["_id"].IsObjectId.Should().BeTrue();

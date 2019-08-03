@@ -32,9 +32,9 @@ namespace LiteDB.Tests.Database
             var full = new ConnectionString(
                 @"filename=""c:\only;file\""d\""emo.db""; 
                   password =   ""john-doe "" ;
-                  timeout = 00:05:00 ;
+                  timeout = 300 ;
                   initial size = 10 MB ;
-                  read only =  TRUE;
+                  readONLY =  TRUE;
                   limit SIZE = 20mb;
                   utc=true");
 

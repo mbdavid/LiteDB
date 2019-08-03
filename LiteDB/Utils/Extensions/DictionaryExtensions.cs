@@ -33,28 +33,99 @@ namespace LiteDB
 
         public static void ParseKeyValue(this IDictionary<string, string> dict, string connectionString)
         {
-            var s = new Tokenizer(connectionString);
+            var position = 0;
 
-            while(!s.EOF)
+            while(position < connectionString.Length)
             {
-                var key = Read(TokenType.Equals);
-                var value = Read(TokenType.SemiColon);
+                EatWhitespace();
+                var key = ReadKey();
+
+                EatWhitespace();
+                var value = ReadValue();
 
                 dict[key] = value;
             }
 
-            string Read(TokenType delim)
+            string ReadKey()
             {
                 var sb = new StringBuilder();
-                var token = s.ReadToken();
 
-                while (token.Type != TokenType.EOF && token.Type != delim)
+                while (position < connectionString.Length)
                 {
-                    sb.Append(token.Value);
-                    token = s.ReadToken(false);
+                    var current = connectionString[position];
+
+                    if (current == '=')
+                    {
+                        position++;
+                        return sb.ToString().Trim();
+                    }
+
+                    sb.Append(current);
+                    position++;
                 }
 
                 return sb.ToString().Trim();
+            }
+
+            string ReadValue()
+            {
+                var sb = new StringBuilder();
+                var quote =
+                    connectionString[position] == '"' ? '"' :
+                    connectionString[position] == '\'' ? '\'' : ' ';
+
+                if (quote != ' ') position++;
+
+                while (position < connectionString.Length)
+                {
+                    var current = connectionString[position];
+
+                    if (quote == ' ')
+                    {
+                        if (current == ';')
+                        {
+                            position++;
+                            return sb.ToString().Trim();
+                        }
+                    }
+                    else if (quote != ' ' && current == quote)
+                    {
+                        if (connectionString[position - 1] == '\\')
+                        {
+                            sb.Length--;
+                        }
+                        else
+                        {
+                            position++;
+
+                            EatWhitespace();
+
+                            if (connectionString[position] == ';') position++;
+
+                            return sb.ToString();
+                        }
+                    }
+
+                    sb.Append(current);
+                    position++;
+                }
+
+                return sb.ToString().Trim();
+            }
+
+            void EatWhitespace()
+            {
+                while (position < connectionString.Length)
+                {
+                    if(connectionString[position] == ' ' ||
+                        connectionString[position] == '\t' ||
+                        connectionString[position] == '\f')
+                    {
+                        position++;
+                        continue;
+                    }
+                    break;
+                }
             }
         }
 
@@ -70,7 +141,7 @@ namespace LiteDB
                 if (typeof(T) == typeof(TimeSpan))
                 {
                     // if timespan are numbers only, convert as seconds
-                    if (Regex.IsMatch(value, @"^\d$", RegexOptions.Compiled))
+                    if (Regex.IsMatch(value, @"^\d+$", RegexOptions.Compiled))
                     {
                         return (T)(object)TimeSpan.FromSeconds(Convert.ToInt32(value));
                     }

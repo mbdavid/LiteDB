@@ -85,7 +85,7 @@ namespace LiteDB
 
             // setting values to properties
             this.Mode = _values.GetValue("mode", this.Mode);
-            this.Filename = _values.GetValue("filename", this.Filename);
+            this.Filename = _values.GetValue("filename", this.Filename).Trim();
 
             this.Password = _values.GetValue("password", this.Password);
             this.Timeout = _values.GetValue("timeout", this.Timeout);
