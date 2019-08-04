@@ -78,8 +78,7 @@ namespace LiteDB.Tests.QueryTest
             //** 
             //** var r1 = collection.Query()
             //**     .GroupBy(x => x.Date.Year)
-            //**     .Select(x => new { x.Date.Year, Count = Sql.Count(x) })
-            //**     .OrderBy(x => x.Year)
+            //**     .Select(x => new { x.Date.Year, Count = x })
             //**     .ToArray();
             //** 
             //** foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))

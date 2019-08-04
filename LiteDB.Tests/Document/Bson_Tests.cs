@@ -57,7 +57,6 @@ namespace LiteDB.Tests.Document
             doc["FirstString"].AsString.Should().Be(o["FirstString"].AsString);
             doc["Date"].AsDateTime.ToString().Should().Be(o["Date"].AsDateTime.ToString());
             doc["CustomerId"].AsGuid.Should().Be(o["CustomerId"].AsGuid);
-            doc["MyNull"].RawValue.Should().Be(o["MyNull"].RawValue);
             doc["EmptyString"].AsString.Should().Be(o["EmptyString"].AsString);
 
             doc["maxDate"].AsDateTime.Should().Be(DateTime.MaxValue);
