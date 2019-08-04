@@ -513,6 +513,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Resolve Enumerable predicate when using Any/All enumerable extensions
+        /// </summary>
         private void VisitEnumerablePredicate(LambdaExpression lambda)
         {
             var expression = lambda.Body;
@@ -520,7 +523,8 @@ namespace LiteDB
             // Visit .Any(x => `x == 10`)
             if (expression is BinaryExpression bin)
             {
-                if (bin.Left.NodeType != ExpressionType.Parameter) throw new LiteException(0, "Any/All requires simple parameter on left side. Eg: `(x => x.Phones.Select(p => p.Number).Any(n => n > 5)`");
+                // requires only parameter in left side
+                if (bin.Left.NodeType != ExpressionType.Parameter) throw new LiteException(0, "Any/All requires simple parameter on left side. Eg: `x => x.Phones.Select(p => p.Number).Any(n => n > 5)`");
 
                 var op = this.GetOperator(bin.NodeType);
 
@@ -531,6 +535,9 @@ namespace LiteDB
             // Visit .Any(x => `x.StartsWith("John")`)
             else if(expression is MethodCallExpression met)
             {
+                // requires only parameter in left side
+                if (met.Object.NodeType != ExpressionType.Parameter) throw new NotSupportedException("Any/All requires simple parameter on left side. Eg: `x.Customers.Select(c => c.Name).Any(n => n.StartsWith('J'))`");
+
                 // if not found in resolver, try run method
                 if (!_resolver.TryGetValue(met.Method.DeclaringType, out var type))
                 {
@@ -547,7 +554,7 @@ namespace LiteDB
             }
             else
             {
-                throw new LiteException(0, "When using Any/All method test do only simple predicate variable. Eg: `(x => x.Phones.Select(p => p.Number).Any(n => n > 5)`");
+                throw new LiteException(0, "When using Any/All method test do only simple predicate variable. Eg: `x => x.Phones.Select(p => p.Number).Any(n => n > 5)`");
             }
 
         }

@@ -24,6 +24,8 @@ namespace LiteDB.Tests.Mapper
             public List<Phone> Phones { get; set; }
             public Phone[] Phones2 { get; set; }
 
+            public int[] PhoneNumbers { get; set; }
+
             [BsonField("USER_DOMAIN_NAME")]
             public string DomainName { get; }
 
@@ -168,6 +170,10 @@ namespace LiteDB.Tests.Mapper
             // fixed position
             TestExpr<User>(x => x.Phones.First(), "$.Phones[0]");
             TestExpr<User>(x => x.Phones.Last(), "$.Phones[-1]");
+
+            // contains
+            TestExpr<User>(x => x.PhoneNumbers.Contains(1234), "PhoneNumbers ANY = @p0", 1234);
+            TestExpr<User>(x => x.Phones2.Contains(new Phone { Number = 1 }), "Phones2 ANY = { Number: @p0 }", 1);
 
             // fixed position with filter expression
             TestExpr<User>(x => x.Phones.First(p => p.Number == 1), "FIRST($.Phones[(@.Number = @p0)])", 1);
