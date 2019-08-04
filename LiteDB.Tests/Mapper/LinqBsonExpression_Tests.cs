@@ -63,6 +63,24 @@ namespace LiteDB.Tests.Mapper
             Landline
         }
 
+        public class Customer
+        {
+            public int CustomerId { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class Order
+        {
+            [BsonId]
+            public int OrderNumber { get; set; }
+
+            [BsonRef("customers")]
+            public Customer Customer { get; set; }
+
+            [BsonRef("users")]
+            public List<User> Users { get; set; }
+        }
+
         private static Address StaticProp { get; set; } = new Address {Number = 99};
         private const int CONST_INT = 100;
         private string MyMethod() => "ok";
@@ -335,6 +353,16 @@ namespace LiteDB.Tests.Mapper
 
             TestExpr<City>(x => (x.CityName ?? x.Country) == DateTime.Now.Year.ToString(),
                 "(COALESCE(CityName, Country) = STRING(YEAR(NOW())))");
+        }
+
+        [Fact]
+        public void Linq_DbRef()
+        {
+            TestExpr<Order>(x => x.Customer.CustomerId == 123, "(Customer.$id = @p0)", 123);
+            TestExpr<Order>(x => x.Customer.Name == "John", "(Customer.Name = @p0)", "John");
+
+            TestExpr<Order>(x => x.Users.Select(u => u.Id).Any(id => id == 9), "(Users => @.$id) ANY = @p0)", 9);
+            TestExpr<Order>(x => x.Users.Select(u => u.Name).Any(n => n == "U1"), "(Users => @.Name) ANY = @p0)", "U1");
         }
 
         [Fact]

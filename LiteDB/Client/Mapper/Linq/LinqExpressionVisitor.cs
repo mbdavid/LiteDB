@@ -35,6 +35,7 @@ namespace LiteDB
         private string _rootParameter = null;
         private string _rootSymbol = "$";
         private int _paramIndex = 0;
+        private Type _dbRefType = null;
 
         private readonly StringBuilder _builder = new StringBuilder();
         private readonly Stack<Expression> _nodes = new Stack<Expression>();
@@ -590,14 +591,22 @@ namespace LiteDB
         {
             var name = member.Name;
 
+            // checks if parent field are not DbRef (checks for same dataType)
+            var isParentDbRef = _dbRefType != null && _dbRefType == member.DeclaringType;
+
             // get class entity from mapper
             var entity = _mapper.GetEntityMapper(member.DeclaringType);
 
+            // get mapped field from entity
             var field = entity.Members.FirstOrDefault(x => x.MemberName == name);
 
             if (field == null) throw new NotSupportedException($"Member {name} not found on BsonMapper for type {member.DeclaringType}.");
 
-            return "." + field.FieldName;
+            // define if this field are DbRef (child will need check parent)
+            _dbRefType = field.IsDbRef ? field.UnderlyingType : null;
+
+            // if parent call is DbRef and are calling _id field, rename to $id
+            return "." + (isParentDbRef && field.FieldName == "_id" ? "$id" : field.FieldName);
         }
 
         /// <summary>
