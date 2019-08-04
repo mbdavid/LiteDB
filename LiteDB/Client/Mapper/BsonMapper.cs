@@ -393,7 +393,7 @@ namespace LiteDB
 
             member.Deserialize = (bson, m) =>
             {
-                var idRef = bson.AsDocument["$id"];
+                var idRef = bson.IsDocument ? bson.AsDocument["$id"] : BsonValue.Null;
 
                 return m.Deserialize(entity.ForType,
                     idRef.IsNull ?
@@ -436,6 +436,8 @@ namespace LiteDB
 
             member.Deserialize = (bson, m) =>
             {
+                if (bson.IsArray == false) return null;
+
                 var array = bson.AsArray;
 
                 if (array.Count == 0) return m.Deserialize(member.DataType, array);

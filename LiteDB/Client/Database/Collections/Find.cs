@@ -95,7 +95,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all documents inside collection order by _id index.
         /// </summary>
-        public IEnumerable<T> FindAll() => this.Query().ToEnumerable();
+        public IEnumerable<T> FindAll() => this.Query().Include(_includes).ToEnumerable();
 
         #endregion
     }
