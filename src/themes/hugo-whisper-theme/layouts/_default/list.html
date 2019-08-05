@@ -1,0 +1,17 @@
+{{ define "header_css" }}{{ end }}
+{{ define "body_classes" }}page-default-list{{ end }}
+{{ define "header_classes" }}{{ end }}
+
+{{ define "main" }}
+
+<span class="overview">Overview</span>
+<h1 class="title">{{ .Title }}</h1>
+<div class="content">
+  {{ .Content }}
+</div>
+
+{{ range.Pages }}
+{{ .Render "summary" }}
+{{ end }}
+
+{{ end }}

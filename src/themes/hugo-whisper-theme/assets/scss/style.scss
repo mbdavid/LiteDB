@@ -1,0 +1,124 @@
+// Font
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Lora:400,700|Roboto+Mono:300,400|Lato:300,400,700');
+
+// Bootstrap
+@import 'bootstrap/functions';
+@import 'bootstrap-variables';
+@import 'bootstrap/variables';
+@import 'bootstrap/mixins';
+@import 'bootstrap/reboot';
+@import 'bootstrap/utilities';
+@import 'bootstrap/grid';
+@import 'bootstrap/tables';
+
+// Libraries
+@import 'libraries/hamburgers/hamburgers';
+@import 'libraries/pygments/github';
+
+// Components
+@import 'components/reset';
+@import 'components/type';
+@import 'components/page';
+@import 'components/header';
+@import 'components/footer';
+@import 'components/sub-footer';
+@import 'components/logo';
+@import 'components/main-menu';
+@import 'components/main-menu-mobile';
+@import 'components/docs-menu';
+@import 'components/hamburger';
+@import 'components/buttons';
+@import 'components/title';
+@import 'components/content';
+@import 'components/strip';
+@import 'components/whitebox';
+@import 'components/overview';
+
+// Pages
+@import 'pages/home';
+
+// Global
+body {
+  font-family: $font-family-base;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: $black;
+}
+.container {
+  padding-left: $grid-gutter-width;
+  padding-right: $grid-gutter-width;
+}
+
+// Display breakpoints for DEV
+// body:after {
+//   color: #000000;
+//   font-size: 12px;
+//   padding: 5px;
+//   font-weight: bold;
+//   right: 10px;
+//   position: fixed;
+//   text-align: center;
+//   text-transform: uppercase;
+//   bottom: 10px;
+//   width: 200px;
+//   z-index: 9999;
+//   border: solid 1px #000000;
+//   @each $name, $value in $grid-breakpoints {
+//     @include media-breakpoint-up($name) {
+//       content: "#{$name} - min-width: #{$value}";
+//     }
+//   }
+// }
+
+.install {
+	text-align: center;
+  padding: 60px 0px;
+}
+
+.install span {
+	background-color: #283542;
+	color: #BCBEC0;
+	font-family: Courier New, Courier, monospace;
+	font-size: 14px;
+	padding: 15px;
+  display: inline-block;
+}
+
+.install a {
+	background-color: #0e83cd;
+	font-size: 14px;
+	padding: 15px;
+	color: white;
+  display: inline-block;
+  position: relative;
+  top: +1px;
+}
+
+.social-buttons {
+  text-align: center;
+}
+
+.social-share {
+	width: 100px !important;
+  height: 20px !important;
+  border: none;
+  overflow: hidden;
+  margin: 2px;
+}
+
+.feature h1 {
+  font-size: 28px;
+  color: #171F26;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.feature h1 > i {
+  margin-right: 10px;
+}
+
+.feature ul {
+  list-style: disc;
+  margin-left: 20px;
+}

@@ -1,0 +1,30 @@
+.docs-menu {
+  h4 {
+    font-size: 1rem;
+    font-weight: bold;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    li {
+      font-size: 0.9rem;
+      line-height: 1.4;
+      font-weight: 400;
+      margin: 0;
+      padding: 4px 0 4px 0;
+      &.active {
+        a {
+          color: lighten($primary, 10%);
+          font-weight: 400;
+        }
+      }
+      a {
+        color: $black;
+        &:hover {
+          color: $primary;
+        }
+      }
+    }
+  }
+}

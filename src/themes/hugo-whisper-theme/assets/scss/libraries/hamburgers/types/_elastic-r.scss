@@ -1,0 +1,41 @@
+@if index($hamburger-types, elastic-r) {
+  /*
+   * Elastic Reverse
+   */
+  .hamburger--elastic-r {
+    .hamburger-inner {
+      top: $hamburger-layer-height / 2;
+      transition-duration: 0.275s;
+      transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+      &::before {
+        top: $hamburger-layer-height + $hamburger-layer-spacing;
+        transition: opacity 0.125s 0.275s ease;
+      }
+
+      &::after {
+        top: ($hamburger-layer-height * 2) + ($hamburger-layer-spacing * 2);
+        transition: transform 0.275s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      }
+    }
+
+    &.is-active {
+      .hamburger-inner {
+        $y-offset: $hamburger-layer-spacing + $hamburger-layer-height;
+
+        transform: translate3d(0, $y-offset, 0) rotate(-135deg);
+        transition-delay: 0.075s;
+
+        &::before {
+          transition-delay: 0s;
+          opacity: 0;
+        }
+
+        &::after {
+          transform: translate3d(0, $y-offset * -2, 0) rotate(270deg);
+          transition-delay: 0.075s;
+        }
+      }
+    }
+  }
+}

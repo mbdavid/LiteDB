@@ -1,0 +1,30 @@
+@if index($hamburger-types, boring) {
+  /*
+   * Boring
+   */
+  .hamburger--boring {
+    .hamburger-inner {
+      &,
+      &::before,
+      &::after {
+        transition-property: none;
+      }
+    }
+
+    &.is-active {
+      .hamburger-inner {
+        transform: rotate(45deg);
+
+        &::before {
+          top: 0;
+          opacity: 0;
+        }
+
+        &::after {
+          bottom: 0;
+          transform: rotate(-90deg);
+        }
+      }
+    }
+  }
+}

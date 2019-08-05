@@ -1,0 +1,38 @@
+@if index($hamburger-types, slider-r) {
+  /*
+   * Slider Reverse
+   */
+  .hamburger--slider-r {
+    .hamburger-inner {
+      top: $hamburger-layer-height / 2;
+
+      &::before {
+        top: $hamburger-layer-height + $hamburger-layer-spacing;
+        transition-property: transform, opacity;
+        transition-timing-function: ease;
+        transition-duration: 0.15s;
+      }
+
+      &::after {
+        top: ($hamburger-layer-height * 2) + ($hamburger-layer-spacing * 2);
+      }
+    }
+
+    &.is-active {
+      .hamburger-inner {
+        $y-offset: $hamburger-layer-spacing + $hamburger-layer-height;
+
+        transform: translate3d(0, $y-offset, 0) rotate(-45deg);
+
+        &::before {
+          transform: rotate(45deg) translate3d($hamburger-layer-width / 7, $hamburger-layer-spacing * -1, 0);
+          opacity: 0;
+        }
+
+        &::after {
+          transform: translate3d(0, $y-offset * -2, 0) rotate(90deg);
+        }
+      }
+    }
+  }
+}

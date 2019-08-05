@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>{{ block "title" . }}{{ .Title }} - {{ .Site.Title }}{{ end }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {{ block "meta_tags" . }}{{end}}
+  <link rel="icon" href="{{ "favicon.png" | absURL}}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  
+  {{ if .Site.IsServer }}
+  {{ $style := resources.Get "scss/style.scss" | toCSS (dict "targetPath" "css/style.css" "enableSourceMap" true) }}
+  <link rel="stylesheet" href="{{ ($style).RelPermalink }}">
+  {{ else }}
+  {{ $style := resources.Get "scss/style.scss" | toCSS (dict "targetPath" "css/style.css" "enableSourceMap" false) }}
+  <link rel="stylesheet" href="{{ ($style | minify | fingerprint).RelPermalink }}">
+  {{ end }}
+
+  {{ block "header_css" . }}{{ end }}
+
+</head>
+
+<body class='page {{ block "body_classes" . }}{{ end }}'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  {{ partial "main-menu-mobile.html" . }}
+  <div class="wrapper">
+    {{ partial "header.html" . }}
+
+    {{ $displaySidebar := false }}
+    {{ range .Site.Params.mainSections }}
+    {{ if eq $.Section . }}
+    {{ $displaySidebar = true }}
+    {{ end }}
+    {{ end }}
+
+    {{ if $displaySidebar }}
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            {{ partial "sidebar.html" . }}
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          {{ block "main" . }}
+          {{ end }}
+        </div>
+      </div>
+    </div>
+    {{ else }}
+    {{ block "main" . }}
+    {{ end }}
+    {{ end}}
+  </div>
+
+  {{ partial "sub-footer.html" . }}
+
+  {{ $scripts := resources.Get "js/scripts.js" }}
+
+  {{ block "footer_js" . }}
+  {{ end }}
+
+  {{ if .Site.IsServer }}
+  <script type="text/javascript" src="{{ $scripts.RelPermalink }}"></script>
+  {{ else }}
+  <script type="text/javascript" src="{{ ($scripts | minify | fingerprint).RelPermalink }}"></script>
+  {{ end }}
+
+  {{ partial "google-analytics.html" . }}
+
+</body>
+
+</html>

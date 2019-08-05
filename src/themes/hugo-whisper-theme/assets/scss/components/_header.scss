@@ -1,0 +1,26 @@
+.header {
+  color: $primary;
+  background-color: #171F26;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0 20px 0;
+  // box-shadow: 0 1px 15px rgba(50, 50, 93, 0.2);
+  .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  &.header-absolute {
+    position: absolute;
+    z-index: 10;
+    width: 100%;
+  }
+}
+.lock-scroll {
+  .header {
+    &.header-absolute {
+      position: static;
+    }
+  }
+}

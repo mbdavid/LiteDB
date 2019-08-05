@@ -1,0 +1,32 @@
+.logo {
+  display: none;
+  @include media-breakpoint-up(sm) {
+    display: block;
+    width: 150px;
+  }
+  img {
+    width: 100%;
+    height: auto;
+  }
+  a {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+.logo-mobile {
+  display: block;
+  width: 54px;
+  @include media-breakpoint-up(sm) {
+    display: none;
+  }
+  img {
+    width: 100%;
+    height: auto;
+  }
+  a {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}

@@ -1,0 +1,102 @@
+{{ define "title" }}{{ .Site.Title }}{{ end}}
+{{ define "header_css" }}{{ end }}
+{{ define "body_classes" }}page-home{{ end }}
+{{ define "header_classes" }}{{ end }}
+
+{{ define "meta_tags" }}
+<meta name="description" content="{{ .Site.Params.homepage_meta_tags.meta_description }}" />
+<meta property="og:title" content="{{ .Site.Params.homepage_meta_tags.meta_og_title }}" />
+<meta property="og:type" content="{{ .Site.Params.homepage_meta_tags.meta_og_type }}" />
+<meta property="og:url" content="{{ .Site.Params.homepage_meta_tags.meta_og_url }}" />
+<meta property="og:image" content="{{ .Site.Params.homepage_meta_tags.meta_og_image }}" />
+<meta property="og:description" content="{{ .Site.Params.homepage_meta_tags.meta_og_description }}" />
+<meta name="twitter:card" content="{{ .Site.Params.homepage_meta_tags.meta_twitter_card }}" />
+<meta name="twitter:site" content="{{ .Site.Params.homepage_meta_tags.meta_twitter_site }}" />
+<meta name="twitter:creator" content="{{ .Site.Params.homepage_meta_tags.meta_twitter_creator }}" />
+{{ end }}
+
+{{ define "main" }}
+<div class="strip" style="background-color: #171F26; padding: 20px;color: #BCBEC0">
+  <div style="text-align: center; font-size: 40px; font-weight: bold; padding: 50px 0 10px">Embedded NoSQL database for .NET</div>
+  <div style="font-size: 20px; text-align: center; font-weight: 300; padding: 0;">An open source MongoDB-like database with zero configuration - mobile ready</div>
+
+  <div class="install">
+    <span>> Install-Package LiteDB</span><a href="https://www.nuget.org/packages/LiteDB"><i class="fa fa-arrow-right"></i></a>
+  </div>
+
+  <div class="social-buttons">
+    <iframe src="http://ghbtns.com/github-btn.html?user=mbdavid&amp;repo=LiteDB&amp;type=star&amp;count=true" class="social-share"></iframe>
+    <iframe src="http://ghbtns.com/github-btn.html?user=mbdavid&amp;repo=LiteDB&amp;type=fork&amp;count=true" class="social-share"></iframe>
+  </div>
+
+</div>
+
+<div class="strip">
+    <div class="container pt-4 pb-0">
+      <div class="row feature">
+        <div class="col-md-4">
+            <h1><i class="fa fa-check-square-o"></i>Standalone database</h1>
+            <p>LiteDB is serverless database delivered in a single DLL (less than 450kb) fully written in .NET C# managed code (compatible with .NET 4.5 and NETStandard 2.0).</p>
+            <p>Install via NuGet or just copy DLL to your bin project folder.</p>
+        </div>
+        <div class="col-md-4">
+            <h1><i class="fa fa-flash"></i>Fast and lightweight</h1>
+            <p>LiteDB is a simple and fast NoSQL database solution. Ideal for:</p>
+            <ul>
+                <li>Mobile Apps</li>
+                <li>Desktop/local small applications</li>
+                <li>Application file format</li>
+                <li>Small web applications</li>
+                <li>One database per <b>account/user</b> data store</li>
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h1><i class="fa fa-cog"></i>And much more...</h1>
+            <ul>
+                <li>Portable UWP and Xamarin iOS/Android</li>
+                <li>ACID transaction</li>
+                <li>Single datafile (like SQLite)</li>
+                <li>Recovery data in writing failure (<a href="https://en.wikipedia.org/wiki/Write-ahead_logging" target="_blank">WAL</a> mode)</li>
+                <li>Map your POCO class to BsonDocument</li>
+                <li>Fluent API for custom mapping</li>
+                <li>Cross collections references (DbRef)</li>
+                <li>Store files and stream data (like GridFS in MongoDB)</li>
+                <li>LINQ query support</li>
+                <li>FREE for everyone - including commercial use</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+    
+
+<div class="strip">
+  <div class="container pt-4 pb-4">
+    <div class="row">
+      <div class="col-12">
+        <h1 class="title" style="display: none">{{ .Title | default .Site.Title }}</h1>
+        <div class="content">
+          {{ if .Content }}
+          {{ .Content }}
+          {{ else }}
+          <p>{{ .Site.Params.homepage_intro }}</p>
+          {{ end }}
+        </div>
+        <div style="text-align: center; margin-top: 15px;">
+            <a class="button button-primary mb-2" href="{{ .Site.Params.homepage_button_link | relURL }}">
+                {{ .Site.Params.homepage_button_text }}
+              </a>
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{{ end }}
+
+{{ define "footer_js" }}
+{{ end }}
