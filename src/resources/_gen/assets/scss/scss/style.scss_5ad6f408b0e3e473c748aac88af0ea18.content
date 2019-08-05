@@ -7870,4 +7870,17 @@ body {
   overflow: hidden;
   margin: 2px; }
 
+.feature h1 {
+  font-size: 28px;
+  color: #171F26;
+  font-weight: bold;
+  margin-bottom: 20px; }
+
+.feature h1 > i {
+  margin-right: 10px; }
+
+.feature ul {
+  list-style: disc;
+  margin-left: 20px; }
+
 /*# sourceMappingURL=style.css.map */

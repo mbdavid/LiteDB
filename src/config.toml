@@ -1,6 +1,6 @@
-baseURL = "www.example.com"
+baseURL = "www.litedb.org"
 languageCode = "en-us"
-title = "Hugo Whisper Theme"
+title = "LiteDB :: A .NET embedded NoSQL database"
 themesDir = "themes"
 theme = "hugo-whisper-theme"
 
