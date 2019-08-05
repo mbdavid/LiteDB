@@ -26,7 +26,8 @@ namespace LiteDB
             [typeof(Guid)] = new GuidResolver(),
             [typeof(Math)] = new MathResolver(),
             [typeof(ObjectId)] = new ObjectIdResolver(),
-            [typeof(String)] = new StringResolver()
+            [typeof(String)] = new StringResolver(),
+            [typeof(Nullable)] = new NullableResolver(),
         };
 
         private readonly BsonMapper _mapper;
@@ -121,7 +122,7 @@ namespace LiteDB
             var member = node.Member;
 
             // special types contains method access: string.Length, DateTime.Day, ...
-            if (_resolver.TryGetValue(member.DeclaringType, out var type))
+            if (this.TryGetResolver(member.DeclaringType, out var type))
             {
                 var pattern = type.ResolveMember(member);
 
@@ -168,11 +169,6 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
-            // get method declaring type - if is from any kind of list, read as Enumerable
-            var isList = Reflection.IsList(node.Method.DeclaringType);
-
-            var declaringType = isList ? typeof(Enumerable) : node.Method.DeclaringType;
-
             // if special method for index access, eval index value (do not use parameters)
             if (this.IsMethodIndexEval(node, out var obj, out var idx))
             {
@@ -194,7 +190,7 @@ namespace LiteDB
             }
 
             // if not found in resolver, try run method
-            if (!_resolver.TryGetValue(declaringType, out var type))
+            if (!this.TryGetResolver(node.Method.DeclaringType, out var type))
             {
                 // if method are called by parameter expression and it's not exists, throw error
                 var isParam = ParameterExpressionVisitor.Test(node);
@@ -330,7 +326,7 @@ namespace LiteDB
         {
             if (node.Members == null)
             {
-                if (_resolver.TryGetValue(node.Type, out var type))
+                if (this.TryGetResolver(node.Type, out var type))
                 {
                     var pattern = type.ResolveCtor(node.Constructor);
 
@@ -540,7 +536,7 @@ namespace LiteDB
                 if (met.Object.NodeType != ExpressionType.Parameter) throw new NotSupportedException("Any/All requires simple parameter on left side. Eg: `x.Customers.Select(c => c.Name).Any(n => n.StartsWith('J'))`");
 
                 // if not found in resolver, try run method
-                if (!_resolver.TryGetValue(met.Method.DeclaringType, out var type))
+                if (!this.TryGetResolver(met.Method.DeclaringType, out var type))
                 {
                     throw new NotSupportedException($"Method {met.Method.Name} not available to convert to BsonExpression inside Any/All call.");
                 }
@@ -695,6 +691,23 @@ namespace LiteDB
             }
 
             return value;
+        }
+
+        /// <summary>
+        /// Try find a Type Resolver for declaring type
+        /// </summary>
+        private bool TryGetResolver(Type declaringType, out ITypeResolver typeResolver)
+        {
+            // get method declaring type - if is from any kind of list, read as Enumerable
+            var isList = Reflection.IsList(declaringType);
+            var isNullable = Reflection.IsNullable(declaringType);
+
+            var type =
+                isList ? typeof(Enumerable) :
+                isNullable ? typeof(Nullable) :
+                declaringType;
+
+            return _resolver.TryGetValue(type, out typeResolver);
         }
     }
 }

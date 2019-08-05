@@ -29,6 +29,8 @@ namespace LiteDB.Tests.Mapper
             [BsonField("USER_DOMAIN_NAME")]
             public string DomainName { get; }
 
+            public int? Latitude { get; set; }
+
             /// <summary>
             /// This type will be render as new BsonDoctument { [key] = value }
             /// </summary>
@@ -226,6 +228,19 @@ namespace LiteDB.Tests.Mapper
 
             // iif (c ? true : false)
             TestExpr<User>(x => x.Id > 10 ? x.Id : 0, "IIF((_id > @p0), _id, @p1)", 10, 0);
+        }
+
+        [Fact]
+        public void Linq_Nullables()
+        {
+            TestExpr<User>(x => x.Latitude, "Latitude");
+            TestExpr<User>(x => x.Latitude + 200, "(Latitude + @p0)", 200);
+            TestExpr<User>(x => x.Latitude.Value + 200, "(Latitude + @p0)", 200);
+
+            TestPredicate<User>(x => x.Latitude > 0, "(Latitude > @p0)", 0);
+
+            TestPredicate<User>(x => x.Latitude != null && x.Latitude > 0, "((Latitude != @p0) AND (Latitude > @p1))", BsonValue.Null, 0);
+            TestPredicate<User>(x => x.Latitude.HasValue && x.Latitude > 0, "(((IS_NULL(Latitude) = false) = true) AND (Latitude > @p0))", 0);
         }
 
         [Fact]
