@@ -22,7 +22,7 @@ namespace LiteDB.Tests.Database
 
         #endregion
 
-        [Fact(Skip = "Need Review")]
+        [Fact(Skip = "Need review")]
         public void Usage_PredicateBuilder()
         {
             var p = PredicateBuilder.True<User>();

@@ -11,7 +11,7 @@ namespace LiteDB
 {
     internal class EnumerableResolver : ITypeResolver
     {
-        public string ResolveMethod(MethodInfo method)
+        public virtual string ResolveMethod(MethodInfo method)
         {
             // all methods in Enumerable are Extensions (static methods), so first parameter is IEnumerable
             var name = Reflection.MethodName(method, 1); 
@@ -77,7 +77,7 @@ namespace LiteDB
             return null;
         }
 
-        public string ResolveMember(MemberInfo member)
+        public virtual string ResolveMember(MemberInfo member)
         {
             // this both members are not from IEnumerable:
             // but any IEnumerable type will run this resolver (IList, ICollection)

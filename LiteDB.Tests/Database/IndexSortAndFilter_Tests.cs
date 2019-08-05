@@ -46,7 +46,7 @@ namespace LiteDB.Tests.Database
         {
             var result = _collection.Query()
                 .Where(x => x.Value == "Value 1")
-                .OrderBy(x => x.Value, Query.Ascending)
+                .OrderBy(x => x.Id, Query.Ascending)
                 .ToList();
 
             result[0].Id.Should().Be("B");
@@ -58,7 +58,7 @@ namespace LiteDB.Tests.Database
         {
             var result = _collection.Query()
                 .Where(x => x.Value == "Value 1")
-                .OrderBy(x => x.Value, Query.Descending)
+                .OrderBy(x => x.Id, Query.Descending)
                 .ToList();
 
             result[0].Id.Should().Be("C");
@@ -72,7 +72,7 @@ namespace LiteDB.Tests.Database
 
             var result = _collection.Query()
                 .Where(x => x.Value == "Value 1")
-                .OrderBy(x => x.Value, Query.Ascending)
+                .OrderBy(x => x.Id, Query.Ascending)
                 .ToList();
 
             result[0].Id.Should().Be("B");

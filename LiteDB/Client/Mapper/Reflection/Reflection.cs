@@ -284,6 +284,7 @@ namespace LiteDB
                 default: return generic > 0 ? type.Name.Substring(0, generic) : type.Name;
             }
         }
+
         #endregion
     }
 }

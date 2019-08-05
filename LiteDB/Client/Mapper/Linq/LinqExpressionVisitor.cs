@@ -28,6 +28,7 @@ namespace LiteDB
             [typeof(ObjectId)] = new ObjectIdResolver(),
             [typeof(String)] = new StringResolver(),
             [typeof(Nullable)] = new NullableResolver(),
+            [typeof(IGrouping<,>)] = new GroupingResolver()
         };
 
         private readonly BsonMapper _mapper;
@@ -492,7 +493,7 @@ namespace LiteDB
                 {
                     this.Visit(obj);
                 }
-                else if (token.Type == TokenType.At)
+                else if (token.Type == TokenType.At && tokenizer.LookAhead(false).Type == TokenType.Int)
                 {
                     var i = Convert.ToInt32(tokenizer.ReadToken(false).Expect(TokenType.Int).Value);
 
@@ -701,10 +702,12 @@ namespace LiteDB
             // get method declaring type - if is from any kind of list, read as Enumerable
             var isList = Reflection.IsList(declaringType);
             var isNullable = Reflection.IsNullable(declaringType);
+            var isGroupBy = declaringType.Name == "IGrouping`2"; // using dirty way (not work when using .GetInterfaces())
 
             var type =
-                isList ? typeof(Enumerable) :
+                isGroupBy ? typeof(IGrouping<,>) :
                 isNullable ? typeof(Nullable) :
+                isList ? typeof(Enumerable) :
                 declaringType;
 
             return _resolver.TryGetValue(type, out typeResolver);
