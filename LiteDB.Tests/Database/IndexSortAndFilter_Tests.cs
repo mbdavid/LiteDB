@@ -27,6 +27,12 @@ namespace LiteDB.Tests.Database
             _tempFile = new TempFile();
             _database = new LiteDatabase(_tempFile.Filename);
             _collection = _database.GetCollection<Item>("items");
+
+            _collection.Upsert(new Item() { Id = "C", Value = "Value 1" });
+            _collection.Upsert(new Item() { Id = "A", Value = "Value 2" });
+            _collection.Upsert(new Item() { Id = "B", Value = "Value 1" });
+
+            _collection.EnsureIndex("idx_value", x => x.Value);
         }
 
         public void Dispose()
@@ -35,53 +41,43 @@ namespace LiteDB.Tests.Database
             _tempFile.Dispose();
         }
 
-        [Fact(Skip = "Need Review")]
+        [Fact]
         public void FilterAndSortAscending()
         {
-            _collection.EnsureIndex(nameof(Item.Value));
-
-            PrepareData(_collection);
-            var result = FilterAndSortById(_collection, Query.Ascending);
+            var result = _collection.Query()
+                .Where(x => x.Value == "Value 1")
+                .OrderBy(x => x.Value, Query.Ascending)
+                .ToList();
 
             result[0].Id.Should().Be("B");
             result[1].Id.Should().Be("C");
         }
 
         [Fact]
-        public void FilterAndSortAscendingWithoutIndex()
-        {
-            PrepareData(_collection);
-            var result = FilterAndSortById(_collection, Query.Ascending);
-
-            result[0].Id.Should().Be("B");
-            result[1].Id.Should().Be("C");
-        }
-
-        [Fact(Skip = "Need review")]
         public void FilterAndSortDescending()
         {
-            _collection.EnsureIndex(nameof(Item.Value));
-
-            PrepareData(_collection);
-            var result = FilterAndSortById(_collection, Query.Descending);
+            var result = _collection.Query()
+                .Where(x => x.Value == "Value 1")
+                .OrderBy(x => x.Value, Query.Descending)
+                .ToList();
 
             result[0].Id.Should().Be("C");
             result[1].Id.Should().Be("B");
         }
 
-        private void PrepareData(LiteCollection<Item> collection)
+        [Fact]
+        public void FilterAndSortAscendingWithoutIndex()
         {
-            collection.Upsert(new Item() { Id = "C", Value = "Value 1" });
-            collection.Upsert(new Item() { Id = "A", Value = "Value 2" });
-            collection.Upsert(new Item() { Id = "B", Value = "Value 1" });
+            _collection.DropIndex("idx_value");
+
+            var result = _collection.Query()
+                .Where(x => x.Value == "Value 1")
+                .OrderBy(x => x.Value, Query.Ascending)
+                .ToList();
+
+            result[0].Id.Should().Be("B");
+            result[1].Id.Should().Be("C");
         }
 
-        private List<Item> FilterAndSortById(LiteCollection<Item> collection, int order)
-        {
-            var filterQuery = Query.EQ(nameof(Item.Value), "Value 1");
-
-            var result = collection.Find(filterQuery).ToList();
-            return result;
-        }
     }
 }
