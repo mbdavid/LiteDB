@@ -6,7 +6,7 @@ namespace LiteDB
 {
     public class ArrayPool<T>
     {
-        private static readonly T[] Emptry = new T[0];
+        private static readonly T[] Empty = new T[0];
 
         private const int SLOT_COUNT = 8;
 
@@ -19,7 +19,7 @@ namespace LiteDB
             {
                 var maxSlotSize = BucketHelper.GetMaxSizeForBucket(i);
 
-                var slotBuff = new SlotBuff();
+                var slotBuff = SlotBuff.Create();
                 _buckets[i] = slotBuff;
 
                 for (var j = 0; j < SLOT_COUNT; ++j)
@@ -41,7 +41,7 @@ namespace LiteDB
 
             if (minSize == 0)
             {
-                return Emptry;
+                return Empty;
             }
 
             var bucketIdx = BucketHelper.GetBucketIndex(minSize);
@@ -75,17 +75,30 @@ namespace LiteDB
 
             var bucketIndex = BucketHelper.GetBucketIndex(buff.Length);
             if (bucketIndex < 0)
+            {
                 return;
+            }
 
             var buffer = _buckets[bucketIndex];
             buffer.TryPush(buff);
         }
 
-        private sealed class SlotBuff
+        private struct SlotBuff
         {
-            private T[][] _buff = new T[SLOT_COUNT][];
+            private T[][] _buff;
             private int _size;
 
+            public SlotBuff(T[][] arr)
+            {
+                _buff = arr;
+                _size = 0;
+            }
+            
+            public static SlotBuff Create()
+            {
+                return new SlotBuff(new T[SLOT_COUNT][]);
+            }
+            
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool TryPush(T[] item)
             {

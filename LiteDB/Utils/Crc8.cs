@@ -15,7 +15,7 @@ namespace LiteDB
     {
         static byte[] _table = new byte[256];
         // x8 + x7 + x6 + x4 + x2 + 1
-        const byte poly = 0xd5;
+        private const byte poly = 0xd5;
 
         public static byte ComputeChecksum(byte[] bytes, int offset, int count)
         {
