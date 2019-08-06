@@ -423,20 +423,6 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => new {x.DomainName}, "{ DomainName: $.USER_DOMAIN_NAME }");
         }
 
-        [Fact]
-        public void Linq_Use_Enumerable_As_Root()
-        {
-            // when root parameter is IEnumerable, root symbol must be *
-            TestExpr<IEnumerable<User>>(x => x.Count(), "COUNT(*)");
-            TestExpr<IEnumerable<User>>(x => x.Sum(u => u.Id), "SUM(* => @._id)");
-
-            //**TestExpr<IEnumerable<User>>(x => new
-            //**{
-            //**    year = x.Select(p => p.CreatedOn.Year).First(),
-            //**    sum = x.Sum(u => u.Salary)
-            //**}, "{ 'year': FIRST((@ => YEAR(@.CreatedOn))), 'sum': SUM(@ => @.Salary) }");
-        }
-
         #region Test helper
 
         /// <summary>

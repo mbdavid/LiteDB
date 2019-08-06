@@ -182,18 +182,6 @@ namespace LiteDB
             return this;
         }
 
-        /// <summary>
-        /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
-        /// </summary>
-        public ILiteQueryableGroupBy<TKey, T> GroupBy<TKey>(Expression<Func<T, TKey>> keySelector)
-        {
-            if (_query.GroupBy != null) throw new ArgumentException("GROUP BY already defined in this query");
-
-            _query.GroupBy = _mapper.GetExpression(keySelector);
-
-            return new LiteGroupByQueryable<TKey, T>(_engine, _mapper, _collection, _query);
-        }
-
         #endregion
 
         #region Having
@@ -228,7 +216,7 @@ namespace LiteDB
         /// </summary>
         public ILiteQueryableResult<K> Select<K>(Expression<Func<T, K>> selector)
         {
-            if (_query.GroupBy != null) throw new ArgumentException("Use SelectAll() when using GroupBy query");
+            if (_query.GroupBy != null) throw new ArgumentException("Use Select(BsonExpression selector) when using GroupBy query");
 
             _query.Select = _mapper.GetExpression(selector);
 
@@ -396,36 +384,5 @@ namespace LiteDB
         }
 
         #endregion
-    }
-
-    public class LiteGroupByQueryable<TKey, T> : LiteQueryable<T>, ILiteQueryableGroupBy<TKey, T>
-    {
-        internal LiteGroupByQueryable(ILiteEngine engine, BsonMapper mapper, string collection, Query query) : base(engine, mapper, collection, query)
-        {
-        }
-
-        /// <summary>
-        /// Project all documents inside a single expression. Output will be a single document or one document per group (used in GroupBy)
-        /// </summary>
-        public ILiteQueryableResult<TResult> Select<TResult>(Expression<Func<IGrouping<TKey, T>, TResult>> selector)
-        {
-            _query.Select = _mapper.GetExpression(selector);
-            
-            return new LiteQueryable<TResult>(_engine, _mapper, _collection, _query);
-        }
-
-
-        /// <summary>
-        /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
-        /// </summary>
-        public ILiteQueryableGroupBy<TKey, T> Having(Expression<Func<IEnumerable<T>, bool>> predicate)
-        {
-            if (_query.Having != null) throw new ArgumentException("HAVING already defined in this query");
-            
-            _query.Having = _mapper.GetExpression(predicate);
-
-            return this;
-        }
-
     }
 }

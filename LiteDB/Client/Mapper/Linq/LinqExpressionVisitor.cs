@@ -27,35 +27,40 @@ namespace LiteDB
             [typeof(Math)] = new MathResolver(),
             [typeof(ObjectId)] = new ObjectIdResolver(),
             [typeof(String)] = new StringResolver(),
-            [typeof(Nullable)] = new NullableResolver(),
-            [typeof(IGrouping<,>)] = new GroupingResolver()
+            [typeof(Nullable)] = new NullableResolver()
         };
 
         private readonly BsonMapper _mapper;
-        private readonly BsonDocument _parameters = new BsonDocument();
+        private readonly Expression _expr;
+        private readonly string _rootParameter = null;
 
-        private string _rootParameter = null;
-        private string _rootSymbol = "$";
+        private readonly BsonDocument _parameters = new BsonDocument();
         private int _paramIndex = 0;
         private Type _dbRefType = null;
 
         private readonly StringBuilder _builder = new StringBuilder();
         private readonly Stack<Expression> _nodes = new Stack<Expression>();
 
-        public LinqExpressionVisitor(BsonMapper mapper)
+        public LinqExpressionVisitor(BsonMapper mapper, Expression expr)
         {
             _mapper = mapper;
+            _expr = expr;
+
+            if (expr is LambdaExpression lambda)
+            {
+                _rootParameter = lambda.Parameters.First().Name;
+            }
+            else
+            {
+                throw new NotSupportedException($"Expression {expr.ToString()} must be a lambda expression");
+            }
         }
 
-        public BsonExpression Resolve(Expression expr, bool predicate, bool extend)
+        public BsonExpression Resolve(bool predicate)
         {
-            if (extend) _builder.Append("EXTEND($,");
-
-            this.Visit(expr);
+            this.Visit(_expr);
 
             ENSURE(_nodes.Count == 0, "node stack must be empty when finish expression resolve");
-
-            if (extend) _builder.Append(")");
 
             var expression = _builder.ToString();
 
@@ -75,7 +80,7 @@ namespace LiteDB
             }
             catch (Exception ex)
             {
-                throw new NotSupportedException($"Invalid BsonExpression when converted from Linq expression: {expr.ToString()} - `{expression}`", ex);
+                throw new NotSupportedException($"Invalid BsonExpression when converted from Linq expression: {_expr.ToString()} - `{expression}`", ex);
             }
         }
 
@@ -97,17 +102,7 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            if (_rootParameter == null)
-            {
-                _rootParameter = node.Name;
-
-                // if root parameter is IEnumerable use root symbol as "*" (source)
-                _rootSymbol = typeof(IEnumerable).IsAssignableFrom(node.Type) &&
-                    node.Type != typeof(BsonDocument) ? 
-                    "*" : "$";
-            }
-
-            _builder.Append(node.Name == _rootParameter ? _rootSymbol : "@");
+            _builder.Append(node.Name == _rootParameter ? "$" : "@");
 
             return base.VisitParameter(node);
         }
@@ -702,12 +697,10 @@ namespace LiteDB
             // get method declaring type - if is from any kind of list, read as Enumerable
             var isList = Reflection.IsList(declaringType);
             var isNullable = Reflection.IsNullable(declaringType);
-            var isGroupBy = declaringType.Name == "IGrouping`2"; // using dirty way (not work when using .GetInterfaces())
 
             var type =
-                isGroupBy ? typeof(IGrouping<,>) :
-                isNullable ? typeof(Nullable) :
                 isList ? typeof(Enumerable) :
+                isNullable ? typeof(Nullable) :
                 declaringType;
 
             return _resolver.TryGetValue(type, out typeResolver);

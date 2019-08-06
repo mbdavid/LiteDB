@@ -27,18 +27,10 @@ namespace LiteDB
         ILiteQueryable<T> ForUpdate();
 
         ILiteQueryable<T> GroupBy(BsonExpression keySelector);
-        ILiteQueryableGroupBy<K, T> GroupBy<K>(Expression<Func<T, K>> keySelector);
-
         ILiteQueryable<T> Having(BsonExpression predicate);
 
         ILiteQueryableResult<BsonDocument> Select(BsonExpression selector);
         ILiteQueryableResult<K> Select<K>(Expression<Func<T, K>> selector);
-    }
-
-    public interface ILiteQueryableGroupBy<TKey, T> : ILiteQueryableResult<T>
-    {
-        ILiteQueryableGroupBy<TKey, T> Having(Expression<Func<IEnumerable<T>, bool>> keySelector);
-        ILiteQueryableResult<TResult> Select<TResult>(Expression<Func<IGrouping<TKey, T>, TResult>> selector);
     }
 
     public interface ILiteQueryableResult<T>

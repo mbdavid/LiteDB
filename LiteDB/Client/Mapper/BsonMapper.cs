@@ -157,9 +157,9 @@ namespace LiteDB
         /// </summary>
         public BsonExpression GetExpression<T, K>(Expression<Func<T, K>> predicate)
         {
-            var visitor = new LinqExpressionVisitor(this);
+            var visitor = new LinqExpressionVisitor(this, predicate);
 
-            var expr = visitor.Resolve(predicate, typeof(K) == typeof(bool), false);
+            var expr = visitor.Resolve(typeof(K) == typeof(bool));
 
             LOG($"`{predicate.ToString()}` -> `{expr.Source}`", "LINQ");
 
