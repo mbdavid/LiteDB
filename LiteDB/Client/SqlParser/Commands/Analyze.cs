@@ -13,6 +13,8 @@ namespace LiteDB
         /// </summary>
         private BsonDataReader ParseAnalyze()
         {
+            _tokenizer.ReadToken().Expect("ANALYZE");
+
             var cols = this.ParseListOfWords().ToArray();
 
             // read eof/;

@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
@@ -9,7 +10,7 @@ namespace LiteDB.Tests.Engine
     public class Transactions_Tests
     {
         [Fact]
-        public void Transaction_Write_Lock_Timeout()
+        public async Task Transaction_Write_Lock_Timeout()
         {
             var data1 = DataGen.Person(1, 100).ToArray();
             var data2 = DataGen.Person(101, 200).ToArray();
@@ -21,15 +22,19 @@ namespace LiteDB.Tests.Engine
                 // init person collection with 100 document
                 person.Insert(data1);
 
+                var taskASemaphore = new SemaphoreSlim(0, 1);
+                var taskBSemaphore = new SemaphoreSlim(0, 1);
+
                 // task A will open transaction and will insert +100 documents 
                 // but will commit only 2s later
-                var ta = new Task(() =>
+                var ta = Task.Run(() =>
                 {
                     db.BeginTrans();
 
                     person.Insert(data2);
 
-                    Task.Delay(4000).Wait();
+                    taskBSemaphore.Release();
+                    taskASemaphore.Wait();
 
                     var count = person.Count();
 
@@ -39,9 +44,9 @@ namespace LiteDB.Tests.Engine
                 });
 
                 // task B will try delete all documents but will be locked during 1 second
-                var tb = new Task(() =>
+                var tb = Task.Run(() =>
                 {
-                    Task.Delay(250).Wait();
+                    taskBSemaphore.Wait();
 
                     db.BeginTrans();
                     person
@@ -49,18 +54,17 @@ namespace LiteDB.Tests.Engine
                         .Should()
                         .Throw<LiteException>()
                         .Where(ex => ex.ErrorCode == LiteException.LOCK_TIMEOUT);
+
+                    taskASemaphore.Release();
                 });
 
-                ta.Start();
-                tb.Start();
-
-                Task.WaitAll(ta, tb);
+                await Task.WhenAll(ta, tb);
             }
         }
 
 
         [Fact]
-        public void Transaction_Avoid_Dirty_Read()
+        public async Task Transaction_Avoid_Dirty_Read()
         {
             var data1 = DataGen.Person(1, 100).ToArray();
             var data2 = DataGen.Person(101, 200).ToArray();
@@ -72,36 +76,42 @@ namespace LiteDB.Tests.Engine
                 // init person collection with 100 document
                 person.Insert(data1);
 
+                var taskASemaphore = new SemaphoreSlim(0, 1);
+                var taskBSemaphore = new SemaphoreSlim(0, 1);
+
                 // task A will open transaction and will insert +100 documents 
                 // but will commit only 1s later - this plus +100 document must be visible only inside task A
-                var ta = new Task(() =>
+                var ta = Task.Run(() =>
                 {
                     db.BeginTrans();
 
                     person.Insert(data2);
 
-                    Task.Delay(1000).Wait();
+                    taskBSemaphore.Release();
+                    taskASemaphore.Wait();
 
                     var count = person.Count();
 
                     count.Should().Be(data1.Length + data2.Length);
 
                     db.Commit();
+                    taskBSemaphore.Release();
                 });
 
                 // task B will not open transaction and will wait 250ms before and count collection - 
                 // at this time, task A already insert +100 document but here I can't see (are not committed yet)
                 // after task A finish, I can see now all 200 documents
-                var tb = new Task(() =>
+                var tb = Task.Run(() =>
                 {
-                    Task.Delay(500).Wait();
+                    taskBSemaphore.Wait();
 
                     var count = person.Count();
 
                     // read 100 documents
                     count.Should().Be(data1.Length);
 
-                    ta.Wait();
+                    taskASemaphore.Release();
+                    taskBSemaphore.Wait();
 
                     // read 200 documents
                     count = person.Count();
@@ -109,15 +119,12 @@ namespace LiteDB.Tests.Engine
                     count.Should().Be(data1.Length + data2.Length);
                 });
 
-                ta.Start();
-                tb.Start();
-
-                Task.WaitAll(ta, tb);
+                await Task.WhenAll(ta, tb);
             }
         }
 
         [Fact]
-        public void Transaction_Read_Version()
+        public async Task Transaction_Read_Version()
         {
             var data1 = DataGen.Person(1, 100).ToArray();
             var data2 = DataGen.Person(101, 200).ToArray();
@@ -129,32 +136,39 @@ namespace LiteDB.Tests.Engine
                 // init person collection with 100 document
                 person.Insert(data1);
 
+                var taskASemaphore = new SemaphoreSlim(0, 1);
+                var taskBSemaphore = new SemaphoreSlim(0, 1);
+
                 // task A will insert more 100 documents but will commit only 1s later
-                var ta = new Task(() =>
+                var ta = Task.Run(() =>
                 {
                     db.BeginTrans();
 
                     person.Insert(data2);
 
-                    Task.Delay(1000).Wait();
+                    taskBSemaphore.Release();
+                    taskASemaphore.Wait();
 
                     db.Commit();
+
+                    taskBSemaphore.Release();
                 });
 
                 // task B will open transaction too and will count 100 original documents only
                 // but now, will wait task A finish - but is in transaction and must see only initial version
-                var tb = new Task(() =>
+                var tb = Task.Run(() =>
                 {
                     db.BeginTrans();
 
-                    Task.Delay(500).Wait();
+                    taskBSemaphore.Wait();
 
                     var count = person.Count();
 
                     // read 100 documents
                     count.Should().Be(data1.Length);
 
-                    ta.Wait();
+                    taskASemaphore.Release();
+                    taskBSemaphore.Wait();
 
                     // keep reading 100 documents because i'm still in same transaction
                     count = person.Count();
@@ -162,10 +176,7 @@ namespace LiteDB.Tests.Engine
                     count.Should().Be(data1.Length);
                 });
 
-                ta.Start();
-                tb.Start();
-
-                Task.WaitAll(ta, tb);
+                await Task.WhenAll(ta, tb);
             }
         }
 

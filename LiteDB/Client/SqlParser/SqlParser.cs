@@ -24,16 +24,15 @@ namespace LiteDB
 
         public IBsonDataReader Execute()
         {
-            var first = _tokenizer.ReadToken().Expect(TokenType.Word);
+            var ahead = _tokenizer.LookAhead().Expect(TokenType.Word);
 
-            LOG($"executing `{first.Value.ToUpper()}`", "SQL");
+            LOG($"executing `{ahead.Value.ToUpper()}`", "SQL");
 
-            switch (first.Value.ToUpper())
+            switch (ahead.Value.ToUpper())
             {
-                case "SELECT": return this.ParseSelect(false);
+                case "SELECT": 
                 case "EXPLAIN":
-                    _tokenizer.ReadToken().Expect("SELECT");
-                    return this.ParseSelect(true);
+                    return this.ParseSelect();
                 case "INSERT": return this.ParseInsert();
                 case "DELETE": return this.ParseDelete();
                 case "UPDATE": return this.ParseUpadate();
@@ -43,13 +42,12 @@ namespace LiteDB
 
                 case "ANALYZE": return this.ParseAnalyze();
                 case "CHECKPOINT": return this.ParseCheckpoint();
-                case "VACCUM": return this.ParseVaccum();
 
                 case "BEGIN": return this.ParseBegin();
                 case "ROLLBACK": return this.ParseRollback();
                 case "COMMIT": return this.ParseCommit();
 
-                default:  throw LiteException.UnexpectedToken(first);
+                default:  throw LiteException.UnexpectedToken(ahead);
             }
         }
     }

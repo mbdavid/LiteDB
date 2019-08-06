@@ -58,53 +58,73 @@ namespace LiteDB.Engine
             foreach (var doc in source)
             {
                 foreach (var value in path.Execute(doc)
-                                        .Where(x => x.IsDocument)
-                                        .Select(x => x.AsDocument)
+                                        .Where(x => x.IsDocument || x.IsArray)
                                         .ToList())
                 {
-                    // works only if is a document
-                    var refId = value["$id"];
-                    var refCol = value["$ref"];
-
-                    // if has no reference, just go out
-                    if (refId.IsNull || !refCol.IsString) continue;
-
-                    // do some cache re-using when is same $ref (almost always is the same $ref collection)
-                    if (last != refCol.AsString)
+                    // if value is document, convert this ref document into full document (do another query)
+                    if (value.IsDocument)
                     {
-                        last = refCol.AsString;
-
-                        // initialize services
-                        snapshot = _transaction.CreateSnapshot(LockMode.Read, last, false);
-                        indexer = new IndexService(snapshot);
-                        data = new DataService(snapshot);
-
-                        lookup = new DatafileLookup(data, _utcDate, null);
-
-                        index = snapshot.CollectionPage?.PK;
+                        DoInclude(value.AsDocument);
                     }
-
-                    // fill only if index and ref node exists
-                    if (index != null)
+                    else
                     {
-                        var node = indexer.Find(index, refId, false, Query.Ascending);
-
-                        if (node != null)
+                        // if value is array, do same per item
+                        foreach(var item in value.AsArray
+                            .Where(x => x.IsDocument)
+                            .Select(x => x.AsDocument))
                         {
-                            // load document based on dataBlock position
-                            var refDoc = lookup.Load(node);
-
-                            value.Remove("$id");
-                            value.Remove("$ref");
-                            
-                            refDoc.CopyTo(value);
+                            DoInclude(item);
                         }
                     }
+
                 }
 
                 yield return doc;
             }
+
+            void DoInclude(BsonDocument value)
+            {
+                // works only if is a document
+                var refId = value["$id"];
+                var refCol = value["$ref"];
+
+                // if has no reference, just go out
+                if (refId.IsNull || !refCol.IsString) return;
+
+                // do some cache re-using when is same $ref (almost always is the same $ref collection)
+                if (last != refCol.AsString)
+                {
+                    last = refCol.AsString;
+
+                    // initialize services
+                    snapshot = _transaction.CreateSnapshot(LockMode.Read, last, false);
+                    indexer = new IndexService(snapshot);
+                    data = new DataService(snapshot);
+
+                    lookup = new DatafileLookup(data, _utcDate, null);
+
+                    index = snapshot.CollectionPage?.PK;
+                }
+
+                // fill only if index and ref node exists
+                if (index != null)
+                {
+                    var node = indexer.Find(index, refId, false, Query.Ascending);
+
+                    if (node != null)
+                    {
+                        // load document based on dataBlock position
+                        var refDoc = lookup.Load(node);
+
+                        value.Remove("$id");
+                        value.Remove("$ref");
+
+                        refDoc.CopyTo(value);
+                    }
+                }
+            }
         }
+
 
         /// <summary>
         /// WHERE: Filter document according expression. Expression must be an Bool result

@@ -26,7 +26,9 @@ namespace LiteDB
             [typeof(Guid)] = new GuidResolver(),
             [typeof(Math)] = new MathResolver(),
             [typeof(ObjectId)] = new ObjectIdResolver(),
-            [typeof(String)] = new StringResolver()
+            [typeof(String)] = new StringResolver(),
+            [typeof(Nullable)] = new NullableResolver(),
+            [typeof(IGrouping<,>)] = new GroupingResolver()
         };
 
         private readonly BsonMapper _mapper;
@@ -35,6 +37,7 @@ namespace LiteDB
         private string _rootParameter = null;
         private string _rootSymbol = "$";
         private int _paramIndex = 0;
+        private Type _dbRefType = null;
 
         private readonly StringBuilder _builder = new StringBuilder();
         private readonly Stack<Expression> _nodes = new Stack<Expression>();
@@ -120,7 +123,7 @@ namespace LiteDB
             var member = node.Member;
 
             // special types contains method access: string.Length, DateTime.Day, ...
-            if (_resolver.TryGetValue(member.DeclaringType, out var type))
+            if (this.TryGetResolver(member.DeclaringType, out var type))
             {
                 var pattern = type.ResolveMember(member);
 
@@ -167,11 +170,6 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
-            // get method declaring type - if is from any kind of list, read as Enumerable
-            var isList = Reflection.IsList(node.Method.DeclaringType);
-
-            var declaringType = isList ? typeof(Enumerable) : node.Method.DeclaringType;
-
             // if special method for index access, eval index value (do not use parameters)
             if (this.IsMethodIndexEval(node, out var obj, out var idx))
             {
@@ -193,7 +191,7 @@ namespace LiteDB
             }
 
             // if not found in resolver, try run method
-            if (!_resolver.TryGetValue(declaringType, out var type))
+            if (!this.TryGetResolver(node.Method.DeclaringType, out var type))
             {
                 // if method are called by parameter expression and it's not exists, throw error
                 var isParam = ParameterExpressionVisitor.Test(node);
@@ -329,7 +327,7 @@ namespace LiteDB
         {
             if (node.Members == null)
             {
-                if (_resolver.TryGetValue(node.Type, out var type))
+                if (this.TryGetResolver(node.Type, out var type))
                 {
                     var pattern = type.ResolveCtor(node.Constructor);
 
@@ -495,7 +493,7 @@ namespace LiteDB
                 {
                     this.Visit(obj);
                 }
-                else if (token.Type == TokenType.At)
+                else if (token.Type == TokenType.At && tokenizer.LookAhead(false).Type == TokenType.Int)
                 {
                     var i = Convert.ToInt32(tokenizer.ReadToken(false).Expect(TokenType.Int).Value);
 
@@ -513,6 +511,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Resolve Enumerable predicate when using Any/All enumerable extensions
+        /// </summary>
         private void VisitEnumerablePredicate(LambdaExpression lambda)
         {
             var expression = lambda.Body;
@@ -520,7 +521,8 @@ namespace LiteDB
             // Visit .Any(x => `x == 10`)
             if (expression is BinaryExpression bin)
             {
-                if (bin.Left.NodeType != ExpressionType.Parameter) throw new LiteException(0, "Any/All requires simple parameter on left side. Eg: `(x => x.Phones.Select(p => p.Number).Any(n => n > 5)`");
+                // requires only parameter in left side
+                if (bin.Left.NodeType != ExpressionType.Parameter) throw new LiteException(0, "Any/All requires simple parameter on left side. Eg: `x => x.Phones.Select(p => p.Number).Any(n => n > 5)`");
 
                 var op = this.GetOperator(bin.NodeType);
 
@@ -531,8 +533,11 @@ namespace LiteDB
             // Visit .Any(x => `x.StartsWith("John")`)
             else if(expression is MethodCallExpression met)
             {
+                // requires only parameter in left side
+                if (met.Object.NodeType != ExpressionType.Parameter) throw new NotSupportedException("Any/All requires simple parameter on left side. Eg: `x.Customers.Select(c => c.Name).Any(n => n.StartsWith('J'))`");
+
                 // if not found in resolver, try run method
-                if (!_resolver.TryGetValue(met.Method.DeclaringType, out var type))
+                if (!this.TryGetResolver(met.Method.DeclaringType, out var type))
                 {
                     throw new NotSupportedException($"Method {met.Method.Name} not available to convert to BsonExpression inside Any/All call.");
                 }
@@ -547,7 +552,7 @@ namespace LiteDB
             }
             else
             {
-                throw new LiteException(0, "When using Any/All method test do only simple predicate variable. Eg: `(x => x.Phones.Select(p => p.Number).Any(n => n > 5)`");
+                throw new LiteException(0, "When using Any/All method test do only simple predicate variable. Eg: `x => x.Phones.Select(p => p.Number).Any(n => n > 5)`");
             }
 
         }
@@ -583,14 +588,22 @@ namespace LiteDB
         {
             var name = member.Name;
 
+            // checks if parent field are not DbRef (checks for same dataType)
+            var isParentDbRef = _dbRefType != null && _dbRefType == member.DeclaringType;
+
             // get class entity from mapper
             var entity = _mapper.GetEntityMapper(member.DeclaringType);
 
+            // get mapped field from entity
             var field = entity.Members.FirstOrDefault(x => x.MemberName == name);
 
             if (field == null) throw new NotSupportedException($"Member {name} not found on BsonMapper for type {member.DeclaringType}.");
 
-            return "." + field.FieldName;
+            // define if this field are DbRef (child will need check parent)
+            _dbRefType = field.IsDbRef ? field.UnderlyingType : null;
+
+            // if parent call is DbRef and are calling _id field, rename to $id
+            return "." + (isParentDbRef && field.FieldName == "_id" ? "$id" : field.FieldName);
         }
 
         /// <summary>
@@ -679,6 +692,25 @@ namespace LiteDB
             }
 
             return value;
+        }
+
+        /// <summary>
+        /// Try find a Type Resolver for declaring type
+        /// </summary>
+        private bool TryGetResolver(Type declaringType, out ITypeResolver typeResolver)
+        {
+            // get method declaring type - if is from any kind of list, read as Enumerable
+            var isList = Reflection.IsList(declaringType);
+            var isNullable = Reflection.IsNullable(declaringType);
+            var isGroupBy = declaringType.Name == "IGrouping`2"; // using dirty way (not work when using .GetInterfaces())
+
+            var type =
+                isGroupBy ? typeof(IGrouping<,>) :
+                isNullable ? typeof(Nullable) :
+                isList ? typeof(Enumerable) :
+                declaringType;
+
+            return _resolver.TryGetValue(type, out typeResolver);
         }
     }
 }

@@ -56,13 +56,9 @@ namespace LiteDB
             {
                 stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None);
             }
-            catch (IOException)
+            catch (IOException ex)
             {
-                //the file is unavailable because it is:
-                //still being written to
-                //or being processed by another thread
-                //or does not exist (has already been processed)
-                return true;
+                return ex.IsLocked();
             }
             finally
             {
@@ -95,22 +91,6 @@ namespace LiteDB
             while (DateTime.UtcNow < timer);
 
             return false;
-        }
-
-        /// <summary>
-        /// Try delete a file that can be in use by another
-        /// </summary>
-        public static bool TryDelete(string filename)
-        {
-            try
-            {
-                File.Delete(filename);
-                return true;
-            }
-            catch(IOException)
-            {
-                return false;
-            }
         }
 
         /// <summary>

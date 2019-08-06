@@ -13,6 +13,7 @@ namespace LiteDB
         /// </summary>
         private BsonDataReader ParseRename()
         {
+            _tokenizer.ReadToken().Expect("RENAME");
             _tokenizer.ReadToken().Expect("COLLECTION");
 
             var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;

@@ -13,6 +13,8 @@ namespace LiteDB
         /// </summary>
         private BsonDataReader ParseRollback()
         {
+            _tokenizer.ReadToken().Expect("ROLLBACK");
+
             var token = _tokenizer.ReadToken().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
             if (token.Is("TRANS") || token.Is("TRANSACTION"))

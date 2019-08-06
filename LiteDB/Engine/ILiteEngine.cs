@@ -7,7 +7,6 @@ namespace LiteDB.Engine
     {
         int Analyze(string[] collections);
         void Checkpoint();
-        int Vaccum();
 
         bool BeginTrans();
         bool Commit();
@@ -27,7 +26,5 @@ namespace LiteDB.Engine
 
         bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique);
         bool DropIndex(string collection, string name);
-
-        int UserVersion { get; set; }
     }
 }

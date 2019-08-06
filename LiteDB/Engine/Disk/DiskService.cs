@@ -297,14 +297,13 @@ namespace LiteDB.Engine
             _dataPool.Dispose();
             _logPool.Dispose();
 
+            ENSURE(_dataFactory.IsLocked() == false, "datafile must be released");
+            ENSURE(_dataFactory.IsLocked() == false, "logfile must be released");
+
             if (delete) _logFactory.Delete();
 
             // other disposes
             _cache.Dispose();
-
-            ENSURE(_dataFactory.IsLocked() == false, "datafile must be released");
-            ENSURE(_dataFactory.IsLocked() == false, "logfile must be released");
-
         }
     }
 }

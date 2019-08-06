@@ -211,8 +211,9 @@ namespace LiteDB
         private TextReader _reader;
         private char _char = '\0';
         private Token _ahead = null;
+        private bool _eof = false;
 
-        public bool EOF { get; private set; }
+        public bool EOF => _eof && _ahead == null;
         public long Position { get; private set; }
         public Token Current { get; private set; }
 
@@ -221,7 +222,7 @@ namespace LiteDB
         /// </summary>
         public bool CheckEOF()
         {
-            if (this.EOF) throw LiteException.UnexpectedToken(this.Current);
+            if (_eof) throw LiteException.UnexpectedToken(this.Current);
 
             return false;
         }
@@ -257,7 +258,7 @@ namespace LiteDB
         /// </summary>
         private char ReadChar()
         {
-            if (this.EOF) return '\0';
+            if (_eof) return '\0';
 
             var c = _reader.Read();
 
@@ -266,7 +267,7 @@ namespace LiteDB
             if (c == -1)
             {
                 _char = '\0';
-                this.EOF = true;
+                _eof = true;
             }
             else
             {
@@ -322,7 +323,7 @@ namespace LiteDB
             // remove whitespace before get next token
             if (eatWhitespace) this.EatWhitespace();
 
-            if (this.EOF)
+            if (_eof)
             {
                 return new Token(TokenType.EOF, null, this.Position);
             }
@@ -519,7 +520,7 @@ namespace LiteDB
                 case '\r':
                 case '\t':
                     var sb = new StringBuilder();
-                    while(char.IsWhiteSpace(_char) && !this.EOF)
+                    while(char.IsWhiteSpace(_char) && !_eof)
                     {
                         sb.Append(_char);
                         this.ReadChar();
@@ -548,7 +549,7 @@ namespace LiteDB
         /// </summary>
         private void EatWhitespace()
         {
-            while (char.IsWhiteSpace(_char) && !this.EOF)
+            while (char.IsWhiteSpace(_char) && !_eof)
             {
                 this.ReadChar();
             }
@@ -564,7 +565,7 @@ namespace LiteDB
 
             this.ReadChar();
 
-            while (!this.EOF && IsWordChar(_char, false))
+            while (!_eof && IsWordChar(_char, false))
             {
                 sb.Append(_char);
                 this.ReadChar();
@@ -587,7 +588,7 @@ namespace LiteDB
 
             this.ReadChar();
 
-            while (!this.EOF &&
+            while (!_eof &&
                 (char.IsDigit(_char) || _char == '+' || _char == '-' || _char == '.' || _char == 'e' || _char == 'E'))
             {
                 if (_char == '.')
@@ -623,7 +624,7 @@ namespace LiteDB
             var sb = new StringBuilder();
             this.ReadChar(); // remove first " or '
 
-            while (_char != quote && !this.EOF)
+            while (_char != quote && !_eof)
             {
                 if (_char == '\\')
                 {
@@ -665,7 +666,7 @@ namespace LiteDB
         private void ReadLine()
         {
             // remove all char until new line
-            while (_char != '\n' && !this.EOF)
+            while (_char != '\n' && !_eof)
             {
                 this.ReadChar();
             }

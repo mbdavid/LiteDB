@@ -20,8 +20,6 @@ namespace LiteDB.Studio.Forms
         {
             InitializeComponent();
 
-            radTypeExclusive.Checked = cs.Mode == ConnectionMode.Exclusive;
-            radTypeShared.Checked = cs.Mode == ConnectionMode.Shared;
             txtFilename.Text = cs.Filename;
             chkUTC.Checked = cs.UtcDate;
             chkReadonly.Checked = cs.UtcDate;
@@ -32,7 +30,6 @@ namespace LiteDB.Studio.Forms
 
         private void BtnConnect_Click(object sender, EventArgs e)
         {
-            this.ConnectionString.Mode = radTypeExclusive.Checked ? ConnectionMode.Exclusive : ConnectionMode.Shared;
             this.ConnectionString.Filename = txtFilename.Text;
             this.ConnectionString.UtcDate = chkUTC.Checked;
             this.ConnectionString.ReadOnly = chkReadonly.Checked;

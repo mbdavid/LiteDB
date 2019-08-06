@@ -24,8 +24,12 @@ namespace LiteDB.Tests.Mapper
             public List<Phone> Phones { get; set; }
             public Phone[] Phones2 { get; set; }
 
+            public int[] PhoneNumbers { get; set; }
+
             [BsonField("USER_DOMAIN_NAME")]
             public string DomainName { get; }
+
+            public int? Latitude { get; set; }
 
             /// <summary>
             /// This type will be render as new BsonDoctument { [key] = value }
@@ -59,6 +63,24 @@ namespace LiteDB.Tests.Mapper
         {
             Mobile,
             Landline
+        }
+
+        public class Customer
+        {
+            public int CustomerId { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class Order
+        {
+            [BsonId]
+            public int OrderNumber { get; set; }
+
+            [BsonRef("customers")]
+            public Customer Customer { get; set; }
+
+            [BsonRef("users")]
+            public List<User> Users { get; set; }
         }
 
         private static Address StaticProp { get; set; } = new Address {Number = 99};
@@ -169,6 +191,10 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.Phones.First(), "$.Phones[0]");
             TestExpr<User>(x => x.Phones.Last(), "$.Phones[-1]");
 
+            // contains
+            TestExpr<User>(x => x.PhoneNumbers.Contains(1234), "PhoneNumbers ANY = @p0", 1234);
+            TestExpr<User>(x => x.Phones2.Contains(new Phone { Number = 1 }), "Phones2 ANY = { Number: @p0 }", 1);
+
             // fixed position with filter expression
             TestExpr<User>(x => x.Phones.First(p => p.Number == 1), "FIRST($.Phones[(@.Number = @p0)])", 1);
 
@@ -202,6 +228,19 @@ namespace LiteDB.Tests.Mapper
 
             // iif (c ? true : false)
             TestExpr<User>(x => x.Id > 10 ? x.Id : 0, "IIF((_id > @p0), _id, @p1)", 10, 0);
+        }
+
+        [Fact]
+        public void Linq_Nullables()
+        {
+            TestExpr<User>(x => x.Latitude, "Latitude");
+            TestExpr<User>(x => x.Latitude + 200, "(Latitude + @p0)", 200);
+            TestExpr<User>(x => x.Latitude.Value + 200, "(Latitude + @p0)", 200);
+
+            TestPredicate<User>(x => x.Latitude > 0, "(Latitude > @p0)", 0);
+
+            TestPredicate<User>(x => x.Latitude != null && x.Latitude > 0, "((Latitude != @p0) AND (Latitude > @p1))", BsonValue.Null, 0);
+            TestPredicate<User>(x => x.Latitude.HasValue && x.Latitude > 0, "(((IS_NULL(Latitude) = false) = true) AND (Latitude > @p0))", 0);
         }
 
         [Fact]
@@ -329,6 +368,16 @@ namespace LiteDB.Tests.Mapper
 
             TestExpr<City>(x => (x.CityName ?? x.Country) == DateTime.Now.Year.ToString(),
                 "(COALESCE(CityName, Country) = STRING(YEAR(NOW())))");
+        }
+
+        [Fact]
+        public void Linq_DbRef()
+        {
+            TestExpr<Order>(x => x.Customer.CustomerId == 123, "(Customer.$id = @p0)", 123);
+            TestExpr<Order>(x => x.Customer.Name == "John", "(Customer.Name = @p0)", "John");
+
+            TestExpr<Order>(x => x.Users.Select(u => u.Id).Any(id => id == 9), "(Users => @.$id) ANY = @p0)", 9);
+            TestExpr<Order>(x => x.Users.Select(u => u.Name).Any(n => n == "U1"), "(Users => @.Name) ANY = @p0)", "U1");
         }
 
         [Fact]

@@ -58,7 +58,10 @@ namespace LiteDB.Studio
             // stop all threads
             this.FormClosing += (s, e) =>
             {
-                this.Disconnect();
+                if(_db != null)
+                {
+                    this.Disconnect();
+                }
             };
         }
 
@@ -66,11 +69,7 @@ namespace LiteDB.Studio
         {
             return await Task.Run(() =>
             {
-                var db = new LiteDatabase(connectionString);
-
-                var openDb = db.UserVersion;
-
-                return db;
+                return new LiteDatabase(connectionString);
             });
         }
 
@@ -118,7 +117,7 @@ namespace LiteDB.Studio
             txtSql.Focus();
         }
 
-        private async void Disconnect()
+        private void Disconnect()
         {
             foreach (var tab in tabSql.TabPages.Cast<TabPage>().Where(x => x.Name != "+").ToArray())
             {
@@ -148,11 +147,8 @@ namespace LiteDB.Studio
 
             try
             {
-                await Task.Run(() =>
-                {
-                    _db?.Dispose();
-                    _db = null;
-                });
+                _db?.Dispose();
+                _db = null;
 
                 lblCursor.Text = "";
                 tlbMain.Enabled = true;
@@ -166,6 +162,7 @@ namespace LiteDB.Studio
         {
             splitRight.Visible = enabled;
             tabSql.Visible = enabled;
+            tvwDatabase.Visible = enabled;
 
             btnRefresh.Enabled = enabled;
             tabSql.Enabled = enabled;
@@ -665,19 +662,5 @@ namespace LiteDB.Studio
         }
 
         #endregion
-
-        private void mnuShrink_Click(object sender, EventArgs e)
-        {
-            var s = new ShrinkForm(_connectionString.Filename, _connectionString.Password, this.Disconnect);
-
-            s.ShowDialog();
-
-            if (_db == null)
-            {
-                _connectionString.Password = s.NewPassword;
-
-                this.Connect(_connectionString);
-            }
-        }
     }
 }

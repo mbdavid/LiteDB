@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LiteDB
@@ -26,14 +27,18 @@ namespace LiteDB
         ILiteQueryable<T> ForUpdate();
 
         ILiteQueryable<T> GroupBy(BsonExpression keySelector);
-        ILiteQueryable<T> GroupBy<K>(Expression<Func<T, K>> keySelector);
+        ILiteQueryableGroupBy<K, T> GroupBy<K>(Expression<Func<T, K>> keySelector);
 
         ILiteQueryable<T> Having(BsonExpression predicate);
-        ILiteQueryable<T> Having(Expression<Func<IEnumerable<T>, bool>> keySelector);
 
         ILiteQueryableResult<BsonDocument> Select(BsonExpression selector);
         ILiteQueryableResult<K> Select<K>(Expression<Func<T, K>> selector);
-        ILiteQueryableResult<K> SelectAll<K>(Expression<Func<IEnumerable<T>, K>> selector);
+    }
+
+    public interface ILiteQueryableGroupBy<TKey, T> : ILiteQueryableResult<T>
+    {
+        ILiteQueryableGroupBy<TKey, T> Having(Expression<Func<IEnumerable<T>, bool>> keySelector);
+        ILiteQueryableResult<TResult> Select<TResult>(Expression<Func<IGrouping<TKey, T>, TResult>> selector);
     }
 
     public interface ILiteQueryableResult<T>

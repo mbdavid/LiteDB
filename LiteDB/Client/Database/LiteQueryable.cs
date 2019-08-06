@@ -13,10 +13,10 @@ namespace LiteDB
     /// </summary>
     public class LiteQueryable<T> : ILiteQueryable<T>
     {
-        private readonly ILiteEngine _engine;
-        private readonly BsonMapper _mapper;
-        private readonly string _collection;
-        private readonly Query _query;
+        protected readonly ILiteEngine _engine;
+        protected readonly BsonMapper _mapper;
+        protected readonly string _collection;
+        protected readonly Query _query;
 
         // indicate that T type are simple and result are inside first document fields (query always return a BsonDocument)
         private readonly bool _isSimpleType = typeof(T).IsValueType || typeof(T) == typeof(string);
@@ -185,12 +185,13 @@ namespace LiteDB
         /// <summary>
         /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
         /// </summary>
-        public ILiteQueryable<T> GroupBy<K>(Expression<Func<T, K>> keySelector)
+        public ILiteQueryableGroupBy<TKey, T> GroupBy<TKey>(Expression<Func<T, TKey>> keySelector)
         {
             if (_query.GroupBy != null) throw new ArgumentException("GROUP BY already defined in this query");
 
             _query.GroupBy = _mapper.GetExpression(keySelector);
-            return this;
+
+            return new LiteGroupByQueryable<TKey, T>(_engine, _mapper, _collection, _query);
         }
 
         #endregion
@@ -205,17 +206,6 @@ namespace LiteDB
             if (_query.Having != null) throw new ArgumentException("HAVING already defined in this query");
 
             _query.Having = predicate;
-            return this;
-        }
-
-        /// <summary>
-        /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
-        /// </summary>
-        public ILiteQueryable<T> Having(Expression<Func<IEnumerable<T>, bool>> predicate)
-        {
-            if (_query.Having != null) throw new ArgumentException("HAVING already defined in this query");
-
-            _query.Having = _mapper.GetExpression(predicate);
             return this;
         }
 
@@ -240,16 +230,6 @@ namespace LiteDB
         {
             if (_query.GroupBy != null) throw new ArgumentException("Use SelectAll() when using GroupBy query");
 
-            _query.Select = _mapper.GetExpression(selector);
-
-            return new LiteQueryable<K>(_engine, _mapper, _collection, _query);
-        }
-
-        /// <summary>
-        /// Project all documents inside a single expression. Output will be a single document or one document per group (used in GroupBy)
-        /// </summary>
-        public ILiteQueryableResult<K> SelectAll<K>(Expression<Func<IEnumerable<T>, K>> selector)
-        {
             _query.Select = _mapper.GetExpression(selector);
 
             return new LiteQueryable<K>(_engine, _mapper, _collection, _query);
@@ -416,5 +396,36 @@ namespace LiteDB
         }
 
         #endregion
+    }
+
+    public class LiteGroupByQueryable<TKey, T> : LiteQueryable<T>, ILiteQueryableGroupBy<TKey, T>
+    {
+        internal LiteGroupByQueryable(ILiteEngine engine, BsonMapper mapper, string collection, Query query) : base(engine, mapper, collection, query)
+        {
+        }
+
+        /// <summary>
+        /// Project all documents inside a single expression. Output will be a single document or one document per group (used in GroupBy)
+        /// </summary>
+        public ILiteQueryableResult<TResult> Select<TResult>(Expression<Func<IGrouping<TKey, T>, TResult>> selector)
+        {
+            _query.Select = _mapper.GetExpression(selector);
+            
+            return new LiteQueryable<TResult>(_engine, _mapper, _collection, _query);
+        }
+
+
+        /// <summary>
+        /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
+        /// </summary>
+        public ILiteQueryableGroupBy<TKey, T> Having(Expression<Func<IEnumerable<T>, bool>> predicate)
+        {
+            if (_query.Having != null) throw new ArgumentException("HAVING already defined in this query");
+            
+            _query.Having = _mapper.GetExpression(predicate);
+
+            return this;
+        }
+
     }
 }

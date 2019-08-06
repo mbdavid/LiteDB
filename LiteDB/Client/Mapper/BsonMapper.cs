@@ -159,17 +159,11 @@ namespace LiteDB
         {
             var visitor = new LinqExpressionVisitor(this);
 
-            return visitor.Resolve(predicate, typeof(K) == typeof(bool), false);
-        }
+            var expr = visitor.Resolve(predicate, typeof(K) == typeof(bool), false);
 
-        /// <summary>
-        /// Resolve LINQ expression into BsonExpression
-        /// </summary>
-        public BsonExpression GetExtendExpression<T, K>(Expression<Func<T, K>> predicate)
-        {
-            var visitor = new LinqExpressionVisitor(this);
+            LOG($"`{predicate.ToString()}` -> `{expr.Source}`", "LINQ");
 
-            return visitor.Resolve(predicate, false, true);
+            return expr;
         }
 
         #endregion
@@ -399,7 +393,7 @@ namespace LiteDB
 
             member.Deserialize = (bson, m) =>
             {
-                var idRef = bson.AsDocument["$id"];
+                var idRef = bson.IsDocument ? bson.AsDocument["$id"] : BsonValue.Null;
 
                 return m.Deserialize(entity.ForType,
                     idRef.IsNull ?
@@ -442,6 +436,8 @@ namespace LiteDB
 
             member.Deserialize = (bson, m) =>
             {
+                if (bson.IsArray == false) return null;
+
                 var array = bson.AsArray;
 
                 if (array.Count == 0) return m.Deserialize(member.DataType, array);

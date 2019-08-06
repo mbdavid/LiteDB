@@ -30,8 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.radTypeShared = new System.Windows.Forms.RadioButton();
-            this.radTypeExclusive = new System.Windows.Forms.RadioButton();
+            this.radModeEmbedded = new System.Windows.Forms.RadioButton();
             this.btnOK = new System.Windows.Forms.Button();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
@@ -57,8 +56,7 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.radTypeShared);
-            this.groupBox1.Controls.Add(this.radTypeExclusive);
+            this.groupBox1.Controls.Add(this.radModeEmbedded);
             this.groupBox1.Location = new System.Drawing.Point(12, 11);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(569, 60);
@@ -66,31 +64,19 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Connection Mode";
             // 
-            // radTypeShared
+            // radModeEmbedded
             // 
-            this.radTypeShared.AutoSize = true;
-            this.radTypeShared.Location = new System.Drawing.Point(128, 25);
-            this.radTypeShared.Name = "radTypeShared";
-            this.radTypeShared.Size = new System.Drawing.Size(61, 19);
-            this.radTypeShared.TabIndex = 10;
-            this.radTypeShared.Text = "Shared";
-            this.toolTip.SetToolTip(this.radTypeShared, "Open datafile in shared mode.\r\n- Support multiple connections (but only one execu" +
-        "tion at time).\r\n- Support multple threads per connection");
-            this.radTypeShared.UseVisualStyleBackColor = true;
-            // 
-            // radTypeExclusive
-            // 
-            this.radTypeExclusive.AutoSize = true;
-            this.radTypeExclusive.Checked = true;
-            this.radTypeExclusive.Location = new System.Drawing.Point(30, 25);
-            this.radTypeExclusive.Name = "radTypeExclusive";
-            this.radTypeExclusive.Size = new System.Drawing.Size(72, 19);
-            this.radTypeExclusive.TabIndex = 9;
-            this.radTypeExclusive.TabStop = true;
-            this.radTypeExclusive.Text = "Exclusive";
-            this.toolTip.SetToolTip(this.radTypeExclusive, "Open datafile in exclusive mode.\r\n- Support only this single connection\r\n- Suppor" +
-        "t multple threads in this connection");
-            this.radTypeExclusive.UseVisualStyleBackColor = true;
+            this.radModeEmbedded.AutoSize = true;
+            this.radModeEmbedded.Checked = true;
+            this.radModeEmbedded.Location = new System.Drawing.Point(30, 25);
+            this.radModeEmbedded.Name = "radModeEmbedded";
+            this.radModeEmbedded.Size = new System.Drawing.Size(82, 19);
+            this.radModeEmbedded.TabIndex = 9;
+            this.radModeEmbedded.TabStop = true;
+            this.radModeEmbedded.Text = "Embedded";
+            this.toolTip.SetToolTip(this.radModeEmbedded, "Open database as embedded.\r\n- Support only this single connection\r\n- Support mult" +
+        "ple threads in this connection");
+            this.radModeEmbedded.UseVisualStyleBackColor = true;
             // 
             // btnOK
             // 
@@ -288,8 +274,7 @@
 
         #endregion
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.RadioButton radTypeShared;
-        private System.Windows.Forms.RadioButton radTypeExclusive;
+        private System.Windows.Forms.RadioButton radModeEmbedded;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
         private System.Windows.Forms.ToolTip toolTip;

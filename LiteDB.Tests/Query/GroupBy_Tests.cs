@@ -1,9 +1,10 @@
-﻿using System;
+﻿using FluentAssertions;
+using System;
 using System.IO;
 using System.Linq;
 using Xunit;
 
-namespace LiteDB.Tests.Query
+namespace LiteDB.Tests.QueryTest
 {
     public class GroupBy_Tests : IDisposable
     {
@@ -23,48 +24,46 @@ namespace LiteDB.Tests.Query
             collection.EnsureIndex(x => x.Age);
         }
 
-        [Fact(Skip = "Commented out")]
-        public void Query_GroupBy_State_With_Count()
+        [Fact]
+        public void Query_GroupBy_Age_With_Count()
         {
-            //** var r0 = local
-            //**     .GroupBy(x => x.State)
-            //**     .Select(x => new { State = x.Key, Count = x.Count() })
-            //**     .OrderBy(x => x.State)
-            //**     .ToArray();
-            //** 
-            //** var r1 = collection.Query()
-            //**     .GroupBy(x => x.State)
-            //**     .Select(x => new { x.State, Count = Sql.Count(x) })
-            //**     .OrderBy(x => x.State)
-            //**     .ToArray();
-            //** 
-            //** foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
-            //** {
-            //**     Assert.Equal(r.left.State, r.right.State);
-            //**     Assert.Equal(r.left.Count, r.right.Count);
-            //** }
+            var r0 = local
+                .GroupBy(x => x.Age)
+                .Select(x => new { Age = x.Key, Count = x.Count() })
+                .OrderBy(x => x.Age)
+                .ToArray();
+
+            var r1 = collection.Query()
+                .GroupBy(x => x.Age)
+                .Select(x => new { Age = x.Key, Count = x.Count() })
+                .ToArray();
+            
+            foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
+            {
+                r.left.Age.Should().Be(r.right.Age);
+                r.left.Count.Should().Be(r.right.Count);
+            }
         }
 
-        [Fact(Skip = "Commented out")]
-        public void Query_GroupBy_State_With_Sum_Age()
+        [Fact]
+        public void Query_GroupBy_Year_With_Sum_Age()
         {
-            //** var r0 = local
-            //**     .GroupBy(x => x.State)
-            //**     .Select(x => new { State = x.Key, Sum = x.Sum(q => q.Age) })
-            //**     .OrderBy(x => x.State)
-            //**     .ToArray();
-            //** 
-            //** var r1 = collection.Query()
-            //**     .GroupBy(x => x.State)
-            //**     .Select(x => new { x.State, Sum = Sql.Sum(x.Age) })
-            //**     .OrderBy(x => x.State)
-            //**     .ToArray();
-            //** 
-            //** foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
-            //** {
-            //**     Assert.Equal(r.left.State, r.right.State);
-            //**     Assert.Equal(r.left.Sum, r.right.Sum);
-            //** }
+            var r0 = local
+                .GroupBy(x => x.Date.Year)
+                .Select(x => new { Year = x.Key, Sum = x.Sum(q => q.Age) })
+                .OrderBy(x => x.Year)
+                .ToArray();
+            
+            var r1 = collection.Query()
+                .GroupBy(x => x.Date.Year)
+                .Select(x => new { Year = x.Key, Sum = x.Sum(q => q.Age) })
+                .ToArray();
+            
+            foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
+            {
+                r.left.Year.Should().Be(r.right.Year);
+                r.left.Sum.Should().Be(r.right.Sum);
+            }
         }
 
         [Fact(Skip = "Commented out")]
@@ -78,8 +77,7 @@ namespace LiteDB.Tests.Query
             //** 
             //** var r1 = collection.Query()
             //**     .GroupBy(x => x.Date.Year)
-            //**     .Select(x => new { x.Date.Year, Count = Sql.Count(x) })
-            //**     .OrderBy(x => x.Year)
+            //**     .Select(x => new { x.Date.Year, Count = x })
             //**     .ToArray();
             //** 
             //** foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))

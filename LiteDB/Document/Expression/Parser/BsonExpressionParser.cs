@@ -172,7 +172,8 @@ namespace LiteDB
                     // test left/right scalar
                     var isLeftEnum = op.Key.StartsWith("ALL") || op.Key.StartsWith("ANY");
 
-                    if (isLeftEnum && left.IsScalar) throw new LiteException(0, $"Left expression `{left.Source}` must return multiples values");
+                    if (isLeftEnum && left.IsScalar) left = ConvertToEnumerable(left);
+                    //if (isLeftEnum && left.IsScalar) throw new LiteException(0, $"Left expression `{left.Source}` must return multiples values");
                     if (!isLeftEnum && !left.IsScalar) throw new LiteException(0, $"Left expression `{left.Source}` returns more than one result. Try use ANY or ALL before operant.");
                     if (!isLeftEnum && !right.IsScalar) throw new LiteException(0, $"Left expression `{right.Source}` must return a single value");
                     if (right.IsScalar == false) throw new LiteException(0, $"Right expression `{right.Source}` must return a single value");
@@ -1309,6 +1310,7 @@ namespace LiteDB
 
         /// <summary>
         /// Convert scalar expression into enumerable expression using ITEMS(...) method
+        /// Do not change output SOURCE (keeps same input string)
         /// </summary>
         private static BsonExpression ConvertToEnumerable(BsonExpression expr)
         {

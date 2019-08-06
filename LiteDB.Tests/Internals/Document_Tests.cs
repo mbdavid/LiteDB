@@ -4,32 +4,10 @@ using System.Collections.Generic;
 using FluentAssertions;
 using Xunit;
 
-namespace LiteDB.Tests.Document
+namespace LiteDB.Internals
 {
     public class Document_Test
     {
-        //** [Fact]
-        //** public void Document_Implicit_Convert()
-        //** {
-        //**     var obj = new Dictionary<string, object>()
-        //**     {
-        //**         { "int", 123 },
-        //**         { "arr", new object[] { 3.0, 2, 1, "zero", false } },
-        //**         { "doc", new Dictionary<string, object>()
-        //**             {
-        //**                 { "a", "a" },
-        //**                 { "b", new int[] { 0 } },
-        //**             }
-        //**         }
-        //**     };
-        //** 
-        //**     var doc = new BsonValue(obj);
-        //** 
-        //**     var json = JsonSerializer.Serialize(doc);
-        //** 
-        //**     Assert.Equal("{\"int\":123,\"arr\":[3.0,2,1,\"zero\",false],\"doc\":{\"a\":\"a\",\"b\":[0]}}", json);
-        //** }
-
         [Fact]
         public void Document_Copies_Properties_To_KeyValue_Array()
         {

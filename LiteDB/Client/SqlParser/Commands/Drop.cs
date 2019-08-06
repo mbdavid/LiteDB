@@ -14,6 +14,8 @@ namespace LiteDB
         /// </summary>
         private BsonDataReader ParseDrop()
         {
+            _tokenizer.ReadToken().Expect("DROP");
+
             var token = _tokenizer.ReadToken().Expect(TokenType.Word);
 
             if (token.Is("INDEX"))

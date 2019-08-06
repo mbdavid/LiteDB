@@ -11,6 +11,7 @@ namespace LiteDB.Engine
     {
         /// <summary>
         /// Upgrade old version of LiteDB into new LiteDB file structure. Returns true if database was completed converted
+        /// If database already in current version just return false
         /// </summary>
         public static bool Upgrade(string filename, string password = null)
         {
@@ -20,7 +21,8 @@ namespace LiteDB.Engine
             var settings = new EngineSettings
             {
                 Filename = filename,
-                Password = password
+                Password = password,
+                Checkpoint = 0
             };
 
             var backup = FileHelper.GetSufixFile(filename, "-backup", true);

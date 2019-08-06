@@ -50,11 +50,11 @@ namespace LiteDB.Engine
 
                 this.Commit();
             }
-            catch
+            catch(Exception ex)
             {
                 this.Rollback();
 
-                throw;
+                throw ex;
             }
         }
     }

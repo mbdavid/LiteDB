@@ -45,6 +45,7 @@ namespace LiteDB
 
             if (connectionString.Upgrade)
             {
+                // try upgrade if need
                 LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
             }
 
@@ -268,7 +269,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Analyze/Vaccum/Checkpoint/UserVersion
+        #region Analyze/Checkpoint/Shrink
 
         /// <summary>
         /// Do database checkpoint. Copy all commited transaction from log file into datafile. 
@@ -284,23 +285,6 @@ namespace LiteDB
         public int Analyze(params string[] collections)
         {
             return _engine.Value.Analyze(collections);
-        }
-
-        /// <summary>
-        /// Analyze all database to find-and-fix non linked empty pages
-        /// </summary>
-        public int Vaccum()
-        {
-            return _engine.Value.Vaccum();
-        }
-
-        /// <summary>
-        /// Get/Set database user version - use this version number to control database change model
-        /// </summary>
-        public int UserVersion
-        {
-            get => _engine.Value.UserVersion;
-            set => _engine.Value.UserVersion = value;
         }
 
         #endregion

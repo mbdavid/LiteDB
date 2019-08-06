@@ -138,12 +138,12 @@ namespace LiteDB.Engine
             if (disposing)
             {
                 // stop running all transactions
-                _monitor.Dispose();
+                _monitor?.Dispose();
 
-                // try checkpoint
-                _walIndex.Checkpoint(true);
+                // do a soft checkpoint (only if exclusive lock is possible)
+                _walIndex?.Checkpoint(true);
 
-                // close all disk connections
+                // close all disk streams (and delete log if empty)
                 _disk?.Dispose();
 
                 // delete sort temp file
