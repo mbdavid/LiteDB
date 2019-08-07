@@ -133,42 +133,6 @@ namespace LiteDB
 
         #endregion
 
-        #region Offset/Limit/ForUpdate
-
-        /// <summary>
-        /// Execute query locking collection in write mode. This is avoid any other thread change results after read document and before transaction ends
-        /// </summary>
-        public ILiteQueryable<T> ForUpdate()
-        {
-            _query.ForUpdate = true;
-            return this;
-        }
-
-        /// <summary>
-        /// Bypasses a specified number of documents in resultset and retun the remaining documents (same as Skip)
-        /// </summary>
-        public ILiteQueryable<T> Offset(int offset)
-        {
-            _query.Offset = offset;
-            return this;
-        }
-
-        /// <summary>
-        /// Bypasses a specified number of documents in resultset and retun the remaining documents (same as Offset)
-        /// </summary>
-        public ILiteQueryable<T> Skip(int offset) => this.Offset(offset);
-
-        /// <summary>
-        /// Return a specified number of contiguous documents from start of resultset
-        /// </summary>
-        public ILiteQueryable<T> Limit(int limit)
-        {
-            _query.Limit = limit;
-            return this;
-        }
-
-        #endregion
-
         #region GroupBy
 
         /// <summary>
@@ -221,6 +185,42 @@ namespace LiteDB
             _query.Select = _mapper.GetExpression(selector);
 
             return new LiteQueryable<K>(_engine, _mapper, _collection, _query);
+        }
+
+        #endregion
+
+        #region Offset/Limit/ForUpdate
+
+        /// <summary>
+        /// Execute query locking collection in write mode. This is avoid any other thread change results after read document and before transaction ends
+        /// </summary>
+        public ILiteQueryableResult<T> ForUpdate()
+        {
+            _query.ForUpdate = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Bypasses a specified number of documents in resultset and retun the remaining documents (same as Skip)
+        /// </summary>
+        public ILiteQueryableResult<T> Offset(int offset)
+        {
+            _query.Offset = offset;
+            return this;
+        }
+
+        /// <summary>
+        /// Bypasses a specified number of documents in resultset and retun the remaining documents (same as Offset)
+        /// </summary>
+        public ILiteQueryableResult<T> Skip(int offset) => this.Offset(offset);
+
+        /// <summary>
+        /// Return a specified number of contiguous documents from start of resultset
+        /// </summary>
+        public ILiteQueryableResult<T> Limit(int limit)
+        {
+            _query.Limit = limit;
+            return this;
         }
 
         #endregion

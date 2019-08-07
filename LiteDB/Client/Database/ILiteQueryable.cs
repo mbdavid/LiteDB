@@ -21,11 +21,6 @@ namespace LiteDB
         ILiteQueryable<T> OrderByDescending(BsonExpression keySelector);
         ILiteQueryable<T> OrderByDescending<K>(Expression<Func<T, K>> keySelector);
 
-        ILiteQueryable<T> Limit(int limit);
-        ILiteQueryable<T> Skip(int offset);
-        ILiteQueryable<T> Offset(int offset);
-        ILiteQueryable<T> ForUpdate();
-
         ILiteQueryable<T> GroupBy(BsonExpression keySelector);
         ILiteQueryable<T> Having(BsonExpression predicate);
 
@@ -35,6 +30,11 @@ namespace LiteDB
 
     public interface ILiteQueryableResult<T>
     {
+        ILiteQueryableResult<T> Limit(int limit);
+        ILiteQueryableResult<T> Skip(int offset);
+        ILiteQueryableResult<T> Offset(int offset);
+        ILiteQueryableResult<T> ForUpdate();
+
         BsonDocument GetPlan();
         IBsonDataReader ExecuteReader();
         IEnumerable<BsonDocument> ToDocuments();
