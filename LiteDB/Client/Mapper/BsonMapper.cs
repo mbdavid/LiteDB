@@ -379,18 +379,26 @@ namespace LiteDB
             {
                 // checks [BsonIgnore]
                 if (memberInfo.IsDefined(ignoreAttr, true)) continue;
+
+                Type fieldType;
+                Expression initExpression;
                 
-                if(!(memberInfo is PropertyInfo))
+                if(memberInfo is PropertyInfo propMember)
                 {
-                    continue;
+                    if (propMember.CanRead == false)
+                    {
+                        continue;
+                    }
+
+                    fieldType = propMember.PropertyType;
+                    initExpression = Expression.Property(castObjEntity, propMember.Name);
+                }
+                else
+                {
+                    fieldType = memberInfo.DeclaringType;
+                    initExpression = Expression.Field(castObjEntity, memberInfo.Name);
                 }
 
-                var member = (PropertyInfo)memberInfo;
-                if (member.CanRead == false)
-                {
-                    continue;
-                }
-                
                 var name = this.ResolveFieldName(memberInfo.Name);
 
                 // check if property has [BsonField]
@@ -408,24 +416,18 @@ namespace LiteDB
                     name = "_id";
                 }
                 
-                // TProperty variable;
-                var fieldExpr = Expression.Variable(member.PropertyType, name);
+                // TPropertyOrField variable;
+                var fieldExpr = Expression.Variable(fieldType, name);
                 bodyContent.Add(fieldExpr);
                 variables.Add(fieldExpr);
                 
-                // variable = castObjEntity.Property;
-                var fieldInitExpr = Expression.Assign(fieldExpr, Expression.Property(castObjEntity, memberInfo.Name));
+                // variable = castObjEntity.PropertyOrProperty;
+                var fieldInitExpr = Expression.Assign(fieldExpr, initExpression);
                 bodyContent.Add(fieldInitExpr);
 
-                var valueParamExpr = member.PropertyType != typeof(object)
-                    ? (Expression) Expression.Convert(fieldExpr, typeof(object))
-                    : fieldExpr;
-
-                // mapper.Serialize(type, (object)value, depth);
-                var callSerializeMethod = Expression.Call(paramMapper, serializeMethod, paramType, valueParamExpr, paramDepth);
-                
                 // bsonValue = mapper.Serialize(type, (object)value, depth);
-                var bsonValueExprAssign = Expression.Assign(bsonValueExpr, callSerializeMethod);
+                var bsonValueExprAssign = Expression.Assign(bsonValueExpr,
+                    Expression.Call(paramMapper, serializeMethod, paramType, fieldType != typeof(object) ? (Expression)Expression.Convert(fieldExpr, typeof(object)) : fieldExpr, paramDepth));
                 bodyContent.Add(bsonValueExprAssign);
                 
                 // resultDocument.Add(fieldName, bsonValue);
