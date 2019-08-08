@@ -74,9 +74,9 @@ namespace LiteDB.Tests.QueryTest
 
             var r1 = collection.Query()
                 .OrderBy(x => x.Date.Day)
+                .Select(x => new {d = x.Date.Day})
                 .Offset(5)
                 .Limit(10)
-                .Select(x => new {d = x.Date.Day})
                 .ToArray();
 
             r0.Should().Equal(r1);

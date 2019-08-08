@@ -45,11 +45,22 @@ namespace LiteDB.Tests.Database
                 // Or you can query using new Query() syntax
                 var results2 = customers.Query()
                     .Where(x => x.Phones.Any(p => p.StartsWith("8000")))
-                    .Limit(10)
+                    .OrderBy(x => x.Name)
                     .Select(x => new { x.Id, x.Name })
+                    .Limit(10)
                     .ToList();
 
+                // Or using SQL
+                var reader = db.Execute(
+                    @"SELECT _id, Name 
+                        FROM customers 
+                       WHERE Phones ANY LIKE '8000%'
+                       ORDER BY Name
+                       LIMIT 10");
+
                 results2.Count.Should().Be(1);
+                reader.ToList().Count.Should().Be(1);
+
             }
         }
 
