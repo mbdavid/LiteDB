@@ -7,6 +7,7 @@ namespace LiteDB.Engine
     {
         int Analyze(string[] collections);
         void Checkpoint();
+        long Shrink();
 
         bool BeginTrans();
         bool Commit();

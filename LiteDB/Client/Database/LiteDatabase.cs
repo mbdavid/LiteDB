@@ -287,6 +287,14 @@ namespace LiteDB
             return _engine.Value.Analyze(collections);
         }
 
+        /// <summary>
+        /// Rebuild all database to remove unused pages - reduce data file
+        /// </summary>
+        public long Shrink()
+        {
+            return _engine.Value.Shrink();
+        }
+
         #endregion
 
         public void Dispose()

@@ -13,6 +13,5 @@ namespace LiteDB.Engine
         public string Name { get; set; }
         public string Expression { get; set; }
         public bool Unique { get; set; }
-        public uint HeadPageID { get; set; }
     }
 }

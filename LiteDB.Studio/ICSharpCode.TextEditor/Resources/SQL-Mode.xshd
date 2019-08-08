@@ -65,6 +65,7 @@ http://minisqlquery.codeplex.com/license
         <Key word="TRANSACTION" />
         <Key word="ANALYZE" />
         <Key word="CHECKPOINT" />
+        <Key word="SHRINK" />
         <Key word="CREATE" />
         <Key word="INDEX" />
         <Key word="ON" />

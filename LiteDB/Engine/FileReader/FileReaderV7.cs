@@ -18,6 +18,7 @@ namespace LiteDB.Engine
 
         private readonly Stream _stream;
         private readonly AesEncryption _aes;
+        private readonly BsonDocument _header;
 
         private byte[] _buffer = new byte[V7_PAGE_SIZE];
 
@@ -28,24 +29,24 @@ namespace LiteDB.Engine
             _stream = stream;
 
             // only userVersion was avaiable in old file format versions
-            var header = this.ReadPage(0);
+            _header = this.ReadPage(0);
 
-            this.UserVersion = header["userVersion"].AsInt32;
+            this.UserVersion = _header["userVersion"].AsInt32;
 
-            if (password == null && header["salt"].AsBinary.IsFullZero() == false)
+            if (password == null && _header["salt"].AsBinary.IsFullZero() == false)
             {
                 throw new LiteException(0, "Current data file requires password");
             }
             else if (password != null)
             {
-                if (header["salt"].AsBinary.IsFullZero())
+                if (_header["salt"].AsBinary.IsFullZero())
                 {
                     throw new LiteException(0, "Current data file has no encryption - do not use password");
                 }
 
                 var hash = AesEncryption.HashSHA1(password);
 
-                if (hash.SequenceEqual(header["password"].AsBinary) == false)
+                if (hash.SequenceEqual(_header["password"].AsBinary) == false)
                 {
                     throw new LiteException(0, "Invalid password");
                 }
@@ -53,7 +54,7 @@ namespace LiteDB.Engine
 
             _aes = password == null ?
                 null :
-                new AesEncryption(password, header["salt"].AsBinary);
+                new AesEncryption(password, _header["salt"].AsBinary);
         }
 
         /// <summary>
@@ -61,43 +62,39 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<string> GetCollections()
         {
-            var header = this.ReadPage(0);
-            var names = header["collections"].AsArray.Select(x => x["name"].AsString).ToArray();
-
-            return names;
+            return _header["collections"].AsDocument.Keys;
         }
 
         /// <summary>
         /// Read all indexes from all collection pages
         /// </summary>
-        public IEnumerable<IndexInfo> GetIndexes()
+        public IEnumerable<IndexInfo> GetIndexes(string collection)
         {
-            var header = this.ReadPage(0);
+            var pageID = (uint)_header["collections"].AsDocument[collection].AsInt32;
+            var page = this.ReadPage(pageID);
 
-            foreach(var col in header["collections"].AsArray)
+            foreach(var index in page["indexes"].AsArray)
             {
-                var page = this.ReadPage((uint)col["pageID"].AsInt32);
-
-                foreach(var index in page["indexes"].AsArray)
+                yield return new IndexInfo
                 {
-                    yield return new IndexInfo
-                    {
-                        Collection = col["name"].AsString,
-                        Name = index["name"].AsString,
-                        Expression = index["expression"].AsString,
-                        Unique = index["unique"].AsBoolean,
-                        HeadPageID = (uint)index["headPageID"].AsInt32
-                    };
-                }
+                    Collection = collection,
+                    Name = index["name"].AsString,
+                    Expression = index["expression"].AsString,
+                    Unique = index["unique"].AsBoolean
+                };
             }
         }
 
         /// <summary>
         /// Get all document using an indexInfo as start point (_id index).
         /// </summary>
-        public IEnumerable<BsonDocument> GetDocuments(IndexInfo index)
+        public IEnumerable<BsonDocument> GetDocuments(string collection)
         {
-            var indexPages = this.VisitIndexPages(index.HeadPageID);
+            var colPageID = (uint)_header["collections"].AsDocument[collection].AsInt32;
+            var col = this.ReadPage(colPageID);
+            var headPageID = (uint)col["indexes"][0]["headPageID"].AsInt32;
+
+            var indexPages = this.VisitIndexPages(headPageID);
 
             foreach(var indexPageID in indexPages)
             {
@@ -130,7 +127,7 @@ namespace LiteDB.Engine
                         var doc = BsonSerializer.Deserialize(data);
 
                         // change _id PK in _chunks collection
-                        if (index.Collection == "_chunks")
+                        if (collection == "_chunks")
                         {
                             var parts = doc["_id"].AsString.Split('\\');
 
@@ -199,17 +196,16 @@ namespace LiteDB.Engine
                 page["userVersion"] = (int)reader.ReadUInt16();
                 page["password"] = reader.ReadBytes(20);
                 page["salt"] = reader.ReadBytes(16);
-                page["collections"] = new BsonArray();
+                page["collections"] = new BsonDocument();
 
                 var cols = reader.ReadByte();
 
                 for (var i = 0; i < cols; i++)
                 {
-                    page["collections"].AsArray.Add(new BsonDocument
-                    {
-                        ["name"] = reader.ReadString(),
-                        ["pageID"] = (int)reader.ReadUInt32()
-                    });
+                    var name = reader.ReadString();
+                    var colPageID = reader.ReadUInt32();
+
+                    page["collections"][name] = (int)colPageID;
                 }
             }
 

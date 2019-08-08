@@ -78,6 +78,11 @@ namespace LiteDB.Engine
         public MemoryCache Cache => _cache;
 
         /// <summary>
+        /// Get Stream pool used inside disk service
+        /// </summary>
+        public StreamPool GetPool(FileOrigin origin) => origin == FileOrigin.Data ? _dataPool : _logPool;
+
+        /// <summary>
         /// Create a new empty database (use synced mode)
         /// </summary>
         private void Initialize(Stream stream, long initialSize)
@@ -262,14 +267,14 @@ namespace LiteDB.Engine
 
             if (origin == FileOrigin.Log)
             {
+                ENSURE(_queue.Value.Length == 0, "queue must be empty before set new length");
+
                 Interlocked.Exchange(ref _logLength, length - PAGE_SIZE);
             }
             else
             {
                 Interlocked.Exchange(ref _dataLength, length - PAGE_SIZE);
             }
-
-            ENSURE(_queue.Value.Length == 0, "queue must be empty before set new length");
 
             stream.SetLength(length);
         }

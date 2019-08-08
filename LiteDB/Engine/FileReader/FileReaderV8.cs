@@ -9,15 +9,22 @@ using static LiteDB.Constants;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Internal class to read all datafile documents - use current engine version
+    /// Internal class to read all datafile documents - use only Stream - no cache system (database are modified during this read - shrink)
     /// </summary>
     internal class FileReaderV8 : IFileReader
     {
-        private LiteEngine _engine;
+        private readonly Dictionary<string, uint> _collections;
+        private readonly Stream _stream;
+        private readonly byte[] _buffer;
 
-        public FileReaderV8(LiteEngine engine)
+        public FileReaderV8(HeaderPage header, DiskService disk)
         {
-            _engine = engine;
+            _collections = header.GetCollections().ToDictionary(x => x.Key, x => x.Value);
+
+            // using writer stream from pool (no need to return)
+            _stream = disk.GetPool(FileOrigin.Data).Writer;
+
+            _buffer = BufferPool.Rent(PAGE_SIZE);
         }
 
         /// <summary>
@@ -25,47 +32,95 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<string> GetCollections()
         {
-            return _engine.GetCollectionNames();
+            return _collections.Keys;
         }
 
         /// <summary>
-        /// Read all indexes from all collection pages
+        /// Read all indexes from all collection pages (except _id index)
         /// </summary>
-        public IEnumerable<IndexInfo> GetIndexes()
+        public IEnumerable<IndexInfo> GetIndexes(string collection)
         {
-            using(var reader = _engine.Query("$indexes", new Query()))
+            var page = this.ReadPage<CollectionPage>(_collections[collection]);
+
+            foreach(var index in page.GetCollectionIndexes().Where(x => x.Name != "_id"))
             {
-                while(reader.Read())
+                yield return new IndexInfo
                 {
-                    yield return new IndexInfo
+                    Collection = collection,
+                    Name = index.Name,
+                    Expression = index.Expression,
+                    Unique = index.Unique
+                };
+            }
+        }
+
+        /// <summary>
+        /// Read all documents from current collection with NO index use - read direct from free lists
+        /// There is no document order
+        /// </summary>
+        public IEnumerable<BsonDocument> GetDocuments(string collection)
+        {
+            var colPage = this.ReadPage<CollectionPage>(_collections[collection]);
+
+            for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
+            {
+                var next = colPage.FreeDataPageID[slot];
+
+                while (next != uint.MaxValue)
+                {
+                    var page = this.ReadPage<DataPage>(next);
+
+                    foreach (var block in page.GetBlocks(true))
                     {
-                        Collection = reader.Current["collection"].AsString,
-                        Name = reader.Current["name"].AsString,
-                        Expression = reader.Current["expression"].AsString,
-                        Unique = reader.Current["unique"].AsBoolean,
-                        HeadPageID = 0 // not used
-                    };
+                        using (var r = new BufferReader(this.ReadBlocks(block)))
+                        {
+                            var doc = r.ReadDocument(null);
+
+                            yield return doc;
+                        }
+                    }
+
+                    next = page.NextPageID;
                 }
             }
         }
 
         /// <summary>
-        /// Read all document based on collection name
+        /// Read page from stream - do not use cache system
         /// </summary>
-        public IEnumerable<BsonDocument> GetDocuments(IndexInfo index)
+        private T ReadPage<T>(uint pageID)
+            where T : BasePage
         {
-            using (var reader = _engine.Query(index.Collection, new Query()))
+            var position = BasePage.GetPagePosition(pageID);
+
+            _stream.Position = position;
+            _stream.Read(_buffer, 0, PAGE_SIZE);
+
+            var buffer = new PageBuffer(_buffer, 0, 0);
+
+            return BasePage.ReadPage<T>(buffer);
+        }
+
+        /// <summary>
+        /// Get all data blocks from first data block
+        /// </summary>
+        public IEnumerable<BufferSlice> ReadBlocks(PageAddress address)
+        {
+            while (address != PageAddress.Empty)
             {
-                while(reader.Read())
-                {
-                    yield return reader.Current.AsDocument;
-                }
+                var dataPage = this.ReadPage<DataPage>(address.PageID);
+
+                var block = dataPage.GetBlock(address.Index);
+
+                yield return block.Buffer;
+
+                address = block.NextBlock;
             }
         }
 
         public void Dispose()
         {
-            // do not dispose current engine
+            BufferPool.Return(_buffer);
         }
     }
 }

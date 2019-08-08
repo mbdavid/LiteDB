@@ -96,7 +96,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void EnterReserved(string collectionName)
         {
-            ENSURE(_transaction.IsReadLockHeld, "Use EnterTransaction() before EnterReserved(name)");
+            ENSURE(_transaction.IsReadLockHeld || _transaction.IsWriteLockHeld, "Use EnterTransaction() before EnterReserved(name)");
 
             // checks if engine was open in readonly mode
             if (_readonly) throw new LiteException(0, "This operation are not support because engine was open in reaodnly mode");

@@ -13,7 +13,7 @@ using static LiteDB.Constants;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Implement disk write queue and async writer thread
+    /// Implement disk write queue and async writer thread - used only for write on LOG file
     /// [ThreadSafe]
     /// </summary>
     internal class DiskWriterQueue : IDisposable

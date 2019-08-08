@@ -18,9 +18,6 @@ namespace LiteDB.Engine
         /// </summary>
         internal void Rebuild(IFileReader reader)
         {
-            // get all indexes
-            var indexes = reader.GetIndexes().ToArray();
-
             // begin transaction and get TransactionID
             var transaction = _monitor.GetTransaction(true, out var isNew);
 
@@ -31,7 +28,7 @@ namespace LiteDB.Engine
                 foreach (var collection in reader.GetCollections())
                 {
                     // first create all user indexes (exclude _id index)
-                    foreach (var index in indexes.Where(x => x.Collection == collection && x.Name != "_id"))
+                    foreach (var index in reader.GetIndexes(collection))
                     {
                         this.EnsureIndex(collection,
                             index.Name,
@@ -40,7 +37,7 @@ namespace LiteDB.Engine
                     }
 
                     // get all documents from current collection
-                    var docs = reader.GetDocuments(indexes.Single(x => x.Collection == collection && x.Name == "_id"));
+                    var docs = reader.GetDocuments(collection);
 
                     // and insert into 
                     this.Insert(collection, docs, BsonAutoId.ObjectId);

@@ -187,34 +187,5 @@ namespace LiteDB.Engine
                 blockAddress = block.NextBlock;
             }
         }
-
-        /// <summary>
-        /// Read all documents from current collection with NO index use - read direct from free lists
-        /// There is no document order
-        /// </summary>
-        public IEnumerable<BsonDocument> ReadAll(HashSet<string> fields = null)
-        {
-            for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
-            {
-                var next = _snapshot.CollectionPage.FreeDataPageID[slot];
-
-                while (next != uint.MaxValue)
-                {
-                    var page = _snapshot.GetPage<DataPage>(next);
-
-                    foreach (var block in page.GetBlocks(true))
-                    {
-                        using (var r = new BufferReader(this.Read(block)))
-                        {
-                            var doc = r.ReadDocument(fields);
-
-                            yield return doc;
-                        }
-                    }
-
-                    next = page.NextPageID;
-                }
-            }
-        }
     }
 }
