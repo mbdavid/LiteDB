@@ -33,6 +33,11 @@ namespace LiteDB
         private Dictionary<Type, EntityMapper> _entities = new Dictionary<Type, EntityMapper>();
 
         /// <summary>
+        /// Mapping cache between Class -> BsonDocument
+        /// </summary>
+        private SortedList<Type, Func<BsonMapper, Type, object, int, BsonDocument>> _docFactory = new SortedList<Type, Func<BsonMapper, Type, object, int, BsonDocument>>();
+        
+        /// <summary>
         /// Map serializer/deserialize for custom types
         /// </summary>
         private Dictionary<Type, Func<object, BsonValue>> _customSerializer = new Dictionary<Type, Func<object, BsonValue>>();
@@ -218,6 +223,27 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Get factory method, for create <see cref="BsonDocument"/> from <see cref="type"/> - Cache results
+        /// </summary>
+        internal Func<BsonMapper, Type, object, int, BsonDocument> GetBsonDocumentFactory(Type type)
+        {
+            if (_docFactory.TryGetValue(type, out Func<BsonMapper, Type, object, int, BsonDocument> factory))
+            {
+                return factory;
+            }
+            
+            lock (_docFactory)
+            {
+                if (!_docFactory.TryGetValue(type, out factory))
+                {
+                    return _docFactory[type] = BuildBsonDocumentFactory(type);
+                }
+            }
+
+            return factory;
+        }
+        
+        /// <summary>
         /// Use this method to override how your class can be, by default, mapped from entity to Bson document.
         /// Returns an EntityMapper from each requested Type
         /// </summary>
@@ -309,6 +335,114 @@ namespace LiteDB
             return mapper;
         }
 
+        protected virtual Func<BsonMapper, Type, object, int, BsonDocument> BuildBsonDocumentFactory(Type type)
+        {
+            var ignoreAttr = typeof(BsonIgnoreAttribute);
+            var fieldAttr = typeof(BsonFieldAttribute);
+            
+            var bodyContent = new List<Expression>();
+            var variables = new List<ParameterExpression>();
+            
+            var paramMapper = Expression.Parameter(typeof(BsonMapper), "mapper");
+            var paramType = Expression.Parameter(typeof(Type), "type");
+            var paramDepth = Expression.Parameter(typeof(int), "depth");
+            var paramEntity = Expression.Parameter(typeof(object), "paramObjectEntity");
+            
+            var castObjEntity = Expression.Parameter(type, "castObjEntity");
+            
+            //T castObjEntity;
+            bodyContent.Add(castObjEntity);
+            variables.Add(castObjEntity);
+            
+            // castObjEntity = (T)objEntity;
+            bodyContent.Add(Expression.Assign(castObjEntity, Expression.Convert(paramEntity, type)));
+
+            var resultDoc = Expression.Variable(typeof(BsonDocument), "resultDocument");
+            // BsonDocument resultDocument;
+            bodyContent.Add(resultDoc);
+            variables.Add(resultDoc);
+            
+            // resultDocument = new BsonDocument();
+            bodyContent.Add(Expression.Assign(resultDoc, Expression.New(typeof(BsonDocument))));
+            
+            var members = this.GetTypeMembers(type);
+            var id = this.GetIdMember(members);
+            var addDocumentMethod = typeof(BsonDocument).GetMethod("Add", new[] {typeof(string), typeof(BsonValue)});
+            var serializeMethod = typeof(BsonMapper).GetMethod("Serialize", BindingFlags.Instance | BindingFlags.NonPublic);
+            
+            // BsonValue bsonValue;
+            var bsonValueExpr = Expression.Variable(typeof(BsonValue), "bsonValue");
+            bodyContent.Add(bsonValueExpr);
+            variables.Add(bsonValueExpr);
+            
+            foreach (var memberInfo in members)
+            {
+                // checks [BsonIgnore]
+                if (memberInfo.IsDefined(ignoreAttr, true)) continue;
+                
+                if(!(memberInfo is PropertyInfo))
+                {
+                    continue;
+                }
+
+                var member = (PropertyInfo)memberInfo;
+                if (member.CanRead == false)
+                {
+                    continue;
+                }
+                
+                var name = this.ResolveFieldName(memberInfo.Name);
+
+                // check if property has [BsonField]
+                var field = (BsonFieldAttribute)memberInfo.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
+
+                // check if property has [BsonField] with a custom field name
+                if (field != null && field.Name != null)
+                {
+                    name = field.Name;
+                }
+
+                // checks if memberInfo is id field
+                if (memberInfo == id)
+                {
+                    name = "_id";
+                }
+                
+                // TProperty variable;
+                var fieldExpr = Expression.Variable(member.PropertyType, name);
+                bodyContent.Add(fieldExpr);
+                variables.Add(fieldExpr);
+                
+                // variable = castObjEntity.Property;
+                var fieldInitExpr = Expression.Assign(fieldExpr, Expression.Property(castObjEntity, memberInfo.Name));
+                bodyContent.Add(fieldInitExpr);
+
+                var valueParamExpr = member.PropertyType != typeof(object)
+                    ? (Expression) Expression.Convert(fieldExpr, typeof(object))
+                    : fieldExpr;
+
+                // mapper.Serialize(type, (object)value, depth);
+                var callSerializeMethod = Expression.Call(paramMapper, serializeMethod, paramType, valueParamExpr, paramDepth);
+                
+                // bsonValue = mapper.Serialize(type, (object)value, depth);
+                var bsonValueExprAssign = Expression.Assign(bsonValueExpr, callSerializeMethod);
+                bodyContent.Add(bsonValueExprAssign);
+                
+                // resultDocument.Add(fieldName, bsonValue);
+                var callExpression = Expression.Call(resultDoc, addDocumentMethod, Expression.Constant(name), bsonValueExpr);
+                bodyContent.Add(callExpression);
+            }
+            
+            // return resultDocument;
+            bodyContent.Add(resultDoc);
+            
+            //BsonDocument Convert(BsonMapper mapper, Type type, object paramObjectEntity, int depth)
+            return Expression.Lambda<Func<BsonMapper, Type, object, int, BsonDocument>>(
+                Expression.Block(variables, bodyContent),
+                new[] {paramMapper, paramType, paramEntity, paramDepth}
+                ).Compile();
+        }
+        
         /// <summary>
         /// Gets MemberInfo that refers to Id from a document object.
         /// </summary>

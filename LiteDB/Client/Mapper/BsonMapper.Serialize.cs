@@ -162,31 +162,14 @@ namespace LiteDB
         private BsonDocument SerializeObject(Type type, object obj, int depth)
         {
             var t = obj.GetType();
-            var doc = new BsonDocument();
-            var entity = this.GetEntityMapper(t);
-
+            var entity = this.GetBsonDocumentFactory(t);
+            
+            var doc = entity(this, type, obj, depth);
+            
             // adding _type only where property Type is not same as object instance type
             if (type != t)
             {
-                doc["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
-            }
-
-            foreach (var member in entity.Members.Where(x => x.Getter != null))
-            {
-                // get member value
-                var value = member.Getter(obj);
-
-                if (value == null && this.SerializeNullValues == false && member.FieldName != "_id") continue;
-
-                // if member has a custom serialization, use it
-                if (member.Serialize != null)
-                {
-                    doc[member.FieldName] = member.Serialize(value, this);
-                }
-                else
-                {
-                    doc[member.FieldName] = this.Serialize(member.DataType, value, depth);
-                }
+                doc["_type"] = new BsonValue(type.FullName + ", " + type.GetTypeInfo().Assembly.GetName().Name);
             }
 
             return doc;
