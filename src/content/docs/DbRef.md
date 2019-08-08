@@ -2,7 +2,7 @@
 title: 'DbRef'
 date: 2019-02-11T19:30:08+10:00
 draft: false
-weight: 1
+weight: 2
 ---
 
 LiteDB is a document database, so there is no JOIN between collections. You can use embedded documents (sub-documents) or create a reference between collections. To create this reference you can use `[BsonRef]` attribute or use `DbRef` method from fluent API mapper.

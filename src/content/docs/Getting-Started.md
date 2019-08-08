@@ -50,11 +50,16 @@ using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
     // Index document using document Name property
     col.EnsureIndex(x => x.Name);
 	
-    // Use LINQ to query documents
-    var results = col.Find(x => x.Name.StartsWith("Jo"));
+    // Use LINQ to query documents (filter, sort, transform)
+    var results = col.Query()
+        .Where(x => x.Name.StartsWith("Jo"))
+        .OrderBy(x => x.Name)
+        .Select(x => new { x.Name, NameUpper = x.Name.ToUpper() })
+        .Limit(10)
+        .ToList();
 
     // Let's create an index in phone numbers (using expression). It's a multikey index
-    col.EnsureIndex(x => x.Phones, "$.Phones[*]"); 
+    col.EnsureIndex(x => x.Phones); 
 
     // and now we can query phones
     var r = col.FindOne(x => x.Phones.Contains("8888-5555"));
@@ -66,9 +71,12 @@ using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
 Need to store files? No problem: use FileStorage.
 
 ```C#
+// Get file storage with Int Id
+var storage = db.GetStorage<int>();
+
 // Upload a file from file system to database
-db.FileStorage.Upload("my-photo-id", @"C:\Temp\picture-01.jpg");
+storage.Upload(123, @"C:\Temp\picture-01.jpg");
 
 // And download later
-db.FileStorage.Download("my-photo-id", @"C:\Temp\copy-of-picture-01.jpg");
+storage.Download(123, @"C:\Temp\copy-of-picture-01.jpg");
 ```

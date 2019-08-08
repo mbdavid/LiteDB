@@ -2,7 +2,7 @@
 title: 'Expressions'
 date: 2019-02-11T19:30:08+10:00
 draft: false
-weight: 1
+weight: 2
 ---
 
 Expressions are path or formulas to access and modify your document data. Based on JSON path article (http://goessner.net/articles/JsonPath/), LiteDB support a near syntax to navigate in a single document. Path always returns an `IEnumerable<BsonValue>` in any case.

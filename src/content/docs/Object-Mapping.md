@@ -2,7 +2,7 @@
 title: 'Object Mapping'
 date: 2019-02-11T19:30:08+10:00
 draft: false
-weight: 1
+weight: 2
 ---
 
 LiteDB supports POCO classes to strongly type documents. When you get a `LiteCollection` instance from `LiteDatabase.GetCollection<T>`, `<T>` will be your document type. If `<T>` is not a `BsonDocument`, LiteDB internally maps your class to `BsonDocument`. To do this, LiteDB uses the `BsonMapper` class:
