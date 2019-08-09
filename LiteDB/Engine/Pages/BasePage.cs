@@ -35,8 +35,6 @@ namespace LiteDB.Engine
         public const int P_NEXT_FREE_POSITION = 27; // 27-28 [ushort]
         public const int P_HIGHEST_INDEX = 29; // 29-29 [byte]
 
-        // public const int P_CRC = 31; // 31-31 [byte]
-
         #endregion
 
         /// <summary>
