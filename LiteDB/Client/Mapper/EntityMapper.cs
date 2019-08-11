@@ -29,6 +29,11 @@ namespace LiteDB
         public Type ForType { get; set; }
 
         /// <summary>
+        /// Set a custorm ctor function to create new entity instance
+        /// </summary>
+        public CreateObject CreateInstance { get; set; }
+
+        /// <summary>
         /// Resolve expression to get member mapped
         /// </summary>
         public MemberMapper GetMember(Expression expr)

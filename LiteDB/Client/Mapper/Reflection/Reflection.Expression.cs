@@ -15,15 +15,18 @@ namespace LiteDB
     {
         public static CreateObject CreateClass(Type type)
         {
-            return Expression.Lambda<CreateObject>(Expression.New(type)).Compile();
+            var pDoc = Expression.Parameter(typeof(BsonDocument), "_doc");
+
+            return Expression.Lambda<CreateObject>(Expression.New(type), pDoc).Compile();
         }
 
         public static CreateObject CreateStruct(Type type)
         {
+            var pDoc = Expression.Parameter(typeof(BsonDocument), "_doc");
             var newType = Expression.New(type);
             var convert = Expression.Convert(newType, typeof(object));
 
-            return Expression.Lambda<CreateObject>(convert).Compile();
+            return Expression.Lambda<CreateObject>(convert, pDoc).Compile();
         }
 
         public static GenericGetter CreateGenericGetter(Type type, MemberInfo memberInfo)

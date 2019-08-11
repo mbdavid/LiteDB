@@ -103,7 +103,7 @@ namespace LiteDB
             this.ResolveCollectionName = (t) => Reflection.IsList(t) ? Reflection.GetListItemType(t).Name : t.Name;
             this.IncludeFields = false;
 
-            _typeInstantiator = customTypeInstantiator ?? Reflection.CreateInstance;
+            _typeInstantiator = customTypeInstantiator ?? ((Type t) => null);
 
             #region Register CustomTypes
 
@@ -209,7 +209,7 @@ namespace LiteDB
                 {
                     if (!_entities.TryGetValue(type, out mapper))
                     {
-                        return _entities[type] = BuildEntityMapper(type);
+                        return _entities[type] = this.BuildEntityMapper(type);
                     }
                 }
             }
@@ -306,6 +306,9 @@ namespace LiteDB
                 }
             }
 
+            // call createInstance after fill all fields
+            mapper.CreateInstance = this.GetTypeCtor(mapper);
+
             return mapper;
         }
 
@@ -341,6 +344,53 @@ namespace LiteDB
             }
 
             return members;
+        }
+
+        /// <summary>
+        /// Get best construtor to use to initialize this entity.
+        /// - Look if contains [BsonCtor] attribute
+        /// - Look for parameterless ctor
+        /// - Look for first contructor with parameter and use BsonDocument to send RawValue
+        /// </summary>
+        protected virtual CreateObject GetTypeCtor(EntityMapper mapper)
+        {
+            var ctors = mapper.ForType.GetConstructors();
+
+            var ctor = 
+                ctors.FirstOrDefault(x => x.GetCustomAttribute<BsonCtorAttribute>() != null && x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType))) ??
+                ctors.FirstOrDefault(x => x.GetParameters().Length == 0) ??
+                ctors.FirstOrDefault(x => x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType)));
+
+            if (ctor == null) throw new NotSupportedException($"Type {mapper.ForType} contains no valid constructor. Try use a public parameterless constructor or use all parameters with BsonValue convertable type: {string.Join(", ", Reflection.ConvertType.Keys.Select(x => x.Name))}");
+
+            var pars = new List<Expression>();
+            var pDoc = Expression.Parameter(typeof(BsonDocument), "_doc");
+
+            // otherwise, need access ctor with parameter
+            foreach (var p in ctor.GetParameters())
+            {
+                // try first get converted named (useful for Id => _id)
+                var name = mapper.Members.FirstOrDefault(x => x.MemberName.Equals(p.Name, StringComparison.OrdinalIgnoreCase))?.FieldName ??
+                    p.Name;
+
+                var expr = Expression.MakeIndex(pDoc,
+                    Reflection.DocumentItemProperty,
+                    new[] { Expression.Constant(name) });
+
+                var prop = Expression.Property(expr, Reflection.ConvertType[p.ParameterType]);
+
+                pars.Add(prop);
+            }
+
+            // get `new MyClass([params])` expression
+            var newExpr = Expression.New(ctor, pars.ToArray());
+
+            // get lambda expression
+            var fn = mapper.ForType.IsClass ? 
+                Expression.Lambda<CreateObject>(newExpr, pDoc).Compile() : // Class
+                Expression.Lambda<CreateObject>(Expression.Convert(newExpr, typeof(object)), pDoc).Compile(); // Struct
+
+            return fn;
         }
 
         #endregion

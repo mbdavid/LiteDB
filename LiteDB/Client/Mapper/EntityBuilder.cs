@@ -58,6 +58,16 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Define which property is your document id (primary key). Define if this property supports auto-id
+        /// </summary>
+        public EntityBuilder<T> Ctor(Func<BsonDocument, T> createInstance)
+        {
+            _entity.CreateInstance = v => createInstance(v);
+
+            return this;
+        }
+
+        /// <summary>
         /// Define a subdocument (or a list of) as a reference
         /// </summary>
         public EntityBuilder<T> DbRef<K>(Expression<Func<T, K>> property, string collection = null)

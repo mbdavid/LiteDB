@@ -175,7 +175,9 @@ namespace LiteDB
                     type = typeof(Dictionary<string, object>);
                 }
 
-                var o = _typeInstantiator(type);
+                var entity = this.GetEntityMapper(type);
+
+                var o = _typeInstantiator(type) ?? entity.CreateInstance(doc);
 
                 if (o is IDictionary && type.GetTypeInfo().IsGenericType)
                 {
@@ -186,7 +188,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    this.DeserializeObject(type, o, doc);
+                    this.DeserializeObject(entity, o, doc);
                 }
 
                 return o;
@@ -247,10 +249,8 @@ namespace LiteDB
             }
         }
 
-        private void DeserializeObject(Type type, object obj, BsonDocument value)
+        private void DeserializeObject(EntityMapper entity, object obj, BsonDocument value)
         {
-            var entity = this.GetEntityMapper(type);
-
             foreach (var member in entity.Members.Where(x => x.Setter != null))
             {
                 if (value.TryGetValue(member.FieldName, out var val))

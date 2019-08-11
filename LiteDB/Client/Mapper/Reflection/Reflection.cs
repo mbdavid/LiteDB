@@ -11,7 +11,7 @@ namespace LiteDB
 {
     #region Delegates
 
-    internal delegate object CreateObject();
+    public delegate object CreateObject(BsonDocument value);
 
     public delegate void GenericSetter(object target, object value);
 
@@ -24,9 +24,9 @@ namespace LiteDB
     /// </summary>
     internal partial class Reflection
     {
-        private static Dictionary<Type, CreateObject> _cacheCtor = new Dictionary<Type, CreateObject>();
-
         #region CreateInstance
+
+        private static Dictionary<Type, CreateObject> _cacheCtor = new Dictionary<Type, CreateObject>();
 
         /// <summary>
         /// Create a new instance from a Type
@@ -37,7 +37,7 @@ namespace LiteDB
             {
                 if (_cacheCtor.TryGetValue(type, out CreateObject c))
                 {
-                    return c();
+                    return c(null);
                 }
             }
             catch (Exception ex)
@@ -51,20 +51,20 @@ namespace LiteDB
                 {
                     if (_cacheCtor.TryGetValue(type, out CreateObject c))
                     {
-                        return c();
+                        return c(null);
                     }
 
-                    if (type.GetTypeInfo().IsClass)
+                    if (type.IsClass)
                     {
                         _cacheCtor.Add(type, c = CreateClass(type));
                     }
-                    else if (type.GetTypeInfo().IsInterface) // some know interfaces
+                    else if (type.IsInterface) // some know interfaces
                     {
-                        if(type.GetTypeInfo().IsGenericType)
+                        if (type.IsGenericType)
                         {
                             var typeDef = type.GetGenericTypeDefinition();
 
-                            if (typeDef == typeof(IList<>) || 
+                            if (typeDef == typeof(IList<>) ||
                                 typeDef == typeof(ICollection<>) ||
                                 typeDef == typeof(IEnumerable<>))
                             {
@@ -72,8 +72,8 @@ namespace LiteDB
                             }
                             else if (typeDef == typeof(IDictionary<,>))
                             {
-                                var k = type.GetTypeInfo().GetGenericArguments()[0];
-                                var v = type.GetTypeInfo().GetGenericArguments()[1];
+                                var k = type.GetGenericArguments()[0];
+                                var v = type.GetGenericArguments()[1];
 
                                 return CreateInstance(GetGenericDictionaryOfType(k, v));
                             }
@@ -86,7 +86,7 @@ namespace LiteDB
                         _cacheCtor.Add(type, c = CreateStruct(type));
                     }
 
-                    return c();
+                    return c(null);
                 }
                 catch (Exception ex)
                 {
@@ -99,9 +99,34 @@ namespace LiteDB
 
         #region Utils
 
+        /// <summary>
+        /// Get a list from all acepted data type to property converter BsonValue
+        /// </summary>
+        public static readonly Dictionary<Type, PropertyInfo> ConvertType = new Dictionary<Type, PropertyInfo>()
+        {
+            [typeof(DateTime)] = typeof(BsonValue).GetProperty("AsDateTime"),
+            [typeof(decimal)] = typeof(BsonValue).GetProperty("AsDecimal"),
+            [typeof(double)] = typeof(BsonValue).GetProperty("AsDouble"),
+            [typeof(long)] = typeof(BsonValue).GetProperty("AsInt64"),
+            [typeof(int)] = typeof(BsonValue).GetProperty("AsInt32"),
+            [typeof(bool)] = typeof(BsonValue).GetProperty("AsBoolean"),
+            [typeof(byte[])] = typeof(BsonValue).GetProperty("AsBinary"),
+            [typeof(BsonDocument)] = typeof(BsonValue).GetProperty("AsDocument"),
+            [typeof(BsonArray)] = typeof(BsonValue).GetProperty("AsArray"),
+            [typeof(ObjectId)] = typeof(BsonValue).GetProperty("AsObjectId"),
+            [typeof(string)] = typeof(BsonValue).GetProperty("AsString"),
+            [typeof(Guid)] = typeof(BsonValue).GetProperty("AsGuid")
+        };
+
+        // getting `bsonDocument.Item[string]` property access
+        public static readonly PropertyInfo DocumentItemProperty =
+            typeof(BsonDocument).GetProperties()
+            .Where(x => x.Name == "Item" && x.GetGetMethod().GetParameters().First().ParameterType == typeof(String))
+            .First();
+
         public static bool IsNullable(Type type)
         {
-            if (!type.GetTypeInfo().IsGenericType) return false;
+            if (!type.IsGenericType) return false;
             var g = type.GetGenericTypeDefinition();
             return (g.Equals(typeof(Nullable<>)));
         }
@@ -111,12 +136,9 @@ namespace LiteDB
         /// </summary>
         public static Type UnderlyingTypeOf(Type type)
         {
-            // works only for generics (if type is not generic, returns same type)
-            var t = type.GetTypeInfo();
+            if (!type.IsGenericType) return type;
 
-            if (!t.IsGenericType) return type;
-
-            return t.GetGenericArguments()[0];
+            return type.GetGenericArguments()[0];
         }
 
         public static Type GetGenericListOfType(Type type)
@@ -140,15 +162,15 @@ namespace LiteDB
 
             foreach (var i in listType.GetInterfaces())
             {
-                if (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-                    return i.GetTypeInfo().GetGenericArguments()[0];
+                    return i.GetGenericArguments()[0];
                 }
                 // if interface is IEnumerable (non-generic), let's get from listType and not from interface
                 // from #395
-                else if(listType.GetTypeInfo().IsGenericType && i == typeof(IEnumerable))
+                else if (listType.IsGenericType && i == typeof(IEnumerable))
                 {
-                    return listType.GetTypeInfo().GetGenericArguments()[0];
+                    return listType.GetGenericArguments()[0];
                 }
             }
 
@@ -165,7 +187,7 @@ namespace LiteDB
 
             foreach (var @interface in type.GetInterfaces())
             {
-                if (@interface.GetTypeInfo().IsGenericType)
+                if (@interface.IsGenericType)
                 {
                     if (@interface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                     {
@@ -208,21 +230,21 @@ namespace LiteDB
 
         #region MethodName
 
-        private static Dictionary<MethodInfo, string> _cache = new Dictionary<MethodInfo, string>();
+        private static Dictionary<MethodInfo, string> _cacheName = new Dictionary<MethodInfo, string>();
 
         /// <summary>
         /// Get a friendly method name with parameter types
         /// </summary>
         public static string MethodName(MethodInfo method, int skipParameters = 0)
         {
-            if (_cache.TryGetValue(method, out var value))
+            if (_cacheName.TryGetValue(method, out var value))
             {
                 return value;
             }
 
             value = MethodNameInternal(method, skipParameters);
 
-            _cache.Add(method, value);
+            _cacheName.Add(method, value);
 
             return value;
         }
