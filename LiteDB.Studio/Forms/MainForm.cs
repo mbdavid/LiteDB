@@ -153,8 +153,10 @@ namespace LiteDB.Studio
                 lblCursor.Text = "";
                 tlbMain.Enabled = true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MessageBox.Show(ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                Application.Exit();
             }
         }
 

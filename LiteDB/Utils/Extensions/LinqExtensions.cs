@@ -6,18 +6,6 @@ namespace LiteDB
 {
     internal static class LinqExtensions
     {
-        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> source, Action<int, T> action)
-        {
-            var index = 0;
-
-            foreach(var item in source)
-            {
-                action(index++, item);
-
-                yield return item;
-            }
-        }
-
         public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int batchSize)
         {
             using (var enumerator = source.GetEnumerator())

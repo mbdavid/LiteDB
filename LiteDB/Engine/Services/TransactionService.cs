@@ -433,7 +433,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Stop transaction because database are in shutdown process
+        /// Stop transaction because database are in shutdown process - not same Thread that open
         /// </summary>
         public void Abort()
         {
@@ -441,22 +441,35 @@ namespace LiteDB.Engine
 
             _disposed = true;
 
-            try
+            // DO NOT call _locker.ExitTransaction - may NOT be same thread
+
+            // release disk
+            _reader.Dispose();
+
+#if DEBUG
+            // release pages only in debug mode to avoid PageBuffer destructor ENSURE conditional
+            // ---
+            // release writable snapshots
+            foreach (var snapshot in _snapshots.Values.Where(x => x.Mode == LockMode.Write))
             {
-                foreach (var snapshot in _snapshots.Values)
+                // discard all dirty pages
+                _disk.DiscardPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer), true);
+
+                // discard all clean pages
+                _disk.DiscardPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer), false);
+            }
+
+            // release buffers in read-only snaphosts
+            foreach (var snapshot in _snapshots.Values.Where(x => x.Mode == LockMode.Read))
+            {
+                foreach(var page in snapshot.LocalPages)
                 {
-                    snapshot.Dispose();
+                    page.Buffer.Release();
                 }
 
-                _locker.ExitTransaction();
-
-                _reader.Dispose();
+                snapshot.CollectionPage?.Buffer.Release();
             }
-            catch
-            {
-                // doint this inside a try/catch block because some operation can already runned
-                // it's depend when shutdown method runs
-            }
+#endif
         }
     }
 }

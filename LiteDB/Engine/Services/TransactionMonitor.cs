@@ -149,7 +149,10 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
-            _transactions.ForEach((x, i) => i.Value.Abort());
+            foreach(var transaction in _transactions.Values)
+            {
+                transaction.Abort();
+            }
         }
     }
 }
