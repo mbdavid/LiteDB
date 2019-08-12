@@ -55,13 +55,18 @@ namespace LiteDB.Engine
 
                 isNew = true;
 
-                transaction = new TransactionService(_header, _locker, _disk, _walIndex, this.GetInitialSize(), this, (id) =>
+                var initialSize = this.GetInitialSize();
+
+                transaction = new TransactionService(_header, _locker, _disk, _walIndex, initialSize, this, (id) =>
                 {
-                    Thread.SetData(_slot, null);
+                    lock(_transactions)
+                    {
+                        Thread.SetData(_slot, null);
 
-                    _transactions.TryRemove(id, out var t);
+                        _transactions.TryRemove(id, out var t);
 
-                    _freePages += t.MaxTransactionSize;
+                        _freePages += t.MaxTransactionSize;
+                    }
                 });
 
                 // add transaction to execution transaction dict
@@ -82,20 +87,31 @@ namespace LiteDB.Engine
         /// </summary>
         private int GetInitialSize()
         {
-            if (_freePages >= _initialSize)
+            lock(_transactions)
             {
-                _freePages -= _initialSize;
-            }
-            else
-            {
-                // if there is no avaiable pages, reduce all open transactions
-                foreach(var trans in _transactions.Values)
+                if (_freePages >= _initialSize)
                 {
-                    trans.MaxTransactionSize -= (trans.MaxTransactionSize / _initialSize);
+                    _freePages -= _initialSize;
+
+                    return _initialSize;
+                }
+                else
+                {
+                    var sum = 0;
+
+                    // if there is no avaiable pages, reduce all open transactions
+                    foreach (var trans in _transactions.Values)
+                    {
+                        var reduce = (trans.MaxTransactionSize / _initialSize);
+
+                        trans.MaxTransactionSize -= reduce;
+
+                        sum += reduce;
+                    }
+
+                    return sum;
                 }
             }
-
-            return _initialSize;
         }
 
         /// <summary>
@@ -103,16 +119,19 @@ namespace LiteDB.Engine
         /// </summary>
         private bool TryExtend(TransactionService trans)
         {
-            if (_freePages >= _initialSize)
+            lock(_transactions)
             {
-                trans.MaxTransactionSize += _initialSize;
+                if (_freePages >= _initialSize)
+                {
+                    trans.MaxTransactionSize += _initialSize;
 
-                _freePages -= _initialSize;
+                    _freePages -= _initialSize;
 
-                return true;
+                    return true;
+                }
+
+                return false;
             }
-
-            return false;
         }
 
         /// <summary>

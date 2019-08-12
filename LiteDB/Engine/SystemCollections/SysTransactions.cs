@@ -23,7 +23,8 @@ namespace LiteDB.Engine
                     ["maxTransactionSize"] = transaction.MaxTransactionSize,
                     ["pagesInLogFile"] = transaction.Pages.DirtyPages.Count,
                     ["newPages"] = transaction.Pages.NewPages.Count,
-                    ["deletedPages"] = transaction.Pages.DeletedPages
+                    ["deletedPages"] = transaction.Pages.DeletedPages,
+                    ["modifiedPages"] = transaction.Snapshots.Select(x => x.GetWritablePages(true, true).Count()).Sum()
                 };
             }
         }
