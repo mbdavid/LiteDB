@@ -62,7 +62,10 @@ namespace LiteDB.Engine
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-            LOG("start initializing", "ENGINE");
+            // clear checkpoint if database is readonly
+            if (_settings.ReadOnly) _settings.Checkpoint = 0;
+
+            LOG($"start initializing{(_settings.ReadOnly ? " (readonly)" : "")}", "ENGINE");
 
             try
             {
@@ -141,7 +144,7 @@ namespace LiteDB.Engine
                 _monitor?.Dispose();
 
                 // do a soft checkpoint (only if exclusive lock is possible)
-                _walIndex?.Checkpoint(true);
+                if (_settings.Checkpoint > 0) _walIndex?.Checkpoint(true);
 
                 // close all disk streams (and delete log if empty)
                 _disk?.Dispose();
