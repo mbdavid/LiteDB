@@ -52,7 +52,15 @@ namespace LiteDB.Engine
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(newName));
-            if (collection.Equals(newName, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("To rename a collection the new name must be different from current collection name");
+
+            // rename collection is possible only in exclusive transaction for this
+            if (_locker.IsInTransaction) throw LiteException.AlreadyExistsTransaction();
+
+            // check for collection name
+            if (collection.Equals(newName, StringComparison.OrdinalIgnoreCase)) throw LiteException.InvalidCollectionName(newName, "New name must be different from current name");
+
+            // checks if newName are compatible
+            CollectionService.CheckName(newName, _header);
 
             // rename collection is possible only in exclusive transaction for this
             if (_locker.IsInTransaction) throw LiteException.AlreadyExistsTransaction();
@@ -63,14 +71,6 @@ namespace LiteDB.Engine
                 var newSnapshot = transaction.CreateSnapshot(LockMode.Write, newName, false);
 
                 if (currentSnapshot.CollectionPage == null) return false;
-
-                var diff = Encoding.UTF8.GetByteCount(newName) - Encoding.UTF8.GetByteCount(collection);
-
-                // check if new size fit on header page
-                if (diff > 0 && diff > _header.GetAvaiableCollectionSpace())
-                {
-                    throw new LiteException(0, "This is no space to rename this collection");
-                }
 
                 // checks if do not already exists this collection name
                 if (_header.GetCollectionPageID(newName) != uint.MaxValue)

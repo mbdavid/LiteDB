@@ -20,6 +20,17 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Check collection name if is valid (and fit on header)
+        /// Throw correct message error if not valid name or not fit on header page
+        /// </summary>
+        public static void CheckName(string name, HeaderPage header)
+        {
+            if (Encoding.UTF8.GetByteCount(name) > header.GetAvaiableCollectionSpace()) throw LiteException.InvalidCollectionName(name, "There is no space in header this collection name");
+            if (!name.IsWord()) throw LiteException.InvalidCollectionName(name, "Use only [a-Z$_]");
+            if (name.StartsWith("$")) throw LiteException.InvalidCollectionName(name, "Collection can't starts with `$` (reserved for system collections)");
+        }
+
+        /// <summary>
         /// Get collection page instance (or create a new one)
         /// </summary>
         public void Get(string name, bool addIfNotExists, ref CollectionPage collectionPage)
@@ -42,9 +53,8 @@ namespace LiteDB.Engine
         /// </summary>
         private void Add(string name, ref CollectionPage collectionPage)
         {
-            if (Encoding.UTF8.GetByteCount(name) > _header.GetAvaiableCollectionSpace()) throw LiteException.InvalidCollectionName(name, "There is no space in header for more collections");
-            if (!name.IsWord()) throw LiteException.InvalidCollectionName(name, "Use only [a-Z$_]");
-            if (name.StartsWith("$")) throw LiteException.InvalidCollectionName(name, "Collection can't starts with `$` (reserved for system collections)");
+            // checks for collection name/size
+            CheckName(name, _header);
 
             // create new collection page
             collectionPage = _snapshot.NewPage<CollectionPage>();
