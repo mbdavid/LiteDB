@@ -8,8 +8,8 @@ namespace LiteDB
 {
     public enum ConnectionMode
     {
-        Embedded
-        // Shared
+        Embedded,
+        Shared
         // MimePipes
         // Tcp
         // Rest

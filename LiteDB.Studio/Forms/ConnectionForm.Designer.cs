@@ -49,6 +49,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.radModeShared = new System.Windows.Forms.RadioButton();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -56,6 +57,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.radModeShared);
             this.groupBox1.Controls.Add(this.radModeEmbedded);
             this.groupBox1.Location = new System.Drawing.Point(12, 11);
             this.groupBox1.Name = "groupBox1";
@@ -72,7 +74,6 @@
             this.radModeEmbedded.Name = "radModeEmbedded";
             this.radModeEmbedded.Size = new System.Drawing.Size(82, 19);
             this.radModeEmbedded.TabIndex = 9;
-            this.radModeEmbedded.TabStop = true;
             this.radModeEmbedded.Text = "Embedded";
             this.toolTip.SetToolTip(this.radModeEmbedded, "Open database as embedded.\r\n- Support only this single connection\r\n- Support mult" +
         "ple threads in this connection");
@@ -245,6 +246,19 @@
             this.label2.TabIndex = 29;
             this.label2.Text = "Timeout (seconds):";
             // 
+            // radModeShared
+            // 
+            this.radModeShared.AutoSize = true;
+            this.radModeShared.Location = new System.Drawing.Point(118, 25);
+            this.radModeShared.Name = "radModeShared";
+            this.radModeShared.Size = new System.Drawing.Size(61, 19);
+            this.radModeShared.TabIndex = 10;
+            this.radModeShared.Text = "Shared";
+            this.toolTip.SetToolTip(this.radModeShared, "Open database as shared mode.\r\n- Open datafile cross processes (and threads)\r\n- G" +
+        "reat to access data when running app\r\n- Slow connection (not recommened for prod" +
+        "uction)");
+            this.radModeShared.UseVisualStyleBackColor = true;
+            // 
             // ConnectionForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -293,5 +307,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtPassword;
         private System.Windows.Forms.CheckBox chkUpgrade;
+        private System.Windows.Forms.RadioButton radModeShared;
     }
 }

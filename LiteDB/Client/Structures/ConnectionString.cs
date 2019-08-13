@@ -122,6 +122,10 @@ namespace LiteDB
             {
                 return new LiteEngine(settings);
             }
+            else if (this.Mode == ConnectionMode.Shared)
+            {
+                return new SharedEngine(settings);
+            }
             else
             {
                 throw new NotImplementedException();

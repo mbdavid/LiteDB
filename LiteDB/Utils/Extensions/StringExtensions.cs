@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 using static LiteDB.Constants;
 
@@ -32,6 +33,24 @@ namespace LiteDB
             var v = str.Trim();
 
             return v.Length == 0 ? null : v;
+        }
+
+        public static string Sha1(this string value)
+        {
+            var data = Encoding.UTF8.GetBytes(value);
+
+            using (var sha = new SHA1Managed())
+            {
+                var hashData = sha.ComputeHash(data);
+                var hash = new StringBuilder();
+
+                foreach (var b in hashData)
+                {
+                    hash.Append(b.ToString("X2"));
+                }
+
+                return hash.ToString();
+            }
         }
 
         /// <summary>

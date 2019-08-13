@@ -30,6 +30,10 @@ namespace LiteDB.Studio.Forms
 
         private void BtnConnect_Click(object sender, EventArgs e)
         {
+            this.ConnectionString.Mode =
+                radModeEmbedded.Checked ? ConnectionMode.Embedded :
+                radModeShared.Checked ? ConnectionMode.Shared : ConnectionMode.Embedded;
+
             this.ConnectionString.Filename = txtFilename.Text;
             this.ConnectionString.UtcDate = chkUTC.Checked;
             this.ConnectionString.ReadOnly = chkReadonly.Checked;
