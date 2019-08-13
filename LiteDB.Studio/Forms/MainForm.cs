@@ -156,7 +156,6 @@ namespace LiteDB.Studio
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                Application.Exit();
             }
         }
 
