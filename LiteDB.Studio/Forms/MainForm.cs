@@ -451,7 +451,7 @@ namespace LiteDB.Studio
 
                 if (current == value) return current;
 
-                var r = _db.Execute($"UPDATE {this.ActiveTask.Collection} SET {{ {field}: @0 }} WHERE _id = @1 AND {field} = @2",
+                var r = _db.Execute($"UPDATE {this.ActiveTask.Collection} SET {field} = @0 WHERE _id = @1 AND {field} = @2",
                     new BsonDocument
                     {
                         ["0"] = value,

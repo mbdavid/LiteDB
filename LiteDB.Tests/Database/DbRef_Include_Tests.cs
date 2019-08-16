@@ -154,22 +154,22 @@ namespace LiteDB.Tests.Database
                 //TODO: v5 are not removing references after delete. There is no BsonValue#Destroy - must fix/discuss better this
 
                 // now, delete reference 1x1 and 1xN
-                //** customers.Delete(customer.Id);
-                //** 
-                //** products.Delete(product1.ProductId);
-                //** 
-                //** var result2 = orders
-                //**     .Include(x => x.Customer)
-                //**     .Include(x => x.Products)
-                //**     .FindAll()
-                //**     .FirstOrDefault();
-                //** 
-                //** // must missing customer and has only 1 product
-                //** result2.Customer.Should().BeNull();
-                //** result2.Products.Count.Should().Be(1);
-                //** 
-                //** // property ProductArray contains only deleted "product1", but has no include on query, so must returns deleted
-                //** result2.ProductArray.Length.Should().Be(1);
+                customers.Delete(customer.Id);
+                
+                products.Delete(product1.ProductId);
+                
+                var result2 = orders
+                    .Include(x => x.Customer)
+                    .Include(x => x.Products)
+                    .FindAll()
+                    .FirstOrDefault();
+                
+                // must missing customer and has only 1 product
+                result2.Customer.Should().BeNull();
+                result2.Products.Count.Should().Be(1);
+                
+                // property ProductArray contains only deleted "product1", but has no include on query, so must returns deleted
+                result2.ProductArray.Length.Should().Be(1);
             }
         }
     }

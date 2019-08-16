@@ -121,6 +121,11 @@ namespace LiteDB.Engine
 
                         refDoc.CopyTo(value);
                     }
+                    else
+                    {
+                        // set in ref document that was not found
+                        value.Add("$missing", true);
+                    }
                 }
             }
         }

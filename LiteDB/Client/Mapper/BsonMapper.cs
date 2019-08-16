@@ -443,7 +443,10 @@ namespace LiteDB
 
             member.Deserialize = (bson, m) =>
             {
-                var idRef = bson.IsDocument ? bson.AsDocument["$id"] : BsonValue.Null;
+                var idRef = bson.IsDocument ? bson["$id"] : BsonValue.Null;
+                var missing = bson.IsDocument ? (bson["$missing"] == true) : false;
+                
+                if (missing) return null;
 
                 return m.Deserialize(entity.ForType,
                     idRef.IsNull ?
@@ -497,7 +500,11 @@ namespace LiteDB
 
                 foreach (var item in array)
                 {
-                    var refId = item.AsDocument["$id"];
+                    var refId = item["$id"];
+                    var missing = item["$missing"] == true;
+                    
+                    // if referece document are missing, do not inlcude on output list
+                    if (missing) continue;
 
                     // if refId is null was included by "include" query, so "item" is full filled document
                     if (refId.IsNull)
