@@ -264,6 +264,11 @@ namespace LiteDB
             get { return this.IsNumber ? Convert.ToInt64(this.RawValue) : default(Int64); }
         }
 
+        public double AsFloat
+        {
+            get { return this.IsNumber ? Convert.ToSingle(this.RawValue) : default(Single); }
+        }
+
         public double AsDouble
         {
             get { return this.IsNumber ? Convert.ToDouble(this.RawValue) : default(Double); }
