@@ -88,6 +88,7 @@ namespace LiteDB
         private static readonly MethodInfo _arrayInitMethod = M("ARRAY_INIT");
 
         private static readonly MethodInfo _itemsMethod = typeof(BsonExpressionMethods).GetMethod("ITEMS");
+        private static readonly MethodInfo _arrayMethod = typeof(BsonExpressionMethods).GetMethod("ARRAY");
 
         #endregion
 
@@ -248,7 +249,7 @@ namespace LiteDB
 
                 names.Add(alias);
 
-                if (expr.IsScalar == false) throw new LiteException(0, $"Document value `{expr.Source}` must be a scalar expression");
+                if (!expr.IsScalar) expr = ConvertToArray(expr);
 
                 fields.Add(new KeyValuePair<string, BsonExpression>(alias, expr));
             };
@@ -364,7 +365,7 @@ namespace LiteDB
 
                 var value = ParseFullExpression(tokenizer, source, root, current, parameters, true);
 
-                if (value.IsScalar == false) throw new LiteException(0, $"Document value `{value.Source}` must be a scalar expression");
+                if (!value.IsScalar) value = ConvertToArray(value);
 
                 // update isImmutable only when came false
                 if (value.IsImmutable == false) isImmutable = false;
@@ -634,7 +635,7 @@ namespace LiteDB
                     }
 
                     // document value must be a scalar value
-                    if (value.IsScalar == false) throw new LiteException(0, $"Document value `{value.Source}` must be a scalar expression");
+                    if (!value.IsScalar) value = ConvertToArray(value);
 
                     // update isImmutable only when came false
                     if (value.IsImmutable == false) isImmutable = false;
@@ -745,7 +746,7 @@ namespace LiteDB
                     var value = ParseFullExpression(tokenizer, source, root, current, parameters, isRoot);
 
                     // document value must be a scalar value
-                    if (value.IsScalar == false) throw new LiteException(0, $"Array item `{value.Source}` must be a scalar expression");
+                    if (!value.IsScalar) value = ConvertToArray(value);
 
                     src.Append(value.Source);
 
@@ -1322,6 +1323,24 @@ namespace LiteDB
                 IsScalar = false,
                 Fields = expr.Fields,
                 Expression = Expression.Call(_itemsMethod, expr.Expression),
+                Source = expr.Source
+            };
+        }
+
+        /// <summary>
+        /// Convert enumerable expression into array using ARRAY(...) method
+        /// Do not change output SOURCE (keeps same input string)
+        /// </summary>
+        private static BsonExpression ConvertToArray(BsonExpression expr)
+        {
+            return new BsonExpression
+            {
+                Type = expr.Type,
+                IsImmutable = expr.IsImmutable,
+                UseSource = expr.UseSource,
+                IsScalar = true,
+                Fields = expr.Fields,
+                Expression = Expression.Call(_arrayMethod, expr.Expression),
                 Source = expr.Source
             };
         }

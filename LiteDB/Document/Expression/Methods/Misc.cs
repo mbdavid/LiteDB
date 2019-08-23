@@ -152,5 +152,20 @@ namespace LiteDB
 
             return BsonValue.Null;
         }
+
+        /// <summary>
+        /// Returns the first num elements of values.
+        /// </summary>
+        public static IEnumerable<BsonValue> TOP(IEnumerable<BsonValue> values, BsonValue num)
+        {
+            if (num.IsInt32 || num.IsInt64)
+            {
+                var numInt = num.AsInt32;
+
+                if(numInt > 0)
+                    return values.Take(numInt);                    
+            }
+            return Enumerable.Empty<BsonValue>();                          
+        }
     }
 }
