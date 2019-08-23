@@ -912,10 +912,10 @@ namespace LiteDB
             {
                 if (item.parameter.ParameterType.IsEnumerable() == false && item.expr.IsScalar == false)
                 {
-                    throw new LiteException(0, $"Method {method.Name} requires a scalar expression. Expression `{item.expr.Source}` can return more than one result.");
+                    // convert enumerable expresion into scalar expression
+                    paramExpr.Add(ConvertToArray(item.expr).Expression); 
                 }
-
-                if (item.parameter.ParameterType.IsEnumerable() && item.expr.IsScalar)
+                else if (item.parameter.ParameterType.IsEnumerable() && item.expr.IsScalar)
                 {
                     // convert scalar expression into enumerable expression
                     paramExpr.Add(ConvertToEnumerable(item.expr).Expression);
