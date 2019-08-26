@@ -167,5 +167,21 @@ namespace LiteDB
             }
             return Enumerable.Empty<BsonValue>();                          
         }
+
+        /// <summary>
+        /// Returns the union of the two enumerables.
+        /// </summary>
+        public static IEnumerable<BsonValue> UNION(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        {
+            return left.Union(right);
+        }
+
+        /// <summary>
+        /// Returns the set difference between the two enumerables.
+        /// </summary>
+        public static IEnumerable<BsonValue> EXCEPT(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        {
+            return left.Except(right);
+        }
     }
 }
