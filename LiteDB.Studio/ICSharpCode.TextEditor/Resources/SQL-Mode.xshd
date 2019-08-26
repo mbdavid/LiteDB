@@ -187,6 +187,8 @@ http://minisqlquery.codeplex.com/license
         <Key word="COALESCE" />
         <Key word="LENGTH" />
         <Key word="TOP" />
+        <Key word="UNION" />
+        <Key word="EXCEPT" />
 
         <!-- String.cs -->
         <Key word="LOWER" />

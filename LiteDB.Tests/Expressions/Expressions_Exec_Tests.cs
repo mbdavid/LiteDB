@@ -295,6 +295,24 @@ namespace LiteDB.Tests.Expressions
 
             // flaten
             A("*.arr[*]").ExpectValues(1, 2, 1, 3, 5, 9, 1, 5, 5);
+
+            // Top Method
+            A("TOP([1,2,3,4,5],3)").ExpectValues(1, 2, 3);
+            A("TOP([1,2,3,4,5],0)").ExpectValues();
+            A("TOP([1,2,3,4,5],-3)").ExpectValues();
+            A("TOP([1,2,3,4,5],10)").ExpectValues(1, 2, 3, 4, 5);
+
+            // Union Method
+            A("UNION([1,2,3],4)").ExpectValues(1, 2, 3, 4);
+            A("UNION([1,2,3],[4])").ExpectValues(1, 2, 3, 4);
+            A("UNION([1,2,3],[4,5,6,7])").ExpectValues(1, 2, 3, 4, 5, 6, 7);
+            A("UNION([1,2,3],[1,2,3])").ExpectValues(1, 2, 3);
+
+            // Except Method
+            A("EXCEPT([1,2,3],4)").ExpectValues(1, 2, 3);
+            A("EXCEPT([1,2,3],1)").ExpectValues(2, 3);
+            A("EXCEPT([1,2,3],[1,3])").ExpectValues(2);
+            A("EXCEPT([1,2,3],[4,5])").ExpectValues(1, 2, 3);
         }
     }
 }
