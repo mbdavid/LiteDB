@@ -117,8 +117,8 @@ namespace LiteDB.Tests.Expressions
             // Multi values equals
             doc = J("{ a: 5 }");
 
-            S("ARRAY(ITEMS([3, 4, 5, 6]) => (@ = $.a))").ExpectArray(false, false, true, false);
-            S("ANY(ITEMS([3, 4, 5, 6]) => (@ = $.a))").ExpectValue(true);
+            S("ARRAY(MAP(ITEMS([3, 4, 5, 6]) => (@ = $.a)))").ExpectArray(false, false, true, false);
+            S("ANY(MAP(ITEMS([3, 4, 5, 6]) => (@ = $.a)))").ExpectValue(true);
 
             // Between
             doc = J("{ a: 50, b: 'm' }");
@@ -141,7 +141,7 @@ namespace LiteDB.Tests.Expressions
 
             doc = J("{ names: ['John', 'Joana', 'Carlos'] }");
 
-            S("ARRAY(names[*] => (@ LIKE 'J%'))").ExpectArray(true, true, false);
+            S("ARRAY(MAP(names[*] => (@ LIKE 'J%')))").ExpectArray(true, true, false);
             S("ARRAY(names[@ LIKE 'J%'])").ExpectArray("John", "Joana");
 
             // Array filter using root/current
@@ -153,7 +153,7 @@ namespace LiteDB.Tests.Expressions
             // MongoDB examples
             doc = J("{ '_id' : 3, 'date' : 'October 30', 'temps' : [ 18, 6, 8 ] }");
 
-            S("{ date, 'temps in Fahrenheit': ARRAY(temps[*] => (@ * (9/5)+32))}")
+            S("{ date, 'temps in Fahrenheit': ARRAY(MAP(temps[*] => (@ * (9/5)+32)))}")
                 .ExpectJson("{ 'date' : 'October 30', 'temps in Fahrenheit' : [ 64.4, 42.8, 46.4 ]}");
         }
 
@@ -183,13 +183,13 @@ namespace LiteDB.Tests.Expressions
             S("LPAD(STRING(27), 5, '0')").ExpectValue("00027");
             S("RPAD(STRING(27), 5, '0')").ExpectValue("27000");
             S("REPLACE('Hi', 'i', 'I')").ExpectValue("HI");
-            S("ARRAY(ITEMS(['Lite', 'LiteDB']) => REPLACE(@, 'L', 'x'))").ExpectArray("xite", "xiteDB");
+            S("ARRAY(MAP(ITEMS(['Lite', 'LiteDB']) => REPLACE(@, 'L', 'x')))").ExpectArray("xite", "xiteDB");
 
             // String in array items
             doc = J("{ arr: ['one', 'two'] }");
 
-            S("ARRAY(arr[*] => UPPER(@))").ExpectArray("ONE", "TWO");
-            S("ARRAY(arr[*] => SUBSTRING(@, 0, 1))").ExpectArray("o", "t");
+            S("ARRAY(MAP(arr[*] => UPPER(@)))").ExpectArray("ONE", "TWO");
+            S("ARRAY(MAP(arr[*] => SUBSTRING(@, 0, 1)))").ExpectArray("o", "t");
 
             // JSON Parser
             S("JSON('{a:1, b:\"string\"}')").ExpectJson("{ a: 1, b: \"string\" }");
@@ -258,7 +258,7 @@ namespace LiteDB.Tests.Expressions
             P("ARRAY(arr[@ > @0])", 3).ExpectArray(4, 5);
 
             // using map
-            P("ARRAY(ITEMS(@0) => (@ + @1))", new BsonArray(new BsonValue[] {10, 11, 12}), 5)
+            P("ARRAY(MAP(ITEMS(@0) => (@ + @1)))", new BsonArray(new BsonValue[] {10, 11, 12}), 5)
                 .ExpectArray(15, 16, 17);
         }
 
@@ -283,7 +283,7 @@ namespace LiteDB.Tests.Expressions
 
             A("SUM(*.a)").ExpectValues(8);
             A("*.b").ExpectValues(5, 15, 10);
-            A("*.c => UPPER(@)", "FIRST", "SECOND", "LAST");
+            A("MAP(*.c => UPPER(@))", "FIRST", "SECOND", "LAST");
 
             A("SUM(*.arr[*])").ExpectValues(32);
             A("SUM(*.arr[@ < 2]) + 7").ExpectValues(10);
@@ -291,7 +291,7 @@ namespace LiteDB.Tests.Expressions
             A("JOIN(*.c, '#')").ExpectValues("First#Second#Last");
 
             // when use $ over multiple values, only first result are used
-            A("JOIN($.arr[*] => (@ + 1), '-')").ExpectValues("2-3");
+            A("JOIN(MAP($.arr[*] => (@ + 1)), '-')").ExpectValues("2-3");
 
             // flaten
             A("*.arr[*]").ExpectValues(1, 2, 1, 3, 5, 9, 1, 5, 5);

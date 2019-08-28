@@ -43,7 +43,7 @@ namespace LiteDB
                 case "Where(Func<T,TResult>)": return "@0[@1]";
                 
                 // map
-                case "Select(Func<T,TResult>)": return "(@0 => @1)";
+                case "Select(Func<T,TResult>)": return "(MAP(@0 => @1))";
 
                 // aggregate
                 case "Count()": return "COUNT(@0)";
@@ -53,11 +53,11 @@ namespace LiteDB
                 case "Min()": return "MIN(@0)";
 
                 // aggregate with map function
-                case "Count(Func<T,TResult>)": return "COUNT(@0 => @1)";
-                case "Sum(Func<T,TResult>)": return "SUM(@0 => @1)";
-                case "Average(Func<T,TResult>)": return "AVG(@0 => @1)";
-                case "Max(Func<T,TResult>)": return "MAX(@0 => @1)";
-                case "Min(Func<T,TResult>)": return "MIN(@0 => @1)";
+                case "Count(Func<T,TResult>)": return "COUNT(MAP(@0 => @1))";
+                case "Sum(Func<T,TResult>)": return "SUM(MAP(@0 => @1))";
+                case "Average(Func<T,TResult>)": return "AVG(MAP(@0 => @1))";
+                case "Max(Func<T,TResult>)": return "MAX(MAP(@0 => @1))";
+                case "Min(Func<T,TResult>)": return "MAP(MIN(@0 => @1))";
 
                 // convert to array
                 case "ToList()": 
