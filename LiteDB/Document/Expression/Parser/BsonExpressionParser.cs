@@ -1128,7 +1128,10 @@ namespace LiteDB
         }
 
         private static BsonExpression ParseFunction(MethodInfo method, BsonExpressionType type, Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
-        { 
+        {
+            // check if next token are ( otherwise returns null (is not a function)
+            if (tokenizer.LookAhead().Type != TokenType.OpenParenthesis) return null;
+
             // read (
             tokenizer.ReadToken().Expect(TokenType.OpenParenthesis);
 
