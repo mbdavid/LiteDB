@@ -81,7 +81,7 @@ namespace LiteDB.Tests.Expressions
             // fields when using source (do simplify, when use * is same as $)
             F("*").ExpectValues("$");
             F("*._id").ExpectValues("$");
-            F("FIRST(* => (@._id + $.name)) + _id)").ExpectValues("$", "name", "_id");
+            F("FIRST(MAP(* => (@._id + $.name))) + _id)").ExpectValues("$", "name", "_id");
         }
 
         [Fact]
@@ -156,9 +156,9 @@ namespace LiteDB.Tests.Expressions
             T("*").ExpectValue(BsonExpressionType.Source);
 
             // maps
-            T("arr[*] => @").ExpectValue(BsonExpressionType.Map);
-            T("el.arr[*] => @").ExpectValue(BsonExpressionType.Map);
-            T("el.arr[*] => (@ + 10 + UPPER(@))").ExpectValue(BsonExpressionType.Map);
+            T("MAP(arr[*] => @)").ExpectValue(BsonExpressionType.Map);
+            T("MAP(el.arr[*] => @)").ExpectValue(BsonExpressionType.Map);
+            T("MAP(el.arr[*] => (@ + 10 + UPPER(@)))").ExpectValue(BsonExpressionType.Map);
 
             // shortcut
             T("arr[*].price").ExpectValue(BsonExpressionType.Map);
@@ -203,7 +203,7 @@ namespace LiteDB.Tests.Expressions
             F("(10 * (1 + 2) - 5)").ExpectValue("(10*(1+2)-5)");
 
             // Map
-            F("names[length(@) > 10] => upper(@)").ExpectValue("$.names[LENGTH(@)>10]=>UPPER(@)");
+            F("MAP(names[length(@) > 10] => upper(@))").ExpectValue("MAP($.names[LENGTH(@)>10]=>UPPER(@))");
 
             // Path/Source-Map
             F("items[*].id").ExpectValue("($.items[*]=>@.id)");

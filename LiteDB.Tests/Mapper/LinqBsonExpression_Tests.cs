@@ -150,26 +150,26 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.Phones.AsEnumerable(), "$.Phones[*]");
 
             // where
-            TestExpr<User>(x => x.Phones.Where(p => p.Prefix == 1), "$.Phones[(@.Prefix = @p0)]", 1);
-            TestExpr<User>(x => x.Phones.Where(p => p.Prefix == x.Id), "$.Phones[(@.Prefix = $._id)]");
+            TestExpr<User>(x => x.Phones.Where(p => p.Prefix == 1), "FILTER($.Phones=>(@.Prefix=@p0))", 1);
+            TestExpr<User>(x => x.Phones.Where(p => p.Prefix == x.Id), "FILTER($.Phones=>(@.Prefix=$._id))");
 
             // aggregate
             TestExpr<User>(x => x.Phones.Count(), "COUNT($.Phones)");
             TestExpr<User>(x => x.Phones.Min(), "MIN($.Phones)");
             TestExpr<User>(x => x.Phones.Max(), "MAX($.Phones)");
-            TestExpr<User>(x => x.Phones.Select(p => p.Number).Sum(), "SUM(($.Phones => @.Number))");
+            TestExpr<User>(x => x.Phones.Select(p => p.Number).Sum(), "SUM(MAP($.Phones => @.Number))");
 
             // aggregate with map
-            TestExpr<User>(x => x.Phones.Sum(w => w.Number), "SUM($.Phones => @.Number)");
+            TestExpr<User>(x => x.Phones.Sum(w => w.Number), "SUM(MAP($.Phones => @.Number))");
 
             // map
-            TestExpr<User>(x => x.Phones.Select(y => y.Type), "($.Phones => @.Type)");
+            TestExpr<User>(x => x.Phones.Select(y => y.Type), "MAP($.Phones => @.Type)");
 
-            TestExpr<User>(x => x.Phones.Select(p => p.Number).Sum(), "SUM(($.Phones => @.Number))");
-            TestExpr<User>(x => x.Phones.Select(p => p.Number).Average(), "AVG(($.Phones => @.Number))");
+            TestExpr<User>(x => x.Phones.Select(p => p.Number).Sum(), "SUM(MAP($.Phones => @.Number))");
+            TestExpr<User>(x => x.Phones.Select(p => p.Number).Average(), "AVG(MAP($.Phones => @.Number))");
 
             // array/list
-            TestExpr<User>(x => x.Phones.Where(w => w.Number == 5).ToArray(), "ARRAY($.Phones[(@.Number = @p0)])", 5);
+            TestExpr<User>(x => x.Phones.Where(w => w.Number == 5).ToArray(), "ARRAY(FILTER($.Phones=>(@.Number=@p0)))", 5);
             TestExpr<User>(x => x.Phones.ToList(), "ARRAY($.Phones)");
 
             // access using native array index (special "get_Item" eval index value)
@@ -196,12 +196,12 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.Phones2.Contains(new Phone { Number = 1 }), "Phones2 ANY = { Number: @p0 }", 1);
 
             // fixed position with filter expression
-            TestExpr<User>(x => x.Phones.First(p => p.Number == 1), "FIRST($.Phones[(@.Number = @p0)])", 1);
+            TestExpr<User>(x => x.Phones.First(p => p.Number == 1), "FIRST(FILTER($.Phones=>(@.Number=@p0)))", 1);
 
             // using any/all
-            TestExpr<User>(x => x.Phones.Select(p => p.Number).Any(p => p == 1), "(Phones => @.Number) ANY = @p0", 1);
+            TestExpr<User>(x => x.Phones.Select(p => p.Number).Any(p => p == 1), "MAP(Phones => @.Number) ANY = @p0", 1);
             TestExpr<User>(x => x.Phones.Select(p => p.Number.ToString()).Any(p => p.StartsWith("51")),
-                "(Phones => STRING(@.Number)) ANY LIKE (@p0 + '%')", "51");
+                "MAP(Phones => STRING(@.Number)) ANY LIKE (@p0 + '%')", "51");
         }
 
         [Fact]
@@ -376,8 +376,8 @@ namespace LiteDB.Tests.Mapper
             TestExpr<Order>(x => x.Customer.CustomerId == 123, "(Customer.$id = @p0)", 123);
             TestExpr<Order>(x => x.Customer.Name == "John", "(Customer.Name = @p0)", "John");
 
-            TestExpr<Order>(x => x.Users.Select(u => u.Id).Any(id => id == 9), "(Users => @.$id) ANY = @p0)", 9);
-            TestExpr<Order>(x => x.Users.Select(u => u.Name).Any(n => n == "U1"), "(Users => @.Name) ANY = @p0)", "U1");
+            TestExpr<Order>(x => x.Users.Select(u => u.Id).Any(id => id == 9), "MAP(Users => @.$id) ANY = @p0)", 9);
+            TestExpr<Order>(x => x.Users.Select(u => u.Name).Any(n => n == "U1"), "MAP(Users => @.Name) ANY = @p0)", "U1");
         }
 
         [Fact]
@@ -392,8 +392,8 @@ namespace LiteDB.Tests.Mapper
                 @"
             {
                 CityName: $.Address.City.CityName,
-                Count: COUNT($.Phones[(@.Type = @p0)]),
-                List: ARRAY(($.Phones[(@.Number > $.Salary)] => @.Number))
+                Count: COUNT(FILTER($.Phones=>(@.Type=@p0))),
+                List: ARRAY(MAP(FILTER($.Phones=>(@.Number>$.Salary))=>@.Number))
             }",
                 (int) PhoneType.Landline);
         }
