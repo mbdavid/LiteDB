@@ -35,12 +35,12 @@ namespace LiteDB
                 case "Single(Func<T,TResult>)":
                 case "First(Func<T,TResult>)":
                 case "SingleOrDefault(Func<T,TResult>)":
-                case "FirstOrDefault(Func<T,TResult>)": return "FIRST(@0[@1])";
+                case "FirstOrDefault(Func<T,TResult>)": return "FIRST(FILTER(@0 => @1))";
                 case "Last(Func<T,TResult>)":
-                case "LastOrDefault(Func<T,TResult>)": return "LAST(@0[@1])";
+                case "LastOrDefault(Func<T,TResult>)": return "LAST(FILTER(@0 => @1))";
 
                 // filter
-                case "Where(Func<T,TResult>)": return "@0[@1]";
+                case "Where(Func<T,TResult>)": return "FILTER(@0 => @1)";
                 
                 // map
                 case "Select(Func<T,TResult>)": return "(MAP(@0 => @1))";
