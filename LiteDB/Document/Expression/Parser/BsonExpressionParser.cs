@@ -681,7 +681,7 @@ namespace LiteDB
                 Source = "*"
             };
 
-            // checks if next token is "." to shortcut from "*.Name" as "(* => @.Name)"
+            // checks if next token is "." to shortcut from "*.Name" as "MAP(*, @.Name)"
             if (tokenizer.LookAhead(false).Type == TokenType.Period)
             {
                 tokenizer.ReadToken(); // consume .
@@ -698,7 +698,7 @@ namespace LiteDB
                     IsScalar = false,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(sourceExpr.Fields).AddRange(pathExpr.Fields),
                     Expression = Expression.Call(_mapMethod, sourceExpr.Expression, Expression.Constant(pathExpr), root, parameters),
-                    Source = "(*=>" + pathExpr.Source + ")"
+                    Source = "MAP(*=>" + pathExpr.Source + ")"
                 };
             }
             else
@@ -1134,8 +1134,9 @@ namespace LiteDB
 
             var left = ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot);
 
-            // read ,
-            tokenizer.ReadToken().Expect(TokenType.Comma);
+            // read =>
+            tokenizer.ReadToken().Expect(TokenType.Equals);
+            tokenizer.ReadToken().Expect(TokenType.Greater);
 
             var right = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
 
@@ -1149,7 +1150,7 @@ namespace LiteDB
             }
 
             if (right == null) throw LiteException.UnexpectedToken(tokenizer.Current);
-            if (right.IsScalar == false) throw new LiteException(0, $"Second parameter must be a scalar expression in {method.Name} method");
+            if (right.IsScalar == false) throw new LiteException(0, $"Right parameter must be a scalar expression in {method.Name} function");
 
             return new BsonExpression
             {
@@ -1159,7 +1160,7 @@ namespace LiteDB
                 IsScalar = false,
                 Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
                 Expression = Expression.Call(method, left.Expression, Expression.Constant(right), root, parameters),
-                Source = "(" + left.Source + "," + right.Source + ")"
+                Source = method.Name + "(" + left.Source + "=>" + right.Source + ")"
             };
         }
         /// <summary>
