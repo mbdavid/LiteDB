@@ -42,6 +42,8 @@ namespace LiteDB
         And = 26,
 
         Map = 27,
-        Source = 28
+        Filter = 28,
+        Sort = 29,
+        Source = 30
     }
 }

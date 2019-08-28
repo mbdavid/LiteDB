@@ -349,7 +349,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Map
+        #region Map/Filter/Sort
 
         public static IEnumerable<BsonValue> MAP(IEnumerable<BsonValue> input, BsonExpression mapExpr, BsonDocument root, BsonDocument parameters)
         {
@@ -361,10 +361,40 @@ namespace LiteDB
                 // execute for each child value and except a first bool value (returns if true)
                 var values = mapExpr.Execute(new BsonDocument[] { root }, root, item);
 
-                foreach(var value in values)
+                foreach (var value in values)
                 {
                     yield return value;
                 }
+            }
+        }
+
+        public static IEnumerable<BsonValue> FILTER(IEnumerable<BsonValue> input, BsonExpression filterExpr, BsonDocument root, BsonDocument parameters)
+        {
+            // update parameters in expression
+            parameters.CopyTo(filterExpr.Parameters);
+
+            foreach (var item in input)
+            {
+                // execute for each child value and except a first bool value (returns if true)
+                var c = filterExpr.ExecuteScalar(new BsonDocument[] { root }, root, item);
+
+                if (c.IsBoolean && c.AsBoolean == true)
+                {
+                    yield return item;
+                }
+            }
+        }
+
+        public static IEnumerable<BsonValue> SORT(IEnumerable<BsonValue> input, BsonExpression sortExpr, BsonDocument root, BsonDocument parameters)
+        {
+            //TODO: implement a sort function here
+
+            // update parameters in expression
+            parameters.CopyTo(sortExpr.Parameters);
+
+            foreach (var item in input)
+            {
+                yield return item;
             }
         }
 

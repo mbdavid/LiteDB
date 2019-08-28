@@ -83,6 +83,8 @@ namespace LiteDB
         private static readonly MethodInfo _arrayFilterMethod = M("ARRAY_FILTER");
 
         private static readonly MethodInfo _mapMethod = M("MAP");
+        private static readonly MethodInfo _filterMethod = M("FILTER");
+        private static readonly MethodInfo _sortMethod = M("SORT");
 
         private static readonly MethodInfo _documentInitMethod = M("DOCUMENT_INIT");
         private static readonly MethodInfo _arrayInitMethod = M("ARRAY_INIT");
@@ -108,20 +110,6 @@ namespace LiteDB
                 var op = ReadOperant(tokenizer);
 
                 if (op == null) break;
-
-                // if map stop full expression parse
-                if (op == "=>")
-                {
-                    var last = values.Last();
-
-                    var mapExpr = ParseMap(last, tokenizer, source, root, current, parameters, isRoot);
-
-                    // remove last item on stack to add only this current map (map is a single expression)
-                    values.RemoveAt(values.Count - 1);
-                    values.Add(mapExpr);
-
-                    continue;
-                }
 
                 var expr = ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot);
 
@@ -225,6 +213,7 @@ namespace LiteDB
                 TryParseArray(tokenizer, source, root, current, parameters, isRoot) ??
                 TryParseParameter(tokenizer, source, root, current, parameters, isRoot) ??
                 TryParseInnerExpression(tokenizer, source, root, current, parameters, isRoot) ??
+                TryParseFunction(tokenizer, source, root, current, parameters, isRoot) ??
                 TryParseMethodCall(tokenizer, source, root, current, parameters, isRoot) ??
                 TryParsePath(tokenizer, source, root, current, parameters, isRoot) ??
                 throw LiteException.UnexpectedToken(token);
@@ -1122,32 +1111,57 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Parse MAP function after fat-arrow. Return linq expression
+        /// Try parse FUNCTION methods: MAP, FILTER, SORT, ...
         /// </summary>
-        private static BsonExpression ParseMap(BsonExpression left, Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParseFunction(Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
+            var token = tokenizer.Current;
+
+            switch(token.Value.ToUpper())
+            {
+                case "MAP": return ParseFunction(_mapMethod, BsonExpressionType.Map, tokenizer, source, root, current, parameters, isRoot);
+                case "FILTER": return ParseFunction(_filterMethod, BsonExpressionType.Filter, tokenizer, source, root, current, parameters, isRoot);
+                case "SORT": return ParseFunction(_sortMethod, BsonExpressionType.Sort, tokenizer, source, root, current, parameters, isRoot);
+            }
+
+            return null;
+        }
+
+        private static BsonExpression ParseFunction(MethodInfo method, BsonExpressionType type, Tokenizer tokenizer, ParameterExpression source, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        { 
+            // read (
+            tokenizer.ReadToken().Expect(TokenType.OpenParenthesis);
+
+            var left = ParseSingleExpression(tokenizer, source, root, current, parameters, isRoot);
+
+            // read ,
+            tokenizer.ReadToken().Expect(TokenType.Comma);
+
+            var right = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
+
+            // read )
+            tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
+
             // if left is a scalar expression, convert into enumerable expression (avoid to use [*] all the time)
             if (left.IsScalar)
             {
                 left = ConvertToEnumerable(left);
             }
 
-            var right = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Single, false);
-
             if (right == null) throw LiteException.UnexpectedToken(tokenizer.Current);
+            if (right.IsScalar == false) throw new LiteException(0, $"Second parameter must be a scalar expression in {method.Name} method");
 
             return new BsonExpression
             {
-                Type = BsonExpressionType.Map,
+                Type = type,
                 IsImmutable = left.IsImmutable && right.IsImmutable,
                 UseSource = left.UseSource || right.UseSource,
                 IsScalar = false,
                 Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
-                Expression = Expression.Call(_mapMethod, left.Expression, Expression.Constant(right), root, parameters),
-                Source = left.Source + "=>" + right.Source
+                Expression = Expression.Call(method, left.Expression, Expression.Constant(right), root, parameters),
+                Source = "(" + left.Source + "," + right.Source + ")"
             };
         }
-
         /// <summary>
         /// Create an array expression with 2 values (used only in BETWEEN statement)
         /// </summary>
@@ -1281,14 +1295,6 @@ namespace LiteDB
             if (token.IsOperand)
             {
                 tokenizer.ReadToken(); // consume operant
-
-                // checks for map function =>
-                if (tokenizer.LookAhead(false).Type == TokenType.Greater)
-                {
-                    tokenizer.ReadToken(); // consume >
-
-                    return "=>";
-                }
 
                 return token.Value;
             }

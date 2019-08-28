@@ -100,7 +100,9 @@ http://minisqlquery.codeplex.com/license
         <Key word="REPLACE" />
         <Key word="VACCUM" />
         <Key word="CHECK" />
-        <Key word="INTEGRITY" />
+        <Key word="MAP" />
+        <Key word="FILTER" />
+        <Key word="SORT" />
       </KeyWords>
       
       <KeyWords name="SqlMethods" bold="false" italic="false" color="Fuchsia">
