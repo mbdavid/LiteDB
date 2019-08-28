@@ -43,7 +43,7 @@ namespace LiteDB
                 case "Where(Func<T,TResult>)": return "FILTER(@0 => @1)";
                 
                 // map
-                case "Select(Func<T,TResult>)": return "(MAP(@0 => @1))";
+                case "Select(Func<T,TResult>)": return "MAP(@0 => @1)";
 
                 // aggregate
                 case "Count()": return "COUNT(@0)";
