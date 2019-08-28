@@ -191,6 +191,7 @@ http://minisqlquery.codeplex.com/license
         <Key word="TOP" />
         <Key word="UNION" />
         <Key word="EXCEPT" />
+        <Key word="DISTINCT" />
 
         <!-- String.cs -->
         <Key word="LOWER" />

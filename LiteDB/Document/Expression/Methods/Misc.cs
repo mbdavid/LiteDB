@@ -183,5 +183,13 @@ namespace LiteDB
         {
             return left.Except(right);
         }
+
+        /// <summary>
+        /// Returns a unique list of items
+        /// </summary>
+        public static IEnumerable<BsonValue> DISTINCT(IEnumerable<BsonValue> items)
+        {
+            return items.Distinct();
+        }
     }
 }
