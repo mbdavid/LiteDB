@@ -12,11 +12,11 @@ namespace LiteDB
     /// </summary>
     public class LiteStorage<TFileId>
     {
-        private readonly LiteDatabase _db;
+        private readonly ILiteDatabase _db;
         private readonly ILiteCollection<LiteFileInfo<TFileId>> _files;
         private readonly ILiteCollection<BsonDocument> _chunks;
 
-        public LiteStorage(LiteDatabase db, string filesCollection, string chunksCollection)
+        public LiteStorage(ILiteDatabase db, string filesCollection, string chunksCollection)
         {
             _db = db;
             _files = db.GetCollection<LiteFileInfo<TFileId>>(filesCollection);

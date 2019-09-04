@@ -20,7 +20,7 @@ namespace LiteDB.Tests.Database
 
         private ILiteCollection<Item> _collection;
         private TempFile _tempFile;
-        private LiteDatabase _database;
+        private ILiteDatabase _database;
 
         public IndexSortAndFilterTest()
         {

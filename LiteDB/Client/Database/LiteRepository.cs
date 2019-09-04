@@ -14,12 +14,12 @@ namespace LiteDB
     {
         #region Properties
 
-        private readonly LiteDatabase _db = null;
+        private readonly ILiteDatabase _db = null;
 
         /// <summary>
         /// Get database instance
         /// </summary>
-        public LiteDatabase Database { get { return _db; } }
+        public ILiteDatabase Database { get { return _db; } }
 
         #endregion
 

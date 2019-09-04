@@ -20,7 +20,7 @@ namespace LiteDB.Studio
     {
         private readonly SynchronizationContext _synchronizationContext;
 
-        private LiteDatabase _db = null;
+        private ILiteDatabase _db = null;
         private ConnectionString _connectionString = null;
         private SqlCodeCompletion _codeCompletion;
 
@@ -65,7 +65,7 @@ namespace LiteDB.Studio
             };
         }
 
-        private async Task<LiteDatabase> AsyncConnect(ConnectionString connectionString)
+        private async Task<ILiteDatabase> AsyncConnect(ConnectionString connectionString)
         {
             return await Task.Run(() =>
             {
@@ -354,10 +354,10 @@ namespace LiteDB.Studio
                 lblResultCount.Visible = true;
                 lblElapsed.Text = data.Elapsed.ToString();
                 prgRunning.Style = ProgressBarStyle.Blocks;
-                lblResultCount.Text = 
+                lblResultCount.Text =
                     data.Result == null ? "" :
                     data.Result.Count == 0 ? "no documents" :
-                    data.Result.Count  == 1 ? "1 document" : 
+                    data.Result.Count  == 1 ? "1 document" :
                     data.Result.Count + (data.LimitExceeded ? "+" : "") + " documents";
 
                 if (data.Exception != null)
@@ -585,7 +585,7 @@ namespace LiteDB.Studio
             // set focus to result
             this.ActiveControl =
                 tabResult.SelectedTab == tabGrid ? (Control)grdResult :
-                tabResult.SelectedTab == tabText ? (Control)txtResult : (Control)txtParameters; 
+                tabResult.SelectedTab == tabText ? (Control)txtResult : (Control)txtParameters;
         }
 
         private void TabSql_MouseClick(object sender, MouseEventArgs e)

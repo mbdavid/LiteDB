@@ -92,7 +92,7 @@ namespace LiteDB.Studio
                 _codeCompletionWindow = null;
             }
         }
-        
+
         private string FindExpression()
         {
             var textArea = _editor.ActiveTextAreaControl.TextArea;
@@ -110,7 +110,7 @@ namespace LiteDB.Studio
             }
         }
 
-        public void UpdateCodeCompletion(LiteDatabase db)
+        public void UpdateCodeCompletion(ILiteDatabase db)
         {
             _codeCompletionData = new List<ICompletionData>();
 
@@ -154,9 +154,9 @@ namespace LiteDB.Studio
             // collections
             var cols = db.GetCollection("$cols").Query().ToArray();
 
-            _codeCompletionData.AddRange(cols.Select(x => new DefaultCompletionData(x["name"].AsString, 
+            _codeCompletionData.AddRange(cols.Select(x => new DefaultCompletionData(x["name"].AsString,
                 (x["type"] == "user" ? "User collection:\n-   " : "System collection:\n-   ") +
-                x["name"].AsString, 
+                x["name"].AsString,
                 x["type"] == "user" ? 1 :
                 x["type"] == "system" ? 5 : 4)));
 
