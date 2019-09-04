@@ -11,7 +11,7 @@ namespace LiteDB.Tests.QueryTest
         private Person[] local;
 
         private LiteDatabase db;
-        private LiteCollection<Person> collection;
+        private ILiteCollection<Person> collection;
 
         public GroupBy_Tests()
         {

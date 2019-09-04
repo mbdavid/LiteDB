@@ -7,10 +7,11 @@ using static LiteDB.Constants;
 
 namespace LiteDB
 {
+
     /// <summary>
     /// The LiteDB database. Used for create a LiteDB instance and use all storage resources. It's the database connection
     /// </summary>
-    public partial class LiteDatabase : IDisposable
+    public partial class LiteDatabase : IDisposable, ILiteDatabase
     {
         #region Properties
 
@@ -92,7 +93,7 @@ namespace LiteDB
         /// Get a collection using a entity class as strong typed document. If collection does not exits, create a new one.
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
-        public LiteCollection<T> GetCollection<T>(string name)
+        public ILiteCollection<T> GetCollection<T>(string name)
         {
             return new LiteCollection<T>(name, BsonAutoId.ObjectId, _engine, _mapper);
         }
@@ -100,7 +101,7 @@ namespace LiteDB
         /// <summary>
         /// Get a collection using a name based on typeof(T).Name (BsonMapper.ResolveCollectionName function)
         /// </summary>
-        public LiteCollection<T> GetCollection<T>()
+        public ILiteCollection<T> GetCollection<T>()
         {
             return this.GetCollection<T>(null);
         }
@@ -108,7 +109,7 @@ namespace LiteDB
         /// <summary>
         /// Get a collection using a name based on typeof(T).Name (BsonMapper.ResolveCollectionName function)
         /// </summary>
-        public LiteCollection<T> GetCollection<T>(BsonAutoId autoId)
+        public ILiteCollection<T> GetCollection<T>(BsonAutoId autoId)
         {
             return this.GetCollection<T>(null);
         }
@@ -118,7 +119,7 @@ namespace LiteDB
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
         /// <param name="autoId">Define autoId data type (when document contains no _id field)</param>
-        public LiteCollection<BsonDocument> GetCollection(string name, BsonAutoId autoId = BsonAutoId.ObjectId)
+        public ILiteCollection<BsonDocument> GetCollection(string name, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
@@ -150,7 +151,7 @@ namespace LiteDB
         #region FileStorage
 
         private LiteStorage<string> _fs = null;
-        
+
         /// <summary>
         /// Returns a special collection for storage files/stream inside datafile. Use _files and _chunks collection names. FileId is implemented as string. Use "GetStorage" for custom options
         /// </summary>
@@ -258,7 +259,7 @@ namespace LiteDB
             var p = new BsonDocument();
             var index = 0;
 
-            foreach(var arg in args)
+            foreach (var arg in args)
             {
                 p[index.ToString()] = arg;
                 index++;
@@ -272,7 +273,7 @@ namespace LiteDB
         #region Analyze/Checkpoint/Shrink
 
         /// <summary>
-        /// Do database checkpoint. Copy all commited transaction from log file into datafile. 
+        /// Do database checkpoint. Copy all commited transaction from log file into datafile.
         /// </summary>
         public void Checkpoint()
         {

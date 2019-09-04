@@ -5,7 +5,8 @@ using static LiteDB.Constants;
 
 namespace LiteDB
 {
-    public partial class LiteCollection<T>
+
+    public partial class LiteCollection<T> : ILiteCollection<T>
     {
         #region Count
 

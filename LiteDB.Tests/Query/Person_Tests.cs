@@ -8,7 +8,7 @@ namespace LiteDB.Tests.QueryTest
         protected readonly Person[] local;
 
         protected LiteDatabase db;
-        protected LiteCollection<Person> collection;
+        protected ILiteCollection<Person> collection;
 
         public Person_Tests()
         {
