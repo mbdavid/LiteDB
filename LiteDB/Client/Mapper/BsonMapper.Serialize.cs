@@ -168,7 +168,7 @@ namespace LiteDB
             // adding _type only where property Type is not same as object instance type
             if (type != t)
             {
-                doc["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
+                doc["_type"] = new BsonValue(_typeNameBinder.GetName(t));
             }
 
             foreach (var member in entity.Members.Where(x => x.Getter != null))
