@@ -11,7 +11,7 @@ namespace LiteDB.Tests.Mapper
     {
         public class ProjectList
         {
-            public Guid Id { get; set; }
+            public int Id { get; set; }
 
             public string Name { get; set; }
 
@@ -21,7 +21,7 @@ namespace LiteDB.Tests.Mapper
 
         public class ProjectItem
         {
-            public Guid Id { get; set; }
+            public int Id { get; set; }
 
             public string Name { get; set; }
 
