@@ -177,7 +177,8 @@ namespace LiteDB
 
                 var entity = this.GetEntityMapper(type);
 
-                var o = _typeInstantiator(type) ?? entity.CreateInstance(doc);
+                var o = _typeInstantiator(type) ?? 
+                    (entity.CreateInstance == null ? Reflection.CreateInstance(entity.ForType) : entity.CreateInstance(doc));
 
                 if (o is IDictionary && type.GetTypeInfo().IsGenericType)
                 {
@@ -222,7 +223,7 @@ namespace LiteDB
             {
                 foreach (BsonValue item in value)
                 {
-                    list.Add(Deserialize(itemType, item));
+                    list.Add(this.Deserialize(itemType, item));
                 }
             }
             else
@@ -231,7 +232,7 @@ namespace LiteDB
 
                 foreach (BsonValue item in value)
                 {
-                    addMethod.Invoke(enumerable, new[] { Deserialize(itemType, item) });
+                    addMethod.Invoke(enumerable, new[] { this.Deserialize(itemType, item) });
                 }
             }
 

@@ -5,7 +5,6 @@ namespace LiteDB
 {
     public class DefaultTypeNameBinder : ITypeNameBinder
     {
-
         public static DefaultTypeNameBinder Instance { get; } = new DefaultTypeNameBinder();
 
         private DefaultTypeNameBinder()

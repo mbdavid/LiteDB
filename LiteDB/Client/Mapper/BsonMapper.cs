@@ -153,7 +153,7 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Entity<T>()
         {
-            return new EntityBuilder<T>(this);
+            return new EntityBuilder<T>(this, _typeNameBinder);
         }
 
         #region Get LinqVisitor processor
@@ -299,7 +299,7 @@ namespace LiteDB
 
                 if (dbRef != null && memberInfo is PropertyInfo)
                 {
-                    BsonMapper.RegisterDbRef(this, member, dbRef.Collection ?? this.ResolveCollectionName((memberInfo as PropertyInfo).PropertyType));
+                    BsonMapper.RegisterDbRef(this, member, _typeNameBinder, dbRef.Collection ?? this.ResolveCollectionName((memberInfo as PropertyInfo).PropertyType));
                 }
 
                 // support callback to user modify member mapper
@@ -367,7 +367,7 @@ namespace LiteDB
                 ctors.FirstOrDefault(x => x.GetParameters().Length == 0) ??
                 ctors.FirstOrDefault(x => x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType)));
 
-            if (ctor == null) throw new NotSupportedException($"Type {mapper.ForType} contains no valid constructor. Try use a public parameterless constructor or use all parameters with BsonValue convertable type: {string.Join(", ", Reflection.ConvertType.Keys.Select(x => x.Name))}");
+            if (ctor == null) return null;
 
             var pars = new List<Expression>();
             var pDoc = Expression.Parameter(typeof(BsonDocument), "_doc");
@@ -406,24 +406,24 @@ namespace LiteDB
         /// <summary>
         /// Register a property mapper as DbRef to serialize/deserialize only document reference _id
         /// </summary>
-        internal static void RegisterDbRef(BsonMapper mapper, MemberMapper member, string collection)
+        internal static void RegisterDbRef(BsonMapper mapper, MemberMapper member, ITypeNameBinder typeNameBinder, string collection)
         {
             member.IsDbRef = true;
 
             if (member.IsList)
             {
-                RegisterDbRefList(mapper, member, collection);
+                RegisterDbRefList(mapper, member, typeNameBinder, collection);
             }
             else
             {
-                RegisterDbRefItem(mapper, member, collection);
+                RegisterDbRefItem(mapper, member, typeNameBinder, collection);
             }
         }
 
         /// <summary>
         /// Register a property as a DbRef - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
         /// </summary>
-        private static void RegisterDbRefItem(BsonMapper mapper, MemberMapper member, string collection)
+        private static void RegisterDbRefItem(BsonMapper mapper, MemberMapper member, ITypeNameBinder typeNameBinder, string collection)
         {
             // get entity
             var entity = mapper.GetEntityMapper(member.DataType);
@@ -440,11 +440,18 @@ namespace LiteDB
 
                 var id = idField.Getter(obj);
 
-                return new BsonDocument
+                var bsonDocument = new BsonDocument
                 {
-                    { "$id", m.Serialize(id.GetType(), id, 0) },
-                    { "$ref", collection }
+                    ["$id"] = m.Serialize(id.GetType(), id, 0),
+                    ["$ref"] = collection
                 };
+
+                if (member.DataType != obj.GetType())
+                {
+                    bsonDocument["$type"] = typeNameBinder.GetName(obj.GetType());
+                }
+
+                return bsonDocument;
             };
 
             member.Deserialize = (bson, m) =>
@@ -457,14 +464,16 @@ namespace LiteDB
                 return m.Deserialize(entity.ForType,
                     idRef.IsNull ?
                     bson : // if has no $id object was full loaded (via Include) - so deserialize using normal function
-                    new BsonDocument { { "_id", idRef } }); // if has $id, deserialize object using only _id object
+                    bson.AsDocument.ContainsKey("$type") ?
+                        new BsonDocument { ["_id"] = idRef, ["_type"] = bson["$type"] } :
+                        new BsonDocument { ["_id"] = idRef }); // if has $id, deserialize object using only _id object
             };
         }
 
         /// <summary>
         /// Register a property as a DbRefList - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
         /// </summary>
-        private static void RegisterDbRefList(BsonMapper mapper, MemberMapper member, string collection)
+        private static void RegisterDbRefList(BsonMapper mapper, MemberMapper member, ITypeNameBinder typeNameBinder, string collection)
         {
             // get entity from list item type
             var entity = mapper.GetEntityMapper(member.UnderlyingType);
@@ -483,11 +492,18 @@ namespace LiteDB
 
                     var id = idField.Getter(item);
 
-                    result.Add(new BsonDocument
+                    var bsonDocument = new BsonDocument
                     {
-                        { "$id", m.Serialize(id.GetType(), id, 0) },
-                        { "$ref", collection }
-                    });
+                        ["$id"] = m.Serialize(id.GetType(), id, 0),
+                        ["$ref"] = collection
+                    };
+
+                    if (member.UnderlyingType != item.GetType())
+                    {
+                        bsonDocument["$type"] = typeNameBinder.GetName(item.GetType());
+                    }
+
+                    result.Add(bsonDocument);
                 }
 
                 return result;
@@ -519,7 +535,14 @@ namespace LiteDB
                     }
                     else
                     {
-                        result.Add(new BsonDocument { { "_id", refId } });
+                        var bsonDocument = new BsonDocument { ["_id"] = refId };
+
+                        if (item.AsDocument.ContainsKey("$type"))
+                        {
+                            bsonDocument["_type"] = item["$type"];
+                        }
+
+                        result.Add(bsonDocument);
                     }
 
                 }

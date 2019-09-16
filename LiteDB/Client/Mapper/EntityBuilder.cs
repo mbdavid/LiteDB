@@ -14,10 +14,12 @@ namespace LiteDB
     {
         private BsonMapper _mapper;
         private EntityMapper _entity;
+        private ITypeNameBinder _typeNameBinder;
 
-        internal EntityBuilder(BsonMapper mapper)
+        internal EntityBuilder(BsonMapper mapper, ITypeNameBinder typeNameBinder)
         {
             _mapper = mapper;
+            _typeNameBinder = typeNameBinder;
             _entity = mapper.GetEntityMapper(typeof(T));
         }
 
@@ -74,7 +76,7 @@ namespace LiteDB
         {
             return this.GetProperty(property, (p) =>
             {
-                BsonMapper.RegisterDbRef(_mapper, p, collection ?? _mapper.ResolveCollectionName(typeof(K)));
+                BsonMapper.RegisterDbRef(_mapper, p, _typeNameBinder, collection ?? _mapper.ResolveCollectionName(typeof(K)));
             });
         }
 
