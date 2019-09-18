@@ -52,6 +52,8 @@ namespace LiteDB
                 case "Minute": return "MINUTE(#)";
                 case "Second": return "SECOND(#)";
                 case "Date": return "DATETIME(YEAR(#), MONTH(#), DAY(#))";
+                case "ToLocalTime": return "TO_LOCAL(#)";
+                case "ToUniversalTime": return "TO_UTC(#)";
             }
 
             return null;

@@ -29,8 +29,8 @@ namespace LiteDB
                 // static properties
                 case "Empty": return "OBJECTID('000000000000000000000000')";
 
-                // instance properties (not implemented in BsonExpression)
-                // case "CreationTime": return "...(#)";
+                // instance properties
+                case "CreationTime": return "OID_CREATIONTIME(#)";
             }
 
             return null;

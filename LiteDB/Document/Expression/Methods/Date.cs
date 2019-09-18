@@ -126,6 +126,32 @@ namespace LiteDB
             return BsonValue.Null;
         }
 
+        /// <summary>
+        /// Convert UTC date into LOCAL date
+        /// </summary>
+        public static BsonValue TO_LOCAL(BsonValue date)
+        {
+            if (date.IsDateTime)
+            {
+                return date.AsDateTime.ToLocalTime();
+            }
+
+            return BsonValue.Null;
+        }
+
+        /// <summary>
+        /// Convert LOCAL date into UTC date
+        /// </summary>
+        public static BsonValue TO_UTC(BsonValue date)
+        {
+            if (date.IsDateTime)
+            {
+                return date.AsDateTime.ToUniversalTime();
+            }
+
+            return BsonValue.Null;
+        }
+
         #endregion
     }
 }

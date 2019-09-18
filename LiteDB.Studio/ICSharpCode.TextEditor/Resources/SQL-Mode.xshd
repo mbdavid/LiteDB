@@ -172,6 +172,8 @@ http://minisqlquery.codeplex.com/license
         <Key word="SECOND" />
         <Key word="DATEADD" />
         <Key word="DATEDIFF" />
+        <Key word="TO_LOCAL" />
+        <Key word="TO_UTC" />
 
         <!-- Math.cs -->
         <Key word="ABS" />
@@ -185,6 +187,8 @@ http://minisqlquery.codeplex.com/license
         <Key word="CONCAT" />
         <Key word="RAW_ID" />
         <Key word="KEYS" />
+        <Key word="REMOVE_KEYS" />
+        <Key word="OID_CREATIONTIME" />
         <Key word="IIF" />
         <Key word="COALESCE" />
         <Key word="LENGTH" />
