@@ -126,7 +126,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Apply a predicate function in an index result (index scan). Execute full index scan but it's faster then runs over deserialized document.
+        /// Apply a predicate function in an index result (index scan). Execute full index scan but it's faster than running over deserialized document.
         /// </summary>
         public static Index Scan(string name, Func<BsonValue, bool> predicate, int order = Query.Ascending)
         {
