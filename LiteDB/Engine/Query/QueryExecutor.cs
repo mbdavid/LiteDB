@@ -78,6 +78,12 @@ namespace LiteDB.Engine
                         transaction.Commit();
                     }
 
+                    // if query use Source (*) need runs with empty data source
+                    if (_query.Select.UseSource)
+                    {
+                        yield return _query.Select.ExecuteScalar().AsDocument;
+                    }
+
                     yield break;
                 }
 

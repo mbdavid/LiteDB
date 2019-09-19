@@ -209,12 +209,12 @@ namespace LiteDB
         #region ExecuteScalar
 
         /// <summary>
-        /// Execute scalar expression with an empty document (used only for resolve math/functions).
+        /// Execute scalar expression with an blank document and empty source (used only for resolve math/functions).
         /// </summary>
         public BsonValue ExecuteScalar()
         {
             var root = new BsonDocument();
-            var source = new BsonDocument[] { root };
+            var source = new BsonDocument[] { };
 
             return this.ExecuteScalar(source, root, root);
         }
