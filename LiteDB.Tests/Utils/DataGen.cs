@@ -15,9 +15,7 @@ namespace LiteDB.Tests
             {
                 var reader = new StreamReader(stream);
 
-                var s = reader.ReadToEnd();
-
-                var docs = JsonSerializer.DeserializeArray(s).Select(x => x.AsDocument);
+                var docs = JsonSerializer.DeserializeArray(reader).Select(x => x.AsDocument);
                 var id = 0;
 
                 foreach (var doc in docs)
