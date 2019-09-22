@@ -14,7 +14,7 @@ namespace LiteDB.Engine
     internal class TransactionMonitor : IDisposable
     {
         private readonly ConcurrentDictionary<uint, TransactionService> _transactions = new ConcurrentDictionary<uint, TransactionService>();
-        private LocalDataStoreSlot _slot = Thread.GetNamedDataSlot(Guid.NewGuid().ToString("n"));
+        private readonly ThreadLocal<TransactionService> _slot = new ThreadLocal<TransactionService>();
 
         private readonly HeaderPage _header;
         private readonly LockService _locker;
@@ -47,7 +47,7 @@ namespace LiteDB.Engine
 
         public TransactionService GetTransaction(bool create, out bool isNew)
         {
-            var transaction = Thread.GetData(_slot) as TransactionService;
+            var transaction = _slot.Value;
 
             if (create && transaction == null)
             {
@@ -61,7 +61,7 @@ namespace LiteDB.Engine
                 {
                     lock(_transactions)
                     {
-                        Thread.SetData(_slot, null);
+                        _slot.Value = null;
 
                         _transactions.TryRemove(id, out var t);
 
@@ -72,7 +72,7 @@ namespace LiteDB.Engine
                 // add transaction to execution transaction dict
                 _transactions[transaction.TransactionID] = transaction;
 
-                Thread.SetData(_slot, transaction);
+                _slot.Value = transaction;
             }
             else
             {
