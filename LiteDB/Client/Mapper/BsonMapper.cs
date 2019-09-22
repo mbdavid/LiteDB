@@ -306,7 +306,7 @@ namespace LiteDB
                 this.ResolveMember?.Invoke(type, memberInfo, member);
 
                 // test if has name and there is no duplicate field
-                if (member.FieldName != null && mapper.Members.Any(x => x.FieldName.Equals(name, StringComparison.InvariantCultureIgnoreCase)) == false)
+                if (member.FieldName != null && mapper.Members.Any(x => x.FieldName.Equals(name, StringComparison.OrdinalIgnoreCase)) == false)
                 {
                     mapper.Members.Add(member);
                 }
@@ -324,7 +324,7 @@ namespace LiteDB
         protected virtual MemberInfo GetIdMember(IEnumerable<MemberInfo> members)
         {
             return Reflection.SelectMember(members,
-                x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
+                x => x.IsDefined(typeof(BsonIdAttribute), true),
                 x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
                 x => x.Name.Equals(x.DeclaringType.Name + "Id", StringComparison.OrdinalIgnoreCase));
         }
@@ -392,7 +392,7 @@ namespace LiteDB
             var newExpr = Expression.New(ctor, pars.ToArray());
 
             // get lambda expression
-            var fn = mapper.ForType.IsClass ? 
+            var fn = mapper.ForType.GetTypeInfo().IsClass ? 
                 Expression.Lambda<CreateObject>(newExpr, pDoc).Compile() : // Class
                 Expression.Lambda<CreateObject>(Expression.Convert(newExpr, typeof(object)), pDoc).Compile(); // Struct
 

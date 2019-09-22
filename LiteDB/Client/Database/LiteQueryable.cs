@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -19,7 +20,7 @@ namespace LiteDB
         protected readonly Query _query;
 
         // indicate that T type are simple and result are inside first document fields (query always return a BsonDocument)
-        private readonly bool _isSimpleType = typeof(T).IsValueType || typeof(T) == typeof(string);
+        private readonly bool _isSimpleType = typeof(T).GetTypeInfo().IsValueType || typeof(T) == typeof(string);
 
         internal LiteQueryable(ILiteEngine engine, BsonMapper mapper, string collection, Query query)
         {

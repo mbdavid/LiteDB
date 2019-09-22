@@ -54,13 +54,15 @@ namespace LiteDB
                         return c(null);
                     }
 
-                    if (type.IsClass)
+                    var typeInfo = type.GetTypeInfo();
+
+                    if (typeInfo.IsClass)
                     {
                         _cacheCtor.Add(type, c = CreateClass(type));
                     }
-                    else if (type.IsInterface) // some know interfaces
+                    else if (typeInfo.IsInterface) // some know interfaces
                     {
-                        if (type.IsGenericType)
+                        if (typeInfo.IsGenericType)
                         {
                             var typeDef = type.GetGenericTypeDefinition();
 
@@ -126,7 +128,7 @@ namespace LiteDB
 
         public static bool IsNullable(Type type)
         {
-            if (!type.IsGenericType) return false;
+            if (!type.GetTypeInfo().IsGenericType) return false;
             var g = type.GetGenericTypeDefinition();
             return (g.Equals(typeof(Nullable<>)));
         }
@@ -136,7 +138,7 @@ namespace LiteDB
         /// </summary>
         public static Type UnderlyingTypeOf(Type type)
         {
-            if (!type.IsGenericType) return type;
+            if (!type.GetTypeInfo().IsGenericType) return type;
 
             return type.GetGenericArguments()[0];
         }
@@ -162,13 +164,13 @@ namespace LiteDB
 
             foreach (var i in listType.GetInterfaces())
             {
-                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                if (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
                     return i.GetGenericArguments()[0];
                 }
                 // if interface is IEnumerable (non-generic), let's get from listType and not from interface
                 // from #395
-                else if (listType.IsGenericType && i == typeof(IEnumerable))
+                else if (listType.GetTypeInfo().IsGenericType && i == typeof(IEnumerable))
                 {
                     return listType.GetGenericArguments()[0];
                 }
@@ -187,7 +189,7 @@ namespace LiteDB
 
             foreach (var @interface in type.GetInterfaces())
             {
-                if (@interface.IsGenericType)
+                if (@interface.GetTypeInfo().IsGenericType)
                 {
                     if (@interface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                     {
@@ -205,7 +207,7 @@ namespace LiteDB
         /// </summary>
         public static bool IsDictionary(Type type)
         {
-            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>);
+            return type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>);
         }
 
         /// <summary>
@@ -260,7 +262,7 @@ namespace LiteDB
 
                 sb.Append(FriendlyTypeName(p.ParameterType));
 
-                if (p.ParameterType.IsGenericType)
+                if (p.ParameterType.GetTypeInfo().IsGenericType)
                 {
                     var generic = p.ParameterType.GetGenericTypeDefinition();
 

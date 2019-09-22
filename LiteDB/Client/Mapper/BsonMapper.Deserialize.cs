@@ -182,8 +182,8 @@ namespace LiteDB
 
                 if (o is IDictionary && type.GetTypeInfo().IsGenericType)
                 {
-                    var k = type.GetTypeInfo().GetGenericArguments()[0];
-                    var t = type.GetTypeInfo().GetGenericArguments()[1];
+                    var k = type.GetGenericArguments()[0];
+                    var t = type.GetGenericArguments()[1];
 
                     this.DeserializeDictionary(k, t, (IDictionary)o, value.AsDocument);
                 }

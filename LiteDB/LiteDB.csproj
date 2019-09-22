@@ -56,6 +56,10 @@
     <Reference Include="System" />
     <Reference Include="System.Runtime" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.1" />
+  </ItemGroup>
   
   <!-- End References -->
 
