@@ -25,7 +25,7 @@ namespace LiteDB.Tests
                         Id = ++id,
                         Name = doc["name"],
                         Age = doc["age"],
-                        Phones = doc["phone"].AsString.Split("-"),
+                        Phones = doc["phone"].AsString.Split('-'),
                         Email = doc["email"],
                         Date = doc["date"],
                         Active = doc["active"],
