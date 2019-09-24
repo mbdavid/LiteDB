@@ -60,7 +60,7 @@ namespace LiteDB
             }
         }
 
-        #region CompareTo / ToString
+        #region CompareTo
 
         public override int CompareTo(BsonValue other)
         {
@@ -88,11 +88,6 @@ namespace LiteDB
             if (i == thisLength) return i == otherLength ? 0 : -1;
 
             return 1;
-        }
-
-        public override string ToString()
-        {
-            return JsonSerializer.Serialize(this);
         }
 
         #endregion

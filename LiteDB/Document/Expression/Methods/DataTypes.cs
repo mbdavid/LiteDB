@@ -189,7 +189,10 @@ namespace LiteDB
         /// </summary>
         public static BsonValue STRING(BsonValue value)
         {
-            return value.ToString();
+            return
+                value.IsNull ? "" :
+                value.IsString ? value.AsString :
+                value.ToString();
         }
 
         // ==> there is no convert to BsonDocument, must use { .. } syntax 

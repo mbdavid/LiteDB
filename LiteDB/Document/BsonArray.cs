@@ -132,11 +132,6 @@ namespace LiteDB
             return 1;
         }
 
-        public override string ToString()
-        {
-            return JsonSerializer.Serialize(this);
-        }
-
         private int _length;
 
         internal override int GetBytesCount(bool recalc)

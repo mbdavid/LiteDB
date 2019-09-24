@@ -436,7 +436,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return this.RawValue?.ToString() ?? "";
+            return JsonSerializer.Serialize(this);
         }
 
         #endregion

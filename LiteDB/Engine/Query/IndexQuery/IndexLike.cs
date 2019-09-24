@@ -60,7 +60,10 @@ namespace LiteDB.Engine
                 // if current node are edges exit while
                 if (node.Key.IsMinValue || node.Key.IsMaxValue) break;
 
-                var valueString = node.Key.IsString ? node.Key.AsString : node.Key.ToString();
+                var valueString = 
+                    node.Key.IsString ? node.Key.AsString : 
+                    node.Key.IsNull ? "" :
+                    node.Key.ToString();
 
                 if (_equals ?
                     valueString.Equals(_startsWith, StringComparison.OrdinalIgnoreCase) :
@@ -89,7 +92,10 @@ namespace LiteDB.Engine
                 // if current node are edges exit while
                 if (node.Key.IsMinValue || node.Key.IsMaxValue) break;
 
-                var valueString = node.Key.IsString ? node.Key.AsString : node.Key.ToString();
+                var valueString =
+                    node.Key.IsString ? node.Key.AsString :
+                    node.Key.IsNull ? "" :
+                    node.Key.ToString();
 
                 if (_equals ?
                     valueString.Equals(_pattern, StringComparison.OrdinalIgnoreCase) :
