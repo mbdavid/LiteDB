@@ -19,7 +19,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Index document fields for fast search (up to 32 indexes per collection)
 - LINQ support for queries
 - SQL-Like commands to access/transform data
-- LiteDB Studio - Nice UI for data access
+- [LiteDB Studio](https://github.com/mbdavid/LiteDB.Studio) - Nice UI for data access 
 - Pretty fast - [compare results with SQLite here](https://github.com/mbdavid/LiteDB-Perf)
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
@@ -30,10 +30,6 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 Take a look at the all [new version v5 here](#v5)
 
 ![LiteDB Studio](https://pbs.twimg.com/media/D_142rzWwAECJDd?format=jpg&name=900x900)
-
-## Try online
-
-[Try LiteDB Web Shell](http://www.litedb.org/#shell). For security reasons, in the online version not all commands are available. Try the offline version for full feature tests.
 
 ## Documentation
 
@@ -201,7 +197,7 @@ After more than a year of hard working, v5 is comming!
     - Support INSERT/UPDATE/DELETE/...
     - MapReduce using GroupBy/Having
    
-- New Native UI - LiteDB.Studio
+- New Native UI - [LiteDB.Studio](https://github.com/mbdavid/LiteDB.Studio)
     - WinForms app to manipulate the database
     - Based on SQL commands
     - Show results in grid or as text
