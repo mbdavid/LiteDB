@@ -117,7 +117,7 @@ namespace LiteDB
                     type = obj.GetType();
                 }
 
-                var itemType = type.GetTypeInfo().GetGenericArguments()[1];
+                var itemType = type.GetGenericArguments()[1];
 
                 return this.SerializeDictionary(itemType, obj as IDictionary, depth);
             }
