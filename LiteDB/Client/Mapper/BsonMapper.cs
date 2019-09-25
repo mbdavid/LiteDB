@@ -229,11 +229,7 @@ namespace LiteDB
         /// </summary>
         protected virtual EntityMapper BuildEntityMapper(Type type)
         {
-            var mapper = new EntityMapper
-            {
-                Members = new List<MemberMapper>(),
-                ForType = type
-            };
+            var mapper = new EntityMapper(type);
 
             var idAttr = typeof(BsonIdAttribute);
             var ignoreAttr = typeof(BsonIgnoreAttribute);
@@ -311,9 +307,6 @@ namespace LiteDB
                     mapper.Members.Add(member);
                 }
             }
-
-            // call createInstance after fill all fields
-            mapper.CreateInstance = this.GetTypeCtor(mapper);
 
             return mapper;
         }

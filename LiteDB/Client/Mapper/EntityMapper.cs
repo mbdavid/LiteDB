@@ -14,24 +14,29 @@ namespace LiteDB
     public class EntityMapper
     {
         /// <summary>
+        /// Indicate which Type this entity mapper is
+        /// </summary>
+        public Type ForType { get; }
+
+        /// <summary>
         /// List all type members that will be mapped to/from BsonDocument
         /// </summary>
-        public List<MemberMapper> Members { get; set; }
+        public List<MemberMapper> Members { get; } = new List<MemberMapper>();
 
         /// <summary>
         /// Indicate which member is _id
         /// </summary>
-        public MemberMapper Id { get { return this.Members.SingleOrDefault(x => x.FieldName == "_id"); } }
+        public MemberMapper Id => this.Members.SingleOrDefault(x => x.FieldName == "_id");
 
         /// <summary>
-        /// Indicate which Type this entity mapper is
-        /// </summary>
-        public Type ForType { get; set; }
-
-        /// <summary>
-        /// Set a custorm ctor function to create new entity instance
+        /// Get/Set a custom ctor function to create new entity instance
         /// </summary>
         public CreateObject CreateInstance { get; set; }
+
+        public EntityMapper(Type forType)
+        {
+            this.ForType = forType;
+        }
 
         /// <summary>
         /// Resolve expression to get member mapped

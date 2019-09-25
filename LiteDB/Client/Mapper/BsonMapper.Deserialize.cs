@@ -177,8 +177,15 @@ namespace LiteDB
 
                 var entity = this.GetEntityMapper(type);
 
-                var o = _typeInstantiator(type) ?? 
-                    (entity.CreateInstance == null ? Reflection.CreateInstance(entity.ForType) : entity.CreateInstance(doc));
+                // initialize CreateInstance
+                if (entity.CreateInstance == null)
+                {
+                    entity.CreateInstance = 
+                        this.GetTypeCtor(entity) ?? 
+                        ((BsonDocument v) => Reflection.CreateInstance(entity.ForType));
+                }
+
+                var o = _typeInstantiator(type) ?? entity.CreateInstance(doc);
 
                 if (o is IDictionary && type.GetTypeInfo().IsGenericType)
                 {
