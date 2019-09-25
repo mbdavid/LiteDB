@@ -75,6 +75,12 @@ namespace LiteDB
         public bool EmptyStringToNull { get; set; }
 
         /// <summary>
+        /// Get/Set if enum must be converted into Integer value. If false, enum will be converted into String value.
+        /// MUST BE "true" to support LINQ expressions (default false)
+        /// </summary>
+        public bool EnumAsInteger { get; set; }
+
+        /// <summary>
         /// Get/Set that mapper must include fields (default: false)
         /// </summary>
         public bool IncludeFields { get; set; }
@@ -103,6 +109,7 @@ namespace LiteDB
             this.SerializeNullValues = false;
             this.TrimWhitespace = true;
             this.EmptyStringToNull = true;
+            this.EnumAsInteger = false;
             this.ResolveFieldName = (s) => s;
             this.ResolveMember = (t, mi, mm) => { };
             this.ResolveCollectionName = (t) => Reflection.IsList(t) ? Reflection.GetListItemType(t).Name : t.Name;

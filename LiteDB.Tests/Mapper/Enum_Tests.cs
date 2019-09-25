@@ -36,7 +36,6 @@ namespace LiteDB.Tests.Mapper
 
             fromDoc.Type.Should().Be(CustomerType.Loyal);
             fromDoc.NullableType.Should().BeNull();
-
         }
 
         [Fact]
@@ -46,15 +45,22 @@ namespace LiteDB.Tests.Mapper
 
             var c = new Customer { Id = 1, Type = CustomerType.Loyal };
 
-            //mapper.enu
+            mapper.EnumAsInteger = true;
 
             var doc = mapper.ToDocument(c);
 
+            doc["Type"].AsInt32.Should().Be(2);
+            doc["Nullable"].IsNull.Should().BeTrue();
+
+            // To use Eum in LINQ expressions, Enum must be integer value (should be EnumAsInteger = true)
             var expr1 = mapper.GetExpression<Customer, bool>(x => x.Type == CustomerType.Loyal);
-            var expr2 = mapper.GetExpression<Customer, bool>(x => x.NullableType == CustomerType.Loyal);
 
-            ;
+            expr1.Parameters["p0"].AsInt32.Should().Be(2);
+
+            var expr2 = mapper.GetExpression<Customer, bool>(x => x.NullableType.Value == CustomerType.Loyal);
+
+            expr2.Parameters["p0"].AsInt32.Should().Be(2);
+
         }
-
     }
 }

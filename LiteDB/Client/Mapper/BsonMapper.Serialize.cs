@@ -99,9 +99,20 @@ namespace LiteDB
             {
                 return new BsonValue(Convert.ToDouble(obj));
             }
-            else if (obj is Char || obj is Enum)
+            else if (obj is Char)
             {
                 return new BsonValue(obj.ToString());
+            }
+            else if (obj is Enum)
+            {
+                if (this.EnumAsInteger)
+                {
+                    return new BsonValue((int)obj);
+                }
+                else
+                {
+                    return new BsonValue(obj.ToString());
+                }
             }
             // check if is a custom type
             else if (_customSerializer.TryGetValue(type, out var custom) || _customSerializer.TryGetValue(obj.GetType(), out custom))
