@@ -1212,7 +1212,7 @@ namespace LiteDB
                 Expression = Expression.Call(method, left.Expression, right.Expression),
                 Left = left,
                 Right = right,
-                Source = left.Source + type + right.Source
+                Source = left.Source + src + right.Source
             };
 
             // copy their parameters into result

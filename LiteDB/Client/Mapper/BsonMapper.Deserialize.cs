@@ -120,7 +120,7 @@ namespace LiteDB
             }
 
             // enum value is an int
-            else if (type.GetTypeInfo().IsEnum)
+            else if (type.IsEnum)
             {
                 if (value.IsString) return Enum.Parse(type, value.AsString);
 
@@ -177,10 +177,17 @@ namespace LiteDB
 
                 var entity = this.GetEntityMapper(type);
 
-                var o = _typeInstantiator(type) ?? 
-                    (entity.CreateInstance == null ? Reflection.CreateInstance(entity.ForType) : entity.CreateInstance(doc));
+                // initialize CreateInstance
+                if (entity.CreateInstance == null)
+                {
+                    entity.CreateInstance = 
+                        this.GetTypeCtor(entity) ?? 
+                        ((BsonDocument v) => Reflection.CreateInstance(entity.ForType));
+                }
 
-                if (o is IDictionary && type.GetTypeInfo().IsGenericType)
+                var o = _typeInstantiator(type) ?? entity.CreateInstance(doc);
+
+                if (o is IDictionary && type.IsGenericType)
                 {
                     var k = type.GetGenericArguments()[0];
                     var t = type.GetGenericArguments()[1];
@@ -243,7 +250,7 @@ namespace LiteDB
         {
             foreach (var el in value.GetElements())
             {
-                var k = K.GetTypeInfo().IsEnum ? Enum.Parse(K, el.Key) : Convert.ChangeType(el.Key, K);
+                var k = K.IsEnum ? Enum.Parse(K, el.Key) : Convert.ChangeType(el.Key, K);
                 var v = this.Deserialize(T, el.Value);
 
                 dict.Add(k, v);

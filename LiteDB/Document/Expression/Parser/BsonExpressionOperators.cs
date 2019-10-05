@@ -25,7 +25,7 @@ namespace LiteDB
             // if any sides are string, concat casting both to string
             else if (left.IsString || right.IsString)
             {
-                return left.ToString() + right.ToString();
+                return BsonExpressionMethods.STRING(left).AsString + BsonExpressionMethods.STRING(right).AsString;
             }
             // if any side are DateTime and another is number, add days in date
             else if (left.IsDateTime && right.IsNumber)

@@ -165,9 +165,7 @@ namespace LiteDB.Tests.Expressions
             BsonValue S(string s, params BsonValue[] args)
             {
                 return BsonExpression.Create(s, args).ExecuteScalar(doc);
-            }
-
-            ;
+            };
 
             doc = J("{}");
 
@@ -270,9 +268,7 @@ namespace LiteDB.Tests.Expressions
             IEnumerable<BsonValue> A(string s, params BsonValue[] args)
             {
                 return BsonExpression.Create(s, args).Execute(docs);
-            }
-
-            ;
+            };
 
             docs = new List<BsonDocument>()
             {

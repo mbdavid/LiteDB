@@ -5,84 +5,34 @@ using Xunit;
 
 namespace LiteDB.Tests.Mapper
 {
-    public class CustomMapping_Tests
+    public class CustomMappingCtor_Tests
     {
-        public class User
+        public class UserWithCustomId
         {
-            public int Id { get; }
+            public int Key { get; }
             public string Name { get; }
 
-            public User(int id, string name)
+            public UserWithCustomId(int key, string name)
             {
-                this.Id = id;
+                this.Key = key;
                 this.Name = name;
             }
         }
-
-        public class Domain
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-        }
-
-        public class MultiCtor
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-            public string DefinedOnlyInInt32 { get; set; }
-
-            public MultiCtor()
-            {
-            }
-
-            [BsonCtor]
-            public MultiCtor(int id)
-            {
-                this.Id = id;
-                this.DefinedOnlyInInt32 = "changed";
-            }
-
-            public MultiCtor(int id, string name)
-            {
-                this.Id = id;
-                this.Name = name;
-            }
-        }
-
-        private BsonMapper _mapper = new BsonMapper();
 
         [Fact]
-        public void Custom_Ctor()
+        public void Custom_Ctor_With_Custom_Id()
         {
+            var mapper = new BsonMapper();
+
+            mapper.Entity<UserWithCustomId>()
+                .Id(u => u.Key, false);
+
             var doc = new BsonDocument { ["_id"] = 10, ["name"] = "John" };
 
-            var user = _mapper.ToObject<User>(doc);
+            var user = mapper.ToObject<UserWithCustomId>(doc);
 
-            user.Id.Should().Be(10);
+            user.Key.Should().Be(10); //     Expected user.Key to be 10, but found 0.
             user.Name.Should().Be("John");
-        }
-
-        [Fact]
-        public void ParameterLess_Ctor()
-        {
-            var doc = new BsonDocument { ["_id"] = 25, ["name"] = "numeria.com.br" };
-
-            var domain = _mapper.ToObject<Domain>(doc);
-
-            domain.Id.Should().Be(25);
-            domain.Name.Should().Be("numeria.com.br");
-        }
-
-        [Fact]
-        public void BsonCtor_Attribute()
-        {
-            var doc = new BsonDocument { ["_id"] = 25, ["name"] = "value-name" };
-
-            var obj = _mapper.ToObject<MultiCtor>(doc);
-
-            obj.Id.Should().Be(25);
-            obj.Name.Should().Be("value-name");
-            obj.DefinedOnlyInInt32.Should().Be("changed");
         }
     }
 }

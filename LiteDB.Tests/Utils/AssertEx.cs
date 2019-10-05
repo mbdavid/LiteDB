@@ -34,31 +34,31 @@ namespace LiteDB.Tests
             }
         }
 
-        [DebuggerHidden]
+        //[DebuggerHidden]
         public static void ExpectValue(this BsonValue value, BsonValue expect)
         {
             value.Should().Be(expect);
         }
 
-        [DebuggerHidden]
+        //[DebuggerHidden]
         public static void ExpectValue<T>(this T value, T expect)
         {
             value.Should().Be(expect);
         }
 
-        [DebuggerHidden]
+        //[DebuggerHidden]
         public static void ExpectArray(this BsonValue value, params BsonValue[] args)
         {
             value.Should().Be(new BsonArray(args));
         }
 
-        [DebuggerHidden]
+        //[DebuggerHidden]
         public static void ExpectJson(this BsonValue value, string expectJson)
         {
             value.Should().Be((JsonSerializer.Deserialize(expectJson)));
         }
 
-        [DebuggerHidden]
+        //[DebuggerHidden]
         public static void ExpectValues(this IEnumerable<BsonValue> values, params BsonValue[] expectValues)
         {
             values.ToArray().Should().Equal(expectValues);
