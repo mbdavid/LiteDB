@@ -11,7 +11,7 @@ namespace LiteDB
         {
         }
 
-        public string GetName(Type type) => type.FullName + ", " + type.Assembly.GetName().Name;
+        public string GetName(Type type) => type.FullName + ", " + type.GetTypeInfo().Assembly.GetName().Name;
 
         public Type GetType(string name) => Type.GetType(name);
     }
