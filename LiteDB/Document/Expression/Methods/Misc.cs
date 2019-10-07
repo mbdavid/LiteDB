@@ -119,29 +119,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Remove keys from a document. Support fields as String or ArrayOfString
-        /// </summary>
-        public static BsonValue REMOVE_KEYS(BsonValue document, BsonValue fields)
-        {
-            if (document.IsDocument)
-            {
-                var doc = document.AsDocument;
-
-                var list =
-                    fields.IsArray ? fields.AsArray.Where(x => x.IsString).Select(x => x.AsString).ToArray() :
-                    fields.IsString ? new string[] { fields.AsString } :
-                    new string[] { };
-
-                foreach (var field in list)
-                {
-                    doc.Remove(field);
-                }
-            }
-
-            return document;
-        }
-
-        /// <summary>
         /// Return CreationTime from ObjectId value - returns null if not an ObjectId
         /// </summary>
         public static BsonValue OID_CREATIONTIME(BsonValue objectId)
