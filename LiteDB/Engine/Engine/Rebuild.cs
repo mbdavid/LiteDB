@@ -14,7 +14,7 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Fill current with data inside file reader - run inside a transacion
+        /// Fill current database with data inside file reader - run inside a transacion
         /// </summary>
         internal void Rebuild(IFileReader reader)
         {
@@ -42,6 +42,9 @@ namespace LiteDB.Engine
                     // and insert into 
                     this.Insert(collection, docs, BsonAutoId.ObjectId);
                 }
+
+                // update user version on commit	
+                transaction.Pages.Commit += h => h.UserVersion = reader.UserVersion;
 
                 this.Commit();
             }

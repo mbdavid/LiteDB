@@ -30,6 +30,8 @@ namespace LiteDB.Engine
             doc["currentReadVersion"] = _walIndex.CurrentReadVersion;
             doc["lastTransactionID"] = _walIndex.LastTransactionID;
 
+            doc["userVersion"] = _header.UserVersion;
+
             doc["cache"] = new BsonDocument
             {
                 ["extendSegments"] = _disk.Cache.ExtendSegments,

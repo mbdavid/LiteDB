@@ -182,6 +182,33 @@ namespace LiteDB
             return new SharedDataReader(reader, () => this.Close());
         }
 
+        public int UserVersion
+        {
+            get
+            {
+                this.OpenRead();
+
+                var value = _engine.UserVersion;
+
+                this.Close();
+
+                return value;
+            }
+            set
+            {
+                this.OpenWrite();
+
+                try
+                {
+                    _engine.UserVersion = value;
+                }
+                finally
+                {
+                    this.Close();
+                }
+            }
+        }
+
         #endregion
 
         #region Write Operations

@@ -269,7 +269,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Analyze/Checkpoint/Shrink
+        #region Analyze/Checkpoint/Shrink/UserVersion
 
         /// <summary>
         /// Do database checkpoint. Copy all commited transaction from log file into datafile. 
@@ -293,6 +293,15 @@ namespace LiteDB
         public long Shrink()
         {
             return _engine.Value.Shrink();
+        }
+
+        /// <summary>	
+        /// Get/Set database user version - use this version number to control database change model	
+        /// </summary>	
+        public int UserVersion
+        {
+            get => _engine.Value.UserVersion;
+            set => _engine.Value.UserVersion = value;
         }
 
         #endregion
