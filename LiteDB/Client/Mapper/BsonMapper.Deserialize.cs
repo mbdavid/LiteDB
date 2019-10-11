@@ -224,9 +224,8 @@ namespace LiteDB
         {
             var itemType = Reflection.GetListItemType(type);
             var enumerable = (IEnumerable)Reflection.CreateInstance(type);
-            var list = enumerable as IList;
 
-            if (list != null)
+            if (enumerable is IList list)
             {
                 foreach (BsonValue item in value)
                 {

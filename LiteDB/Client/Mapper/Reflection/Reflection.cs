@@ -70,6 +70,10 @@ namespace LiteDB
                             {
                                 return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
                             }
+                            else if (typeDef == typeof(ISet<>))
+                            {
+                                return CreateInstance(GetGenericSetOfType(UnderlyingTypeOf(type)));
+                            }
                             else if (typeDef == typeof(IDictionary<,>))
                             {
                                 var k = type.GetGenericArguments()[0];
@@ -147,10 +151,16 @@ namespace LiteDB
             return listType.MakeGenericType(type);
         }
 
+        public static Type GetGenericSetOfType(Type type)
+        {
+            var setType = typeof(HashSet<>);
+            return setType.MakeGenericType(type);
+        }
+
         public static Type GetGenericDictionaryOfType(Type k, Type v)
         {
-            var listType = typeof(Dictionary<,>);
-            return listType.MakeGenericType(k, v);
+            var dictionaryType = typeof(Dictionary<,>);
+            return dictionaryType.MakeGenericType(k, v);
         }
 
         /// <summary>
