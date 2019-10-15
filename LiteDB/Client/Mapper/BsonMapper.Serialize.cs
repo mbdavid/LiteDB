@@ -27,7 +27,7 @@ namespace LiteDB
         /// </summary>
         public virtual BsonDocument ToDocument<T>(T entity)
         {
-            return this.ToDocument(typeof(T), entity).AsDocument;
+            return this.ToDocument(typeof(T), entity)?.AsDocument;
         }
 
         /// <summary>
