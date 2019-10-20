@@ -119,11 +119,6 @@ namespace LiteDB
             }
         }
 
-        ~SharedEngine()
-        {
-            this.Dispose();
-        }
-
         #region Transaction Operations
 
         public bool BeginTrans()
