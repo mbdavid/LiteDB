@@ -78,23 +78,18 @@ namespace LiteDB
 
         private bool _disposed = false;
 
-        ~LiteFileStream()
-        {
-            Dispose(false);
-        }
-
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
 
-            if (!_disposed)
+            if (_disposed) return;
+
+            if (disposing && this.CanWrite)
             {
-                if (this.CanWrite)
-                {
-                    this.Flush();
-                }
-                _disposed = true;
+                this.Flush();
             }
+
+            _disposed = true;
         }
 
         #endregion

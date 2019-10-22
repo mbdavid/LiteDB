@@ -29,11 +29,6 @@ namespace LiteDB
             _dispose();
         }
 
-        ~SharedDataReader()
-        {
-            this.Dispose();
-        }
-
         public BsonValue this[string field] => _reader[field];
 
         public string Collection => _reader.Collection;
