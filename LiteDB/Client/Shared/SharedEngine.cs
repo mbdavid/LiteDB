@@ -92,7 +92,14 @@ namespace LiteDB
 
             try
             {
-                return _engine.BeginTrans();
+                var result = _engine.BeginTrans();
+
+                if (result == false)
+                {
+                    _stack--;
+                }
+
+                return result;
             }
             catch
             {
