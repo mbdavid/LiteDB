@@ -19,8 +19,11 @@ namespace LiteDB.Shell.Commands
 
         public void Execute(StringScanner s, Env env)
         {
-            env.Database.Dispose();
-            env.Database = null;
+            if (env.Database != null)
+            {
+                env.Database.Dispose();
+                env.Database = null;
+            }
         }
     }
 }

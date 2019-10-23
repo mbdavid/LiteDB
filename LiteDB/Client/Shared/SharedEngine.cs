@@ -39,7 +39,16 @@ namespace LiteDB
 
                     _settings.ReadOnly = true;
 
-                    _engine = new LiteEngine(_settings);
+                    try
+                    {
+                        _engine = new LiteEngine(_settings);
+                    }
+                    catch
+                    {
+                        _locker.ReleaseReaderLock();
+                        _stack = 0;
+                        throw;
+                    }
                 }
             }
         }
@@ -59,14 +68,34 @@ namespace LiteDB
 
                     _settings.ReadOnly = false;
 
-                    _engine = new LiteEngine(_settings);
+                    try
+                    {
+                        _engine = new LiteEngine(_settings);
+                    }
+                    catch
+                    {
+                        _locker.ReleaseWriterLock();
+                        _stack = 0;
+                        throw;
+                    }
+
                 }
                 else if (_settings.ReadOnly)
                 {
                     // if database already open in readonly mode, change to writeable mode
                     _settings.ReadOnly = false;
                     _engine.Dispose();
-                    _engine = new LiteEngine(_settings);
+
+                    try
+                    {
+                        _engine = new LiteEngine(_settings);
+                    }
+                    catch
+                    {
+                        _locker.ReleaseWriterLock();
+                        _stack = 0;
+                        throw;
+                    }
                 }
             }
         }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using LiteDB.Engine;
 using static LiteDB.Constants;
 
@@ -49,7 +50,7 @@ namespace LiteDB
                 LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
             }
 
-            _engine = new Lazy<ILiteEngine>(connectionString.CreateEngine);
+            _engine = new Lazy<ILiteEngine>(connectionString.CreateEngine, LazyThreadSafetyMode.PublicationOnly);
         }
 
         /// <summary>
@@ -70,7 +71,7 @@ namespace LiteDB
                 };
 
                 return new LiteEngine(settings);
-            });
+            }, LazyThreadSafetyMode.PublicationOnly);
         }
 
         /// <summary>
@@ -80,7 +81,7 @@ namespace LiteDB
         {
             if (engine == null) throw new ArgumentNullException(nameof(engine));
 
-            _engine = new Lazy<ILiteEngine>(() => engine);
+            _engine = new Lazy<ILiteEngine>(() => engine, LazyThreadSafetyMode.PublicationOnly);
             _mapper = mapper ?? BsonMapper.Global;
         }
 
