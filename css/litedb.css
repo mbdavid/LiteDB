@@ -103,6 +103,11 @@ header .container {
     top: +1px;
 }
 
+.survey {
+	color: #0e83cd;
+	text-decoration: underline;
+}
+
 .social-buttons {
     text-align: center;
 }
