@@ -105,6 +105,10 @@ header .container {
 
 .survey {
 	color: #0e83cd;
+	text-decoration: none;
+}
+
+.survey:hover {
 	text-decoration: underline;
 }
 
