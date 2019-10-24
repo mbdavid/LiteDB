@@ -164,14 +164,7 @@ namespace LiteDB.Engine
             // dispose data file
             this.Dispose(true);
 
-            GC.SuppressFinalize(this);
-
             LOG("engine disposed", "ENGINE");
-        }
-
-        ~LiteEngine()
-        {
-            this.Dispose(false);
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using static LiteDB.Constants;
 
@@ -25,7 +26,7 @@ namespace LiteDB.Engine
         {
             _factory = factory;
 
-            _writer = new Lazy<Stream>(() => _factory.GetStream(true, appendOnly));
+            _writer = new Lazy<Stream>(() => _factory.GetStream(true, appendOnly), LazyThreadSafetyMode.PublicationOnly);
         }
 
         /// <summary>

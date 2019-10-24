@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using LiteDB.Engine;
 using static LiteDB.Constants;
 
@@ -49,7 +50,7 @@ namespace LiteDB
                 LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
             }
 
-            _engine = new Lazy<ILiteEngine>(connectionString.CreateEngine);
+            _engine = new Lazy<ILiteEngine>(connectionString.CreateEngine, LazyThreadSafetyMode.PublicationOnly);
         }
 
         /// <summary>
@@ -70,7 +71,7 @@ namespace LiteDB
                 };
 
                 return new LiteEngine(settings);
-            });
+            }, LazyThreadSafetyMode.PublicationOnly);
         }
 
         /// <summary>
@@ -80,7 +81,7 @@ namespace LiteDB
         {
             if (engine == null) throw new ArgumentNullException(nameof(engine));
 
-            _engine = new Lazy<ILiteEngine>(() => engine);
+            _engine = new Lazy<ILiteEngine>(() => engine, LazyThreadSafetyMode.PublicationOnly);
             _mapper = mapper ?? BsonMapper.Global;
         }
 
@@ -269,7 +270,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Analyze/Checkpoint/Shrink
+        #region Analyze/Checkpoint/Shrink/UserVersion
 
         /// <summary>
         /// Do database checkpoint. Copy all commited transaction from log file into datafile. 
@@ -293,6 +294,15 @@ namespace LiteDB
         public long Shrink()
         {
             return _engine.Value.Shrink();
+        }
+
+        /// <summary>	
+        /// Get/Set database user version - use this version number to control database change model	
+        /// </summary>	
+        public int UserVersion
+        {
+            get => _engine.Value.UserVersion;
+            set => _engine.Value.UserVersion = value;
         }
 
         #endregion

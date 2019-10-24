@@ -22,7 +22,7 @@ namespace LiteDB.Engine
 
         private byte[] _buffer = new byte[V7_PAGE_SIZE];
 
-        public int UserVersion { get; set; }
+        public int UserVersion { get; private set; }
 
         public FileReaderV7(Stream stream, string password)
         {
