@@ -150,7 +150,7 @@ namespace LiteDB
                         return (T)(object)TimeSpan.Parse(value);
                     }
                 }
-                else if (typeof(T).IsEnum)
+                else if (typeof(T).GetTypeInfo().IsEnum)
                 {
                     return (T)Enum.Parse(typeof(T), value, true);
                 }
