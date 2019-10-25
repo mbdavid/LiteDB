@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -21,7 +22,7 @@ namespace LiteDB.Engine
         private readonly Stream _stream;
 
         // async thread controls
-        private readonly Thread _thread;
+        private readonly Task _task;
         private readonly ManualResetEventSlim _waiter;
         private readonly ManualResetEventSlim _writing;
 
@@ -37,9 +38,7 @@ namespace LiteDB.Engine
             _waiter = new ManualResetEventSlim(false);
             _writing = new ManualResetEventSlim(false);
 
-            _thread = new Thread(this.CreateThread);
-            _thread.Name = "LiteDB_Writer";
-            _thread.Start();
+            _task = Task.Factory.StartNew(this.CreateThread, TaskCreationOptions.LongRunning);
         }
 
         /// <summary>
@@ -154,7 +153,7 @@ namespace LiteDB.Engine
             _waiter.Set();
 
             // wait async task finish before dispose
-            _thread.Join();
+            _task.Wait();
 
             _waiter.Dispose();
             _writing.Dispose();

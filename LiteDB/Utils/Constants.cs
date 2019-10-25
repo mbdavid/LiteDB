@@ -88,7 +88,7 @@ namespace LiteDB
         [Conditional("DEBUG")]
         public static void LOG(string message, string category)
         {
-            var threadID = Thread.CurrentThread.ManagedThreadId;
+            var threadID = Environment.CurrentManagedThreadId;
 
             Debug.WriteLine(message, threadID + "|" + category);
         }
@@ -118,7 +118,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    throw new SystemException("ENSURE: " + message);
+                    throw new Exception("ENSURE: " + message);
                 }
             }
         }
@@ -138,7 +138,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    throw new SystemException("ENSURE: " + message);
+                    throw new Exception("ENSURE: " + message);
                 }
             }
         }

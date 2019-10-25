@@ -28,7 +28,7 @@ namespace LiteDB.Engine
         private readonly Action<uint> _done;
 
         // transaction info
-        private readonly int _threadID = Thread.CurrentThread.ManagedThreadId;
+        private readonly int _threadID = Environment.CurrentManagedThreadId;
         private readonly uint _transactionID;
         private readonly DateTime _startTime;
         private LockMode _mode = LockMode.Read;

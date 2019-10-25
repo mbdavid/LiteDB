@@ -62,7 +62,7 @@ namespace LiteDB
             }
             finally
             {
-                stream?.Close();
+                stream?.Dispose();
             }
 
             //file is not locked
