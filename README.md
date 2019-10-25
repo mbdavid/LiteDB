@@ -155,11 +155,9 @@ Change details for each release are documented in the [release notes](https://gi
 
 LiteDB is digitally signed courtesy of [SignPath](https://www.signpath.io)
 
-<center>
-    <a href="https://www.signpath.io" target="_blank">
-        <img src="https://about.signpath.io/wp-content/uploads/2018/11/logo_signpath_500_light.png" style="width: 250px; height: auto;" />
-    </a>
-</center>
+<a href="https://www.signpath.io">
+    <img src="https://about.signpath.io/wp-content/uploads/2018/11/logo_signpath_500.png" width="150">
+</a>
 
 ## License
 
