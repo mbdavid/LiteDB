@@ -39,6 +39,10 @@ Visit [the Wiki](https://github.com/mbdavid/LiteDB/wiki) for full documentation.
 
 Download the source code or binary only in [LiteDB Releases](https://github.com/mbdavid/LiteDB/releases)
 
+## LiteDB Community
+
+Help LiteDB grow its user community by answering this [simple survey](https://docs.google.com/forms/d/e/1FAIpQLSc4cNG7wyLKXXcOLIt7Ea4TlXCG6s-51_EfHPu2p5WZ2dIx7A/viewform?usp=sf_link)
+
 ## How to use LiteDB
 
 A quick example for storing and searching documents:
