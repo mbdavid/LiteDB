@@ -47,7 +47,7 @@ namespace LiteDB.Engine
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (transform == null) throw new ArgumentNullException(nameof(transform));
 
-            return this.AutoTransaction((Func<TransactionService, int>)(transaction =>
+            return this.AutoTransaction(transaction =>
             {
                 return this.Update(collection, transformDocs());
 
@@ -62,7 +62,7 @@ namespace LiteDB.Engine
 
                     using (var reader = this.Query(collection, q))
                     {
-                        while(reader.Read())
+                        while (reader.Read())
                         {
                             var doc = reader.Current.AsDocument;
 
@@ -87,7 +87,7 @@ namespace LiteDB.Engine
                         }
                     }
                 }
-            }));
+            });
         }
 
         /// <summary>
