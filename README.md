@@ -39,6 +39,10 @@ Visit [the Wiki](https://github.com/mbdavid/LiteDB/wiki) for full documentation.
 
 Download the source code or binary only in [LiteDB Releases](https://github.com/mbdavid/LiteDB/releases)
 
+## LiteDB Community
+
+Help LiteDB grow its user community by answering this [simple survey](https://docs.google.com/forms/d/e/1FAIpQLSc4cNG7wyLKXXcOLIt7Ea4TlXCG6s-51_EfHPu2p5WZ2dIx7A/viewform?usp=sf_link)
+
 ## How to use LiteDB
 
 A quick example for storing and searching documents:
@@ -147,6 +151,14 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 
 Change details for each release are documented in the [release notes](https://github.com/mbdavid/LiteDB/releases).
 
+## Code Signing
+
+LiteDB is digitally signed courtesy of [SignPath](https://www.signpath.io)
+
+<a href="https://www.signpath.io">
+    <img src="https://about.signpath.io/wp-content/uploads/2018/11/logo_signpath_500.png" width="150">
+</a>
+
 ## License
 
 [MIT](http://opensource.org/licenses/MIT)
@@ -216,4 +228,4 @@ After more than a year of hard working, v5 is comming!
 - Single DLL, no dependencies and 100% C#
 - 100% free open source
     
-> Roadmap: The first beta version will be released in Aug/2019
+
