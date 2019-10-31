@@ -11,6 +11,7 @@ before_build:
   - cmd: nuget restore LiteDB.sln
 build:
   project: LiteDB.sln
+  publish_nuget: true
   verbosity: minimal
 for:
 -
@@ -19,6 +20,9 @@ for:
       - configuration: Release
   artifacts:
     - path: LiteDB\bin\Release\net45\LiteDB.dll
+    - path: LiteDB\bin\Release\netstandard1.3\LiteDB.dll
+    - path: LiteDB\bin\Release\netstandard2.0\LiteDB.dll
+    - path: LiteDB\bin\Release\*.nupkg
   deploy:
   - provider: Webhook
     url: https://app.signpath.io/API/v1/f5b329b8-705f-4d6c-928a-19465b83716b/Integrations/AppVeyor?ProjectKey=LiteDB.git&SigningPolicyKey=test-signing
