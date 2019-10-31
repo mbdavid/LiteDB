@@ -19,6 +19,16 @@ namespace LiteDB.Engine
 
         public FileStreamFactory(string filename, string password, bool readOnly)
         {
+
+#if HAVE_DRIVE_INFO
+            var drive = new DriveInfo(new FileInfo(filename).Directory.Root.FullName);
+
+            if (drive.DriveType != DriveType.Fixed)
+            {
+                throw new NotSupportedException("LiteDB works only with local datafile");
+            }
+#endif
+
             _filename = filename;
             _password = password;
             _readonly = readOnly;

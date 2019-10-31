@@ -38,6 +38,7 @@
   HAVE_ENVIRONMENT
   HAVE_SHA1_MANAGED
   HAVE_GET_CULTURE_INFO
+  HAVE_DRIVE_INFO
   -->
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
@@ -45,11 +46,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
-    <DefineConstants>HAVE_GET_CULTURE_INFO;HAVE_SHA1_MANAGED;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT;</DefineConstants>
+    <DefineConstants>HAVE_GET_CULTURE_INFO;HAVE_SHA1_MANAGED;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT;HAVE_DRIVE_INFO</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>HAVE_GET_CULTURE_INFO;HAVE_SHA1_MANAGED;</DefineConstants>
+    <DefineConstants>HAVE_GET_CULTURE_INFO;HAVE_SHA1_MANAGED;HAVE_DRIVE_INFO</DefineConstants>
   </PropertyGroup>
 
   <!-- Begin References -->
