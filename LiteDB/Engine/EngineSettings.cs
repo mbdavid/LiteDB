@@ -85,6 +85,11 @@ namespace LiteDB.Engine
         public int MaxTransactionSize { get; set; } = MAX_TRANSACTION_SIZE;
 
         /// <summary>
+        /// Get logger class reference to track engine operations
+        /// </summary>
+        public ILogger Logger { get; set; }
+
+        /// <summary>
         /// Create new IStreamFactory for datafile
         /// </summary>
         internal IStreamFactory CreateDataFactory()

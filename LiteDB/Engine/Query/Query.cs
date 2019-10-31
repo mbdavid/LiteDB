@@ -23,7 +23,6 @@ namespace LiteDB
         public BsonExpression GroupBy { get; set; } = null;
         public BsonExpression Having { get; set; } = null;
 
-
         public int Offset { get; set; } = 0;
         public int Limit { get; set; } = int.MaxValue;
         public bool ForUpdate { get; set; } = false;
