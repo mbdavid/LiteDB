@@ -51,18 +51,6 @@ namespace LiteDB
 
         #endregion
 
-        #region Shortchut from FileStorage
-
-        // /// <summary>
-        // /// Returns a special collection for storage files/stream inside datafile
-        // /// </summary>
-        // public LiteStorage FileStorage
-        // {
-        //     get { return _db.FileStorage; }
-        // }
-
-        #endregion
-
         #region Insert
 
         /// <summary>
@@ -159,6 +147,56 @@ namespace LiteDB
         public ILiteQueryable<T> Query<T>(string collectionName = null)
         {
             return _db.GetCollection<T>(collectionName).Query();
+        }
+
+        #endregion
+
+        #region EnsureIndex
+
+        /// <summary>
+        /// Create a new permanent index in all documents inside this collections if index not exists already. Returns true if index was created or false if already exits
+        /// </summary>
+        /// <param name="name">Index name - unique name for this collection</param>
+        /// <param name="expression">Create a custom expression function to be indexed</param>
+        /// <param name="unique">If is a unique index</param>
+        /// <param name="collectionName">Collection Name</param>
+        public bool EnsureIndex<T>(string name, BsonExpression expression, bool unique = false, string collectionName = null)
+        {
+            return _db.GetCollection<T>(collectionName).EnsureIndex(name, expression, unique);
+        }
+
+        /// <summary>
+        /// Create a new permanent index in all documents inside this collections if index not exists already. Returns true if index was created or false if already exits
+        /// </summary>
+        /// <param name="expression">Create a custom expression function to be indexed</param>
+        /// <param name="unique">If is a unique index</param>
+        /// <param name="collectionName">Collection Name</param>
+        public bool EnsureIndex<T>(BsonExpression expression, bool unique = false, string collectionName = null)
+        {
+            return _db.GetCollection<T>(collectionName).EnsureIndex(expression, unique);
+        }
+
+        /// <summary>
+        /// Create a new permanent index in all documents inside this collections if index not exists already.
+        /// </summary>
+        /// <param name="keySelector">LinqExpression to be converted into BsonExpression to be indexed</param>
+        /// <param name="unique">Create a unique keys index?</param>
+        /// <param name="collectionName">Collection Name</param>
+        public bool EnsureIndex<T, K>(Expression<Func<T, K>> keySelector, bool unique = false, string collectionName = null)
+        {
+            return _db.GetCollection<T>(collectionName).EnsureIndex(keySelector, unique);
+        }
+
+        /// <summary>
+        /// Create a new permanent index in all documents inside this collections if index not exists already.
+        /// </summary>
+        /// <param name="name">Index name - unique name for this collection</param>
+        /// <param name="keySelector">LinqExpression to be converted into BsonExpression to be indexed</param>
+        /// <param name="unique">Create a unique keys index?</param>
+        /// <param name="collectionName">Collection Name</param>
+        public bool EnsureIndex<T, K>(string name, Expression<Func<T, K>> keySelector, bool unique = false, string collectionName = null)
+        {
+            return _db.GetCollection<T>(collectionName).EnsureIndex(name, keySelector, unique);
         }
 
         #endregion

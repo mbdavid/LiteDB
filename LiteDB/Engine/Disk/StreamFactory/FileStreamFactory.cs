@@ -25,7 +25,7 @@ namespace LiteDB.Engine
 
             if (drive.DriveType != DriveType.Fixed)
             {
-                throw new NotSupportedException("LiteDB works only with local datafile. Do not share daata files across network");
+                throw new NotSupportedException("LiteDB works only with local drive. Do not share database files across network.");
             }
 #endif
 
