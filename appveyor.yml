@@ -12,6 +12,14 @@ before_build:
 build:
   project: LiteDB.sln
   verbosity: minimal
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}'
+  package_version: '{version}'
+  assembly_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'  
 for:
 -
   matrix:
@@ -19,6 +27,8 @@ for:
       - configuration: Release
   artifacts:
     - path: LiteDB\bin\Release\net45\LiteDB.dll
+    - path: LiteDB\bin\Release\netstandard1.3\LiteDB.dll
+    - path: LiteDB\bin\Release\netstandard2.0\LiteDB.dll
     - path: LiteDB\bin\Release\*.nupkg
   deploy:
   - provider: Webhook
