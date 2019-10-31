@@ -11,15 +11,8 @@ before_build:
   - cmd: nuget restore LiteDB.sln
 build:
   project: LiteDB.sln
+  publish_nuget: true
   verbosity: minimal
-dotnet_csproj:
-  patch: true
-  file: '**\*.csproj'
-  version: '{version}'
-  package_version: '{version}'
-  assembly_version: '{version}'
-  file_version: '{version}'
-  informational_version: '{version}'  
 for:
 -
   matrix:
