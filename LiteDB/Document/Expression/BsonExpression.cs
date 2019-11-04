@@ -48,11 +48,6 @@ namespace LiteDB
         internal BsonExpression Right { get; set; }
 
         /// <summary>
-        /// Set if this expression are an ALL operator (used to not remove in Filter)
-        /// </summary>
-        internal bool IsAllOperator { get; set; }
-
-        /// <summary>
         /// Get/Set this expression (or any inner expression) use global Source (*)
         /// </summary>
         internal bool UseSource { get; set; }
@@ -282,7 +277,6 @@ namespace LiteDB
                 Right = expr.Right,
                 Source = expr.Source,
                 Type = expr.Type,
-                IsAllOperator = expr.IsAllOperator,
                 _func = expr._func,
                 _funcScalar = expr._funcScalar
             };
@@ -337,7 +331,6 @@ namespace LiteDB
                 Right = expr.Right,
                 Source = expr.Source,
                 Type = expr.Type,
-                IsAllOperator = expr.IsAllOperator,
                 _func = expr._func,
                 _funcScalar = expr._funcScalar
             };

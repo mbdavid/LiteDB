@@ -11,12 +11,12 @@ namespace LiteDB
         /// <summary>
         /// Update a document in this collection. Returns false if not found document in collection
         /// </summary>
-        public bool Update(T document)
+        public bool Update(T entity)
         {
-            if (document == null) throw new ArgumentNullException(nameof(document));
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
 
             // get BsonDocument from object
-            var doc = _mapper.ToDocument(document);
+            var doc = _mapper.ToDocument(entity);
 
             return _engine.Value.Update(_collection, new BsonDocument[] { doc }) > 0;
         }
@@ -24,13 +24,13 @@ namespace LiteDB
         /// <summary>
         /// Update a document in this collection. Returns false if not found document in collection
         /// </summary>
-        public bool Update(BsonValue id, T document)
+        public bool Update(BsonValue id, T entity)
         {
-            if (document == null) throw new ArgumentNullException(nameof(document));
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
             if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
             // get BsonDocument from object
-            var doc = _mapper.ToDocument(document);
+            var doc = _mapper.ToDocument(entity);
 
             // set document _id using id parameter
             doc["_id"] = id;
@@ -41,11 +41,11 @@ namespace LiteDB
         /// <summary>
         /// Update all documents
         /// </summary>
-        public int Update(IEnumerable<T> documents)
+        public int Update(IEnumerable<T> entities)
         {
-            if (documents == null) throw new ArgumentNullException(nameof(documents));
+            if (entities == null) throw new ArgumentNullException(nameof(entities));
 
-            return _engine.Value.Update(_collection, documents.Select(x => _mapper.ToDocument(x)));
+            return _engine.Value.Update(_collection, entities.Select(x => _mapper.ToDocument(x)));
         }
 
         /// <summary>

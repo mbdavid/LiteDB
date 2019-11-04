@@ -174,7 +174,6 @@ namespace LiteDB
                         IsImmutable = left.IsImmutable && right.IsImmutable,
                         UseSource = left.UseSource || right.UseSource,
                         IsScalar = true,
-                        IsAllOperator = op.Key.StartsWith("ALL"),
                         Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
                         Expression = Expression.Call(method, left.Expression, right.Expression),
                         Left = left,

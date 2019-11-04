@@ -186,16 +186,8 @@ namespace LiteDB.Engine
                 _queryPlan.IsIndexKeyOnly = true;
             }
 
-            if (selected != null && selected.IsAllOperator)
-            {
-                // if selected term use ALL operant, do not remove from filter because INDEX conver only ANY
-                _queryPlan.Filters.AddRange(_terms);
-            }
-            else
-            {
-                // fill filter using all expressions (remove selected term used in Index)
-                _queryPlan.Filters.AddRange(_terms.Where(x => x != selected));
-            }
+            // fill filter using all expressions (remove selected term used in Index)
+            _queryPlan.Filters.AddRange(_terms.Where(x => x != selected));
         }
 
         /// <summary>
@@ -220,6 +212,9 @@ namespace LiteDB.Engine
             foreach (var expr in _terms.Where(x => x.IsPredicate))
             {
                 ENSURE(expr.Left != null && expr.Right != null, "predicate expression must has left/right expressions");
+
+                // checks if expression are not ANY/ALL (do not use to select index)
+                if (expr.Left.IsScalar == false && expr.Right.IsScalar == true) continue;
 
                 // get index that match with expression left/right side 
                 var index = indexes

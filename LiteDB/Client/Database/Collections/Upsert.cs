@@ -10,33 +10,33 @@ namespace LiteDB
         /// <summary>
         /// Insert or Update a document in this collection.
         /// </summary>
-        public bool Upsert(T document)
+        public bool Upsert(T entity)
         {
-            if (document == null) throw new ArgumentNullException(nameof(document));
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-            return this.Upsert(new T[] { document }) == 1;
+            return this.Upsert(new T[] { entity }) == 1;
         }
 
         /// <summary>
         /// Insert or Update all documents
         /// </summary>
-        public int Upsert(IEnumerable<T> documents)
+        public int Upsert(IEnumerable<T> entities)
         {
-            if (documents == null) throw new ArgumentNullException(nameof(documents));
+            if (entities == null) throw new ArgumentNullException(nameof(entities));
 
-            return _engine.Value.Upsert(_collection, this.GetBsonDocs(documents), _autoId);
+            return _engine.Value.Upsert(_collection, this.GetBsonDocs(entities), _autoId);
         }
 
         /// <summary>
         /// Insert or Update a document in this collection.
         /// </summary>
-        public bool Upsert(BsonValue id, T document)
+        public bool Upsert(BsonValue id, T entity)
         {
-            if (document == null) throw new ArgumentNullException(nameof(document));
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
             if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
             // get BsonDocument from object
-            var doc = _mapper.ToDocument(document);
+            var doc = _mapper.ToDocument(entity);
 
             // set document _id using id parameter
             doc["_id"] = id;
