@@ -57,7 +57,7 @@ namespace LiteDB
         /// <summary>
         /// Indicate that this property contains an list of elements (IEnumerable)
         /// </summary>
-        public bool IsList { get; set; }
+        public bool IsEnumerable { get; set; }
 
         /// <summary>
         /// When property is an array of items, gets underlying type (otherwise is same type of PropertyType)

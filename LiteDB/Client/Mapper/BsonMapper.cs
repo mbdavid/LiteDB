@@ -112,7 +112,7 @@ namespace LiteDB
             this.EnumAsInteger = false;
             this.ResolveFieldName = (s) => s;
             this.ResolveMember = (t, mi, mm) => { };
-            this.ResolveCollectionName = (t) => Reflection.IsList(t) ? Reflection.GetListItemType(t).Name : t.Name;
+            this.ResolveCollectionName = (t) => Reflection.IsEnumerable(t) ? Reflection.GetListItemType(t).Name : t.Name;
             this.IncludeFields = false;
 
             _typeInstantiator = customTypeInstantiator ?? ((Type t) => null);
@@ -282,7 +282,7 @@ namespace LiteDB
                     (memberInfo as FieldInfo).FieldType;
 
                 // check if datatype is list/array
-                var isList = Reflection.IsList(dataType);
+                var isEnumerable = Reflection.IsEnumerable(dataType);
 
                 // create a property mapper
                 var member = new MemberMapper
@@ -291,8 +291,8 @@ namespace LiteDB
                     FieldName = name,
                     MemberName = memberInfo.Name,
                     DataType = dataType,
-                    IsList = isList,
-                    UnderlyingType = isList ? Reflection.GetListItemType(dataType) : dataType,
+                    IsEnumerable = isEnumerable,
+                    UnderlyingType = isEnumerable ? Reflection.GetListItemType(dataType) : dataType,
                     Getter = getter,
                     Setter = setter
                 };
@@ -410,7 +410,7 @@ namespace LiteDB
         {
             member.IsDbRef = true;
 
-            if (member.IsList)
+            if (member.IsEnumerable)
             {
                 RegisterDbRefList(mapper, member, typeNameBinder, collection);
             }

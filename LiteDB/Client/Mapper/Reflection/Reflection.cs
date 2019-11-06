@@ -192,7 +192,7 @@ namespace LiteDB
         /// <summary>
         /// Returns true if Type is any kind of Array/IList/ICollection/....
         /// </summary>
-        public static bool IsList(Type type)
+        public static bool IsEnumerable(Type type)
         {
             if (type.IsArray) return true;
             if (type == typeof(string)) return false; // do not define "String" as IEnumerable<char>
@@ -210,6 +210,15 @@ namespace LiteDB
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Returns true if Type implement ICollection (like List, HashSet)
+        /// </summary>
+        public static bool IsCollection(Type type)
+        {
+            return type.GetInterfaces().Any(x => x == typeof(ICollection) || 
+                (x.GetTypeInfo().IsGenericType ? x.GetGenericTypeDefinition() == typeof(ICollection<>) : false));
         }
 
         /// <summary>

@@ -22,6 +22,7 @@ namespace LiteDB
             [typeof(Int64)] = new NumberResolver("INT64"),
             [typeof(Decimal)] = new NumberResolver("DECIMAL"),
             [typeof(Double)] = new NumberResolver("DOUBLE"),
+            [typeof(ICollection)] = new ICollectionResolver(),
             [typeof(Enumerable)] = new EnumerableResolver(),
             [typeof(Guid)] = new GuidResolver(),
             [typeof(Math)] = new MathResolver(),
@@ -695,11 +696,13 @@ namespace LiteDB
         private bool TryGetResolver(Type declaringType, out ITypeResolver typeResolver)
         {
             // get method declaring type - if is from any kind of list, read as Enumerable
-            var isList = Reflection.IsList(declaringType);
+            var isCollection = Reflection.IsCollection(declaringType);
+            var isEnumerable = Reflection.IsEnumerable(declaringType);
             var isNullable = Reflection.IsNullable(declaringType);
 
             var type =
-                isList ? typeof(Enumerable) :
+                isCollection ? typeof(ICollection) :
+                isEnumerable ? typeof(Enumerable) :
                 isNullable ? typeof(Nullable) :
                 declaringType;
 

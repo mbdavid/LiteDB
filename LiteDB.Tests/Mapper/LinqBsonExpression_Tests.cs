@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -228,6 +229,18 @@ namespace LiteDB.Tests.Mapper
 
             // iif (c ? true : false)
             TestExpr<User>(x => x.Id > 10 ? x.Id : 0, "IIF((_id > @p0), _id, @p1)", 10, 0);
+
+            // contains in Array/List
+            var numbersArray = new int[] { 1, 2, 3 };
+            var numbersList = new List<int>() { 1, 2, 3 };
+            var numbersSet = new HashSet<int>() { 1, 2, 3 };
+            var numbersArrayList = new ArrayList() { 1, 2, 3 };
+            var numbersBson = new BsonArray(numbersArray.Select(x => new BsonValue(x)));
+
+            TestExpr<User>(x => numbersArray.Contains(x.Id), "@p0 ANY = _id", numbersBson);
+            TestExpr<User>(x => numbersList.Contains(x.Id), "@p0 ANY = _id", numbersBson);
+            TestExpr<User>(x => numbersSet.Contains(x.Id), "@p0 ANY = _id", numbersBson);
+            TestExpr<User>(x => numbersArrayList.Contains(x.Id), "@p0 ANY = _id", numbersBson);
         }
 
         [Fact]
