@@ -21,7 +21,7 @@ for:
     - path: LiteDB\bin\Debug\net45\LiteDB.dll
     - path: LiteDB\bin\Debug\netstandard1.3\LiteDB.dll
     - path: LiteDB\bin\Debug\netstandard2.0\LiteDB.dll
-    - path: LiteDB\bin\Debug\LiteDB.5.*.nupkg
+    - path: LiteDB.5.*.nupkg
   deploy:
   - provider: Webhook
     url: https://app.signpath.io/API/v1/f5b329b8-705f-4d6c-928a-19465b83716b/Integrations/AppVeyor?ProjectKey=LiteDB.git&SigningPolicyKey=test-signing
