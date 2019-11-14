@@ -1,4 +1,4 @@
-name: ASP.NET Core CI
+name: LiteDB CI - All OS
 
 on: [push]
 
