@@ -18,74 +18,19 @@ namespace LiteDB.Demo
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("LITE DB v5");
-            Console.WriteLine("===========================================================");
+            Console.WriteLine("Stress Test");
+            Console.WriteLine("===========");
 
-            File.Delete(@"d:\test-1m.db");
-            File.Delete(@"d:\test-1m-log.db");
-
-            var file = @"d:\test-1m.db";
-            var sw = new Stopwatch();
-
-            using (var db = new LiteDatabase(file))
+            using (var l = new Logger(@"filename=d:\stress\eventLog.db; mode=shared"))
+            using (var e = new ExampleStressTest(@"d:\stress\example.db", l))
             {
-                var col = db.GetCollection<Event>("event");
-
-                var tmp = new List<Event>();
-
-                for (var i = 0; i < 1_000_000; i++)
-                {
-                    tmp.Add(new Event()
-                    {
-                        Data = "the quick brown fox jumps over the lazy dog",
-                        DateTime = DateTime.Now
-                    });
-                }
-
-                // -----------------
-
-                sw.Restart();
-
-                col.Insert(tmp);
-
-                Console.WriteLine("Insert: " + sw.Elapsed);
-
-                // -----------------
-
-                sw.Restart();
-
-                db.Checkpoint();
-
-                Console.WriteLine("Checkpoint: " + sw.Elapsed);
-
-                // -----------------
-
-                sw.Restart();
-
-                col.EnsureIndex(x => x.DateTime);
-
-                Console.WriteLine("EnsureIndex: " + sw.Elapsed);
+                e.Run(TimeSpan.FromMinutes(1));
             }
 
-            Console.WriteLine(" ===========================================================");
-            Console.WriteLine("End");
+            Console.WriteLine("Stress test finish");
+
             Console.ReadKey();
         }
-    }
-
-    public class User
-    {
-        public int Id { get; set; }
-        public string City { get; set; }
-        public string Name { get; set; }
-        public List<User> Children { get; set; }
-    }
-
-    public class Event
-    {
-        public Guid Id { get; set; }
-        public DateTime DateTime { get; set; }
-        public string Data { get; set; }
     }
 
 
