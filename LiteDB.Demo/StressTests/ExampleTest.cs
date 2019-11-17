@@ -26,23 +26,43 @@ namespace LiteDB.Demo
         /// </summary>
         public override void OnInit(SqlDB db)
         {
-            db.Execute("DROP COLLECTION col1");
+            db.ExecuteScalar("DROP COLLECTION col1");
 
-            db.Execute("INSERT INTO col1 VALUES { _id: 1, name:'John' }");
+            db.Insert("col1", new BsonDocument 
+            { 
+                ["_id"] = 1, 
+                ["name"] = "John" 
+            });
 
-            db.Execute("CHECKPOINT");
+            db.ExecuteScalar("CHECKPOINT");
         }
 
-        [Task(InitialDelay = 100, Repeat = 40, Random = 10)]
-        public void Insert_Col1(SqlDB db)
+        [Task(Delay = 0, Wait = 20, Random = 10, Tasks = 4)]
+        public void Insert(SqlDB db)
         {
-            db.Execute($"INSERT INTO col1:int VALUES {{ name: 'John-{Guid.NewGuid()}', active: false }}");
+            db.Insert("col1", new BsonDocument
+            {
+                ["name"] = "John " + Guid.NewGuid(),
+                ["active"] = false
+            });
         }
 
-        [Task(InitialDelay = 2000, Repeat = 100, Random = 0)]
-        public void Update_Col1_Active(SqlDB db)
+        //[Task(Delay = 2000, Wait = 2000, Random = 0)]
+        //public void Update_Active(SqlDB db)
+        //{
+        //    db.ExecuteScalar("UPDATE col1 SET active = true, new_name = @0, another = @0, last = @0 WHERE active = false", Guid.NewGuid());
+        //}
+
+        [Task(Delay = 5000, Wait = 4000, Random = 500)]
+        public void Delete_Active(SqlDB db)
         {
-            db.Execute("UPDATE col1 SET active = true WHERE active = false");
+            db.ExecuteScalar("DELETE col1 WHERE active = false");
+        }
+
+        [Task(Delay = 100, Wait = 75, Random = 25)]
+        public void QueryCount(SqlDB db)
+        {
+            db.Query("SELECT COUNT(*) FROM col1");
         }
     }
 }

@@ -25,7 +25,9 @@ namespace LiteDB.Demo
 
         private long _delay;
 
-        public SqlDB(string taskName, LiteDatabase db, Logger logger, Stopwatch watch, ConcurrentCounter concurrent)
+        public int Index { get; }
+
+        public SqlDB(string taskName, LiteDatabase db, Logger logger, Stopwatch watch, ConcurrentCounter concurrent, int index)
         {
             _taskName = taskName;
             _db = db;
@@ -34,9 +36,26 @@ namespace LiteDB.Demo
             _concurrent = concurrent;
 
             _delay = watch.ElapsedMilliseconds;
+
+            this.Index = index;
         }
 
-        public BsonValue[] Execute(string sql, params BsonValue[] args)
+        public BsonValue ExecuteScalar(string sql, params BsonValue[] args)
+        {
+            return this.Execute(sql, args).FirstOrDefault();
+        }
+
+        public BsonDocument[] Query(string sql, params BsonValue[] args)
+        {
+            return this.Execute(sql, args).ToEnumerable().Select(x => x.AsDocument).ToArray();
+        }
+
+        public int Insert(string collection, BsonDocument document, string autoId = "int")
+        {
+            return this.Execute($"INSERT INTO {collection}:{autoId} VALUES {JsonSerializer.Serialize(document)}").Current.AsInt32;
+        }
+
+        private IBsonDataReader Execute(string sql, params BsonValue[] args)
         {
             var parameters = new BsonDocument();
 
@@ -49,7 +68,7 @@ namespace LiteDB.Demo
             {
                 Task = _taskName,
                 Timer = (int)_watch.ElapsedMilliseconds,
-                Concurrent = _concurrent.Increment(),
+                Concurrent = _concurrent.Increment() - 1,
                 Delay = (int)(_watch.ElapsedMilliseconds - _delay),
                 Sql = sql,
                 Params = parameters
@@ -59,10 +78,7 @@ namespace LiteDB.Demo
 
             try
             {
-                using (var reader = _db.Execute(sql, parameters))
-                {
-                    return reader.ToArray();
-                }
+                return _db.Execute(sql, parameters);
             }
             catch(Exception ex)
             {

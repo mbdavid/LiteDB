@@ -24,7 +24,7 @@ namespace LiteDB.Demo
             using (var l = new Logger(@"filename=d:\stress\eventLog.db; mode=shared"))
             using (var e = new ExampleStressTest(@"d:\stress\example.db", l))
             {
-                e.Run(TimeSpan.FromMinutes(1));
+                e.Run(TimeSpan.FromMinutes(.5));
             }
 
             Console.WriteLine("Stress test finish");

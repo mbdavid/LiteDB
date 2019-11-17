@@ -48,7 +48,7 @@ namespace LiteDB.Demo
             _logger.Initialize(this.GetType().Name + "_Log");
 
             // initialize database
-            this.OnInit(new SqlDB("OnInit", _db.Database, _logger, watch, concurrent));
+            this.OnInit(new SqlDB("OnInit", _db.Database, _logger, watch, concurrent, 0));
 
             var tasks = new List<Task>();
             var methods = this.GetType()
@@ -61,41 +61,43 @@ namespace LiteDB.Demo
 
             foreach(var method in methods)
             {
-                // create one task per method
-                var task = new Task(() =>
+                for(var i = 0; i < method.Item2.Tasks; i++)
                 {
-                    var count = 0;
+                    var index = i;
 
-                    // running loop
-                    while(running && DateTime.Now < finish)
+                    // create one task per method
+                    tasks.Add(Task.Factory.StartNew(() =>
                     {
-                        var wait = count == 0 ? method.Item2.InitialDelay : method.Item2.Repeat;
-                        var delay = wait + _rnd.Next(0, method.Item2.Random);
+                        var count = 0;
 
-                        var sql = new SqlDB(method.Item1.Name, _db.Database, _logger, watch, concurrent);
-
-                        Task.Delay(delay).GetAwaiter().GetResult();
-
-                        try
+                        // running loop
+                        while (running && DateTime.Now < finish)
                         {
-                            method.Item1.Invoke(this, new object[] { sql });
+                            var wait = count == 0 ? method.Item2.Delay : method.Item2.Wait;
+                            var delay = wait + _rnd.Next(0, method.Item2.Random);
+                            var name = method.Item2.Tasks == 1 ? method.Item1.Name : method.Item1.Name + "_" + index;
 
-                            exec++;
+                            var sql = new SqlDB(name, _db.Database, _logger, watch, concurrent, index);
+
+                            Task.Delay(delay).GetAwaiter().GetResult();
+
+                            try
+                            {
+                                method.Item1.Invoke(this, new object[] { sql });
+
+                                exec++;
+                            }
+                            catch (Exception ex)
+                            {
+                                running = false;
+
+                                Console.WriteLine($"ERROR {method.Item1.Name} : {ex.Message}");
+                            }
+
+                            count++;
                         }
-                        catch(Exception ex)
-                        {
-                            running = false;
-
-                            Console.WriteLine($"ERROR {method.Item1.Name} : {ex.Message}");
-                        }
-
-                        count++;
-                    }
-                });
-
-                tasks.Add(task);
-
-                task.Start();
+                    }));
+                }
             }
 
             // progress task
@@ -118,30 +120,6 @@ namespace LiteDB.Demo
             Task.WaitAll(tasks.ToArray());
 
         }
-
-        #region Fake data generation tool
-
-        protected int Random(int min, int max)
-        {
-            return 0;
-        }
-
-        protected DateTime Random(DateTime min, DateTime max)
-        {
-            return DateTime.Now;
-        }
-
-        protected string RandomName()
-        {
-            return "";
-        }
-
-        protected string LoremLipsum()
-        {
-            return "";
-        }
-
-        #endregion
 
         public void Dispose()
         {
