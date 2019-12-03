@@ -40,12 +40,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Data\movies.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.Buffers" Version="4.5.0" />
     <PackageReference Include="System.Memory" Version="4.5.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Data\movies.json" />
   </ItemGroup>
   
 </Project>

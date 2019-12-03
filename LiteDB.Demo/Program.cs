@@ -21,10 +21,10 @@ namespace LiteDB.Demo
             Console.WriteLine("Stress Test");
             Console.WriteLine("===========");
 
-            using (var l = new Logger(@"filename=d:\stress\eventLog.db; mode=shared"))
-            using (var e = new ExampleStressTest(@"d:\stress\example.db", l))
+            using (var l = new Logger(@"filename=C:\Git\Temp\stress\eventLog.db; mode=shared"))
+            using (var e = new ExampleStressTest(@"C:\Git\Temp\stress\example-1.db", l))
             {
-                e.Run(TimeSpan.FromMinutes(.5));
+                e.Run(TimeSpan.FromMinutes(2));
             }
 
             Console.WriteLine("Stress test finish");

@@ -16,15 +16,26 @@ namespace LiteDB.Demo
 {
     public abstract class StressTest : IDisposable
     {
-        private readonly Random _rnd = new Random();
+        // "fixed" random number order
+        private readonly Random _rnd = new Random(0);
 
-        private readonly LiteRepository _db;
+        private readonly LiteDatabase _db;
 
         private readonly Logger _logger;
 
-        public StressTest(string connectionString, Logger logger)
+        public StressTest(EngineSettings settings, Logger logger)
         {
-            _db = new LiteRepository(connectionString);
+            settings.Seed = 0;
+            settings.Timeout = TimeSpan.FromHours(1);
+
+            if (settings.Filename != null)
+            {
+                File.Delete(settings.Filename);
+                File.Delete(GetSufixFile(settings.Filename, "-log", false));
+                File.Delete(GetSufixFile(settings.Filename, "-tmp", false));
+            }
+
+            _db = new LiteDatabase(new LiteEngine(settings));
 
             _logger = logger;
         }
@@ -48,7 +59,7 @@ namespace LiteDB.Demo
             _logger.Initialize(this.GetType().Name + "_Log");
 
             // initialize database
-            this.OnInit(new SqlDB("OnInit", _db.Database, _logger, watch, concurrent, 0));
+            this.OnInit(new SqlDB("OnInit", _db, _logger, watch, concurrent, 0));
 
             var tasks = new List<Task>();
             var methods = this.GetType()
@@ -77,7 +88,7 @@ namespace LiteDB.Demo
                             var delay = wait + _rnd.Next(0, method.Item2.Random);
                             var name = method.Item2.Tasks == 1 ? method.Item1.Name : method.Item1.Name + "_" + index;
 
-                            var sql = new SqlDB(name, _db.Database, _logger, watch, concurrent, index);
+                            var sql = new SqlDB(name, _db, _logger, watch, concurrent, index);
 
                             Task.Delay(delay).GetAwaiter().GetResult();
 
@@ -119,6 +130,27 @@ namespace LiteDB.Demo
             // wait finish all tasks
             Task.WaitAll(tasks.ToArray());
 
+        }
+
+        /// <summary>
+        /// Create a temp filename based on original filename - checks if file exists (if exists, append counter number)
+        /// </summary>
+        public static string GetSufixFile(string filename, string suffix = "-temp", bool checkIfExists = true)
+        {
+            var count = 0;
+            var temp = Path.Combine(Path.GetDirectoryName(filename),
+                Path.GetFileNameWithoutExtension(filename) + suffix +
+                Path.GetExtension(filename));
+
+            while (checkIfExists && File.Exists(temp))
+            {
+                temp = Path.Combine(Path.GetDirectoryName(filename),
+                    Path.GetFileNameWithoutExtension(filename) + suffix +
+                    "-" + (++count) +
+                    Path.GetExtension(filename));
+            }
+
+            return temp;
         }
 
         public void Dispose()

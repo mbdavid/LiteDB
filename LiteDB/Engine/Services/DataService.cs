@@ -8,7 +8,7 @@ namespace LiteDB.Engine
     internal class DataService
     {
         /// <summary>
-        /// Get maximum data bytes[] that fit in 1 page = 8149
+        /// Get maximum data bytes[] that fit in 1 page = 8150
         /// </summary>
         public const int MAX_DATA_BYTES_PER_PAGE =
             PAGE_SIZE - // 8192

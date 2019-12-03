@@ -280,21 +280,23 @@ namespace LiteDB.Engine
         {
             index = this.GetFreeIndex();
 
-            return this.Insert(bytesLength, index, false);
+            return this.Insert(bytesLength, index);
         }
 
         /// <summary>
         /// Get a new page segment for this length content using fixed index
         /// </summary>
-        private BufferSlice Insert(ushort bytesLength, byte index, bool overwrite)
+        private BufferSlice Insert(ushort bytesLength, byte index)
         {
+            var isNewIndex = index > this.HighestIndex || this.HighestIndex == byte.MaxValue;
+
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
-            ENSURE(this.FreeBytes >= bytesLength + (overwrite ? 0 : SLOT_SIZE), "length must be always lower than current free space");
+            ENSURE(this.FreeBytes >= bytesLength + (isNewIndex ? SLOT_SIZE : 0), "length must be always lower than current free space");
             ENSURE(index != byte.MaxValue, "index shloud be a valid number (0-254)");
             ENSURE(this.ItemsCount < byte.MaxValue, "page full");
 
             // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
-            if (index > this.HighestIndex || this.HighestIndex == byte.MaxValue) this.HighestIndex = index;
+            if (isNewIndex) this.HighestIndex = index;
 
             // calculate how many continuous bytes are avaiable in this page
             var continuosBlocks = this.FreeBytes - this.FragmentedBytes;
@@ -455,7 +457,7 @@ namespace LiteDB.Engine
 
                 return _buffer.Slice(position, bytesLength);
             }
-            // when new length are large than current segment must remove current item no add again
+            // when new length are large than current segment must remove current item and add again
             else
             {
                 // clear current segment
@@ -480,7 +482,7 @@ namespace LiteDB.Engine
                 _buffer.Write((ushort)0, lengthAddr);
 
                 // call insert
-                return this.Insert(bytesLength, index, true);
+                return this.Insert(bytesLength, index);
             }
         }
 
@@ -493,6 +495,8 @@ namespace LiteDB.Engine
             ENSURE(this.FragmentedBytes > 0, "do not call this when page has no fragmentation");
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
             ENSURE(this.HighestIndex < byte.MaxValue, "there is no items in this page to run defrag");
+
+            LOG($"defrag page #{this.PageID} (fragments: {this.FragmentedBytes})", "DISK");
 
             // first get all segments inside this page sorted by position (position, index)
             var segments = new SortedList<ushort, byte>();

@@ -80,7 +80,7 @@ namespace LiteDB.Engine
                 foreach(var key in keys)
                 {
                     // insert node
-                    var node = indexer.AddNode(index, key, dataBlock, last);
+                    var node = indexer.AddNode(index, key, dataBlock, last, _flipCoin);
 
                     last = node;
                 }

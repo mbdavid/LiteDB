@@ -85,9 +85,9 @@ namespace LiteDB.Engine
         public int MaxTransactionSize { get; set; } = MAX_TRANSACTION_SIZE;
 
         /// <summary>
-        /// Get logger class reference to track engine operations
+        /// Get FlipCoin seed first number (to create always same sequence) - Null will create random seed
         /// </summary>
-        public ILogger Logger { get; set; }
+        public int? Seed { get; set; } = null;
 
         /// <summary>
         /// Create new IStreamFactory for datafile

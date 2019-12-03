@@ -165,6 +165,72 @@ namespace LiteDB.Internals
         }
 
         [Fact]
+        public void BasePage_Delete_Full()
+        {
+            var data = new byte[Constants.PAGE_SIZE];
+            var buffer = new PageBuffer(data, 0, 0);
+
+            // mark buffer as writable (debug propose)
+            buffer.ShareCounter = Constants.BUFFER_WRITABLE;
+
+            // create new base page
+            var page = new BasePage(buffer, 1, PageType.Empty);
+
+            var seg0 = page.Insert(100, out var index0);
+            var seg1 = page.Insert(200, out var index1);
+            var seg2 = page.Insert(8192 - 32 - (100 + 200 + 8) - 4, out var index2); // 7848
+
+            seg0.Fill(10);
+            seg1.Fill(11);
+            seg2.Fill(12);
+
+            page.HighestIndex.Should().Be(2);
+            page.ItemsCount.Should().Be(3);
+            page.UsedBytes.Should().Be(8148);
+            page.NextFreePosition.Should().Be(8180); // no next free position
+            page.FreeBytes.Should().Be(0); // full used
+            page.FragmentedBytes.Should().Be(0);
+
+            // deleting 200b (end of page)
+            page.Delete(index1);
+
+            page.HighestIndex.Should().Be(2);
+            page.ItemsCount.Should().Be(2);
+            page.UsedBytes.Should().Be(8148 - 200);
+            page.NextFreePosition.Should().Be(8180);
+            page.FreeBytes.Should().Be(200);
+            page.FragmentedBytes.Should().Be(200);
+
+            page.Delete(index0);
+
+            page.HighestIndex.Should().Be(2);
+            page.ItemsCount.Should().Be(1);
+            page.UsedBytes.Should().Be(8148 - 200 - 100);
+            page.NextFreePosition.Should().Be(8180);
+            page.FreeBytes.Should().Be(300);
+            page.FragmentedBytes.Should().Be(300);
+
+            var seg3 = page.Insert(250, out var index3);
+
+            seg3.Fill(13);
+
+            page.HighestIndex.Should().Be(2);
+            page.ItemsCount.Should().Be(2);
+            page.UsedBytes.Should().Be(8148 - 200 - 100 + 250);
+            page.NextFreePosition.Should().Be(8180 - 50);
+            page.FreeBytes.Should().Be(50);
+            page.FragmentedBytes.Should().Be(0);
+
+            var seg3f = page.Get(index3);
+
+            seg3f.All(13).Should().BeTrue();
+
+
+
+            buffer.ShareCounter = 0;
+        }
+
+        [Fact]
         public void BasePage_Defrag()
         {
             var data = new byte[Constants.PAGE_SIZE];
@@ -191,16 +257,18 @@ namespace LiteDB.Internals
             page.UsedBytes.Should().Be(700);
             page.NextFreePosition.Should().Be(32 + 1000);
 
-            page.Defrag();
+            // fill all page
+            page.Insert(7440, out var index4).Fill(105); // 8192 - 32 - (4 * 4) - 700
 
             page.FragmentedBytes.Should().Be(0);
-            page.UsedBytes.Should().Be(700);
-            page.NextFreePosition.Should().Be(32 + 700);
+            page.UsedBytes.Should().Be(8140);
+            page.NextFreePosition.Should().Be(8172);
 
             page.Get(index2).All(103).Should().BeTrue();
             page.Get(index3).All(104).Should().BeTrue();
+            page.Get(index4).All(105).Should().BeTrue();
 
-            page.GetUsedIndexs().ToArray().Should().Equal(2, 3);
+            page.GetUsedIndexs().ToArray().Should().Equal(0, 2, 3);
 
             buffer.ShareCounter = 0;
         }

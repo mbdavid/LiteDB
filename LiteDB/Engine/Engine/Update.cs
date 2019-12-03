@@ -150,7 +150,7 @@ namespace LiteDB.Engine
             {
                 var index = col.GetCollectionIndex(elem.Item3);
 
-                last = indexer.AddNode(index, elem.Item2, pkNode.DataBlock, last);
+                last = indexer.AddNode(index, elem.Item2, pkNode.DataBlock, last, _flipCoin);
             }
 
             return true;

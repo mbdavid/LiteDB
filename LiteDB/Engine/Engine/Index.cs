@@ -75,7 +75,7 @@ namespace LiteDB.Engine
                                 foreach(var itemKey in arr)
                                 {
                                     // insert new index node
-                                    var node = indexer.AddNode(index, itemKey, pkNode.DataBlock, last);
+                                    var node = indexer.AddNode(index, itemKey, pkNode.DataBlock, last, _flipCoin);
 
                                     if (first == null) first = node;
 
@@ -87,7 +87,7 @@ namespace LiteDB.Engine
                             else
                             {
                                 // insert new index node
-                                var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
+                                var node = indexer.AddNode(index, key, pkNode.DataBlock, last, _flipCoin);
 
                                 if (first == null) first = node;
 

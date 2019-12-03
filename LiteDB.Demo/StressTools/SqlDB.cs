@@ -82,7 +82,7 @@ namespace LiteDB.Demo
             }
             catch(Exception ex)
             {
-                log.Error = ex.Message;
+                log.Error = ex.Message + '\n' + ex.StackTrace;
 
                 throw ex;
             }
@@ -96,7 +96,6 @@ namespace LiteDB.Demo
 
                 _delay = _watch.ElapsedMilliseconds;
             }
-
         }
     }
 }

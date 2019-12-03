@@ -23,14 +23,14 @@ namespace LiteDB.Demo
 
         public Logger(string connectionString)
         {
-            _db = new LiteRepository(connectionString);
+            //_db = new LiteRepository(connectionString);
         }
 
         public void Initialize(string name)
         {
-            _db.Database.DropCollection(name);
-
-            _db.Database.Checkpoint();
+            //_db.Database.DropCollection(name);
+            //
+            //_db.Database.Checkpoint();
 
             _logName = name;
         }
@@ -51,14 +51,14 @@ namespace LiteDB.Demo
 
             _cache.Clear();
 
-            _db.Insert((IEnumerable<Log>)logs, _logName);
+            //_db.Insert((IEnumerable<Log>)logs, _logName);
         }
 
         public void Dispose()
         {
             this.Flush();
 
-            _db.Dispose();
+            //_db.Dispose();
         }
     }
 }

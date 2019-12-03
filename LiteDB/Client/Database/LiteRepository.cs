@@ -26,6 +26,14 @@ namespace LiteDB
         #region Ctor
 
         /// <summary>
+        /// Starts LiteDB database an existing Database instance
+        /// </summary>
+        public LiteRepository(LiteDatabase database)
+        {
+            _db = database;
+        }
+
+        /// <summary>
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
         public LiteRepository(string connectionString, BsonMapper mapper = null)
