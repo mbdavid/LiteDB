@@ -72,7 +72,7 @@ namespace LiteDB.Demo
 
             foreach(var method in methods)
             {
-                for(var i = 0; i < method.Item2.Tasks; i++)
+                for(var i = 0; i < method.Item2.Threads; i++)
                 {
                     var index = i;
 
@@ -84,9 +84,9 @@ namespace LiteDB.Demo
                         // running loop
                         while (running && DateTime.Now < finish)
                         {
-                            var wait = count == 0 ? method.Item2.Delay : method.Item2.Wait;
+                            var wait = count == 0 ? method.Item2.Start : method.Item2.Repeat;
                             var delay = wait + _rnd.Next(0, method.Item2.Random);
-                            var name = method.Item2.Tasks == 1 ? method.Item1.Name : method.Item1.Name + "_" + index;
+                            var name = method.Item2.Threads == 1 ? method.Item1.Name : method.Item1.Name + "_" + index;
 
                             var sql = new SqlDB(name, _db, _logger, watch, concurrent, index);
 

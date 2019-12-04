@@ -556,7 +556,7 @@ namespace LiteDB.Engine
             // fill all non-used content area with 0
             var emptyLength = PAGE_SIZE - next - this.FooterSize;
 
-            _buffer.Array.Fill(0, next, emptyLength);
+            _buffer.Array.Fill(0, _buffer.Offset + next, emptyLength);
 
             // clear fragment blocks (page are in a continuous segment)
             this.FragmentedBytes = 0;

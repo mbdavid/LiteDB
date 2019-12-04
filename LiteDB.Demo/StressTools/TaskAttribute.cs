@@ -19,12 +19,12 @@ namespace LiteDB.Demo
         /// <summary>
         /// Waiting time (in milliseconds) before first run
         /// </summary>
-        public int Delay { get; set; } = 2000;
+        public int Start { get; set; } = 2000;
 
         /// <summary>
         /// Repeat this method every N milliseconds
         /// </summary>
-        public int Wait { get; set; } = 1000;
+        public int Repeat { get; set; } = 1000;
 
         /// <summary>
         /// Random time (0-N ms) for initial/repeat tasks
@@ -34,6 +34,6 @@ namespace LiteDB.Demo
         /// <summary>
         /// Define how many concurrent tasks will be created
         /// </summary>
-        public int Tasks { get; set; } = 1;
+        public int Threads { get; set; } = 1;
     }
 }

@@ -77,6 +77,32 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Return byte[] slice into hex digits
+        /// </summary>
+        public string ToHex()
+        {
+            var output = new StringBuilder();
+            var position = 0L;
+
+            while(position < this.Count)
+            {
+                //output.Append(position.ToString("X3") + "  ");
+
+                for (var i = 0; i < 32 && position < this.Count; i++)
+                {
+                    output.Append(this.Array[this.Offset + position].ToString("X2") + " ");
+
+                    position++;
+                }
+
+                output.AppendLine();
+
+            }
+
+            return output.ToString();
+        }
+
+        /// <summary>
         /// Slice this buffer into new BufferSlice according new offset and new count
         /// </summary>
         public BufferSlice Slice(int offset, int count)
