@@ -34,28 +34,29 @@ namespace LiteDB.Demo
             });
         }
 
-        [Task(Start = 0, Repeat = 10, Random = 10, Threads = 5)]
+        [Task(Start = 0, Repeat = 10, Random = 10, Threads = 1)]
         public void Insert(SqlDB db)
         {
             db.Insert("col1", new BsonDocument
             {
                 ["name"] = "John " + Guid.NewGuid(),
-                ["r"] = "-".PadLeft(200, '-'),
+                //["r"] = "-".PadLeft(200, '-'),
+                ["t"] = 0,
                 ["active"] = false
             }); ;
         }
 
-        [Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
+        //Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 1)]
         public void Update_Active(SqlDB db)
         {
-            db.ExecuteScalar("UPDATE col1 SET active = true , r=@0 WHERE active = false", 
+            db.ExecuteScalar("UPDATE col1 SET active = true, r = null , t=1 WHERE active = false", 
                 Guid.NewGuid().ToString().PadLeft(200, '-'));
         }
 
-        [Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 3)]
+        [Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 1)]
         public void Delete_Active(SqlDB db)
         {
-            db.ExecuteScalar("DELETE col1 WHERE active = false");
+            db.ExecuteScalar("DELETE col1 WHERE t = 0");
         }
 
         [Task(Start = 100, Repeat = 75, Random = 25, Threads = 1)]

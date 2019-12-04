@@ -192,7 +192,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void SetPrev(byte level, PageAddress value)
         {
-            ENSURE(level < this.Level, "out of index in level");
+            ENSURE(level <= this.Level, "out of index in level");
 
             this.Prev[level] = value;
 
@@ -206,7 +206,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void SetNext(byte level, PageAddress value)
         {
-            ENSURE(level < this.Level, "out of index in level");
+            ENSURE(level <= this.Level, "out of index in level");
 
             this.Next[level] = value;
 

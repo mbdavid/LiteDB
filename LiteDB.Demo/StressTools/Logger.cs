@@ -45,7 +45,10 @@ namespace LiteDB.Demo
 
             _cache.Clear();
 
-            _db.Insert((IEnumerable<Log>)logs, "EventLog");
+            Task.Factory.StartNew(() =>
+            {
+                _db.Insert((IEnumerable<Log>)logs, "EventLog");
+            });
         }
 
         public void Dispose()

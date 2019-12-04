@@ -335,5 +335,33 @@ namespace LiteDB.Internals
 
             buffer.ShareCounter = 0;
         }
+
+        [Fact]
+        public void BasePage_Test_Output()
+        {
+            var data = new byte[Constants.PAGE_SIZE];
+            var buffer = new PageBuffer(data, 0, 0);
+
+            // mark buffer as writable (debug propose)
+            buffer.ShareCounter = Constants.BUFFER_WRITABLE;
+
+            var page = new BasePage(buffer, 1, PageType.Empty);
+
+            page.Insert(100, out var index0).Fill(101);
+            page.Insert(7900, out var index1).Fill(102);
+            page.Insert(100, out var index2).Fill(103);
+
+            page.FragmentedBytes.Should().Be(0);
+            page.UsedBytes.Should().Be(8100);
+            page.NextFreePosition.Should().Be(8132);
+
+            page.Delete(index1);
+
+            page.Insert(7948, out var index3).Fill(104);
+
+            buffer.ShareCounter = 0;
+        }
+
+
     }
 }
