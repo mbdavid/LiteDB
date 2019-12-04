@@ -99,7 +99,7 @@ namespace LiteDB.Engine
             // update buffer
             header.UpdateBuffer();
 
-            stream.Write(buffer.Array, 0, PAGE_SIZE);
+            stream.Write(buffer.Array, buffer.Offset, PAGE_SIZE);
 
             if (initialSize > 0)
             {

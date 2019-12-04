@@ -92,7 +92,7 @@ namespace LiteDB.Demo
 
                 log.Elapsed = DateTime.Now.Subtract(start).TotalMilliseconds;
 
-                _logger.Insert(log);
+                _logger?.Insert(log);
 
                 _delay = _watch.ElapsedMilliseconds;
             }

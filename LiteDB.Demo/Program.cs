@@ -20,15 +20,15 @@ namespace LiteDB.Demo
         {
             Console.WriteLine("Stress Test");
             Console.WriteLine("===========");
+            Console.Write("Enter time (minutes): ");
+            var timer = Console.ReadLine();
 
-            using (var l = new Logger(@"filename=C:\Git\Temp\stress\eventLog.db; mode=shared"))
-            using (var e = new ExampleStressTest(@"C:\Git\Temp\stress\example-1.db", l))
+            using (var e = new ExampleStressTest(@"C:\Git\Temp\stress\example-1.db"))
             {
-                e.Run(TimeSpan.FromMinutes(2));
+                e.Run(TimeSpan.FromMinutes(string.IsNullOrEmpty(timer) ? .5 : Convert.ToDouble(timer)));
             }
 
-            Console.WriteLine("Stress test finish");
-
+            Console.WriteLine("End");
             Console.ReadKey();
         }
     }

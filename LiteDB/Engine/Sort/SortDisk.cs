@@ -91,7 +91,7 @@ namespace LiteDB.Engine
             lock(writer)
             {
                 writer.Position = position;
-                writer.Write(buffer.Array, 0, _containerSize);
+                writer.Write(buffer.Array, buffer.Offset, _containerSize);
             }
         }
 

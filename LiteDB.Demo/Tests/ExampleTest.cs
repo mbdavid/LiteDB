@@ -16,8 +16,8 @@ namespace LiteDB.Demo
 {
     public class ExampleStressTest : StressTest
     {
-        public ExampleStressTest(string filename, Logger logger) : 
-            base(new EngineSettings { Filename = filename }, logger)
+        public ExampleStressTest(string filename) : 
+            base(new EngineSettings { Filename = filename })
         {
         }
 
@@ -34,24 +34,25 @@ namespace LiteDB.Demo
             });
         }
 
-        [Task(Start = 0, Repeat = 20, Random = 10, Threads = 4)]
+        [Task(Start = 0, Repeat = 10, Random = 50, Threads = 5)]
         public void Insert(SqlDB db)
         {
             db.Insert("col1", new BsonDocument
             {
                 ["name"] = "John " + Guid.NewGuid(),
-                ["r"] = "-----------------------------------------------------------------------------------" + Guid.NewGuid(),
+                ["r"] = "-".PadLeft(200, '-'),
                 ["active"] = false
-            });
+            }); ;
         }
 
-        [Task(Start = 2000, Repeat = 2000, Random = 25, Threads = 1)]
+        //[Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
         public void Update_Active(SqlDB db)
         {
-            db.ExecuteScalar("UPDATE col1 SET active = true , r=null WHERE active = false", Guid.NewGuid());
+            db.ExecuteScalar("UPDATE col1 SET active = true , r=@0 WHERE active = false", 
+                Guid.NewGuid().ToString().PadLeft(200, '-'));
         }
 
-        [Task(Start = 5000, Repeat = 6000, Random = 500, Threads = 1)]
+        [Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 3)]
         public void Delete_Active(SqlDB db)
         {
             db.ExecuteScalar("DELETE col1 WHERE active = false");

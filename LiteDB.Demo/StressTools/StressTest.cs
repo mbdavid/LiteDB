@@ -23,7 +23,7 @@ namespace LiteDB.Demo
 
         private readonly Logger _logger;
 
-        public StressTest(EngineSettings settings, Logger logger)
+        public StressTest(EngineSettings settings)
         {
             settings.Seed = 0;
             settings.Timeout = TimeSpan.FromHours(1);
@@ -33,11 +33,16 @@ namespace LiteDB.Demo
                 File.Delete(settings.Filename);
                 File.Delete(GetSufixFile(settings.Filename, "-log", false));
                 File.Delete(GetSufixFile(settings.Filename, "-tmp", false));
+
+                _logger = new Logger(GetSufixFile(settings.Filename, "-eventLog", true));
+            }
+            else
+            {
+                _logger = null;
             }
 
             _db = new LiteDatabase(new LiteEngine(settings));
 
-            _logger = logger;
         }
 
         public abstract void OnInit(SqlDB db);
@@ -54,9 +59,6 @@ namespace LiteDB.Demo
             var exec = 0;
 
             Console.WriteLine("Start running: " + this.GetType().Name);
-
-            // setting log name
-            _logger.Initialize(this.GetType().Name + "_Log");
 
             // initialize database
             this.OnInit(new SqlDB("OnInit", _db, _logger, watch, concurrent, 0));
@@ -98,6 +100,12 @@ namespace LiteDB.Demo
 
                                 exec++;
                             }
+                            catch (TargetInvocationException ex)
+                            {
+                                running = false;
+
+                                Console.WriteLine($"ERROR {method.Item1.Name} : {ex.InnerException.Message}");
+                            }
                             catch (Exception ex)
                             {
                                 running = false;
@@ -126,10 +134,8 @@ namespace LiteDB.Demo
                 }
             }));
 
-
             // wait finish all tasks
             Task.WaitAll(tasks.ToArray());
-
         }
 
         /// <summary>

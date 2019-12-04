@@ -19,20 +19,14 @@ namespace LiteDB.Demo
     {
         private readonly LiteRepository _db;
         private List<Log> _cache = new List<Log>();
-        private string _logName;
 
-        public Logger(string connectionString)
+        public Logger(string filename)
         {
-            //_db = new LiteRepository(connectionString);
-        }
-
-        public void Initialize(string name)
-        {
-            //_db.Database.DropCollection(name);
-            //
-            //_db.Database.Checkpoint();
-
-            _logName = name;
+            _db = new LiteRepository(new ConnectionString
+            {
+                Filename = filename,
+                Mode = ConnectionMode.Shared
+            });
         }
 
         public void Insert(Log log)
@@ -51,14 +45,14 @@ namespace LiteDB.Demo
 
             _cache.Clear();
 
-            //_db.Insert((IEnumerable<Log>)logs, _logName);
+            _db.Insert((IEnumerable<Log>)logs, "EventLog");
         }
 
         public void Dispose()
         {
             this.Flush();
 
-            //_db.Dispose();
+            _db.Dispose();
         }
     }
 }

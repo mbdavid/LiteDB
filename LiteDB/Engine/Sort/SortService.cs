@@ -30,7 +30,6 @@ namespace LiteDB.Engine
         private readonly BufferSlice _buffer;
         private readonly Lazy<Stream> _reader;
 
-
         /// <summary>
         /// Get how many documents was inserted by Insert method
         /// </summary>
