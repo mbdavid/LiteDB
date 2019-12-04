@@ -34,7 +34,7 @@ namespace LiteDB.Demo
             });
         }
 
-        [Task(Start = 0, Repeat = 10, Random = 50, Threads = 5)]
+        [Task(Start = 0, Repeat = 10, Random = 10, Threads = 5)]
         public void Insert(SqlDB db)
         {
             db.Insert("col1", new BsonDocument
@@ -45,7 +45,7 @@ namespace LiteDB.Demo
             }); ;
         }
 
-        //[Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
+        [Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
         public void Update_Active(SqlDB db)
         {
             db.ExecuteScalar("UPDATE col1 SET active = true , r=@0 WHERE active = false", 

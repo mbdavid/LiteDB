@@ -417,7 +417,7 @@ namespace LiteDB.Engine
             var length = _buffer.ReadUInt16(lengthAddr);
 
             ENSURE(this.IsValidPos(position), "invalid segment position");
-            ENSURE(this.IsValidPos(length), "invalid segment length");
+            ENSURE(this.IsValidLen(length), "invalid segment length");
 
             // check if deleted segment are at end of page
             var isLastSegment = (position + length == this.NextFreePosition);
