@@ -297,11 +297,12 @@ namespace LiteDB.Engine
             ENSURE(this.FreeBytes >= bytesLength + (isNewIndex ? SLOT_SIZE : 0), "length must be always lower than current free space");
             ENSURE(index != byte.MaxValue, "index shloud be a valid number (0-254)");
             ENSURE(this.ItemsCount < byte.MaxValue, "page full");
+            ENSURE(this.FreeBytes >= this.FragmentedBytes, "fragmented bytes must be at most free bytes");
 
             // calculate how many continuous bytes are avaiable in this page
             var continuosBlocks = this.FreeBytes - this.FragmentedBytes - (isNewIndex ? SLOT_SIZE : 0);
 
-            ENSURE(continuosBlocks >= 0, "continuosBlock must be greater than zero");
+            ENSURE(continuosBlocks == PAGE_SIZE - this.NextFreePosition - this.FooterSize - (isNewIndex ? SLOT_SIZE : 0), "continuosBlock must be same as from NextFreePosition");
 
             // if continuous blocks are not big enouth for this data, must run page defrag
             if (bytesLength > continuosBlocks)
@@ -310,7 +311,11 @@ namespace LiteDB.Engine
             }
 
             // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
-            if (isNewIndex) this.HighestIndex = index;
+            if (isNewIndex)
+            {
+                ENSURE(index == this.HighestIndex + 1, "new index must be next highest index");
+                this.HighestIndex = index;
+            }
 
             // get segment addresses
             var positionAddr = CalcPositionAddr(index);
