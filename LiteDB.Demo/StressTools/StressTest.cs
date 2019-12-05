@@ -17,11 +17,13 @@ namespace LiteDB.Demo
     public abstract class StressTest : IDisposable
     {
         // "fixed" random number order
-        private readonly Random _rnd = new Random(0);
+        protected readonly Random rnd = new Random(0);
 
         private readonly LiteDatabase _db;
 
         private readonly Logger _logger;
+
+        public bool Synced { get; set; } = false;
 
         public StressTest(EngineSettings settings)
         {
@@ -87,7 +89,7 @@ namespace LiteDB.Demo
                         while (running && DateTime.Now < finish)
                         {
                             var wait = count == 0 ? method.Item2.Start : method.Item2.Repeat;
-                            var delay = wait + _rnd.Next(0, method.Item2.Random);
+                            var delay = wait + rnd.Next(0, method.Item2.Random);
                             var name = method.Item2.Threads == 1 ? method.Item1.Name : method.Item1.Name + "_" + index;
 
                             var sql = new SqlDB(name, _db, _logger, watch, concurrent, index);
@@ -96,6 +98,8 @@ namespace LiteDB.Demo
 
                             try
                             {
+                                if (this.Synced) Monitor.Enter(_db);
+
                                 method.Item1.Invoke(this, new object[] { sql });
 
                                 exec++;
@@ -111,6 +115,10 @@ namespace LiteDB.Demo
                                 running = false;
 
                                 Console.WriteLine($"ERROR {method.Item1.Name} : {ex.Message}");
+                            }
+                            finally
+                            {
+                                if (this.Synced) Monitor.Exit(_db);
                             }
 
                             count++;

@@ -25,6 +25,8 @@ namespace LiteDB.Demo
 
             using (var e = new ExampleStressTest(@"C:\Git\Temp\stress\example-1.db"))
             {
+                e.Synced = true;
+
                 e.Run(TimeSpan.FromMinutes(string.IsNullOrEmpty(timer) ? .5 : Convert.ToDouble(timer)));
             }
 

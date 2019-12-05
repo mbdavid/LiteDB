@@ -6,7 +6,7 @@ namespace LiteDB.Engine
     internal class DataBlock
     {
         /// <summary>
-        /// Get fixed part of DataBlock
+        /// Get fixed part of DataBlock (6 bytes)
         /// </summary>
         public const int DATA_BLOCK_FIXED_SIZE = 1 + // DataIndex
                                                  PageAddress.SIZE; // NextBlock

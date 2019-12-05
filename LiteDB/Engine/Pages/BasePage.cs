@@ -256,7 +256,9 @@ namespace LiteDB.Engine
         /// </summary>
         public BufferSlice Get(byte index)
         {
-            ENSURE(index < byte.MaxValue, "slot index must be between 0-254");
+            ENSURE(this.ItemsCount > 0, "should have items in this page");
+            ENSURE(this.HighestIndex != byte.MaxValue, "should be have at least 1 index in this page");
+            ENSURE(index <= this.HighestIndex, "get only index below highest index");
 
             // read slot address
             var positionAddr = CalcPositionAddr(index);
@@ -297,7 +299,9 @@ namespace LiteDB.Engine
             ENSURE(this.ItemsCount < byte.MaxValue, "page full");
 
             // calculate how many continuous bytes are avaiable in this page
-            var continuosBlocks = this.FreeBytes - this.FragmentedBytes;
+            var continuosBlocks = this.FreeBytes - this.FragmentedBytes - (isNewIndex ? SLOT_SIZE : 0);
+
+            ENSURE(continuosBlocks >= 0, "continuosBlock must be greater than zero");
 
             // if continuous blocks are not big enouth for this data, must run page defrag
             if (bytesLength > continuosBlocks)

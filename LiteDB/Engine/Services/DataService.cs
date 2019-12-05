@@ -97,7 +97,7 @@ namespace LiteDB.Engine
                         var currentBlock = dataPage.GetBlock(updateAddress.Index);
 
                         // try get full page size content
-                        bytesToCopy = Math.Min(bytesLeft, dataPage.FreeBytes + currentBlock.Buffer.Count);
+                        bytesToCopy = Math.Min(bytesLeft, dataPage.FreeBytes + currentBlock.Buffer.Count + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
                         // get current free slot linked list
                         var slot = BasePage.FreeIndexSlot(dataPage.FreeBytes);
@@ -110,7 +110,7 @@ namespace LiteDB.Engine
 
                         lastBlock = updateBlock;
 
-                        // go to next address (if extits)
+                        // go to next address (if exists)
                         updateAddress = updateBlock.NextBlock;
                     }
                     else
@@ -135,7 +135,11 @@ namespace LiteDB.Engine
                 // old document was bigger than current, must delete extend blocks
                 if (lastBlock.NextBlock.IsEmpty == false)
                 {
-                    this.Delete(lastBlock.NextBlock);
+                    var nextBlockAddress = lastBlock.NextBlock;
+
+                    lastBlock.SetNextBlock(PageAddress.Empty);
+
+                    this.Delete(nextBlockAddress);
                 }
             }
 
