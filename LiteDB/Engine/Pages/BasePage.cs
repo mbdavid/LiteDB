@@ -313,7 +313,7 @@ namespace LiteDB.Engine
             // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
             if (isNewIndex)
             {
-                ENSURE(index == this.HighestIndex + 1, "new index must be next highest index");
+                ENSURE(index == (byte)(this.HighestIndex + 1), "new index must be next highest index");
                 this.HighestIndex = index;
             }
 

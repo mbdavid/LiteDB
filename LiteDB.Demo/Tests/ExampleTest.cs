@@ -42,7 +42,7 @@ namespace LiteDB.Demo
             db.Insert("col1", new BsonDocument
             {
                 ["name"] = "John " + Guid.NewGuid(),
-                ["r"] = "-".PadLeft(rnd.Next(6500, 9500), '-'),
+                ["r"] = "-".PadLeft(rnd.Next(6500, 19500), '-'),
                 ["t"] = 0,
                 ["active"] = false
             }); ;
