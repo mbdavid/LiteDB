@@ -65,5 +65,10 @@ namespace LiteDB.Demo
         {
             db.Query("SELECT COUNT(*) FROM col1");
         }
+
+        public override void OnCleanUp(SqlDB db)
+        {
+            db.ExecuteScalar("CHECKPOINT");
+        }
     }
 }

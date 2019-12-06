@@ -49,6 +49,8 @@ namespace LiteDB.Demo
 
         public abstract void OnInit(SqlDB db);
 
+        public abstract void OnCleanUp(SqlDB db);
+
         /// <summary>
         /// Run all methods
         /// </summary>
@@ -144,6 +146,9 @@ namespace LiteDB.Demo
 
             // wait finish all tasks
             Task.WaitAll(tasks.ToArray());
+
+            // finalize database
+            this.OnCleanUp(new SqlDB("OnCleanUp", _db, _logger, watch, concurrent, 0));
         }
 
         /// <summary>
