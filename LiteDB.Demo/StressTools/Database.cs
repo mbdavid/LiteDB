@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Demo
 {
-    public class SqlDB
+    public class Database
     {
         private readonly string _taskName;
         private readonly LiteDatabase _db;
@@ -27,7 +27,7 @@ namespace LiteDB.Demo
 
         public int Index { get; }
 
-        public SqlDB(string taskName, LiteDatabase db, Logger logger, Stopwatch watch, ConcurrentCounter concurrent, int index)
+        public Database(string taskName, LiteDatabase db, Logger logger, Stopwatch watch, ConcurrentCounter concurrent, int index)
         {
             _taskName = taskName;
             _db = db;
@@ -45,17 +45,17 @@ namespace LiteDB.Demo
             return this.Execute(sql, args).FirstOrDefault();
         }
 
-        public BsonDocument[] Query(string sql, params BsonValue[] args)
+        public BsonValue[] Query(string sql, params BsonValue[] args)
         {
-            return this.Execute(sql, args).ToEnumerable().Select(x => x.AsDocument).ToArray();
+            return this.Execute(sql, args);
         }
 
         public int Insert(string collection, BsonDocument document, string autoId = "int")
         {
-            return this.Execute($"INSERT INTO {collection}:{autoId} VALUES {JsonSerializer.Serialize(document)}").Current.AsInt32;
+            return this.Execute($"INSERT INTO {collection}:{autoId} VALUES {JsonSerializer.Serialize(document)}").FirstOrDefault().AsInt32;
         }
 
-        private IBsonDataReader Execute(string sql, params BsonValue[] args)
+        private BsonValue[] Execute(string sql, params BsonValue[] args)
         {
             var parameters = new BsonDocument();
 
@@ -78,7 +78,7 @@ namespace LiteDB.Demo
 
             try
             {
-                return _db.Execute(sql, parameters);
+                return _db.Execute(sql, parameters).ToArray();
             }
             catch(Exception ex)
             {

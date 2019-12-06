@@ -25,7 +25,7 @@ namespace LiteDB.Demo
         /// Use this method to initialize your stress test.
         /// You can drop existing collection, load initial data and run checkpoint before finish
         /// </summary>
-        public override void OnInit(SqlDB db)
+        public override void OnInit(Database db)
         {
             db.Insert("col1", new BsonDocument 
             { 
@@ -37,7 +37,7 @@ namespace LiteDB.Demo
         }
 
         [Task(Start = 0, Repeat = 10, Random = 10, Threads = 5)]
-        public void Insert(SqlDB db)
+        public void Insert(Database db)
         {
             db.Insert("col1", new BsonDocument
             {
@@ -49,24 +49,24 @@ namespace LiteDB.Demo
         }
 
         [Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
-        public void Update_Active(SqlDB db)
+        public void Update_Active(Database db)
         {
             db.ExecuteScalar("UPDATE col1 SET active = true, r = null WHERE active = false"); 
         }
 
         [Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 2)]
-        public void Delete_Active(SqlDB db)
+        public void Delete_Active(Database db)
         {
             db.ExecuteScalar("DELETE col1 WHERE active = true");
         }
 
         [Task(Start = 100, Repeat = 75, Random = 25, Threads = 1)]
-        public void QueryCount(SqlDB db)
+        public void QueryCount(Database db)
         {
             db.Query("SELECT COUNT(*) FROM col1");
         }
 
-        public override void OnCleanUp(SqlDB db)
+        public override void OnCleanUp(Database db)
         {
             db.ExecuteScalar("CHECKPOINT");
         }

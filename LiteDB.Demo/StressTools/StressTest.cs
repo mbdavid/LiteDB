@@ -47,9 +47,9 @@ namespace LiteDB.Demo
 
         }
 
-        public abstract void OnInit(SqlDB db);
+        public abstract void OnInit(Database db);
 
-        public abstract void OnCleanUp(SqlDB db);
+        public abstract void OnCleanUp(Database db);
 
         /// <summary>
         /// Run all methods
@@ -65,7 +65,7 @@ namespace LiteDB.Demo
             Console.WriteLine("Start running: " + this.GetType().Name);
 
             // initialize database
-            this.OnInit(new SqlDB("OnInit", _db, _logger, watch, concurrent, 0));
+            this.OnInit(new Database("OnInit", _db, _logger, watch, concurrent, 0));
 
             var tasks = new List<Task>();
             var methods = this.GetType()
@@ -94,7 +94,7 @@ namespace LiteDB.Demo
                             var delay = wait + rnd.Next(0, method.Item2.Random);
                             var name = method.Item2.Threads == 1 ? method.Item1.Name : method.Item1.Name + "_" + index;
 
-                            var sql = new SqlDB(name, _db, _logger, watch, concurrent, index);
+                            var sql = new Database(name, _db, _logger, watch, concurrent, index);
 
                             Task.Delay(delay).GetAwaiter().GetResult();
 
@@ -148,7 +148,7 @@ namespace LiteDB.Demo
             Task.WaitAll(tasks.ToArray());
 
             // finalize database
-            this.OnCleanUp(new SqlDB("OnCleanUp", _db, _logger, watch, concurrent, 0));
+            this.OnCleanUp(new Database("OnCleanUp", _db, _logger, watch, concurrent, 0));
         }
 
         /// <summary>
