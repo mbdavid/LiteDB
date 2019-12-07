@@ -23,6 +23,7 @@ namespace LiteDB.Demo
         public int Delay { get; set; }
         public double Elapsed { get; set; }
         public int Concurrent { get; set; }
+        public string Command { get; set; }
         public string Error { get; set; }
     }
 }

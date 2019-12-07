@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
 {
-    public class Display
+    internal class Display
     {
         public bool Pretty { get; set; }
 
@@ -44,7 +44,7 @@ namespace LiteDB.Shell
             }
         }
 
-        public void WriteResult(IBsonDataReader result)
+        public void WriteResult(IBsonDataReader result, Env env)
         {
             var index = 0;
             var writer = new JsonWriter(Console.Out)
@@ -55,6 +55,8 @@ namespace LiteDB.Shell
 
             foreach (var item in result.ToEnumerable())
             {
+                if (env.Running == false) return;
+
                 this.Write(ConsoleColor.Cyan, string.Format("[{0}]: ", ++index));
 
                 if (this.Pretty) Console.WriteLine();

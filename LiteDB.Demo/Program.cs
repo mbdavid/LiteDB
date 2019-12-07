@@ -20,10 +20,10 @@ namespace LiteDB.Demo
         {
             Console.WriteLine("Stress Test");
             Console.WriteLine("===========");
-            Console.Write("Enter time (minutes): ");
+            Console.Write("Enter test duration (minutes): ");
             var timer = Console.ReadLine();
 
-            using (var e = new ExampleStressTest(@"C:\Git\Temp\stress\example-1.db"))
+            using (var e = new ExampleStressTest(@"C:\Git\Temp\stress\example.db"))
             {
                 e.Synced = true;
 
