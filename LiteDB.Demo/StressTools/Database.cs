@@ -70,8 +70,7 @@ namespace LiteDB.Demo
                 Timer = (int)_watch.ElapsedMilliseconds,
                 Concurrent = _concurrent.Increment() - 1,
                 Delay = (int)(_watch.ElapsedMilliseconds - _delay),
-                Sql = sql,
-                Params = parameters
+                Thread = Task.CurrentId
             };
 
             var start = DateTime.Now;
