@@ -96,8 +96,8 @@ namespace LiteDB.Engine
                         var dataPage = _snapshot.GetPage<DataPage>(updateAddress.PageID);
                         var currentBlock = dataPage.GetBlock(updateAddress.Index);
 
-                        // try get full page size content
-                        bytesToCopy = Math.Min(bytesLeft, dataPage.FreeBytes + currentBlock.Buffer.Count + DataBlock.DATA_BLOCK_FIXED_SIZE);
+                        // try get full page size content (do not add DATA_BLOCK_FIXED_SIZE because will be added in UpdateBlock)
+                        bytesToCopy = Math.Min(bytesLeft, dataPage.FreeBytes + currentBlock.Buffer.Count);
 
                         // get current free slot linked list
                         var slot = BasePage.FreeIndexSlot(dataPage.FreeBytes);

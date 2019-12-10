@@ -33,7 +33,7 @@ namespace LiteDB.Demo
                 ["name"] = "John" 
             });
 
-            //db.ExecuteScalar("CREATE INDEX idx_name ON col1(upper(name))");
+            db.ExecuteScalar("CREATE INDEX idx_name ON col1(upper(name))");
         }
 
         [Task(Start = 0, Repeat = 10, Random = 10, Threads = 5)]
@@ -42,7 +42,7 @@ namespace LiteDB.Demo
             db.Insert("col1", new BsonDocument
             {
                 ["name"] = "John " + Guid.NewGuid(),
-                ["r"] = "-".PadLeft(rnd.Next(6500, 19500), '-'),
+                ["r"] = "myvalue",
                 ["t"] = 0,
                 ["active"] = false
             }); ;
@@ -51,7 +51,7 @@ namespace LiteDB.Demo
         [Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
         public void Update_Active(Database db)
         {
-            db.ExecuteScalar("UPDATE col1 SET active = true, r = null WHERE active = false"); 
+            db.ExecuteScalar("UPDATE col1 SET active = true, r = LPAD(r, RANDOM(5000, 20000), '-') WHERE active = false"); 
         }
 
         [Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 2)]

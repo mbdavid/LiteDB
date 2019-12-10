@@ -204,5 +204,34 @@ namespace LiteDB
         {
             return items.Distinct();
         }
+
+        private static Random _random = new Random();
+
+        /// <summary>
+        /// Return a random int value
+        /// </summary>
+        [Volatile]
+        public static BsonValue RANDOM()
+        {
+            return _random.Next();
+        }
+
+        /// <summary>
+        /// Return a ranom int value inside this min/max values
+        /// </summary>
+        [Volatile]
+        public static BsonValue RANDOM(BsonValue min, BsonValue max)
+        {
+            if (min.IsNumber && max.IsNumber)
+            {
+                return _random.Next(min.AsInt32, max.AsInt32);
+            }
+            else
+            {
+                return BsonValue.Null;
+            }
+        }
+
+
     }
 }
