@@ -409,6 +409,22 @@ namespace LiteDB
         {
             ENSURE(keys.Length == values.Length, "both keys/value must contains same length");
 
+            // test for special JsonEx data types (date, numberLong, ...)
+            if (keys.Length == 1 && keys[0][0] == '$' && values[0].IsString)
+            {
+                switch (keys[0])
+                {
+                    case "$binary": return BsonExpressionMethods.BINARY(values[0]);
+                    case "$oid": return BsonExpressionMethods.OBJECTID(values[0]);
+                    case "$guid": return BsonExpressionMethods.GUID(values[0]);
+                    case "$date": return BsonExpressionMethods.DATE(values[0]);
+                    case "$numberLong": return BsonExpressionMethods.LONG(values[0]);
+                    case "$numberDecimal": return BsonExpressionMethods.DECIMAL(values[0]);
+                    case "$minValue": return BsonExpressionMethods.MINVALUE();
+                    case "$maxValue": return BsonExpressionMethods.MAXVALUE();
+                }
+            }
+
             var doc = new BsonDocument();
 
             for(var i = 0; i < keys.Length; i++)

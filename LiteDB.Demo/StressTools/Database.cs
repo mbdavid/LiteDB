@@ -50,11 +50,6 @@ namespace LiteDB.Demo
             return this.Execute(sql, args);
         }
 
-        public int Insert(string collection, BsonDocument document, string autoId = "int")
-        {
-            return this.Execute($"INSERT INTO {collection}:{autoId} VALUES {JsonSerializer.Serialize(document)}").FirstOrDefault().AsInt32;
-        }
-
         private BsonValue[] Execute(string sql, params BsonValue[] args)
         {
             var parameters = new BsonDocument();
@@ -70,8 +65,8 @@ namespace LiteDB.Demo
                 Timer = (int)_watch.ElapsedMilliseconds,
                 Concurrent = _concurrent.Increment() - 1,
                 Delay = (int)(_watch.ElapsedMilliseconds - _delay),
-                Sql = sql,
-                Params = parameters
+                Command = sql,
+                Thread = Task.CurrentId
             };
 
             var start = DateTime.Now;
@@ -81,6 +76,47 @@ namespace LiteDB.Demo
                 return _db.Execute(sql, parameters).ToArray();
             }
             catch(Exception ex)
+            {
+                log.Error = ex.Message + '\n' + ex.StackTrace;
+
+                throw ex;
+            }
+            finally
+            {
+                _concurrent.Decrement();
+
+                log.Elapsed = DateTime.Now.Subtract(start).TotalMilliseconds;
+
+                _logger?.Insert(log);
+
+                _delay = _watch.ElapsedMilliseconds;
+            }
+        }
+
+        public int Insert(string collection, BsonDocument document, string autoId = "int")
+        {
+            return this.Insert(collection, new BsonDocument[] { document }, autoId);
+        }
+
+        public int Insert(string collection, IEnumerable<BsonDocument> documents, string autoId = "int")
+        {
+            var log = new Log
+            {
+                Task = _taskName,
+                Timer = (int)_watch.ElapsedMilliseconds,
+                Concurrent = _concurrent.Increment() - 1,
+                Delay = (int)(_watch.ElapsedMilliseconds - _delay),
+                Command = "INSERT " + collection,
+                Thread = Task.CurrentId
+            };
+
+            var start = DateTime.Now;
+
+            try
+            {
+                return _db.GetCollection(collection).Insert(documents);
+            }
+            catch (Exception ex)
             {
                 log.Error = ex.Message + '\n' + ex.StackTrace;
 

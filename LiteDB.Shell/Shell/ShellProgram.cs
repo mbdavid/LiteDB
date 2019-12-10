@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using LiteDB.Shell.Commands;
 
 namespace LiteDB.Shell
@@ -14,6 +15,8 @@ namespace LiteDB.Shell
 
             // show welcome message
             display.WriteWelcome();
+
+            Console.CancelKeyPress += (o, e) => { e.Cancel = true; env.Running = false; };
 
             while (input.Running)
             {
@@ -35,7 +38,9 @@ namespace LiteDB.Shell
                     // if string is not a shell command, try execute as sql command
                     if (env.Database == null) throw new Exception("Database not connected");
 
-                    display.WriteResult(env.Database.Execute(cmd));
+                    env.Running = true;
+
+                    display.WriteResult(env.Database.Execute(cmd), env);
 
                 }
                 catch (Exception ex)

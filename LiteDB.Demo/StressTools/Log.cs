@@ -18,12 +18,12 @@ namespace LiteDB.Demo
     {
         public int Id { get; set; }
         public string Task { get; set; }
+        public int? Thread { get; set; }
         public int Timer { get; set; }
         public int Delay { get; set; }
         public double Elapsed { get; set; }
         public int Concurrent { get; set; }
-        public string Sql { get; set; }
-        public BsonDocument Params { get; set; }
+        public string Command { get; set; }
         public string Error { get; set; }
     }
 }
