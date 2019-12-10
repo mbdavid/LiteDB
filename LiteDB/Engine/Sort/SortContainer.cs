@@ -61,7 +61,11 @@ namespace LiteDB.Engine
             {
                 buffer.WriteIndexKey(item.Key, offset);
 
-                offset += GetKeyLength(item.Key);
+                var keyLength = GetKeyLength(item.Key);
+
+                if (keyLength > MAX_INDEX_KEY_LENGTH) throw LiteException.InvalidIndexKey($"Sort key must be less than {MAX_INDEX_KEY_LENGTH} bytes.");
+
+                offset += keyLength;
 
                 buffer.Write(item.Value, offset);
 

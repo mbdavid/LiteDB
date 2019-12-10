@@ -10,9 +10,12 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexNode
     {
-        private const int INDEX_NODE_FIXED_SIZE = 1 + // Slot [byte]
-                                                  1 + // Levels [byte]
-                                                  PageAddress.SIZE + // DataBlock
+        /// <summary>
+        /// Fixed length of IndexNode (12 bytes)
+        /// </summary>
+        private const int INDEX_NODE_FIXED_SIZE = 1 + // Slot [1 byte]
+                                                  1 + // Levels [1 byte]
+                                                  PageAddress.SIZE + // DataBlock (5 bytes)
                                                   PageAddress.SIZE; // NextNode (5 bytes)
 
         private const int P_SLOT = 0; // 00-00 [byte]

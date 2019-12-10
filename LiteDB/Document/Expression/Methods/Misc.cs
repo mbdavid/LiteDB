@@ -231,7 +231,5 @@ namespace LiteDB
                 return BsonValue.Null;
             }
         }
-
-
     }
 }
