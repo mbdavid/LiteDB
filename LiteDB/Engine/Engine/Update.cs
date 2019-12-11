@@ -123,7 +123,7 @@ namespace LiteDB.Engine
 
             foreach (var index in col.GetCollectionIndexes().Where(x => x.Name != "_id"))
             {
-                // getting all keys do check
+                // getting all keys from expression over document
                 var keys = index.BsonExpr.Execute(doc);
 
                 foreach (var key in keys)
@@ -131,6 +131,8 @@ namespace LiteDB.Engine
                     newKeys.Add(new Tuple<byte, BsonValue, string>(index.Slot, key, index.Name));
                 }
             }
+
+            if (oldKeys.Length == 0 && newKeys.Count == 0) return true;
 
             // get a list of all nodes that are in oldKeys but not in newKeys (must delete)
             var toDelete = new HashSet<PageAddress>(oldKeys
@@ -141,6 +143,9 @@ namespace LiteDB.Engine
             var toInsert = newKeys
                 .Where(x => oldKeys.Any(o => o.Item1 == x.Item1 && o.Item2 == x.Item2) == false)
                 .ToArray();
+
+            // if nothing to change, just exit
+            if (toDelete.Count == 0 && toInsert.Length == 0) return true;
 
             // delete nodes and return last keeped node in list
             var last = indexer.DeleteList(pkNode.Position, toDelete);

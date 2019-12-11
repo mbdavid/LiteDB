@@ -587,7 +587,7 @@ namespace LiteDB.Engine
         private byte GetFreeIndex()
         {
             // check for all slot area to get first empty slot [safe for byte loop]
-            for (byte index = _startIndex; index < byte.MaxValue; index++)
+            for (byte index = 0; index < byte.MaxValue; index++)
             {
                 var positionAddr = CalcPositionAddr(index);
                 var position = _buffer.ReadUInt16(positionAddr);

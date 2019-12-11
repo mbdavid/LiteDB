@@ -10,6 +10,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexPage : BasePage
     {
+        public readonly Dictionary<byte, IndexNode> _cache = new Dictionary<byte, IndexNode>();
+
         /// <summary>
         /// Read existing IndexPage in buffer
         /// </summary>
@@ -32,11 +34,20 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode GetIndexNode(byte index)
         {
-            var segment = base.Get(index);
+            if (_cache.TryGetValue(index, out var node))
+            {
+                return node;
+            }
+            else
+            {
+                var segment = base.Get(index);
 
-            var node = new IndexNode(this, index, segment);
+                node = new IndexNode(this, index, segment);
 
-            return node;
+                _cache[index] = node;
+
+                return node;
+            }
         }
 
         /// <summary>

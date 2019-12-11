@@ -93,12 +93,12 @@ namespace LiteDB.Demo
             }
         }
 
-        public int Insert(string collection, BsonDocument document, string autoId = "int")
+        public int Insert(string collection, BsonDocument document, BsonAutoId autoId = BsonAutoId.Int32)
         {
             return this.Insert(collection, new BsonDocument[] { document }, autoId);
         }
 
-        public int Insert(string collection, IEnumerable<BsonDocument> documents, string autoId = "int")
+        public int Insert(string collection, IEnumerable<BsonDocument> documents, BsonAutoId autoId = BsonAutoId.Int32)
         {
             var log = new Log
             {
@@ -114,7 +114,7 @@ namespace LiteDB.Demo
 
             try
             {
-                return _db.GetCollection(collection).Insert(documents);
+                return _db.GetCollection(collection, autoId).Insert(documents);
             }
             catch (Exception ex)
             {

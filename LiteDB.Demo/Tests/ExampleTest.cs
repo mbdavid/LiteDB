@@ -48,16 +48,17 @@ namespace LiteDB.Demo
             }); ;
         }
 
-        [Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
+        //[Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
         public void Update_Active(Database db)
         {
             db.ExecuteScalar("UPDATE col1 SET active = true, r = LPAD(r, RANDOM(5000, 20000), '-') WHERE active = false"); 
+            //db.ExecuteScalar("UPDATE col1 SET active = true WHERE active = false"); 
         }
 
         [Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 2)]
         public void Delete_Active(Database db)
         {
-            db.ExecuteScalar("DELETE col1 WHERE active = true");
+            db.ExecuteScalar("DELETE col1 WHERE active = false");
         }
 
         [Task(Start = 100, Repeat = 75, Random = 25, Threads = 1)]
