@@ -19,6 +19,8 @@ namespace LiteDB.Demo
         // "fixed" random number order
         protected readonly Random rnd = new Random(0);
 
+        public LiteEngine Engine { get; }
+
         private readonly LiteDatabase _db;
 
         private readonly Logger _logger;
@@ -43,8 +45,9 @@ namespace LiteDB.Demo
                 _logger = null;
             }
 
-            _db = new LiteDatabase(new LiteEngine(settings));
+            this.Engine = new LiteEngine(settings);
 
+            _db = new LiteDatabase(this.Engine);
         }
 
         public abstract void OnInit(Database db);
@@ -149,6 +152,8 @@ namespace LiteDB.Demo
 
             // finalize database
             this.OnCleanUp(new Database("OnCleanUp", _db, _logger, watch, concurrent, 0));
+
+            this.Engine.CheckIntegrity(Console.Out);
         }
 
         /// <summary>

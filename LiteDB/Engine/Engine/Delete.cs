@@ -34,11 +34,16 @@ namespace LiteDB.Engine
                     // if pk not found, continue
                     if (pkNode == null) continue;
 
+                    // remove object data
+                    //data.Delete(pkNode.DataBlock);
+
                     // delete all nodes (start in pk node)
                     indexer.DeleteAll(pkNode.Position);
 
-                    // remove object data
-                    data.Delete(pkNode.DataBlock);
+                    if (pkNode.NextNode.IsEmpty)
+                    {
+                        ;
+                    }
 
                     transaction.Safepoint();
 

@@ -214,5 +214,4 @@ namespace LiteDB.Engine
             done.Running = false;
         }
     }
-
 }

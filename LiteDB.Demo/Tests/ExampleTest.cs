@@ -55,7 +55,7 @@ namespace LiteDB.Demo
             //db.ExecuteScalar("UPDATE col1 SET active = true WHERE active = false"); 
         }
 
-        [Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 2)]
+        //[Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 2)]
         public void Delete_Active(Database db)
         {
             db.ExecuteScalar("DELETE col1 WHERE active = false");

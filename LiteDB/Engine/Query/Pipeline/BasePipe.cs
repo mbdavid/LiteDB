@@ -171,7 +171,6 @@ namespace LiteDB.Engine
                     yield return doc;
                 }
             }
-
         }
 
         public void Dispose()
