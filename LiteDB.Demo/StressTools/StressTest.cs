@@ -57,7 +57,7 @@ namespace LiteDB.Demo
         /// <summary>
         /// Run all methods
         /// </summary>
-        public void Run(TimeSpan timer)
+        public virtual void Run(TimeSpan timer)
         {
             var running = true;
             var finish = DateTime.Now.Add(timer);

@@ -371,7 +371,7 @@ namespace LiteDB.Engine
             this.ItemsCount--;
             this.UsedBytes -= length;
 
-            // clean segment area with \0
+            // clean segment area with \0 [[can be removed later for production]]
             _buffer.Array.Fill(0, _buffer.Offset + position, length);
 
             // check if deleted segment are at end of page
