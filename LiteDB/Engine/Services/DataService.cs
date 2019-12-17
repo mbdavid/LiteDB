@@ -42,7 +42,7 @@ namespace LiteDB.Engine
                 while (bytesLeft > 0)
                 {
                     var bytesToCopy = Math.Min(bytesLeft, MAX_DATA_BYTES_PER_PAGE);
-                    var dataPage = _snapshot.GetFreePage<DataPage>(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE);
+                    var dataPage = _snapshot.GetFreePage<DataPage>(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE, _snapshot.CollectionPage.FreeDataPageList);
                     var dataBlock = dataPage.InsertBlock(bytesToCopy, blockIndex++ > 0);
 
                     if (lastBlock != null)
@@ -104,7 +104,7 @@ namespace LiteDB.Engine
 
                         var updateBlock = dataPage.UpdateBlock(currentBlock, bytesToCopy);
 
-                        _snapshot.AddOrRemoveFreeList(dataPage, slot);
+                        _snapshot.AddOrRemoveFreeList(dataPage, slot, _snapshot.CollectionPage.FreeDataPageList);
 
                         yield return updateBlock.Buffer;
 
@@ -116,7 +116,7 @@ namespace LiteDB.Engine
                     else
                     {
                         bytesToCopy = Math.Min(bytesLeft, MAX_DATA_BYTES_PER_PAGE);
-                        var dataPage = _snapshot.GetFreePage<DataPage>(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE);
+                        var dataPage = _snapshot.GetFreePage<DataPage>(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE, _snapshot.CollectionPage.FreeDataPageList);
                         var insertBlock = dataPage.InsertBlock(bytesToCopy, true);
 
                         if (lastBlock != null)
@@ -186,7 +186,7 @@ namespace LiteDB.Engine
                 page.DeleteBlock(blockAddress.Index);
 
                 // fix page empty list (or delete page)
-                _snapshot.AddOrRemoveFreeList(page, slot);
+                _snapshot.AddOrRemoveFreeList(page, slot, _snapshot.CollectionPage.FreeDataPageList);
 
                 blockAddress = block.NextBlock;
             }

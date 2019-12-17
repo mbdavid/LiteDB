@@ -38,8 +38,8 @@ namespace LiteDB.Demo
             // - teve defrag desta pagina
             // - so quando tem 2 indices (ou mais)
 
-            db.ExecuteScalar("CREATE INDEX idx_name ON col1(upper(name))");
-            db.ExecuteScalar("CREATE INDEX idx_rnd ON col1(rnd)");
+            //db.ExecuteScalar("CREATE INDEX idx_name ON col1(upper(name))");
+            //db.ExecuteScalar("CREATE INDEX idx_rnd ON col1(rnd)");
         }
 
         [Task(Start = 0, Repeat = 10, Random = 10, Threads = 5)]
@@ -62,7 +62,7 @@ namespace LiteDB.Demo
             //db.ExecuteScalar("UPDATE col1 SET active = true WHERE active = false"); 
         }
 
-        [Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 2)]
+        //[Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 2)]
         public void Delete_Active(Database db)
         {
             db.ExecuteScalar("DELETE col1 WHERE active = false");

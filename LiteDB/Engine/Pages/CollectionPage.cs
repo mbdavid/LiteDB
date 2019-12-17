@@ -20,7 +20,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Free data page linked-list (N lists for different range of FreeBlocks)
         /// </summary>
-        public uint[] FreeDataPageID = new uint[PAGE_FREE_LIST_SLOTS];
+        public uint[] FreeDataPageList { get; } = new uint[PAGE_FREE_LIST_SLOTS];
 
         /// <summary>
         /// DateTime when collection was created
@@ -51,7 +51,7 @@ namespace LiteDB.Engine
 
             for(var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
             {
-                this.FreeDataPageID[i] = uint.MaxValue;
+                this.FreeDataPageList[i] = uint.MaxValue;
             }
         }
 
@@ -68,7 +68,7 @@ namespace LiteDB.Engine
                 // read position for FreeDataPage and FreeIndexPage
                 for(var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
                 {
-                    this.FreeDataPageID[i] = r.ReadUInt32();
+                    this.FreeDataPageList[i] = r.ReadUInt32();
                 }
 
                 // read create/last analyzed (16 bytes)
@@ -99,7 +99,7 @@ namespace LiteDB.Engine
 
                     for(var j = 0; j < PAGE_FREE_LIST_SLOTS; j++)
                     {
-                        index.FreeIndexPageID[j] = r.ReadUInt32();
+                        index.FreeIndexPageList[j] = r.ReadUInt32();
                     }
 
                     _indexes[index.Name] = index;
@@ -119,7 +119,7 @@ namespace LiteDB.Engine
                 // read position for FreeDataPage and FreeIndexPage
                 for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
                 {
-                    w.Write(this.FreeDataPageID[i]);
+                    w.Write(this.FreeDataPageList[i]);
                 }
 
                 // write creation/last analyzed (16 bytes)
@@ -149,7 +149,7 @@ namespace LiteDB.Engine
 
                         for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
                         {
-                            w.Write(index.FreeIndexPageID[i]);
+                            w.Write(index.FreeIndexPageList[i]);
                         }
                     }
 
@@ -181,9 +181,24 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get all indexes in this collection page
         /// </summary>
-        public IEnumerable<CollectionIndex> GetCollectionIndexes()
+        public ICollection<CollectionIndex> GetCollectionIndexes()
         {
             return _indexes.Values;
+        }
+
+        /// <summary>
+        /// Get all collections array based on slot number
+        /// </summary>
+        public CollectionIndex[] GetCollectionIndexesSlots()
+        {
+            var indexes = new CollectionIndex[_indexes.Count];
+
+            foreach (var index in _indexes.Values)
+            {
+                indexes[index.Slot] = index;
+            }
+
+            return indexes;
         }
 
         /// <summary>

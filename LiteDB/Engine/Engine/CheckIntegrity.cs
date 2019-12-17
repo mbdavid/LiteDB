@@ -235,7 +235,7 @@ namespace LiteDB.Engine
 
                     for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
                     {
-                        var next = snapshot.CollectionPage.FreeDataPageID[slot];
+                        var next = snapshot.CollectionPage.FreeDataPageList[slot];
 
                         while (next != uint.MaxValue)
                         {
@@ -275,7 +275,7 @@ namespace LiteDB.Engine
 
                     for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
                     {
-                        var next = snapshot.CollectionPage.FreeDataPageID[slot];
+                        var next = snapshot.CollectionPage.FreeDataPageList[slot];
 
                         while (next != uint.MaxValue)
                         {

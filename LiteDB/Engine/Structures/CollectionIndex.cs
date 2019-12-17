@@ -65,7 +65,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Free index page linked-list (N lists for different range of FreeBlocks)
         /// </summary>
-        public uint[] FreeIndexPageID = new uint[PAGE_FREE_LIST_SLOTS];
+        public uint[] FreeIndexPageList { get; } = new uint[PAGE_FREE_LIST_SLOTS];
 
         /// <summary>
         /// Get index density based on KeyCount vs UniqueKeyCount. Value are from 0 to 1.
@@ -103,6 +103,11 @@ namespace LiteDB.Engine
             this.Unique = unique;
 
             this.BsonExpr = BsonExpression.Create(expr);
+
+            for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
+            {
+                this.FreeIndexPageList[i] = uint.MaxValue;
+            }
         }
 
         /// <summary>
@@ -128,7 +133,8 @@ namespace LiteDB.Engine
                 PageAddress.SIZE + // Tail
                 1 + // MaxLevel
                 4 + // KeyCount
-                4; // UniqueKeyCount
+                4 + // UniqueKeyCount
+                (PAGE_FREE_LIST_SLOTS * PageAddress.SIZE); // FreeListPage
         }
     }
 }

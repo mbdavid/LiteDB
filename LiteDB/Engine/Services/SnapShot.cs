@@ -218,15 +218,10 @@ namespace LiteDB.Engine
         /// Returns a page that contains space enough to data to insert new object - if one does not exit, creates a new page.
         /// Before return page, fix empty free list slot according with passed length
         /// </summary>
-        public T GetFreePage<T>(int bytesLength)
+        public T GetFreePage<T>(int bytesLength, uint[] freeList)
             where T : BasePage
         {
             var length = bytesLength + BasePage.SLOT_SIZE; // add +4 bytes for footer slot
-
-            // select if I will get from free index list or data list
-            var freeLists = typeof(T) == typeof(IndexPage) ?
-                _collectionPage.FreeIndexPageID :
-                _collectionPage.FreeDataPageID;
 
             // get minimum slot to check for free page. Returns -1 if need NewPage
             var startSlot = BasePage.GetMinimumIndexSlot(length);
@@ -234,7 +229,7 @@ namespace LiteDB.Engine
             // check for avaiable re-usable page
             for (int currentSlot = startSlot; currentSlot >= 0; currentSlot--)
             {
-                var freePageID = freeLists[currentSlot];
+                var freePageID = freeList[currentSlot];
 
                 // there is no free page here, try find princess in another castle
                 if (freePageID == uint.MaxValue) continue;
@@ -246,8 +241,8 @@ namespace LiteDB.Engine
                 // if slots will change, fix now
                 if (currentSlot != newSlot)
                 {
-                    this.RemoveFreeList<T>(page, ref freeLists[currentSlot]);
-                    this.AddFreeList<T>(page, ref freeLists[newSlot]);
+                    this.RemoveFreeList<T>(page, ref freeList[currentSlot]);
+                    this.AddFreeList<T>(page, ref freeList[newSlot]);
                 }
 
                 ENSURE(page.FreeBytes >= length, "ensure selected page has space enougth for this content");
@@ -265,7 +260,7 @@ namespace LiteDB.Engine
             var slot = BasePage.FreeIndexSlot(newPage.FreeBytes - length - BasePage.SLOT_SIZE);
 
             // and add into free-list
-            this.AddFreeList<T>(newPage, ref freeLists[slot]);
+            this.AddFreeList<T>(newPage, ref freeList[slot]);
 
             return newPage;
         }
@@ -342,7 +337,7 @@ namespace LiteDB.Engine
         /// Add/Remove page into free slots on collection page. Used when some data are removed/changed
         /// For insert data, this method are called from GetFreePage
         /// </summary>
-        public void AddOrRemoveFreeList<T>(T page, int initialSlot) where T : BasePage
+        public void AddOrRemoveFreeList<T>(T page, int initialSlot, uint[] freeList) where T : BasePage
         {
             ENSURE(page.PageType == PageType.Index || page.PageType == PageType.Data, "only index/data page contains free linked-list");
 
@@ -351,13 +346,8 @@ namespace LiteDB.Engine
             // there is no slot change - just exit (no need any change) [except if has no more items)
             if (newSlot == initialSlot && page.ItemsCount > 0) return;
 
-            // select if I will get from free index list or data list
-            var freeLists = page.PageType == PageType.Index ?
-                _collectionPage.FreeIndexPageID :
-                _collectionPage.FreeDataPageID;
-
             // remove from intial slot
-            this.RemoveFreeList<T>(page, ref freeLists[initialSlot]);
+            this.RemoveFreeList<T>(page, ref freeList[initialSlot]);
 
             // if there is no items, delete page
             if (page.ItemsCount == 0)
@@ -367,7 +357,7 @@ namespace LiteDB.Engine
             else
             {
                 // add into current slot
-                this.AddFreeList<T>(page, ref freeLists[newSlot]);
+                this.AddFreeList<T>(page, ref freeList[newSlot]);
             }
         }
 
