@@ -758,7 +758,7 @@ namespace LiteDB.Engine
                 if (freeBytes >= _freePageSlots[i]) return i;
             }
 
-            return CollectionPage.PAGE_FREE_LIST_SLOTS - 1; // Slot 4 (last slot)
+            return PAGE_FREE_LIST_SLOTS - 1; // Slot 4 (last slot)
         }
 
         /// <summary>

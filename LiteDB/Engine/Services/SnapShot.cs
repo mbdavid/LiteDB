@@ -476,46 +476,49 @@ namespace LiteDB.Engine
         {
             ENSURE(_transPages.DeletedPages == 0, "transaction should be clean before any drop collection");
 
-            // CollectionPage will be last deleted page (there is no NextPageID from CollectionPage)
-            _transPages.FirstDeletedPageID = _collectionPage.PageID;
-            _transPages.LastDeletedPageID = _collectionPage.PageID;
+            throw new NotImplementedException();
 
-            // mark collection page as empty
-            _collectionPage.MarkAsEmtpy();
 
-            _transPages.DeletedPages = 1;
+            //// CollectionPage will be last deleted page (there is no NextPageID from CollectionPage)
+            //_transPages.FirstDeletedPageID = _collectionPage.PageID;
+            //_transPages.LastDeletedPageID = _collectionPage.PageID;
 
-            for (var type = PageType.Index; type <= PageType.Data; type++)
-            {
-                for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
-                {
-                    var next = type == PageType.Data ?
-                        _collectionPage.FreeDataPageID[slot] :
-                        _collectionPage.FreeIndexPageID[slot];
+            //// mark collection page as empty
+            //_collectionPage.MarkAsEmtpy();
 
-                    while (next != uint.MaxValue)
-                    {
-                        var page = this.GetPage<BasePage>(next);
+            //_transPages.DeletedPages = 1;
 
-                        next = page.NextPageID;
+            //for (var type = PageType.Index; type <= PageType.Data; type++)
+            //{
+            //    for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
+            //    {
+            //        var next = type == PageType.Data ?
+            //            _collectionPage.FreeDataPageID[slot] :
+            //            _collectionPage.FreeIndexPageID[slot];
 
-                        page.MarkAsEmtpy();
+            //        while (next != uint.MaxValue)
+            //        {
+            //            var page = this.GetPage<BasePage>(next);
 
-                        // fix last free linked link page
-                        page.NextPageID = _transPages.FirstDeletedPageID;
+            //            next = page.NextPageID;
 
-                        _transPages.FirstDeletedPageID = page.PageID;
+            //            page.MarkAsEmtpy();
 
-                        _transPages.DeletedPages++;
+            //            // fix last free linked link page
+            //            page.NextPageID = _transPages.FirstDeletedPageID;
 
-                        // safepoint
-                        safePoint();
-                    }
-                }
-            }
+            //            _transPages.FirstDeletedPageID = page.PageID;
 
-            // remove collection name (in header) at commit time
-            _transPages.Commit += (h) => h.DeleteCollection(_collectionName);
+            //            _transPages.DeletedPages++;
+
+            //            // safepoint
+            //            safePoint();
+            //        }
+            //    }
+            //}
+
+            //// remove collection name (in header) at commit time
+            //_transPages.Commit += (h) => h.DeleteCollection(_collectionName);
         }
 
         #endregion

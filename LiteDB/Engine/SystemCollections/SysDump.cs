@@ -60,7 +60,6 @@ namespace LiteDB.Engine
                     doc["lastAnalyzed"] = collection.LastAnalyzed;
                     doc["creationTime"] = collection.CreationTime;
                     doc["freeDataPageID"] = new BsonArray(collection.FreeDataPageID.Select(x => dumpPageID(x)));
-                    doc["freeIndexPageID"] = new BsonArray(collection.FreeIndexPageID.Select(x => dumpPageID(x)));
                     doc["indexes"] = new BsonArray(collection.GetCollectionIndexes().Select(x => new BsonDocument
                     {
                         ["name"] = x.Name,
@@ -70,8 +69,9 @@ namespace LiteDB.Engine
                         ["tailPageID"] = dumpPageID(x.Tail.PageID),
                         ["maxLevel"] = (int)x.MaxLevel,
                         ["keyCount"] = (int)x.KeyCount,
-                        ["uniqueKeyCount"] = (int)x.UniqueKeyCount
-                    }));
+                        ["uniqueKeyCount"] = (int)x.UniqueKeyCount,
+                        ["freeIndexPageID"] = new BsonArray(x.FreeIndexPageID.Select(z => dumpPageID(z)))
+                }));
                 }
 
                 yield return doc;

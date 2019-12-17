@@ -10,11 +10,6 @@ namespace LiteDB.Engine
 {
     internal class CollectionPage : BasePage
     {
-        /// <summary>
-        /// Get how many slots collection pages will have for free list page (data/index)
-        /// </summary>
-        public const int PAGE_FREE_LIST_SLOTS = 5;
-
         #region Buffer Field Positions
 
         private const int P_INDEXES = 96; // 96-8192
@@ -26,11 +21,6 @@ namespace LiteDB.Engine
         /// Free data page linked-list (N lists for different range of FreeBlocks)
         /// </summary>
         public uint[] FreeDataPageID = new uint[PAGE_FREE_LIST_SLOTS];
-
-        /// <summary>
-        /// Free index page linked-list (N lists for different range of FreeBlocks)
-        /// </summary>
-        public uint[] FreeIndexPageID = new uint[PAGE_FREE_LIST_SLOTS];
 
         /// <summary>
         /// DateTime when collection was created
@@ -62,7 +52,6 @@ namespace LiteDB.Engine
             for(var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
             {
                 this.FreeDataPageID[i] = uint.MaxValue;
-                this.FreeIndexPageID[i] = uint.MaxValue;
             }
         }
 
@@ -80,7 +69,6 @@ namespace LiteDB.Engine
                 for(var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
                 {
                     this.FreeDataPageID[i] = r.ReadUInt32();
-                    this.FreeIndexPageID[i] = r.ReadUInt32();
                 }
 
                 // read create/last analyzed (16 bytes)
@@ -97,6 +85,7 @@ namespace LiteDB.Engine
                 {
                     var index = new CollectionIndex(
                         slot: r.ReadByte(),
+                        indexType: r.ReadByte(),
                         name: r.ReadCString(),
                         expr: r.ReadCString(),
                         unique: r.ReadBoolean())
@@ -107,6 +96,11 @@ namespace LiteDB.Engine
                         KeyCount = r.ReadUInt32(), // 4
                         UniqueKeyCount = r.ReadUInt32() // 4
                     };
+
+                    for(var j = 0; j < PAGE_FREE_LIST_SLOTS; j++)
+                    {
+                        index.FreeIndexPageID[j] = r.ReadUInt32();
+                    }
 
                     _indexes[index.Name] = index;
                 }
@@ -126,7 +120,6 @@ namespace LiteDB.Engine
                 for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
                 {
                     w.Write(this.FreeDataPageID[i]);
-                    w.Write(this.FreeIndexPageID[i]);
                 }
 
                 // write creation/last analyzed (16 bytes)
@@ -144,6 +137,7 @@ namespace LiteDB.Engine
                     foreach (var index in _indexes.Values)
                     {
                         w.Write(index.Slot);
+                        w.Write(index.IndexType);
                         w.WriteCString(index.Name);
                         w.WriteCString(index.Expression);
                         w.Write(index.Unique);
@@ -152,6 +146,11 @@ namespace LiteDB.Engine
                         w.Write(index.MaxLevel);
                         w.Write(index.KeyCount);
                         w.Write(index.UniqueKeyCount);
+
+                        for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
+                        {
+                            w.Write(index.FreeIndexPageID[i]);
+                        }
                     }
 
                     _isIndexesChanged = false;
@@ -201,7 +200,7 @@ namespace LiteDB.Engine
 
             var slot = (byte)(_indexes.Count == 0 ? 0 : (_indexes.Max(x => x.Value.Slot) + 1));
 
-            var index = new CollectionIndex(slot, name, expr, unique);
+            var index = new CollectionIndex(slot, 0, name, expr, unique);
             
             _indexes[name] = index;
 

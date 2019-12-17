@@ -13,6 +13,11 @@ namespace LiteDB.Engine
         public byte Slot { get; }
 
         /// <summary>
+        /// Indicate index type: 0 = SkipList (reserved for future use)
+        /// </summary>
+        public byte IndexType { get; } = 0;
+
+        /// <summary>
         /// Index name
         /// </summary>
         public string Name { get; }
@@ -58,6 +63,11 @@ namespace LiteDB.Engine
         public uint UniqueKeyCount { get; set; } = 0;
 
         /// <summary>
+        /// Free index page linked-list (N lists for different range of FreeBlocks)
+        /// </summary>
+        public uint[] FreeIndexPageID = new uint[PAGE_FREE_LIST_SLOTS];
+
+        /// <summary>
         /// Get index density based on KeyCount vs UniqueKeyCount. Value are from 0 to 1.
         /// 0 means completed unique keys (best)
         /// 1 means has only 1 single unique key in all index (worst)
@@ -84,9 +94,10 @@ namespace LiteDB.Engine
             get { return string.IsNullOrEmpty(this.Name); }
         }
 
-        public CollectionIndex(byte slot, string name, string expr, bool unique)
+        public CollectionIndex(byte slot, byte indexType, string name, string expr, bool unique)
         {
             this.Slot = slot;
+            this.IndexType = indexType;
             this.Name = name;
             this.Expression = expr;
             this.Unique = unique;
@@ -109,6 +120,7 @@ namespace LiteDB.Engine
         {
             return
                 1 + // Slot
+                1 + // IndexType
                 Encoding.UTF8.GetByteCount(name) + 1 + // Name + \0
                 Encoding.UTF8.GetByteCount(expr) + 1 + // Expression + \0
                 1 + // Unique
