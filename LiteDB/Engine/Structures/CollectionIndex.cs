@@ -15,7 +15,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Indicate index type: 0 = SkipList (reserved for future use)
         /// </summary>
-        public byte IndexType { get; } = 0;
+        public byte IndexType { get; }
 
         /// <summary>
         /// Index name
@@ -107,6 +107,46 @@ namespace LiteDB.Engine
             for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
             {
                 this.FreeIndexPageList[i] = uint.MaxValue;
+            }
+        }
+
+        public CollectionIndex(BufferReader reader)
+        {
+            this.Slot = reader.ReadByte();
+            this.IndexType = reader.ReadByte();
+            this.Name = reader.ReadCString();
+            this.Expression = reader.ReadCString();
+            this.Unique = reader.ReadBoolean();
+            this.Head = reader.ReadPageAddress(); // 5
+            this.Tail = reader.ReadPageAddress(); // 5
+            this.MaxLevel = reader.ReadByte(); // 1
+            this.KeyCount = reader.ReadUInt32(); // 4
+            this.UniqueKeyCount = reader.ReadUInt32(); // 4
+
+            this.BsonExpr = BsonExpression.Create(this.Expression);
+
+            for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
+            {
+                this.FreeIndexPageList[i] = reader.ReadUInt32();
+            }
+        }
+
+        public void UpdateBuffer(BufferWriter writer)
+        {
+            writer.Write(this.Slot);
+            writer.Write(this.IndexType);
+            writer.WriteCString(this.Name);
+            writer.WriteCString(this.Expression);
+            writer.Write(this.Unique);
+            writer.Write(this.Head);
+            writer.Write(this.Tail);
+            writer.Write(this.MaxLevel);
+            writer.Write(this.KeyCount);
+            writer.Write(this.UniqueKeyCount);
+
+            for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
+            {
+                writer.Write(this.FreeIndexPageList[i]);
             }
         }
 

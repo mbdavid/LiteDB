@@ -37,11 +37,6 @@ namespace LiteDB.Engine
         /// </summary>
         private readonly Dictionary<string, CollectionIndex> _indexes = new Dictionary<string, CollectionIndex>();
 
-        /// <summary>
-        /// Check if indexes was changed
-        /// </summary>
-        private bool _isIndexesChanged = false;
-
         public CollectionPage(PageBuffer buffer, uint pageID)
             : base(buffer, pageID, PageType.Collection)
         {
@@ -83,24 +78,7 @@ namespace LiteDB.Engine
 
                 for(var i = 0; i < count; i++)
                 {
-                    var index = new CollectionIndex(
-                        slot: r.ReadByte(),
-                        indexType: r.ReadByte(),
-                        name: r.ReadCString(),
-                        expr: r.ReadCString(),
-                        unique: r.ReadBoolean())
-                    { 
-                        Head = r.ReadPageAddress(), // 5
-                        Tail = r.ReadPageAddress(), // 5
-                        MaxLevel = r.ReadByte(), // 1
-                        KeyCount = r.ReadUInt32(), // 4
-                        UniqueKeyCount = r.ReadUInt32() // 4
-                    };
-
-                    for(var j = 0; j < PAGE_FREE_LIST_SLOTS; j++)
-                    {
-                        index.FreeIndexPageList[j] = r.ReadUInt32();
-                    }
+                    var index = new CollectionIndex(r);
 
                     _indexes[index.Name] = index;
                 }
@@ -126,34 +104,14 @@ namespace LiteDB.Engine
                 w.Write(this.CreationTime);
                 w.Write(this.LastAnalyzed);
 
-                // update collection only if needed
-                if (_isIndexesChanged)
+                // skip reserved area (indexes starts at position 96)
+                w.Skip(P_INDEXES - w.Position);
+
+                w.Write((byte)_indexes.Count); // 1 byte
+
+                foreach (var index in _indexes.Values)
                 {
-                    // skip reserved area (indexes starts at position 96)
-                    w.Skip(P_INDEXES - w.Position);
-
-                    w.Write((byte)_indexes.Count); // 1 byte
-
-                    foreach (var index in _indexes.Values)
-                    {
-                        w.Write(index.Slot);
-                        w.Write(index.IndexType);
-                        w.WriteCString(index.Name);
-                        w.WriteCString(index.Expression);
-                        w.Write(index.Unique);
-                        w.Write(index.Head);
-                        w.Write(index.Tail);
-                        w.Write(index.MaxLevel);
-                        w.Write(index.KeyCount);
-                        w.Write(index.UniqueKeyCount);
-
-                        for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
-                        {
-                            w.Write(index.FreeIndexPageList[i]);
-                        }
-                    }
-
-                    _isIndexesChanged = false;
+                    index.UpdateBuffer(w);
                 }
             }
 
@@ -219,8 +177,6 @@ namespace LiteDB.Engine
             
             _indexes[name] = index;
 
-            _isIndexesChanged = true;
-
             this.IsDirty = true;
 
             return index;
@@ -231,8 +187,6 @@ namespace LiteDB.Engine
         /// </summary>
         public CollectionIndex UpdateCollectionIndex(string name)
         {
-            _isIndexesChanged = true;
-
             this.IsDirty = true;
 
             return _indexes[name];
@@ -246,8 +200,6 @@ namespace LiteDB.Engine
             _indexes.Remove(name);
 
             this.IsDirty = true;
-
-            _isIndexesChanged = true;
         }
 
     }

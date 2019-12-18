@@ -40,11 +40,6 @@ namespace LiteDB.Engine
                     // delete all nodes (start in pk node)
                     indexer.DeleteAll(pkNode.Position);
 
-                    if (pkNode.NextNode.IsEmpty)
-                    {
-                        ;
-                    }
-
                     transaction.Safepoint();
 
                     count++;
