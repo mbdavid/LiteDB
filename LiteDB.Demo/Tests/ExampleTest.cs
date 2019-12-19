@@ -34,11 +34,15 @@ namespace LiteDB.Demo
             });
 
             // o ERRO ocorre quando:
-            // - sempre na pagina 2
+            // - sempre na pagina 4
             // - teve defrag desta pagina
+            // - continuosBlocks = -4
             // - so quando tem 2 indices (ou mais)
+            // * deu erro com 1 indice só, aos 8 minutos (del+upd): 'Invalid IndexPage buffer on 589'
+            // * não deu erro com 1 indice, 10 min, só ins+del (sem upd)
+            // * com 2 indices dá erro rapidinho (menos de 1 min)
 
-            //db.ExecuteScalar("CREATE INDEX idx_name ON col1(upper(name))");
+            db.ExecuteScalar("CREATE INDEX idx_name ON col1(upper(name))");
             db.ExecuteScalar("CREATE INDEX idx_rnd ON col1(rnd)");
         }
 
@@ -55,7 +59,7 @@ namespace LiteDB.Demo
             }); ;
         }
 
-        [Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
+        //[Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
         public void Update_Active(Database db)
         {
             db.ExecuteScalar("UPDATE col1 SET active = true, r = LPAD(r, RANDOM(5000, 20000), '-') WHERE active = false"); 
@@ -65,7 +69,7 @@ namespace LiteDB.Demo
         [Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 2)]
         public void Delete_Active(Database db)
         {
-            db.ExecuteScalar("DELETE col1 WHERE active = true");
+            db.ExecuteScalar("DELETE col1 WHERE active = false");
         }
 
         //[Task(Start = 100, Repeat = 75, Random = 25, Threads = 1)]

@@ -280,40 +280,41 @@ namespace LiteDB.Engine
         /// </summary>
         public BufferSlice Insert(ushort bytesLength, out byte index)
         {
-            index = this.GetFreeIndex();
+            index = byte.MaxValue;
 
-            return this.Insert(bytesLength, index);
+            return this.InternalInsert(bytesLength, ref index);
         }
 
         /// <summary>
         /// Get a new page segment for this length content using fixed index
         /// </summary>
-        private BufferSlice Insert(ushort bytesLength, byte index)
+        private BufferSlice InternalInsert(ushort bytesLength, ref byte index)
         {
-            var isNewIndex = index > this.HighestIndex || this.HighestIndex == byte.MaxValue;
-
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
             ENSURE(bytesLength > 0, "must insert more than 0 bytes");
-            ENSURE(this.FreeBytes >= bytesLength + (isNewIndex ? SLOT_SIZE : 0), "length must be always lower than current free space");
-            ENSURE(index != byte.MaxValue, "index shloud be a valid number (0-254)");
+            ENSURE(this.FreeBytes >= bytesLength + SLOT_SIZE, "length must be always lower than current free space");
             ENSURE(this.ItemsCount < byte.MaxValue, "page full");
             ENSURE(this.FreeBytes >= this.FragmentedBytes, "fragmented bytes must be at most free bytes");
 
             // calculate how many continuous bytes are avaiable in this page
-            var continuosBlocks = this.FreeBytes - this.FragmentedBytes - (isNewIndex ? SLOT_SIZE : 0);
+            var continuousBlocks = this.FreeBytes - this.FragmentedBytes - SLOT_SIZE;
 
-            ENSURE(continuosBlocks == PAGE_SIZE - this.NextFreePosition - this.FooterSize - (isNewIndex ? SLOT_SIZE : 0), "continuosBlock must be same as from NextFreePosition");
+            ENSURE(continuousBlocks == PAGE_SIZE - this.NextFreePosition - this.FooterSize - SLOT_SIZE, "continuosBlock must be same as from NextFreePosition");
 
-            // if continuous blocks are not big enouth for this data, must run page defrag
-            if (bytesLength > continuosBlocks)
+            // if continuous blocks are not big enough for this data, must run page defrag
+            if (bytesLength > continuousBlocks)
             {
                 this.Defrag();
             }
 
             // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
-            if (isNewIndex)
+            if (index == byte.MaxValue)
             {
+                // get new free index must run after defrag
+                index = this.GetFreeIndex();
+
                 ENSURE(index == (byte)(this.HighestIndex + 1), "new index must be next highest index");
+
                 this.HighestIndex = index;
             }
 
@@ -495,7 +496,7 @@ namespace LiteDB.Engine
                 _buffer.Write((ushort)0, lengthAddr);
 
                 // call insert
-                return this.Insert(bytesLength, index);
+                return this.InternalInsert(bytesLength, ref index);
             }
         }
 
@@ -574,7 +575,7 @@ namespace LiteDB.Engine
             // clear fragment blocks (page are in a continuous segment)
             this.FragmentedBytes = 0;
             this.NextFreePosition = next;
-        }
+         }
 
         /// <summary>
         /// Store start index used in GetFreeIndex to avoid always run full loop over all indexes
@@ -587,7 +588,7 @@ namespace LiteDB.Engine
         private byte GetFreeIndex()
         {
             // check for all slot area to get first empty slot [safe for byte loop]
-            for (byte index = 0; index < byte.MaxValue; index++)
+            for (byte index = _startIndex; index <= this.HighestIndex; index++)
             {
                 var positionAddr = CalcPositionAddr(index);
                 var position = _buffer.ReadUInt16(positionAddr);
@@ -601,7 +602,7 @@ namespace LiteDB.Engine
                 }
             }
 
-            throw new InvalidOperationException("This page has no more free space to insert new data");
+            return (byte)(this.HighestIndex + 1);
         }
 
         /// <summary>
@@ -642,7 +643,7 @@ namespace LiteDB.Engine
                 return;
             }
 
-            // start from current - 1 to 0 (should use "int" becase for use ">= 0")
+            // start from current - 1 to 0 (should use "int" because for use ">= 0")
             for (int index = this.HighestIndex - 1; index >= 0; index--)
             {
                 var positionAddr = CalcPositionAddr((byte)index);
