@@ -257,7 +257,7 @@ namespace LiteDB.Engine
         public BufferSlice Get(byte index)
         {
             ENSURE(this.ItemsCount > 0, "should have items in this page");
-            ENSURE(this.HighestIndex != byte.MaxValue, "should be have at least 1 index in this page");
+            ENSURE(this.HighestIndex != byte.MaxValue, "should have at least 1 index in this page");
             ENSURE(index <= this.HighestIndex, "get only index below highest index");
 
             // read slot address
@@ -292,7 +292,7 @@ namespace LiteDB.Engine
         {
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
             ENSURE(bytesLength > 0, "must insert more than 0 bytes");
-            ENSURE(this.FreeBytes >= bytesLength + SLOT_SIZE, "length must be always lower than current free space");
+            ENSURE(this.FreeBytes >= bytesLength + (index == byte.MaxValue ? SLOT_SIZE : 0), "length must be always lower than current free space");
             ENSURE(this.ItemsCount < byte.MaxValue, "page full");
             ENSURE(this.FreeBytes >= this.FragmentedBytes, "fragmented bytes must be at most free bytes");
 
@@ -307,12 +307,15 @@ namespace LiteDB.Engine
                 this.Defrag();
             }
 
-            // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
+            // if index is new insert segment, must request for new Index
             if (index == byte.MaxValue)
             {
                 // get new free index must run after defrag
                 index = this.GetFreeIndex();
+            }
 
+            if (index > this.HighestIndex || this.HighestIndex == byte.MaxValue)
+            {
                 ENSURE(index == (byte)(this.HighestIndex + 1), "new index must be next highest index");
 
                 this.HighestIndex = index;
@@ -754,6 +757,8 @@ namespace LiteDB.Engine
         /// </summary>
         public static int FreeIndexSlot(int freeBytes)
         {
+            ENSURE(freeBytes > 0, "freeBytes must be positive");
+
             for(var i = 0; i < _freePageSlots.Length; i++)
             {
                 if (freeBytes >= _freePageSlots[i]) return i;
