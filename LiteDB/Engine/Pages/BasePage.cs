@@ -290,16 +290,18 @@ namespace LiteDB.Engine
         /// </summary>
         private BufferSlice InternalInsert(ushort bytesLength, ref byte index)
         {
+            var isNewInsert = index == byte.MaxValue;
+
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
             ENSURE(bytesLength > 0, "must insert more than 0 bytes");
-            ENSURE(this.FreeBytes >= bytesLength + (index == byte.MaxValue ? SLOT_SIZE : 0), "length must be always lower than current free space");
+            ENSURE(this.FreeBytes >= bytesLength + (isNewInsert ? SLOT_SIZE : 0), "length must be always lower than current free space");
             ENSURE(this.ItemsCount < byte.MaxValue, "page full");
             ENSURE(this.FreeBytes >= this.FragmentedBytes, "fragmented bytes must be at most free bytes");
 
             // calculate how many continuous bytes are avaiable in this page
-            var continuousBlocks = this.FreeBytes - this.FragmentedBytes - SLOT_SIZE;
+            var continuousBlocks = this.FreeBytes - this.FragmentedBytes - (isNewInsert ? SLOT_SIZE : 0);
 
-            ENSURE(continuousBlocks == PAGE_SIZE - this.NextFreePosition - this.FooterSize - SLOT_SIZE, "continuosBlock must be same as from NextFreePosition");
+            ENSURE(continuousBlocks == PAGE_SIZE - this.NextFreePosition - this.FooterSize - (isNewInsert ? SLOT_SIZE : 0), "continuosBlock must be same as from NextFreePosition");
 
             // if continuous blocks are not big enough for this data, must run page defrag
             if (bytesLength > continuousBlocks)
@@ -757,7 +759,7 @@ namespace LiteDB.Engine
         /// </summary>
         public static int FreeIndexSlot(int freeBytes)
         {
-            ENSURE(freeBytes > 0, "freeBytes must be positive");
+            ENSURE(freeBytes >= 0, "freeBytes must be positive");
 
             for(var i = 0; i < _freePageSlots.Length; i++)
             {

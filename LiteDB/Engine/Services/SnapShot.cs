@@ -257,7 +257,7 @@ namespace LiteDB.Engine
             var newPage = this.NewPage<T>();
 
             // get slot based on how many blocks page will have after use
-            var slot = BasePage.FreeIndexSlot(newPage.FreeBytes - length - BasePage.SLOT_SIZE);
+            var slot = BasePage.FreeIndexSlot(newPage.FreeBytes - length);
 
             // and add into free-list
             this.AddFreeList<T>(newPage, ref freeList[slot]);
