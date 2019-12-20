@@ -48,6 +48,7 @@ namespace LiteDB.Demo
                 ["name"] = "John " + Guid.NewGuid(),
                 ["rnd"] = this.rnd.Next(0, 1000000),
                 ["r"] = "myvalue",
+                //["r"] = "-".PadLeft(rnd.Next(5000, 20000), '-'),
                 ["t"] = 0,
                 ["active"] = false
             }); ;
