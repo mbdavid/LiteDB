@@ -25,13 +25,15 @@ namespace LiteDB.Engine
             writer.WriteLine("=============================");
 
             var result = new List<bool>();
+            var linkedPages = new List<uint>(new uint[] { 0 });
 
             result.Add(this.Run(writer, "Data file", "{0}", () => _disk.GetName(FileOrigin.Data) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Data)) + ")"));
             result.Add(this.Run(writer, "Log file", "{0}", () => _disk.GetName(FileOrigin.Log) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Log)) + ")"));
             result.Add(this.Run(writer, "Clear cache memory", "OK ({0} pages)", () => _disk.Cache.Clear()));
-            result.Add(this.Run(writer, "Verify free empty list", "OK ({0} pages)", () => this.VerifyFreeEmptyList()));
-            result.Add(this.Run(writer, "Verify data pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Data)));
-            result.Add(this.Run(writer, "Verify index pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Index)));
+            result.Add(this.Run(writer, "Verify free empty list", "OK ({0} pages)", () => this.VerifyFreeEmptyList(linkedPages)));
+            result.Add(this.Run(writer, "Verify data pages links", "OK ({0} pages)", () => this.VerifyDataPagesFreeList(linkedPages)));
+            result.Add(this.Run(writer, "Verify index pages links", "OK ({0} pages)", () => this.VerifyIndexPagesFreeList(linkedPages)));
+            result.Add(this.Run(writer, "Verify all linked pages", "OK ({0} pages)", () => this.VerifyAllPagesList(linkedPages)));
             result.Add(this.Run(writer, "Verify index nodes", "OK ({0} nodes)", () => this.VerifyIndexNodes()));
             result.Add(this.Run(writer, "Verify data blocks", "OK ({0} blocks)", () => this.VerifyDataBlocks()));
             result.Add(this.Run(writer, "Verify documents", "OK ({0} documents)", () => this.VerifyDataBlocks()));
@@ -66,7 +68,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Check if all free empty list pages are OK
         /// </summary>
-        private int VerifyFreeEmptyList()
+        private int VerifyFreeEmptyList(List<uint> linkedPages)
         {
             return this.AutoTransaction(transaction =>
             {
@@ -83,6 +85,8 @@ namespace LiteDB.Engine
                         throw new LiteException(0, $"Page {page.PageID} should be Empty type");
                     }
 
+                    linkedPages.Add(page.PageID);
+
                     next = page.NextPageID;
 
                     transaction.Safepoint();
@@ -95,42 +99,104 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Checks if all data/index pages are linked
+        /// Checks if all data pages are in free list
         /// </summary>
-        private int VerifyPagesType(PageType type)
+        private int VerifyDataPagesFreeList(List<uint> linkedPages)
         {
             return this.AutoTransaction(transaction =>
             {
                 var counter = 0;
 
-                //foreach (var col in _header.GetCollections())
-                //{
-                //    var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
+                foreach (var col in _header.GetCollections())
+                {
+                    var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
 
-                //    for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
-                //    {
-                //        var next = type == PageType.Data ?
-                //            snapshot.CollectionPage.FreeDataPageID[slot] :
-                //            snapshot.CollectionPage.FreeIndexPageID[slot];
+                    linkedPages.Add(col.Value);
 
-                //        while (next != uint.MaxValue)
-                //        {
-                //            var page = snapshot.GetPage<BasePage>(next);
+                    for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
+                    {
+                        var next = snapshot.CollectionPage.FreeDataPageList[slot];
 
-                //            if (page.PageType != type)
-                //            {
-                //                throw new LiteException(0, $"Page {page.PageID} should be {type} type");
-                //            }
+                        while (next != uint.MaxValue)
+                        {
+                            var page = snapshot.GetPage<BasePage>(next);
 
-                //            counter++;
-                //            next = page.NextPageID;
-                //            transaction.Safepoint();
-                //        }
-                //    }
-                //}
+                            if (page.PageType != PageType.Data)
+                            {
+                                throw new LiteException(0, $"Page {page.PageID} should be DataPage type");
+                            }
+
+                            linkedPages.Add(page.PageID);
+
+                            counter++;
+                            next = page.NextPageID;
+                            transaction.Safepoint();
+                        }
+                    }
+                }
 
                 return counter;
             });
+        }
+
+        /// <summary>
+        /// Checks if all index pages are in free list
+        /// </summary>
+        private int VerifyIndexPagesFreeList(List<uint> linkedPages)
+        {
+            return this.AutoTransaction(transaction =>
+            {
+                var counter = 0;
+
+                foreach (var col in _header.GetCollections())
+                {
+                    var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
+
+                    foreach (var index in snapshot.CollectionPage.GetCollectionIndexes())
+                    {
+                        for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
+                        {
+                            var next = index.FreeIndexPageList[slot];
+
+                            while (next != uint.MaxValue)
+                            {
+                                var page = snapshot.GetPage<BasePage>(next);
+
+                                if (page.PageType != PageType.Index)
+                                {
+                                    throw new LiteException(0, $"Page {page.PageID} should be IndexPage type");
+                                }
+
+                                linkedPages.Add(page.PageID);
+
+                                counter++;
+                                next = page.NextPageID;
+                                transaction.Safepoint();
+                            }
+                        }
+                    }
+                }
+
+                return counter;
+            });
+        }
+
+        /// <summary>
+        /// Check if all pages are linked 
+        /// </summary>
+        private int VerifyAllPagesList(List<uint> linkedPages)
+        {
+            linkedPages.Sort();
+
+            for(var i = 0; i <= _header.LastPageID; i++)
+            {
+                if (linkedPages[i] != i)
+                {
+                    throw new LiteException(0, $"Invalid linked page sort order. PageID {linkedPages[i]} should be {i}");
+                }
+            }
+
+            return (int)_header.LastPageID;
         }
 
         /// <summary>
