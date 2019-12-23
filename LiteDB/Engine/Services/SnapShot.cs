@@ -70,6 +70,7 @@ namespace LiteDB.Engine
             // clear local pages (will clear _collectionPage link reference)
             if (_collectionPage != null)
             {
+                // local pages contains only data/index pages
                 _localPages.Remove(_collectionPage.PageID);
             }
         }
@@ -145,17 +146,39 @@ namespace LiteDB.Engine
         public T GetPage<T>(uint pageID)
             where T : BasePage
         {
-            ENSURE(pageID != 0, "never should request header page (always use global _header instance)");
+            return this.GetPage<T>(pageID, out var origin, out var position, out var walVersion);
+        }
+
+        /// <summary>
+        /// Get a a valid page for this snapshot (must consider local-index and wal-index)
+        /// </summary>
+        public T GetPage<T>(uint pageID, out FileOrigin origin, out long position, out int walVersion)
+            where T : BasePage
+        {
             ENSURE(pageID <= _header.LastPageID, "request page must be less or equals lastest page in data file");
 
-            // first, look for this page inside local pages
+            // check for header page (return header single instance)
+            if (pageID == 0)
+            {
+                origin = FileOrigin.None;
+                position = 0;
+                walVersion = 0;
+
+                return (T)(object)_header;
+            }
+
+            // look for this page inside local pages
             if (_localPages.TryGetValue(pageID, out var page))
             {
+                origin = FileOrigin.None;
+                position = 0;
+                walVersion = 0;
+
                 return (T)page;
             }
 
             // if page is not in local cache, get from disk (log/wal/data)
-            page = this.ReadPage<T>(pageID);
+            page = this.ReadPage<T>(pageID, out origin, out position, out walVersion);
 
             // add into local pages
             _localPages[pageID] = page;
@@ -169,15 +192,19 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read page from disk (dirty, wal or data)
         /// </summary>
-        private T ReadPage<T>(uint pageID)
+        private T ReadPage<T>(uint pageID, out FileOrigin origin, out long position, out int walVersion)
             where T : BasePage
         {
             // if not inside local pages can be a dirty page saved in log file
-            if (_transPages.DirtyPages.TryGetValue(pageID, out var position))
+            if (_transPages.DirtyPages.TryGetValue(pageID, out var walPosition))
             {
                 // read page from log file
-                var buffer = _reader.ReadPage(position.Position, _mode == LockMode.Write, FileOrigin.Log);
+                var buffer = _reader.ReadPage(walPosition.Position, _mode == LockMode.Write, FileOrigin.Log);
                 var dirty = BasePage.ReadPage<T>(buffer);
+
+                origin = FileOrigin.Log;
+                position = walPosition.Position;
+                walVersion = _readVersion;
 
                 ENSURE(dirty.TransactionID == _transactionID, "this page must came from same transaction");
 
@@ -185,7 +212,7 @@ namespace LiteDB.Engine
             }
 
             // now, look inside wal-index
-            var pos = _walIndex.GetPageIndex(pageID, _readVersion);
+            var pos = _walIndex.GetPageIndex(pageID, _readVersion, out walVersion);
 
             if (pos != long.MaxValue)
             {
@@ -197,6 +224,9 @@ namespace LiteDB.Engine
                 logPage.TransactionID = 0;
                 logPage.IsConfirmed = false;
 
+                origin = FileOrigin.Log;
+                position = pos;
+
                 return logPage;
             }
             else
@@ -207,6 +237,9 @@ namespace LiteDB.Engine
                 // read page from data file
                 var buffer = _reader.ReadPage(pagePosition, _mode == LockMode.Write, FileOrigin.Data);
                 var diskpage = BasePage.ReadPage<T>(buffer);
+
+                origin = FileOrigin.Data;
+                position = pagePosition;
 
                 ENSURE(diskpage.IsConfirmed == false || diskpage.TransactionID != 0, "page are not header-clear in data file");
 
