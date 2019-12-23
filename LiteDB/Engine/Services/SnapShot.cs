@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using static LiteDB.Constants;
 
@@ -189,6 +190,24 @@ namespace LiteDB.Engine
             return (T)page;
         }
 
+        public string GetPageList(uint pageID)
+        {
+            var s = new StringBuilder();
+
+            var p = this.GetPage<BasePage>(pageID);
+
+            while(p != null)
+            {
+                s.Append(p.PageID + ":");
+
+                if (p.NextPageID == uint.MaxValue) break;
+
+                p = this.GetPage<BasePage>(p.NextPageID);
+            }
+
+            return s.ToString();
+        }
+
         /// <summary>
         /// Read page from disk (dirty, wal or data)
         /// </summary>
@@ -290,7 +309,7 @@ namespace LiteDB.Engine
             var newPage = this.NewPage<T>();
 
             // get slot based on how many blocks page will have after use
-            var slot = BasePage.FreeIndexSlot(newPage.FreeBytes - length - BasePage.SLOT_SIZE);
+            var slot = BasePage.FreeIndexSlot(newPage.FreeBytes - length);
 
             // and add into free-list
             this.AddFreeList<T>(newPage, ref freeList[slot]);
@@ -412,6 +431,8 @@ namespace LiteDB.Engine
             page.PrevPageID = uint.MaxValue;
             page.NextPageID = startPageID;
 
+            ENSURE(page.PageType == PageType.Data || page.PageType == PageType.Index, "only data/index pages must be first on free stack");
+
             startPageID = page.PageID;
 
             _collectionPage.IsDirty = true;
@@ -442,6 +463,9 @@ namespace LiteDB.Engine
             if (startPageID == page.PageID)
             {
                 startPageID = page.NextPageID;
+
+                ENSURE(page.NextPageID == uint.MaxValue || this.GetPage<BasePage>(page.NextPageID).PageType != PageType.Empty, "first page on free stack must be non empty page");
+
                 _collectionPage.IsDirty = true;
             }
 
