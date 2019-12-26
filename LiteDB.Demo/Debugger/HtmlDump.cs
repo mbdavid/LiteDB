@@ -56,10 +56,10 @@ namespace LiteDB.Demo
         private void ReadItems()
         {
             // some span for header
-            spanItem(0, 3, "/{text}", "PageID", BitConverter.ToUInt32);
+            spanPageID(0, "PageID");
             spanItem<byte>(4, 0, null, "PageType", null);
-            spanItem(5, 3, "/{text}", "PrevPageID", BitConverter.ToUInt32);
-            spanItem(9, 3, "/{text}", "NextPageID", BitConverter.ToUInt32);
+            spanPageID(5, "PrevPageID");
+            spanPageID(9, "NextPageID");
 
             spanItem(13, 3, null, "TransactionID", BitConverter.ToUInt32);
             spanItem<byte>(17, 0, null, "IsConfirmed", null);
@@ -78,7 +78,7 @@ namespace LiteDB.Demo
 
             if (highestIndex < byte.MaxValue)
             {
-                var color = 0;
+                var colorIndex = 0;
 
                 for(var i = 0; i <= highestIndex; i++)
                 {
@@ -88,30 +88,44 @@ namespace LiteDB.Demo
                     var position = BitConverter.ToUInt16(_buffer, posAddr);
                     var length = BitConverter.ToUInt16(_buffer, lenAddr);
 
-                    _items[posAddr].Span = 1;
-                    _items[posAddr].Text = position.ToString();
-                    _items[posAddr].Href = "#b" + position;
-                    _items[posAddr].Title = $"Position #{i}";
-
-                    _items[lenAddr].Span = 1;
-                    _items[lenAddr].Text = length.ToString();
-                    _items[lenAddr].Title = $"Length #{i}";
+                    _items[lenAddr].Span = 3;
+                    _items[lenAddr].Text = $"{i}: {position} ({length})";
+                    _items[lenAddr].Href = "#b" + position;
 
                     if (position != 0)
                     {
-                        _items[posAddr].Color = (color % _colors.Length);
-                        _items[lenAddr].Color = (color % _colors.Length);
+                        _items[posAddr].Color = _items[lenAddr].Color = (colorIndex++ % _colors.Length);
 
                         _items[position].Id = "b" + position;
-                        _items[position].Href = "/d/" + _pageID + "/" + position + "/" + length;
 
-                        for(var j = position; j < position + length; j++)
+                        if (_pageType == PageType.Data)
                         {
-                            _items[j].Color = (color % _colors.Length);
+                            spanPageID(position + 1, "NextBlockID");
                         }
 
+                        for (var j = position; j < position + length; j++)
+                        {
+                            _items[j].Color = colorIndex - 1;
+                        }
+                    }
+                }
+            }
+
+            // fixing zebra segment colors
+            var current = 0;
+            var color = 0;
+
+            for(var i = 0; i < _buffer.Length; i++)
+            {
+                if (_items[i].Color != -1)
+                {
+                    if (_items[i].Color != current)
+                    {
                         color++;
                     }
+
+                    current = _items[i].Color;
+                    _items[i].Color = color % _colors.Length;
                 }
             }
 
@@ -119,9 +133,9 @@ namespace LiteDB.Demo
             {
                 spanItem(32, 26, null, "HeaderInfo", (byte[] b, int i) => Encoding.UTF8.GetString(b, i, 27));
                 spanItem<byte>(59, 0, null, "FileVersion", null);
-                spanItem(60, 3, "/{text}", "FreeEmptyPageID", BitConverter.ToUInt32);
-                spanItem(64, 3, "/{text}", "LastPageID", BitConverter.ToUInt32);
-                spanItem<byte>(68, 7, null, "CreationTime", null);
+                spanPageID(60, "FreeEmptyPageID");
+                spanPageID(64, "LastPageID");
+                spanItem(68, 7, null, "CreationTime", (byte[] b, int i) => new DateTime(BitConverter.ToInt64(b, i)).ToString("o"));
                 spanItem(76, 3, null, "UserVersion", BitConverter.ToInt32);
             }
 
@@ -132,6 +146,16 @@ namespace LiteDB.Demo
                 _items[index].Text = convert == null ? _items[index].Value.ToString() : convert(_buffer, index).ToString();
                 _items[index].Href = href?.Replace("{text}", _items[index].Text);
             }
+
+            void spanPageID(int index, string title)
+            {
+                var pageID = BitConverter.ToUInt32(_buffer, index);
+
+                _items[index].Span = 3;
+                _items[index].Title = title;
+                _items[index].Text = pageID.ToString();
+                _items[index].Href = pageID == uint.MaxValue ? null : "/" + pageID;
+            }
         }
 
         public string Render()
@@ -140,6 +164,7 @@ namespace LiteDB.Demo
 
             this.RenderHeader();
             this.RenderInfo();
+            this.RenderConvert();
             this.RenderPage();
             this.RenderFooter();
 
@@ -150,10 +175,11 @@ namespace LiteDB.Demo
         {
             _writer.AppendLine("<html>");
             _writer.AppendLine("<head>");
-            _writer.AppendLine($"<title>LiteDB [Dump Page]: {_pageID}</title>");
+            _writer.AppendLine($"<title>LiteDB Database Debugger: {_pageID} - {_pageType}</title>");
             _writer.AppendLine("<style>");
+            _writer.AppendLine("textarea { margin: 0px; width: 819px; height: 61px; vertical-align: top; }");
             _writer.AppendLine(".page { display: flex; flex-wrap: wrap; width: 1205px; }");
-            _writer.AppendLine(".page > a { font-family: monospace; background-color: #d1d1d1; margin: 1px; width: 60px; flex-basis: 35px; text-align: center; }");
+            _writer.AppendLine(".page > a { font-family: monospace; background-color: #d1d1d1; margin: 1px; width: 60px; flex-basis: 35px; text-align: center; padding: 5px 0; }");
 
             foreach (var color in _items.Select(x => x.Color).Where(x => x != -1).Distinct())
             {
@@ -176,6 +202,14 @@ namespace LiteDB.Demo
             json.Serialize(_page);
 
             _writer.AppendLine("</pre>");
+        }
+
+        private void RenderConvert()
+        {
+            _writer.AppendLine($"<form method='post' action='/{_pageID}'>");
+            _writer.AppendLine("<textarea placeholder='Place hex page content' name='b'></textarea>");
+            _writer.AppendLine("<button type='submit'>Paste</button>");
+            _writer.AppendLine("</form>");
         }
 
         private void RenderPage()

@@ -57,7 +57,10 @@ namespace LiteDB.Demo
                             if (Regex.IsMatch(context.Request.RawUrl, @"^\/(\d+)?$"))
                             {
                                 var pageID = context.Request.RawUrl == "/" ? 0 : int.Parse(context.Request.RawUrl.Substring(1));
-                                var page = _db.GetCollection($"$dump({pageID})").Query().FirstOrDefault();
+
+                                var page = context.Request.HttpMethod == "GET" ?
+                                    _db.GetCollection($"$dump({pageID})").Query().FirstOrDefault() :
+                                    GetPost(context.Request.InputStream);
 
                                 if (page == null)
                                 {
@@ -89,6 +92,20 @@ namespace LiteDB.Demo
                     }
                 }
             });
+        }
+
+        private BsonDocument GetPost(Stream input)
+        {
+            var text = WebUtility.UrlDecode(new StreamReader(input).ReadToEnd().Substring(2));
+            var bytes = text.Trim().Split(' ');
+            var buffer = new byte[bytes.Length];
+
+            for(var i = 0; i < bytes.Length; i++)
+            {
+                buffer[i] = Convert.ToByte(bytes[i].Trim(), 16);
+            }
+
+            return new BsonDocument { ["buffer"] = buffer };
         }
     }
 }
