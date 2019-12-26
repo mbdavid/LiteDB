@@ -55,5 +55,11 @@
   <ItemGroup>
     <EmbeddedResource Include="Data\movies.json" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="mscorlib">
+      <HintPath>..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\mscorlib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   
 </Project>

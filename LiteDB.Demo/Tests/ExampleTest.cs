@@ -36,13 +36,8 @@ namespace LiteDB.Demo
             // o ERRO ocorre quando:
             // 3 indices + update/delete exception 'Invalid IndexPage buffer on 589' (3:42)
 
-<<<<<<< HEAD
-            //db.ExecuteScalar("CREATE INDEX idx_name ON col1(upper(name))");
-            //db.ExecuteScalar("CREATE INDEX idx_rnd ON col1(rnd)");
-=======
             db.ExecuteScalar("CREATE INDEX idx_name ON col1(upper(name))");
             db.ExecuteScalar("CREATE INDEX idx_rnd ON col1(rnd)");
->>>>>>> bfa46f978997c4f8bfaa436b937998038981d051
         }
 
         [Task(Start = 0, Repeat = 10, Random = 10, Threads = 5)]

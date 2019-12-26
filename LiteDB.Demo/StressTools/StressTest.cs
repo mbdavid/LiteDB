@@ -7,8 +7,10 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -48,6 +50,8 @@ namespace LiteDB.Demo
             this.Engine = new LiteEngine(settings);
 
             _db = new LiteDatabase(this.Engine);
+
+            new DatabaseDebugger(_db).Start(8001);
         }
 
         public abstract void OnInit(Database db);
@@ -79,9 +83,9 @@ namespace LiteDB.Demo
 
             watch.Start();
 
-            foreach(var method in methods)
+            foreach (var method in methods)
             {
-                for(var i = 0; i < method.Item2.Threads; i++)
+                for (var i = 0; i < method.Item2.Threads; i++)
                 {
                     var index = i;
 

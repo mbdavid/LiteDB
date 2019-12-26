@@ -48,7 +48,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get/Set how many open cursor this transaction are running
         /// </summary>
-        public int OpenCursors { get; set; } = 0;
+        public List<CursorInfo> OpenCursors { get; } = new List<CursorInfo>();
 
         /// <summary>
         /// Get/Set if this transaction was opened by BeginTrans() method (not by AutoTransaction/Cursor)

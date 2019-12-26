@@ -40,7 +40,7 @@ namespace LiteDB.Tests
 
         public static BsonDocument GetPageLog(this LiteEngine engine, int pageID)
         {
-            return engine.Find("$dump_log", "pageID = " + pageID).Last();
+            return engine.Find($"$dump({pageID})", "1=1").Last();
         }
     }
 }

@@ -104,7 +104,7 @@ namespace LiteDB
                 sb.AppendLine($"FOR UPDATE");
             }
 
-            return sb.ToString();
+            return sb.ToString().Trim();
         }
     }
 }

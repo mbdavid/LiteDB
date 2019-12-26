@@ -28,6 +28,7 @@ namespace LiteDB.Engine
         private readonly LockMode _mode;
         private readonly string _collectionName;
         private readonly CollectionPage _collectionPage;
+        private CursorInfo _cursor = null;
 
         // local page cache - contains only pages about this collection (but do not contains CollectionPage - use this.CollectionPage)
         private readonly Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();

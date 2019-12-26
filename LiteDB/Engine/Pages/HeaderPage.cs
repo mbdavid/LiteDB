@@ -43,12 +43,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page) [4 bytes]
         /// </summary>
-        public uint FreeEmptyPageID;
+        public uint FreeEmptyPageID { get; set; }
 
         /// <summary>
         /// Last created page - Used when there is no free page inside file [4 bytes]
         /// </summary>
-        public uint LastPageID;
+        public uint LastPageID { get; set; }
 
         /// <summary>
         /// DateTime when database was created [8 bytes]

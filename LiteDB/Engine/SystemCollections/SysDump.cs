@@ -37,7 +37,7 @@ namespace LiteDB.Engine
             var start = pageID.HasValue ? pageID.Value : 0;
             var end = pageID.HasValue ? pageID.Value : _header.LastPageID;
 
-            for (uint i = start; i <= end; i++)
+            for (uint i = start; i <= Math.Min(end, _header.LastPageID); i++)
             {
                 var page = snapshot.GetPage<BasePage>(i, out var origin, out var position, out var walVersion);
 
@@ -65,9 +65,6 @@ namespace LiteDB.Engine
             }
 
             transaction.Safepoint();
-
         }
-
-        public override int Output(IEnumerable<BsonDocument> source, BsonValue options) => throw new NotImplementedException();
     }
 }
