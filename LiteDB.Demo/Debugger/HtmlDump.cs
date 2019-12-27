@@ -82,8 +82,8 @@ namespace LiteDB.Demo
 
                 for(var i = 0; i <= highestIndex; i++)
                 {
-                    var posAddr = 8192 - ((i + 1) * 4) + 2;
-                    var lenAddr = 8192 - (i + 1) * 4;
+                    var posAddr = _buffer.Length - ((i + 1) * 4) + 2;
+                    var lenAddr = _buffer.Length - (i + 1) * 4;
 
                     var position = BitConverter.ToUInt16(_buffer, posAddr);
                     var length = BitConverter.ToUInt16(_buffer, lenAddr);
@@ -179,7 +179,8 @@ namespace LiteDB.Demo
             _writer.AppendLine("<style>");
             _writer.AppendLine("textarea { margin: 0px; width: 819px; height: 61px; vertical-align: top; }");
             _writer.AppendLine(".page { display: flex; flex-wrap: wrap; width: 1205px; }");
-            _writer.AppendLine(".page > a { font-family: monospace; background-color: #d1d1d1; margin: 1px; width: 60px; flex-basis: 35px; text-align: center; padding: 5px 0; }");
+            _writer.AppendLine(".page > a { font-family: monospace; background-color: #d1d1d1; margin: 1px; width: 60px; flex-basis: 35px; text-align: center; padding: 5px 0; position: relative; }");
+            _writer.AppendLine(".page > a:before { font-family: arial; font-size: 7px; color: gray; content: attr(i); position: absolute; left: 0px; top: -1px; background-color: white; padding-right: 2px; }");
 
             foreach (var color in _items.Select(x => x.Color).Where(x => x != -1).Distinct())
             {
@@ -216,11 +217,18 @@ namespace LiteDB.Demo
         {
             _writer.AppendLine("<div class='page'>");
 
+            var position = 0;
+
             for(var i = 0; i < _items.Count; i++)
             {
                 var item = _items[i];
 
-                _writer.Append("<a");
+                _writer.Append($"<a");
+
+                if (position % 32 == 0)
+                {
+                    _writer.AppendLine($" i={i}");
+                }
 
                 if (!string.IsNullOrEmpty(item.Href))
                 {
@@ -251,6 +259,7 @@ namespace LiteDB.Demo
                 _writer.Append(item.Text ?? item.Value.ToString());
                 _writer.Append("</a>");
 
+                position += (item.Span + 1);
                 i += item.Span;
             }
 
