@@ -154,25 +154,22 @@ namespace LiteDB.Engine
 
                     foreach (var index in snapshot.CollectionPage.GetCollectionIndexes())
                     {
-                        for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
+                        var next = index.FreeIndexPageList;
+
+                        while (next != uint.MaxValue)
                         {
-                            var next = index.FreeIndexPageList[slot];
+                            var page = snapshot.GetPage<BasePage>(next);
 
-                            while (next != uint.MaxValue)
+                            if (page.PageType != PageType.Index)
                             {
-                                var page = snapshot.GetPage<BasePage>(next);
-
-                                if (page.PageType != PageType.Index)
-                                {
-                                    throw new LiteException(0, $"Page {page.PageID} should be IndexPage type");
-                                }
-
-                                linkedPages.Add(page.PageID);
-
-                                counter++;
-                                next = page.NextPageID;
-                                transaction.Safepoint();
+                                throw new LiteException(0, $"Page {page.PageID} should be IndexPage type");
                             }
+
+                            linkedPages.Add(page.PageID);
+
+                            counter++;
+                            next = page.NextPageID;
+                            transaction.Safepoint();
                         }
                     }
                 }

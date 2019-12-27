@@ -271,8 +271,7 @@ namespace LiteDB.Engine
         /// Returns a page that contains space enough to data to insert new object - if one does not exit, creates a new page.
         /// Before return page, fix empty free list slot according with passed length
         /// </summary>
-        public T GetFreePage<T>(int bytesLength, uint[] freeList)
-            where T : BasePage
+        public DataPage GetFreeDataPage(int bytesLength)
         {
             var length = bytesLength + BasePage.SLOT_SIZE; // add +4 bytes for footer slot
 
@@ -282,20 +281,20 @@ namespace LiteDB.Engine
             // check for avaiable re-usable page
             for (int currentSlot = startSlot; currentSlot >= 0; currentSlot--)
             {
-                var freePageID = freeList[currentSlot];
+                var freePageID = _collectionPage.FreeDataPageList[currentSlot];
 
                 // there is no free page here, try find princess in another castle
                 if (freePageID == uint.MaxValue) continue;
 
-                var page = this.GetPage<T>(freePageID);
+                var page = this.GetPage<DataPage>(freePageID);
 
                 var newSlot = BasePage.FreeIndexSlot(page.FreeBytes - length);
 
                 // if slots will change, fix now
                 if (currentSlot != newSlot)
                 {
-                    this.RemoveFreeList<T>(page, ref freeList[currentSlot]);
-                    this.AddFreeList<T>(page, ref freeList[newSlot]);
+                    this.RemoveFreeList(page, ref _collectionPage.FreeDataPageList[currentSlot]);
+                    this.AddFreeList(page, ref _collectionPage.FreeDataPageList[newSlot]);
                 }
 
                 ENSURE(page.FreeBytes >= length, "ensure selected page has space enougth for this content");
@@ -307,15 +306,45 @@ namespace LiteDB.Engine
             }
 
             // if not page avaiable, create new and add in free list
-            var newPage = this.NewPage<T>();
+            var newPage = this.NewPage<DataPage>();
 
             // get slot based on how many blocks page will have after use
             var slot = BasePage.FreeIndexSlot(newPage.FreeBytes - length);
 
             // and add into free-list
-            this.AddFreeList<T>(newPage, ref freeList[slot]);
+            this.AddFreeList(newPage, ref _collectionPage.FreeDataPageList[slot]);
 
             return newPage;
+        }
+
+        /// <summary>
+        /// Get a index page with space enouth for a new index node
+        /// </summary>
+        public IndexPage GetFreeIndexPage(int bytesLength, ref uint freeIndexPageList)
+        {
+            IndexPage page;
+
+            // if there is not page in list pages, create new page
+            if (freeIndexPageList == uint.MaxValue)
+            {
+                page = this.NewPage<IndexPage>();
+
+                // set first list page to this new page
+                freeIndexPageList = page.PageID;
+            }
+            else
+            {
+                // get first page of free list
+                page = this.GetPage<IndexPage>(freeIndexPageList);
+
+                // if this page, after add this new node, has less than 600 bytes, remove from list
+                if (page.FreeBytes - bytesLength < MAX_INDEX_LENGTH)
+                {
+                    this.RemoveFreeList(page, ref freeIndexPageList);
+                }
+            }
+
+            return page;
         }
 
         /// <summary>
@@ -387,20 +416,17 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Add/Remove page into free slots on collection page. Used when some data are removed/changed
-        /// For insert data, this method are called from GetFreePage
+        /// Add/Remove a data page from free list slots
         /// </summary>
-        public void AddOrRemoveFreeList<T>(T page, int initialSlot, uint[] freeList) where T : BasePage
+        public void AddOrRemoveFreeDataList(DataPage page, int initialSlot)
         {
-            ENSURE(page.PageType == PageType.Index || page.PageType == PageType.Data, "only index/data page contains free linked-list");
-
             var newSlot = BasePage.FreeIndexSlot(page.FreeBytes);
 
             // there is no slot change - just exit (no need any change) [except if has no more items)
             if (newSlot == initialSlot && page.ItemsCount > 0) return;
 
             // remove from intial slot
-            this.RemoveFreeList<T>(page, ref freeList[initialSlot]);
+            this.RemoveFreeList(page, ref _collectionPage.FreeDataPageList[initialSlot]);
 
             // if there is no items, delete page
             if (page.ItemsCount == 0)
@@ -410,8 +436,28 @@ namespace LiteDB.Engine
             else
             {
                 // add into current slot
-                this.AddFreeList<T>(page, ref freeList[newSlot]);
+                this.AddFreeList(page, ref _collectionPage.FreeDataPageList[newSlot]);
             }
+        }
+
+        /// <summary>
+        /// Add/Remove a index page from single free list
+        /// </summary>
+        public void AddOrRemoveFreeIndexList(IndexPage page, int initialFreeSize, ref uint startPageID)
+        {
+            var isOnList = initialFreeSize >= MAX_INDEX_LENGTH;
+            var mustKeep = page.FreeBytes >= MAX_INDEX_LENGTH;
+
+            if (isOnList && !mustKeep)
+            {
+                this.RemoveFreeList(page, ref startPageID);
+            }
+            else if (!isOnList && mustKeep)
+            {
+                this.AddFreeList(page, ref startPageID);
+            }
+
+            // otherwise, nothing was changed
         }
 
         /// <summary>
@@ -486,6 +532,8 @@ namespace LiteDB.Engine
             ENSURE(page.Buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE - 1).All(0), "page content shloud be empty");
             ENSURE(page.ItemsCount == 0 && page.UsedBytes == 0 && page.HighestIndex == byte.MaxValue && page.FragmentedBytes == 0, "no items on page when delete this page");
             ENSURE(page.PageType == PageType.Data || page.PageType == PageType.Index, "only data/index page can be deleted");
+            ENSURE(!_collectionPage.FreeDataPageList.Any(x => x == page.PageID), "this page cann't be deleted because free data list page is linked o this page");
+            ENSURE(!_collectionPage.GetCollectionIndexes().Any(x => x.FreeIndexPageList == page.PageID), "this page cann't be deleted because free index list page is linked o this page");
 
             // mark page as empty and dirty
             page.MarkAsEmtpy();

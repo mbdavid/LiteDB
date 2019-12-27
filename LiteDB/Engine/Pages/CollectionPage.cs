@@ -12,7 +12,7 @@ namespace LiteDB.Engine
     {
         #region Buffer Field Positions
 
-        private const int P_INDEXES = 96; // 96-8192
+        private const int P_INDEXES = 96; // 96-8192 (64 + 32 header = 96)
         private const int P_INDEXES_COUNT = PAGE_SIZE - P_INDEXES; // 8096
 
         #endregion
@@ -73,9 +73,9 @@ namespace LiteDB.Engine
                 this.LastAnalyzed = r.ReadDateTime();
 
                 // skip reserved area
-                r.Skip(P_INDEXES - r.Position);
+                r.Skip(P_INDEXES - PAGE_HEADER_SIZE - r.Position);
 
-                // read indexes count (max 256 indexes per collection)
+                // read indexes count (max 255 indexes per collection)
                 var count = r.ReadByte(); // 1 byte
 
                 for(var i = 0; i < count; i++)
@@ -107,7 +107,7 @@ namespace LiteDB.Engine
                 w.Write(this.LastAnalyzed);
 
                 // skip reserved area (indexes starts at position 96)
-                w.Skip(P_INDEXES - w.Position);
+                w.Skip(P_INDEXES - PAGE_HEADER_SIZE - w.Position);
 
                 w.Write((byte)_indexes.Count); // 1 byte
 

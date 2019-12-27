@@ -42,7 +42,7 @@ namespace LiteDB.Engine
                 while (bytesLeft > 0)
                 {
                     var bytesToCopy = Math.Min(bytesLeft, MAX_DATA_BYTES_PER_PAGE);
-                    var dataPage = _snapshot.GetFreePage<DataPage>(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE, _snapshot.CollectionPage.FreeDataPageList);
+                    var dataPage = _snapshot.GetFreeDataPage(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE);
                     var dataBlock = dataPage.InsertBlock(bytesToCopy, blockIndex++ > 0);
 
                     if (lastBlock != null)
@@ -104,7 +104,7 @@ namespace LiteDB.Engine
 
                         var updateBlock = dataPage.UpdateBlock(currentBlock, bytesToCopy);
 
-                        _snapshot.AddOrRemoveFreeList(dataPage, slot, _snapshot.CollectionPage.FreeDataPageList);
+                        _snapshot.AddOrRemoveFreeDataList(dataPage, slot);
 
                         yield return updateBlock.Buffer;
 
@@ -116,7 +116,7 @@ namespace LiteDB.Engine
                     else
                     {
                         bytesToCopy = Math.Min(bytesLeft, MAX_DATA_BYTES_PER_PAGE);
-                        var dataPage = _snapshot.GetFreePage<DataPage>(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE, _snapshot.CollectionPage.FreeDataPageList);
+                        var dataPage = _snapshot.GetFreeDataPage(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE);
                         var insertBlock = dataPage.InsertBlock(bytesToCopy, true);
 
                         if (lastBlock != null)
@@ -180,13 +180,13 @@ namespace LiteDB.Engine
             {
                 var page = _snapshot.GetPage<DataPage>(blockAddress.PageID);
                 var block = page.GetBlock(blockAddress.Index);
-                var slot = BasePage.FreeIndexSlot(page.FreeBytes);
+                var initialSlot = BasePage.FreeIndexSlot(page.FreeBytes);
 
                 // delete block inside page
                 page.DeleteBlock(blockAddress.Index);
 
                 // fix page empty list (or delete page)
-                _snapshot.AddOrRemoveFreeList(page, slot, _snapshot.CollectionPage.FreeDataPageList);
+                _snapshot.AddOrRemoveFreeDataList(page, initialSlot);
 
                 blockAddress = block.NextBlock;
             }

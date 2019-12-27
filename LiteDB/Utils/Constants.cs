@@ -51,6 +51,11 @@ namespace LiteDB
         public const int MAX_INDEX_KEY_LENGTH = 255;
 
         /// <summary>
+        /// Get max length of 1 single index node
+        /// </summary>
+        public const int MAX_INDEX_LENGTH = 600;
+
+        /// <summary>
         /// Get how many slots collection pages will have for free list page (data/index)
         /// </summary>
         public const int PAGE_FREE_LIST_SLOTS = 5;

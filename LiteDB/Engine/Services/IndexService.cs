@@ -42,7 +42,7 @@ namespace LiteDB.Engine
             tail.SetPrev(0, head.Position);
 
             // add this new page in free list (slot 0)
-            index.FreeIndexPageList[0] = indexPage.PageID;
+            index.FreeIndexPageList = indexPage.PageID;
 
             index.Head = head.Position;
             index.Tail = tail.Position;
@@ -86,7 +86,7 @@ namespace LiteDB.Engine
             // test for index key maxlength (length must fit in 1 byte)
             if (keyLength > MAX_INDEX_KEY_LENGTH) throw LiteException.InvalidIndexKey($"Index key must be less than {MAX_INDEX_KEY_LENGTH} bytes.");
 
-            var indexPage = _snapshot.GetFreePage<IndexPage>(bytesLength, index.FreeIndexPageList);
+            var indexPage = _snapshot.GetFreeIndexPage(bytesLength, ref index.FreeIndexPageList);
 
             // create node in buffer
             var node = indexPage.InsertIndexNode(index.Slot, level, key, dataBlock, bytesLength);
@@ -244,13 +244,11 @@ namespace LiteDB.Engine
                 }
             }
 
-            // get current slot position in free list
-            var slot = BasePage.FreeIndexSlot(node.Page.FreeBytes);
+            var initialFreeBytes = node.Page.FreeBytes;
 
             node.Page.DeleteIndexNode(node.Position.Index);
 
-            // update (if needed) slot position
-            _snapshot.AddOrRemoveFreeList(node.Page, slot, index.FreeIndexPageList);
+            _snapshot.AddOrRemoveFreeIndexList(node.Page, initialFreeBytes, ref index.FreeIndexPageList);
         }
 
         /// <summary>

@@ -63,9 +63,9 @@ namespace LiteDB.Engine
         public uint UniqueKeyCount { get; set; } = 0;
 
         /// <summary>
-        /// Free index page linked-list (N lists for different range of FreeBlocks)
+        /// Free index page linked-list (all pages here must have at least 600 bytes)
         /// </summary>
-        public uint[] FreeIndexPageList { get; } = new uint[PAGE_FREE_LIST_SLOTS];
+        public uint FreeIndexPageList;
 
         /// <summary>
         /// Get index density based on KeyCount vs UniqueKeyCount. Value are from 0 to 1.
@@ -101,13 +101,9 @@ namespace LiteDB.Engine
             this.Name = name;
             this.Expression = expr;
             this.Unique = unique;
+            this.FreeIndexPageList = uint.MaxValue;
 
             this.BsonExpr = BsonExpression.Create(expr);
-
-            for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
-            {
-                this.FreeIndexPageList[i] = uint.MaxValue;
-            }
         }
 
         public CollectionIndex(BufferReader reader)
@@ -122,13 +118,9 @@ namespace LiteDB.Engine
             this.MaxLevel = reader.ReadByte(); // 1
             this.KeyCount = reader.ReadUInt32(); // 4
             this.UniqueKeyCount = reader.ReadUInt32(); // 4
+            this.FreeIndexPageList = reader.ReadUInt32(); // 4
 
             this.BsonExpr = BsonExpression.Create(this.Expression);
-
-            for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
-            {
-                this.FreeIndexPageList[i] = reader.ReadUInt32();
-            }
         }
 
         public void UpdateBuffer(BufferWriter writer)
@@ -143,11 +135,7 @@ namespace LiteDB.Engine
             writer.Write(this.MaxLevel);
             writer.Write(this.KeyCount);
             writer.Write(this.UniqueKeyCount);
-
-            for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
-            {
-                writer.Write(this.FreeIndexPageList[i]);
-            }
+            writer.Write(this.FreeIndexPageList);
         }
 
         /// <summary>
