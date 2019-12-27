@@ -47,7 +47,6 @@ namespace LiteDB.Demo
                 {
                     Index = i,
                     Value = _buffer[i],
-                    Title = "#" + i,
                     Color = -1
                 });
             }
@@ -88,9 +87,14 @@ namespace LiteDB.Demo
                     var position = BitConverter.ToUInt16(_buffer, posAddr);
                     var length = BitConverter.ToUInt16(_buffer, lenAddr);
 
-                    _items[lenAddr].Span = 3;
-                    _items[lenAddr].Text = $"{i}: {position} ({length})";
-                    _items[lenAddr].Href = "#b" + position;
+                    _items[lenAddr].Span = 1;
+                    _items[lenAddr].Caption = i.ToString();
+                    _items[lenAddr].Text = length.ToString();
+
+                    _items[posAddr].Span = 1;
+                    _items[posAddr].Caption = i.ToString();
+                    _items[lenAddr].Text = position.ToString();
+                    _items[posAddr].Href = "#b" + position;
 
                     if (position != 0)
                     {
@@ -100,7 +104,9 @@ namespace LiteDB.Demo
 
                         if (_pageType == PageType.Data)
                         {
+                            spanItem<byte>(position, 0, null, "Extend", null);
                             spanPageID(position + 1, "NextBlockID");
+                            spanItem<byte>(position + 5, 0, null, "Index", null);
                         }
 
                         for (var j = position; j < position + length; j++)
@@ -139,20 +145,20 @@ namespace LiteDB.Demo
                 spanItem(76, 3, null, "UserVersion", BitConverter.ToInt32);
             }
 
-            void spanItem<T>(int index, int span, string href, string title, Func<byte[], int, T> convert)
+            void spanItem<T>(int index, int span, string href, string caption, Func<byte[], int, T> convert)
             {
                 _items[index].Span = span;
-                _items[index].Title = title;
+                _items[index].Caption = caption;
                 _items[index].Text = convert == null ? _items[index].Value.ToString() : convert(_buffer, index).ToString();
                 _items[index].Href = href?.Replace("{text}", _items[index].Text);
             }
 
-            void spanPageID(int index, string title)
+            void spanPageID(int index, string caption)
             {
                 var pageID = BitConverter.ToUInt32(_buffer, index);
 
                 _items[index].Span = 3;
-                _items[index].Title = title;
+                _items[index].Caption = caption;
                 _items[index].Text = pageID.ToString();
                 _items[index].Href = pageID == uint.MaxValue ? null : "/" + pageID;
             }
@@ -175,12 +181,16 @@ namespace LiteDB.Demo
         {
             _writer.AppendLine("<html>");
             _writer.AppendLine("<head>");
-            _writer.AppendLine($"<title>LiteDB Database Debugger: {_pageID} - {_pageType}</title>");
+            _writer.AppendLine($"<title>LiteDB Debugger: #{_pageID.ToString("0000")} - {_pageType}</title>");
             _writer.AppendLine("<style>");
-            _writer.AppendLine("textarea { margin: 0px; width: 819px; height: 61px; vertical-align: top; }");
-            _writer.AppendLine(".page { display: flex; flex-wrap: wrap; width: 1205px; }");
-            _writer.AppendLine(".page > a { font-family: monospace; background-color: #d1d1d1; margin: 1px; width: 60px; flex-basis: 35px; text-align: center; padding: 5px 0; position: relative; }");
-            _writer.AppendLine(".page > a:before { font-family: arial; font-size: 7px; color: gray; content: attr(i); position: absolute; left: 0px; top: -1px; background-color: white; padding-right: 2px; }");
+            _writer.AppendLine("body { font-family: monospace; }");
+            _writer.AppendLine("h1 { border-bottom: 2px solid #545454; color: #545454; margin: 0; }");
+            _writer.AppendLine("textarea { margin: 0px; width: 1164px; height: 61px; vertical-align: top; }");
+            _writer.AppendLine(".page { display: flex; flex-wrap: wrap; width: 1245px; }");
+            _writer.AppendLine(".page > span { font-size: 11px; color: gray; background-color: #f1f1f1; margin: 1px; flex-basis: 35px; text-align: center; padding: 5px 0; position: relative; }");
+            _writer.AppendLine(".page > a { background-color: #d1d1d1; margin: 1px; flex-basis: 35px; text-align: center; padding: 5px 0; position: relative; }");
+            _writer.AppendLine(".page > a[href] { color: blue; }");
+            _writer.AppendLine(".page > a:before { background-color: white; font-size: 7px; top: -1; left: 0; color: black; position: absolute; content: attr(st); }");
 
             foreach (var color in _items.Select(x => x.Color).Where(x => x != -1).Distinct())
             {
@@ -190,26 +200,24 @@ namespace LiteDB.Demo
             _writer.AppendLine("</style>");
             _writer.AppendLine("</head>");
             _writer.AppendLine("<body>");
-            _writer.AppendLine($"<h1>{_pageType} - #{_pageID.ToString().PadLeft(4, '0')}</h1><hr/>");
+            _writer.AppendLine($"<h1>#{_pageID.ToString("0000")} :: {_pageType} Page</h1>");
         }
 
         private void RenderInfo()
         {
-            _writer.AppendLine("<pre>");
-
-            var json = new JsonWriter(new StringWriter(_writer));
-            json.Pretty = true;
-            json.Indent = 4;
-            json.Serialize(_page);
-
-            _writer.AppendLine("</pre>");
+            if (_page.ContainsKey("pageID"))
+            {
+                _writer.AppendLine("<div style='text-align: center; margin: 5px 0;'>");
+                _writer.AppendLine($"Origin: [{_page["_origin"].AsString}] - Position: {_page["_position"].AsInt64} - Free bytes: {_page["freeBytes"]}");
+                _writer.AppendLine("</div>");
+            }
         }
 
         private void RenderConvert()
         {
             _writer.AppendLine($"<form method='post' action='/{_pageID}'>");
-            _writer.AppendLine("<textarea placeholder='Place hex page content' name='b'></textarea>");
-            _writer.AppendLine("<button type='submit'>Paste</button>");
+            _writer.AppendLine("<textarea placeholder='Paste hex page body content here' name='b'></textarea>");
+            _writer.AppendLine("<button type='submit'>View</button>");
             _writer.AppendLine("</form>");
         }
 
@@ -223,12 +231,12 @@ namespace LiteDB.Demo
             {
                 var item = _items[i];
 
-                _writer.Append($"<a");
-
                 if (position % 32 == 0)
                 {
-                    _writer.AppendLine($" i={i}");
+                    _writer.AppendLine($"<span>{i}</span>");
                 }
+
+                _writer.Append($"<a title='{i}'");
 
                 if (!string.IsNullOrEmpty(item.Href))
                 {
@@ -245,9 +253,9 @@ namespace LiteDB.Demo
                     _writer.Append($" style='flex-basis: {35 * (item.Span + 1) + (item.Span * 2)}px'");
                 }
 
-                if (!string.IsNullOrEmpty(item.Title))
+                if (!string.IsNullOrEmpty(item.Caption))
                 {
-                    _writer.Append($" title='{item.Title}'");
+                    _writer.Append($" st='{item.Caption}'");
                 }
 
                 if (!string.IsNullOrEmpty(item.Id))
@@ -277,10 +285,10 @@ namespace LiteDB.Demo
             public int Index { get; set; }
             public string Href { get; set; }
             public string Id { get; set; }
-            public string Title { get; set; }
             public string Text { get; set; }
             public byte Value { get; set; }
             public int Span { get; set; }
+            public string Caption { get; set; }
             public int Color { get; set; }
         }
     }
