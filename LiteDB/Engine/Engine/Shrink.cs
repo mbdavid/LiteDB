@@ -31,7 +31,7 @@ namespace LiteDB.Engine
                 using (var reader = new FileReaderV8(_header, _disk))
                 {
                     // clear current header
-                    _header.FreeEmptyPageID = uint.MaxValue;
+                    _header.FreeEmptyPageList = uint.MaxValue;
                     _header.LastPageID = 0;
                     _header.GetCollections().ToList().ForEach(c => _header.DeleteCollection(c.Key));
 

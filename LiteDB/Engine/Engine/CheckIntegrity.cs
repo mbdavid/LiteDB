@@ -73,7 +73,7 @@ namespace LiteDB.Engine
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Read, "_", false);
-                var next = _header.FreeEmptyPageID;
+                var next = _header.FreeEmptyPageList;
                 var counter = 0;
 
                 while(next != uint.MaxValue)

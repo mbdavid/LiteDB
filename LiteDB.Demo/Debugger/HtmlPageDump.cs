@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Demo
 {
-    public class HtmlDump
+    public class HtmlPageDump
     {
         private readonly BsonDocument _page;
         private readonly uint _pageID;
@@ -23,11 +23,9 @@ namespace LiteDB.Demo
         private readonly byte[] _buffer;
         private readonly StringBuilder _writer = new StringBuilder();
         private readonly List<PageItem> _items = new List<PageItem>();
-        private string[] _colors = new string[] {
-            /* 400 */ "#B2EBF2", "#FFECB3"
-        };
+        private string[] _colors = new string[] { "#B2EBF2", "#FFECB3" };
 
-        public HtmlDump(BsonDocument page)
+        public HtmlPageDump(BsonDocument page)
         {
             _page = page;
             _buffer = page["buffer"].AsBinary;
@@ -54,32 +52,52 @@ namespace LiteDB.Demo
 
         private void SpanCaptionItems()
         {
+            this.SpanPageHeader();
+            this.SpanSegments();
+
+            if (_pageType == PageType.Header)
+            {
+                this.SpanHeaderPage();
+            }
+            else if (_pageType == PageType.Collection)
+            {
+                this.SpanCollectionPage();
+            }
+        }
+
+        private void SpanPageHeader()
+        {
+            var h = 0;
+
             // some span for header
-            spanPageID(0, "PageID", false);
-            spanItem<byte>(4, 0, null, "PageType", null);
-            spanPageID(5, "PrevPageID", false);
-            spanPageID(9, "NextPageID", false);
+            h += this.SpanPageID(h, "PageID", false, false);
+            h += this.SpanItem<byte>(h, 0, null, "PageType", null);
+            h += this.SpanPageID(h, "PrevPageID", false, false);
+            h += this.SpanPageID(h, "NextPageID", false, true);
+            h += this.SpanItem<byte>(h, 0, null, "Slot", null);
 
-            spanItem(13, 3, null, "TransactionID", BitConverter.ToUInt32);
-            spanItem<byte>(17, 0, null, "IsConfirmed", null);
-            spanItem(18, 3, null, "ColID", BitConverter.ToUInt32);
+            h += this.SpanItem(h, 3, null, "TransactionID", BitConverter.ToUInt32);
+            h += this.SpanItem<byte>(h, 0, null, "IsConf", null);
+            h += this.SpanItem(h, 3, null, "ColID", BitConverter.ToUInt32);
 
-            spanItem<byte>(22, 0, null, "ItemsCount", null);
-            spanItem(23, 1, null, "UsedBytes", BitConverter.ToUInt16);
-            spanItem(25, 1, null, "FragmentedBytes", BitConverter.ToUInt16);
-            spanItem(27, 1, null, "NextFreePosition", BitConverter.ToUInt16);
-            spanItem<byte>(29, 0, null, "HighestIndex", null);
-            spanItem<byte>(30, 0, null, "Reserved", null);
-            spanItem<byte>(31, 0, null, "Reserved", null);
+            h += this.SpanItem<byte>(h, 0, null, "ItemsCnt", null);
+            h += this.SpanItem(h, 1, null, "UsedBytes", BitConverter.ToUInt16);
+            h += this.SpanItem(h, 1, null, "FragmentedBytes", BitConverter.ToUInt16);
+            h += this.SpanItem(h, 1, null, "NextFreePosition", BitConverter.ToUInt16);
+            h += this.SpanItem<byte>(h, 0, null, "HghestIdx", null);
+            h += this.SpanItem<byte>(h, 0, null, "Reserved", null);
+        }
 
+        private void SpanSegments()
+        {
             // color segments
-            var highestIndex = _buffer[29];
+            var highestIndex = _buffer[30];
 
             if (highestIndex < byte.MaxValue)
             {
                 var colorIndex = 0;
 
-                for(var i = 0; i <= highestIndex; i++)
+                for (var i = 0; i <= highestIndex; i++)
                 {
                     var posAddr = _buffer.Length - ((i + 1) * 4) + 2;
                     var lenAddr = _buffer.Length - (i + 1) * 4;
@@ -104,29 +122,29 @@ namespace LiteDB.Demo
 
                         if (_pageType == PageType.Data)
                         {
-                            spanItem<byte>(position, 0, null, "Extend", null);
-                            spanPageID(position + 1, "NextBlockID", true);
+                            this.SpanItem<byte>(position, 0, null, "Extend", null);
+                            this.SpanPageID(position + 1, "NextBlockID", true, false);
                         }
                         else
                         {
-                            spanItem<byte>(position, 0, null, "Slot", null);
-                            spanItem<byte>(position + 1, 0, null, "Level", null);
-                            spanPageID(position + 2, "DataBlock", true);
-                            spanPageID(position + 7, "NextNode", true);
+                            this.SpanItem<byte>(position, 0, null, "Slot", null);
+                            this.SpanItem<byte>(position + 1, 0, null, "Level", null);
+                            this.SpanPageID(position + 2, "DataBlock", true, false);
+                            this.SpanPageID(position + 7, "NextNode", true, false);
 
-                            for(var j = 0; j < _buffer[position + 1]; j++)
+                            for (var j = 0; j < _buffer[position + 1]; j++)
                             {
-                                spanPageID(position + 12 + (j * 5 * 2), "Prev #" + j, true);
-                                spanPageID(position + 12 + (j * 5 * 2) + 5, "Next #" + j, true);
+                                this.SpanPageID(position + 12 + (j * 5 * 2), "Prev #" + j, true, false);
+                                this.SpanPageID(position + 12 + (j * 5 * 2) + 5, "Next #" + j, true, false);
                             }
 
                             var p = position + 12 + (_buffer[position + 1] * 5 * 2);
 
-                            spanItem<byte>(p, 0, null, "Type", null);
+                            this.SpanItem<byte>(p, 0, null, "Type", null);
 
                             if (_buffer[p] == 6 || _buffer[p] == 9)
                             {
-                                spanItem<byte>(++p, 0, null, "Len", null);
+                                this.SpanItem<byte>(++p, 0, null, "Len", null);
                             }
 
                             //TODO key??
@@ -144,7 +162,7 @@ namespace LiteDB.Demo
             var current = 0;
             var color = 0;
 
-            for(var i = 0; i < _buffer.Length; i++)
+            for (var i = 0; i < _buffer.Length; i++)
             {
                 if (_items[i].Color != -1)
                 {
@@ -157,97 +175,138 @@ namespace LiteDB.Demo
                     _items[i].Color = color % _colors.Length;
                 }
             }
+        }
 
-            if (_pageType == PageType.Header)
+        private void SpanHeaderPage()
+        {
+            var h = 32;
+            var color = 0;
+
+            h += this.SpanItem(h, 26, null, "HeaderInfo", (byte[] b, int i) => Encoding.UTF8.GetString(b, i, 27));
+            h += this.SpanItem<byte>(h, 0, null, "FileVersion", null);
+            h += this.SpanPageID(h, "FreeEmptyPageList", false, true);
+            h += this.SpanPageID(h, "LastPageID", false, false);
+            h += this.SpanItem(h, 7, null, "CreationTime", (byte[] b, int i) => new DateTime(BitConverter.ToInt64(b, i)).ToString("o"));
+            h += this.SpanItem(h, 3, null, "UserVersion", BitConverter.ToInt32);
+
+            this.SpanItem(96, 3, null, "Length", BitConverter.ToInt32);
+
+            var p = 100;
+
+            while (p < 100 + BitConverter.ToInt32(_buffer, 96) - 5)
             {
-                spanItem(32, 26, null, "HeaderInfo", (byte[] b, int i) => Encoding.UTF8.GetString(b, i, 27));
-                spanItem<byte>(59, 0, null, "FileVersion", null);
-                spanPageID(60, "FreeEmptyPageID", false);
-                spanPageID(64, "LastPageID", false);
-                spanItem(68, 7, null, "CreationTime", (byte[] b, int i) => new DateTime(BitConverter.ToInt64(b, i)).ToString("o"));
-                spanItem(76, 3, null, "UserVersion", BitConverter.ToInt32);
-            }
-            else if (_pageType == PageType.Collection)
-            {
-                for(var j = 0; j < 5; j++)
+                var initial = p;
+
+                p++; // dataType
+                p += this.SpanCString(p, "Name");
+                p += this.SpanPageID(p, "PageID", false, false);
+
+                for (var k = initial; k <= p; k++)
                 {
-                    spanPageID(32 + (j * 4), "FreeDataPage #" + j, false);
+                    _items[k].Color = (color % _colors.Length);
                 }
 
-                spanItem(32 + (5 * 4), 7, null, "CreationTime", (byte[] b, int i) => new DateTime(BitConverter.ToInt64(b, i)).ToString("o"));
-                spanItem(32 + (5 * 4) + 8, 7, null, "LastAnalyzed", (byte[] b, int i) => new DateTime(BitConverter.ToInt64(b, i)).ToString("yyyy-MM-dd"));
-
-                var p = 96;
-                var indexes = _buffer[p];
-
-                p += spanItem<byte>(p, 0, null, "Indexes", null);
-
-                for(var j = 0; j < indexes; j++)
-                {
-                    p += spanItem<byte>(p, 0, null, "Slot", null);
-                    p += spanItem<byte>(p, 0, null, "Type", null);
-                    p += spanCString(p, "Name");
-                    p += spanCString(p, "Expr");
-                    p += spanItem<byte>(p, 0, null, "Unique", null);
-                    p += spanPageID(p, "Head", true);
-                    p += spanPageID(p, "Tail", true);
-                    p += spanItem<byte>(p, 0, null, "MaxLevel", null);
-                    p += spanItem(p, 3, null, "KeyCount", BitConverter.ToUInt32);
-                    p += spanItem(p, 3, null, "UniqueKeyCount", BitConverter.ToUInt32);
-                    p += spanPageID(p, "FreeIndexPage", false);
-                }
-
+                color++;
             }
 
-            int spanItem<T>(int index, int span, string href, string caption, Func<byte[], int, T> convert)
-            {
-                _items[index].Span = span;
-                _items[index].Caption = caption;
-                _items[index].Text = convert == null ? _items[index].Value.ToString() : convert(_buffer, index).ToString();
-                _items[index].Href = href?.Replace("{text}", _items[index].Text);
+        }
 
-                return span + 1;
+        private void SpanCollectionPage()
+        {
+            var color = 0;
+
+            for (var i = 0; i < 5; i++)
+            {
+                this.SpanPageID(32 + (i * 4), "DataPageList #" + i, false, true);
             }
 
-            int spanPageID(int index, string caption, bool pageAddress)
+            this.SpanItem(32 + (5 * 4), 7, null, "CreationTime", (byte[] b, int i) => new DateTime(BitConverter.ToInt64(b, i)).ToString("o"));
+            this.SpanItem(32 + (5 * 4) + 8, 7, null, "LastAnalyzed", (byte[] b, int i) => new DateTime(BitConverter.ToInt64(b, i)).ToString("yyyy-MM-dd"));
+
+            var h = 96;
+            var indexes = _buffer[h];
+
+            h += this.SpanItem<byte>(h, 0, null, "Indexes", null);
+
+            for (var i = 0; i < indexes; i++)
             {
-                var pageID = BitConverter.ToUInt32(_buffer, index);
+                var initial = h;
 
-                _items[index].Span = 3;
-                _items[index].Caption = caption;
-                _items[index].Text = pageID == uint.MaxValue ? "-" : pageID.ToString();
-                _items[index].Href = pageID == uint.MaxValue ? null : "/" + pageID + (pageAddress ? "#" + _buffer[index + 4] : "");
+                h += this.SpanItem<byte>(h, 0, null, "Slot", null);
+                h += this.SpanItem<byte>(h, 0, null, "Type", null);
+                h += this.SpanCString(h, "Name");
+                h += this.SpanCString(h, "Expr");
+                h += this.SpanItem<byte>(h, 0, null, "Unique", null);
+                h += this.SpanPageID(h, "Head", true, false);
+                h += this.SpanPageID(h, "Tail", true, false);
+                h += this.SpanItem<byte>(h, 0, null, "MaxLevel", null);
+                h += this.SpanItem(h, 3, null, "KeyCount", BitConverter.ToUInt32);
+                h += this.SpanItem(h, 3, null, "UniqueKeyCount", BitConverter.ToUInt32);
+                h += this.SpanPageID(h, "IndexPageList", false, true);
 
-                if (pageAddress)
+                for (var k = initial; k <= h; k++)
                 {
-                    _items[index + 4].Caption = "Index";
-                    _items[index + 4].Text = _items[index + 4].Value == byte.MaxValue ? "-" : _items[index + 4].Value.ToString();
+                    _items[k].Color = (color % _colors.Length);
                 }
 
-                return 4 + (pageAddress ? 1 : 0);
-            }
-
-            int spanCString(int index, string caption)
-            {
-                var p = index;
-
-                while(_buffer[p] != 0)
-                {
-                    p++;
-                }
-
-                var length = p - index;
-
-                if (length > 0)
-                {
-                    _items[index].Text = Encoding.UTF8.GetString(_buffer, index, length);
-                    _items[index].Span = length - 1; // include /0
-                    _items[index].Caption = caption;
-                }
-
-                return length + 1;
+                color++;
             }
         }
+
+        #region SpanItems Method Helpers
+
+        private int SpanItem<T>(int index, int span, string href, string caption, Func<byte[], int, T> convert)
+        {
+            _items[index].Span = span;
+            _items[index].Caption = caption;
+            _items[index].Text = convert == null ? _items[index].Value.ToString() : convert(_buffer, index).ToString();
+            _items[index].Href = href?.Replace("{text}", _items[index].Text);
+
+            return span + 1;
+        }
+
+        private int SpanPageID(int index, string caption, bool pageAddress, bool pageList)
+        {
+            var pageID = BitConverter.ToUInt32(_buffer, index);
+
+            _items[index].Span = 3;
+            _items[index].Caption = caption;
+            _items[index].Text = pageID == uint.MaxValue ? "-" : pageID.ToString();
+            _items[index].Href = pageID == uint.MaxValue || index == 0 ? 
+                null : 
+                "/" + (pageList ? "list/" : "") + pageID + (pageAddress ? "#" + _buffer[index + 4] : "");
+
+            if (pageAddress)
+            {
+                _items[index + 4].Caption = "Index";
+                _items[index + 4].Text = _items[index + 4].Value == byte.MaxValue ? "-" : _items[index + 4].Value.ToString();
+            }
+
+            return 4 + (pageAddress ? 1 : 0);
+        }
+
+        private int SpanCString(int index, string caption)
+        {
+            var p = index;
+
+            while (_buffer[p] != 0)
+            {
+                p++;
+            }
+
+            var length = p - index;
+
+            if (length > 0)
+            {
+                _items[index].Text = Encoding.UTF8.GetString(_buffer, index, length);
+                _items[index].Span = length - 1; // include /0
+                _items[index].Caption = caption;
+            }
+
+            return length + 1;
+        }
+
+        #endregion
 
         public string Render()
         {
@@ -268,13 +327,15 @@ namespace LiteDB.Demo
             _writer.AppendLine("<head>");
             _writer.AppendLine($"<title>LiteDB Debugger: #{_pageID.ToString("0000")} - {_pageType}</title>");
             _writer.AppendLine("<style>");
+            _writer.AppendLine("* { box-sizing: border-box; }");
             _writer.AppendLine("body { font-family: monospace; }");
             _writer.AppendLine("h1 { border-bottom: 2px solid #545454; color: #545454; margin: 0; }");
             _writer.AppendLine("textarea { margin: 0px; width: 1164px; height: 61px; vertical-align: top; }");
             _writer.AppendLine(".page { display: flex; min-width: 1245px; }");
-            _writer.AppendLine(".rules > div { padding: 5px 0 6px; height: 18px; color: gray; background-color: #f1f1f1; margin: 1px; text-align: center; position: relative; }");
+            _writer.AppendLine(".rules > div { padding: 9px 0 0; height: 31px; width: 37px; color: gray; background-color: #f1f1f1; margin: 1px; text-align: center; position: relative; }");
             _writer.AppendLine(".blocks {  }");
-            _writer.AppendLine(".line > a { background-color: #d1d1d1; margin: 1px; min-width: 35px; height: 18px; display: inline-block; text-align: center; padding: 7px 0 3px; position: relative; }");
+            _writer.AppendLine(".line > a { background-color: #d1d1d1; margin: 1px; min-width: 35px; height: 30px; display: inline-block; text-align: center; padding: 10px 0 0; position: relative; }");
+            _writer.AppendLine(".line:first-child > a { background-color: #a1a1a1; }");
             _writer.AppendLine(".line > a[href] { color: blue; }");
             _writer.AppendLine(".line > a:before { background-color: white; font-size: 7px; top: -1; left: 0; color: black; position: absolute; content: attr(st); }");
 

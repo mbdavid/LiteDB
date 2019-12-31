@@ -24,16 +24,17 @@ namespace LiteDB.Engine
         public const int P_PAGE_TYPE = 4; // 04-04 [byte]
         public const int P_PREV_PAGE_ID = 5; // 05-08 [uint]
         public const int P_NEXT_PAGE_ID = 9; // 09-12 [uint]
+        public const int P_INITIAL_SLOT = 13; // 13-13 [byte]
 
-        public const int P_TRANSACTION_ID = 13; // 13-16 [uint]
-        public const int P_IS_CONFIRMED = 17; // 17-17 [byte]
-        public const int P_COL_ID = 18; // 18-21 [uint]
+        public const int P_TRANSACTION_ID = 14; // 14-17 [uint]
+        public const int P_IS_CONFIRMED = 18; // 18-18 [byte]
+        public const int P_COL_ID = 19; // 19-22 [uint]
 
-        public const int P_ITEMS_COUNT = 22; // 22-22 [byte]
-        public const int P_USED_BYTES = 23; // 23-24 [ushort]
-        public const int P_FRAGMENTED_BYTES = 25; // 25-26 [ushort]
-        public const int P_NEXT_FREE_POSITION = 27; // 27-28 [ushort]
-        public const int P_HIGHEST_INDEX = 29; // 29-29 [byte]
+        public const int P_ITEMS_COUNT = 23; // 23-23 [byte]
+        public const int P_USED_BYTES = 24; // 24-25 [ushort]
+        public const int P_FRAGMENTED_BYTES = 26; // 26-27 [ushort]
+        public const int P_NEXT_FREE_POSITION = 28; // 28-29 [ushort]
+        public const int P_HIGHEST_INDEX = 30; // 39-30 [byte]
 
         #endregion
 
@@ -56,6 +57,14 @@ namespace LiteDB.Engine
         /// Represent the next page. Used for page-sequences - MaxValue represent that has NO next page [4 bytes]
         /// </summary>
         public uint NextPageID { get; set; }
+
+        /// <summary>
+        /// Get/Set where this page are in free list slot [1 byte]
+        /// Used only in DataPage (0-4) and IndexPage (0-1) - when new or not used: 255
+        /// DataPage: 0 (7344 - 8160 free space) - 1 (6120 - 7343) - 2 (4896 - 6119) - 3 (2448 - 4895) - 4 (0 - 2447)
+        /// IndexPage 0 (600 - 8160 free bytes) - 1 (0 - 599 bytes free)
+        /// </summary>
+        public byte PageListSlot { get; set; }
 
         /// <summary>
         /// Indicate how many items are used inside this page [1 byte]
@@ -139,6 +148,7 @@ namespace LiteDB.Engine
             this.PageType = pageType;
             this.PrevPageID = uint.MaxValue;
             this.NextPageID = uint.MaxValue;
+            this.PageListSlot = byte.MaxValue; // no slot
 
             // transaction information
             this.ColID = uint.MaxValue;
@@ -173,6 +183,7 @@ namespace LiteDB.Engine
             this.PageType = (PageType)_buffer.ReadByte(P_PAGE_TYPE);
             this.PrevPageID = _buffer.ReadUInt32(P_PREV_PAGE_ID);
             this.NextPageID = _buffer.ReadUInt32(P_NEXT_PAGE_ID);
+            this.PageListSlot = _buffer.ReadByte(P_INITIAL_SLOT);
 
             // transaction information
             this.TransactionID = _buffer.ReadUInt32(P_TRANSACTION_ID);
@@ -199,6 +210,7 @@ namespace LiteDB.Engine
             // PageID - never change!
             _buffer.Write(this.PrevPageID, P_PREV_PAGE_ID);
             _buffer.Write(this.NextPageID, P_NEXT_PAGE_ID);
+            _buffer.Write(this.PageListSlot, P_INITIAL_SLOT);
 
             // transaction information
             _buffer.Write(this.TransactionID, P_TRANSACTION_ID);
@@ -222,10 +234,12 @@ namespace LiteDB.Engine
         {
             this.IsDirty = true;
 
+            // page information
+            // PageID never change
             this.PageType = PageType.Empty;
-            this.ItemsCount = 0;
             this.PrevPageID = uint.MaxValue;
             this.NextPageID = uint.MaxValue;
+            this.PageListSlot = byte.MaxValue;
 
             // transaction information
             this.ColID = uint.MaxValue;
@@ -736,46 +750,6 @@ namespace LiteDB.Engine
             if (typeof(T) == typeof(DataPage)) return (T)(object)new DataPage(buffer, pageID);
 
             throw new InvalidCastException();
-        }
-
-        /// <summary>
-        /// FreeBytes ranges on page slot for free list page
-        /// 90% - 100% = 0 (7344 - 8160)
-        /// 75% -  90% = 1 (6120 - 7343)
-        /// 60% -  75% = 2 (4896 - 6119)
-        /// 30% -  60% = 3 (2448 - 4895)
-        ///  0% -  30% = 4 (0000 - 2447)
-        /// </summary>
-        private static int[] _freePageSlots = new[] 
-        {
-            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .90), // 0
-            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .75), // 1
-            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .60), // 2
-            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .30)  // 3
-        };
-
-        /// <summary>
-        /// Get page index slot on FreeDataPageID/FreeIndexPageID 
-        /// </summary>
-        public static int FreeIndexSlot(int freeBytes)
-        {
-            ENSURE(freeBytes >= 0, "freeBytes must be positive");
-
-            for(var i = 0; i < _freePageSlots.Length; i++)
-            {
-                if (freeBytes >= _freePageSlots[i]) return i;
-            }
-
-            return PAGE_FREE_LIST_SLOTS - 1; // Slot 4 (last slot)
-        }
-
-        /// <summary>
-        /// Get minimum slot with space enough for your data content
-        /// Returns -1 if no space guaranteed (more than 90%)
-        /// </summary>
-        public static int GetMinimumIndexSlot(int length)
-        {
-            return FreeIndexSlot(length) - 1;
         }
 
         #endregion

@@ -24,10 +24,10 @@ namespace LiteDB.Engine
             this.RegisterSystemCollection("$snapshots", () => this.SysSnapshots());
             this.RegisterSystemCollection("$open_cursors", () => this.SysOpenCursors());
 
-            // external collections
             this.RegisterSystemCollection(new SysFileJson());
             this.RegisterSystemCollection(new SysFileCsv());
             this.RegisterSystemCollection(new SysDump(_header, this));
+            this.RegisterSystemCollection(new SysPageList(_header, this));
 
             this.RegisterSystemCollection(new SysQuery(this));
         }

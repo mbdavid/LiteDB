@@ -43,6 +43,7 @@ namespace LiteDB.Engine
 
             // add this new page in free list (slot 0)
             index.FreeIndexPageList = indexPage.PageID;
+            indexPage.PageListSlot = 0;
 
             index.Head = head.Position;
             index.Tail = tail.Position;
@@ -145,6 +146,9 @@ namespace LiteDB.Engine
                 last.SetNextNode(node.Position);
             }
 
+            // fix page position in free list slot
+            _snapshot.AddOrRemoveFreeIndexList(node.Page, ref index.FreeIndexPageList);
+
             return node;
         }
 
@@ -244,11 +248,9 @@ namespace LiteDB.Engine
                 }
             }
 
-            var initialFreeBytes = node.Page.FreeBytes;
-
             node.Page.DeleteIndexNode(node.Position.Index);
 
-            _snapshot.AddOrRemoveFreeIndexList(node.Page, initialFreeBytes, ref index.FreeIndexPageList);
+            _snapshot.AddOrRemoveFreeIndexList(node.Page, ref index.FreeIndexPageList);
         }
 
         /// <summary>

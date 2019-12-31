@@ -179,10 +179,10 @@ namespace LiteDB.Engine
                         ENSURE(page.Item.PageType == PageType.Empty, "must be marked as deleted page");
 
                         // join existing free list pages into new list of deleted pages
-                        page.Item.NextPageID = _header.FreeEmptyPageID;
+                        page.Item.NextPageID = _header.FreeEmptyPageList;
 
                         // and now, set header free list page to this new list
-                        _header.FreeEmptyPageID = _transPages.FirstDeletedPageID;
+                        _header.FreeEmptyPageList = _transPages.FirstDeletedPageID;
                     }
 
                     var buffer = page.Item.UpdateBuffer();
@@ -334,7 +334,7 @@ namespace LiteDB.Engine
                     for (var i = 0; i < _transPages.NewPages.Count; i++)
                     {
                         var pageID = _transPages.NewPages[i];
-                        var next = i < _transPages.NewPages.Count - 1 ? _transPages.NewPages[i + 1] : _header.FreeEmptyPageID;
+                        var next = i < _transPages.NewPages.Count - 1 ? _transPages.NewPages[i + 1] : _header.FreeEmptyPageList;
 
                         var buffer = _disk.NewPage();
 
@@ -354,7 +354,7 @@ namespace LiteDB.Engine
 
                     // update header page with my new transaction ID
                     _header.TransactionID = transactionID;
-                    _header.FreeEmptyPageID = _transPages.NewPages[0];
+                    _header.FreeEmptyPageList = _transPages.NewPages[0];
                     _header.IsConfirmed = true;
 
                     // clone header buffer

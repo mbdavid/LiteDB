@@ -68,10 +68,17 @@ namespace LiteDB.Demo
                                 }
                                 else
                                 {
-                                    var dump = new HtmlDump(page);
+                                    var dump = new HtmlPageDump(page);
 
                                     body = dump.Render();
                                 }
+                            }
+                            else if (Regex.IsMatch(context.Request.RawUrl, @"^\/list/(\d+)$"))
+                            {
+                                var pageID = int.Parse(context.Request.RawUrl.Substring(6));
+                                var exp = new HtmlPageList(_db.GetCollection($"$page_list({pageID})").Query().Limit(1000).ToEnumerable());
+
+                                body = exp.Render();
                             }
                             else
                             {

@@ -19,7 +19,7 @@ namespace LiteDB.Engine
             doc["readOnly"] = _settings.ReadOnly;
 
             doc["lastPageID"] = (int)_header.LastPageID;
-            doc["freeEmptyPageID"] = (int)_header.FreeEmptyPageID;
+            doc["freeEmptyPageID"] = (int)_header.FreeEmptyPageList;
 
             doc["creationTime"] = _header.CreationTime;
 
