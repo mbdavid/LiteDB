@@ -62,7 +62,7 @@ namespace LiteDB.Demo
         [Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
         public void Update_Active(Database db)
         {
-            db.ExecuteScalar("UPDATE col1 SET active = true, r = LPAD(r, RANDOM(5000, 20000), '-') WHERE active = false"); 
+            db.ExecuteScalar("UPDATE col1 SET active = true, rnd = 0, r = LPAD(r, RANDOM(5000, 20000), '-') WHERE active = false"); 
         }
 
         [Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 2)]

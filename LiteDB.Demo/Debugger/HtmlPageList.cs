@@ -41,25 +41,28 @@ namespace LiteDB.Demo
             _writer.AppendLine("<title>LiteDB Explorer Debugger</title>");
             _writer.AppendLine("<style>");
             _writer.AppendLine("* { box-sizing: border-box; }");
-            _writer.AppendLine("body { font-family: monospace; }");
+            _writer.AppendLine("body { font-family: monospace; margin: 0; }");
+            _writer.AppendLine("table { border-collapse: collapse; width: 100%; }");
+            _writer.AppendLine("th { font-weight: bold; background-color: #a1a1a1; }");
+            _writer.AppendLine("td, th { height: 32px; }");
+            _writer.AppendLine("a[href] { color: blue; }");
             _writer.AppendLine("</style>");
             _writer.AppendLine("</head>");
             _writer.AppendLine("<body>");
-            _writer.AppendLine($"<h1>Page List</h1>");
         }
 
         private void RenderInfo()
         {
-            _writer.AppendLine("<table border=1>");
+            _writer.AppendLine("<table border='1'>");
 
             _writer.AppendLine("<tr>");
-            _writer.AppendLine("<td>PageID</td>");
-            _writer.AppendLine("<td>PageType</td>");
-            _writer.AppendLine("<td>Slot</td>");
-            _writer.AppendLine("<td>Collection</td>");
-            _writer.AppendLine("<td>Index</td>");
-            _writer.AppendLine("<td>FreeSpace</td>");
-            _writer.AppendLine("<td>Items</td>");
+            _writer.AppendLine("<th>PageID</th>");
+            _writer.AppendLine("<th>PageType</th>");
+            _writer.AppendLine("<th>Slot</th>");
+            //_writer.AppendLine("<th>Collection</th>");
+            //_writer.AppendLine("<th>Index</th>");
+            _writer.AppendLine("<th>FreeSpace</th>");
+            _writer.AppendLine("<th>Items</th>");
             _writer.AppendLine("</tr>");
 
             var count = 0;
@@ -67,13 +70,13 @@ namespace LiteDB.Demo
             foreach (var page in _pages)
             {
                 _writer.AppendLine("<tr>");
-                _writer.AppendLine($"<td><a href='/{page["pageID"].AsInt32}'>{page["pageID"].AsInt32}</a></td>");
-                _writer.AppendLine($"<td>{page["pageType"].AsString}</td>");
-                _writer.AppendLine($"<td>{page["slot"].AsInt32}</td>");
-                _writer.AppendLine($"<td>{page["collection"].AsString}</td>");
-                _writer.AppendLine($"<td>{page["index"].AsString}</td>");
-                _writer.AppendLine($"<td>{page["freeBytes"].AsInt32}</td>");
-                _writer.AppendLine($"<td>{page["itemsCount"].AsInt32}</td>");
+                _writer.AppendLine($"<td style='text-align: center'><a target='_top' href='/{page["pageID"].AsInt32}'>{page["pageID"].AsInt32}</a></td>");
+                _writer.AppendLine($"<td style='text-align: center'>{page["pageType"].AsString}</td>");
+                _writer.AppendLine($"<td style='text-align: center'>{page["slot"].AsInt32}</td>");
+                //_writer.AppendLine($"<td>{page["collection"].AsString}</td>");
+                //_writer.AppendLine($"<td>{page["index"].AsString}</td>");
+                _writer.AppendLine($"<td style='text-align: right'>{page["freeBytes"].AsInt32}</td>");
+                _writer.AppendLine($"<td style='text-align: center'>{page["itemsCount"].AsInt32}</td>");
                 _writer.AppendLine("</tr>");
 
                 count++;

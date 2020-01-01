@@ -17,6 +17,8 @@ namespace LiteDB.Demo
 {
     public class HtmlPageDump
     {
+        private const int BLOCK_WIDTH = 30;
+
         private readonly BsonDocument _page;
         private readonly uint _pageID;
         private readonly PageType _pageType;
@@ -80,12 +82,12 @@ namespace LiteDB.Demo
             h += this.SpanItem<byte>(h, 0, null, "IsConf", null);
             h += this.SpanItem(h, 3, null, "ColID", BitConverter.ToUInt32);
 
-            h += this.SpanItem<byte>(h, 0, null, "ItemsCnt", null);
+            h += this.SpanItem<byte>(h, 0, null, "Items", null);
             h += this.SpanItem(h, 1, null, "UsedBytes", BitConverter.ToUInt16);
             h += this.SpanItem(h, 1, null, "FragmentedBytes", BitConverter.ToUInt16);
-            h += this.SpanItem(h, 1, null, "NextFreePosition", BitConverter.ToUInt16);
-            h += this.SpanItem<byte>(h, 0, null, "HghestIdx", null);
-            h += this.SpanItem<byte>(h, 0, null, "Reserved", null);
+            h += this.SpanItem(h, 1, null, "NextFreePo", BitConverter.ToUInt16);
+            h += this.SpanItem<byte>(h, 0, null, "HghIdx", null);
+            h += this.SpanItem<byte>(h, 0, null, "Reserv", null);
         }
 
         private void SpanSegments()
@@ -282,6 +284,11 @@ namespace LiteDB.Demo
                 _items[index + 4].Text = _items[index + 4].Value == byte.MaxValue ? "-" : _items[index + 4].Value.ToString();
             }
 
+            if (pageList)
+            {
+                _items[index].Target = "list";
+            }
+
             return 4 + (pageAddress ? 1 : 0);
         }
 
@@ -332,12 +339,13 @@ namespace LiteDB.Demo
             _writer.AppendLine("h1 { border-bottom: 2px solid #545454; color: #545454; margin: 0; }");
             _writer.AppendLine("textarea { margin: 0px; width: 1164px; height: 61px; vertical-align: top; }");
             _writer.AppendLine(".page { display: flex; min-width: 1245px; }");
-            _writer.AppendLine(".rules > div { padding: 9px 0 0; height: 31px; width: 37px; color: gray; background-color: #f1f1f1; margin: 1px; text-align: center; position: relative; }");
-            _writer.AppendLine(".blocks {  }");
-            _writer.AppendLine(".line > a { background-color: #d1d1d1; margin: 1px; min-width: 35px; height: 30px; display: inline-block; text-align: center; padding: 10px 0 0; position: relative; }");
+            _writer.AppendLine($".rules > div {{ padding: 9px 0 0; height: 31px; width: {BLOCK_WIDTH}px; color: gray; background-color: #f1f1f1; margin: 1px; text-align: center; position: relative; }}");
+            _writer.AppendLine(".line { min-width: 1024px; }");
+            _writer.AppendLine($".line > a {{ background-color: #d1d1d1; margin: 1px; min-width: {BLOCK_WIDTH}px; height: 30px; display: inline-block; text-align: center; padding: 10px 0 0; position: relative; }}");
             _writer.AppendLine(".line:first-child > a { background-color: #a1a1a1; }");
             _writer.AppendLine(".line > a[href] { color: blue; }");
             _writer.AppendLine(".line > a:before { background-color: white; font-size: 7px; top: -1; left: 0; color: black; position: absolute; content: attr(st); }");
+            _writer.AppendLine("iframe { border: none; flex: 1; min-width: 50px; }");
 
             foreach (var color in _items.Select(x => x.Color).Where(x => x != -1).Distinct())
             {
@@ -374,6 +382,8 @@ namespace LiteDB.Demo
 
             this.RenderRules();
             this.RenderBlocks();
+
+            _writer.AppendLine("<iframe name='list' id='list'></iframe>");
 
             _writer.AppendLine("</div>");
         }
@@ -426,7 +436,7 @@ namespace LiteDB.Demo
             }
 
             _writer.AppendLine("</div>");
-
+            _writer.AppendLine("</div>");
         }
 
         private void RenderItem(PageItem item, int span)
@@ -438,6 +448,11 @@ namespace LiteDB.Demo
                 _writer.Append($" href='{item.Href}'");
             }
 
+            if (!string.IsNullOrEmpty(item.Target))
+            {
+                _writer.Append($" target='{item.Target}'");
+            }
+
             if (item.Color >= 0)
             {
                 _writer.Append($" class='c{item.Color}'");
@@ -447,7 +462,7 @@ namespace LiteDB.Demo
             {
                 var s = item.Span + (span < 0 ? span : 0);
 
-                _writer.Append($" style='min-width: {35 * (s + 1) + (s * 2)}px'");
+                _writer.Append($" style='min-width: {BLOCK_WIDTH * (s + 1) + (s * 2)}px'");
             }
 
             if (!string.IsNullOrEmpty(item.Caption))
@@ -474,13 +489,14 @@ namespace LiteDB.Demo
         public class PageItem
         {
             public int Index { get; set; }
-            public string Href { get; set; }
             public string Id { get; set; }
             public string Text { get; set; }
             public byte Value { get; set; }
             public int Span { get; set; }
             public string Caption { get; set; }
             public int Color { get; set; }
+            public string Href { get; set; }
+            public string Target { get; set; }
         }
     }
 }
