@@ -18,7 +18,7 @@ namespace LiteDB.Engine
 
             transacion.ExplicitTransaction = true;
 
-            if (transacion.OpenCursors > 0) throw new LiteException(0, "This thread contains an open cursors/query. Close cursors before Begin()");
+            if (transacion.OpenCursors.Count > 0) throw new LiteException(0, "This thread contains an open cursors/query. Close cursors before Begin()");
 
             LOG(isNew, $"begin trans", "COMMAND");
 
@@ -35,7 +35,7 @@ namespace LiteDB.Engine
             if (transaction != null)
             {
                 // do not accept explicit commit transaction when contains open cursors running
-                if (transaction.OpenCursors > 0) throw new LiteException(0, "This thread contains an open query/cursor. Close cursors before run Commit()");
+                if (transaction.OpenCursors.Count > 0) throw new LiteException(0, "This thread contains an open query/cursor. Close cursors before run Commit()");
 
                 return transaction.Commit();
             }
@@ -74,7 +74,7 @@ namespace LiteDB.Engine
                 var result = fn(transaction);
 
                 // if this transaction was auto-created for this operation, commit & dispose now
-                if (isNew && transaction.OpenCursors == 0)
+                if (isNew && transaction.OpenCursors.Count == 0)
                 {
                     transaction.Commit();
                 }

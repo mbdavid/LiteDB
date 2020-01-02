@@ -43,12 +43,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page) [4 bytes]
         /// </summary>
-        public uint FreeEmptyPageID;
+        public uint FreeEmptyPageList { get; set; }
 
         /// <summary>
         /// Last created page - Used when there is no free page inside file [4 bytes]
         /// </summary>
-        public uint LastPageID;
+        public uint LastPageID { get; set; }
 
         /// <summary>
         /// DateTime when database was created [8 bytes]
@@ -78,7 +78,7 @@ namespace LiteDB.Engine
         {
             // initialize page version
             this.CreationTime = DateTime.UtcNow;
-            this.FreeEmptyPageID = uint.MaxValue;
+            this.FreeEmptyPageList = uint.MaxValue;
             this.LastPageID = 0;
             this.UserVersion = 0;
 
@@ -116,7 +116,7 @@ namespace LiteDB.Engine
 
             // CreateTime is readonly
             this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
-            this.FreeEmptyPageID = _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
+            this.FreeEmptyPageList = _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
             this.LastPageID = _buffer.ReadUInt32(P_LAST_PAGE_ID);
             this.UserVersion = _buffer.ReadInt32(P_USER_VERSION);
 
@@ -133,7 +133,7 @@ namespace LiteDB.Engine
 
         public override PageBuffer UpdateBuffer()
         {
-            _buffer.Write(this.FreeEmptyPageID, P_FREE_EMPTY_PAGE_ID);
+            _buffer.Write(this.FreeEmptyPageList, P_FREE_EMPTY_PAGE_ID);
             _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
             _buffer.Write(this.UserVersion, P_USER_VERSION);
 

@@ -66,9 +66,9 @@ namespace LiteDB.Engine
         {
             var colPage = this.ReadPage<CollectionPage>(_collections[collection]);
 
-            for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
+            for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
             {
-                var next = colPage.FreeDataPageID[slot];
+                var next = colPage.FreeDataPageList[slot];
 
                 while (next != uint.MaxValue)
                 {

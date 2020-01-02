@@ -26,7 +26,7 @@ namespace LiteDB.Engine
                 // get registered system collection to get data source
                 var sys = this.GetSystemCollection(name);
 
-                source = sys.Input(this, options);
+                source = sys.Input(options);
                 collection = sys.Name;
             }
 

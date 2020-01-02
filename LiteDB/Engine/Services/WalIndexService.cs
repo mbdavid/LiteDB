@@ -55,10 +55,14 @@ namespace LiteDB.Engine
         /// <summary>
         /// Checks if a Page/Version are in WAL-index memory. Consider version that are below parameter. Returns PagePosition of this page inside WAL-file or Empty if page doesn't found.
         /// </summary>
-        public long GetPageIndex(uint pageID, int version)
+        public long GetPageIndex(uint pageID, int version, out int walVersion)
         {
             // wal-index versions must be greater than 0 (version 0 is datafile)
-            if (version == 0) return long.MaxValue;
+            if (version == 0)
+            {
+                walVersion = 0;
+                return long.MaxValue;
+            }
 
             // get page slot in cache
             if (_index.TryGetValue(pageID, out var list))
@@ -66,6 +70,8 @@ namespace LiteDB.Engine
                 // list are sorted by version number
                 var idx = list.Count;
                 var position = long.MaxValue;
+
+                walVersion = version;
 
                 // get all page versions in wal-index
                 // and then filter only equals-or-less then selected version
@@ -77,6 +83,8 @@ namespace LiteDB.Engine
 
                     if (v.Key <= version)
                     {
+                        walVersion = v.Key;
+
                         position = v.Value;
                         break;
                     }
@@ -84,6 +92,8 @@ namespace LiteDB.Engine
 
                 return position;
             }
+
+            walVersion = int.MaxValue;
 
             return long.MaxValue;
         }

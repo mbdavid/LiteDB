@@ -13,6 +13,7 @@ namespace LiteDB.Engine
         private readonly LiteEngine _engine;
         private readonly TransactionMonitor _monitor;
         private readonly SortDisk _sortDisk;
+        private readonly CursorInfo _cursor;
         private readonly bool _utcDate;
         private readonly string _collection;
         private readonly Query _query;
@@ -26,6 +27,8 @@ namespace LiteDB.Engine
             _utcDate = utcDate;
             _collection = collection;
             _query = query;
+
+            _cursor = new CursorInfo(collection, query);
 
             LOG(_query.ToSQL(_collection).Replace(Environment.NewLine, " "), "QUERY");
 
@@ -52,7 +55,7 @@ namespace LiteDB.Engine
         {
             var transaction = _monitor.GetTransaction(true, out var isNew);
 
-            transaction.OpenCursors++;
+            transaction.OpenCursors.Add(_cursor.Start());
 
             try
             {
@@ -73,15 +76,17 @@ namespace LiteDB.Engine
                 // no collection, no documents
                 if (snapshot.CollectionPage == null && _source == null)
                 {
-                    if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
-                    {
-                        transaction.Commit();
-                    }
-
                     // if query use Source (*) need runs with empty data source
                     if (_query.Select.UseSource)
                     {
                         yield return _query.Select.ExecuteScalar().AsDocument;
+                    }
+
+                    transaction.OpenCursors.Remove(_cursor);
+
+                    if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
+                    {
+                        transaction.Commit();
                     }
 
                     yield break;
@@ -97,7 +102,9 @@ namespace LiteDB.Engine
                 {
                     yield return queryPlan.GetExecutionPlan();
 
-                    if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
+                    transaction.OpenCursors.Remove(_cursor);
+
+                    if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
                     {
                         transaction.Commit();
                     }
@@ -114,7 +121,9 @@ namespace LiteDB.Engine
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>
                     {
-                        if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
+                        transaction.OpenCursors.Remove(_cursor);
+
+                        if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
                         {
                             transaction.Commit();
                         }
@@ -123,6 +132,8 @@ namespace LiteDB.Engine
                     // call safepoint just before return each document
                     foreach (var doc in pipe.Pipe(nodes, queryPlan))
                     {
+                        _cursor.Fetched++;
+
                         yield return doc;
                     }
                 }

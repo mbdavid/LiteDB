@@ -16,11 +16,9 @@ namespace LiteDB.Engine
         {
         }
 
-        public override bool IsFunction => true;
-
-        public override IEnumerable<BsonDocument> Input(LiteEngine engine, BsonValue options)
+        public override IEnumerable<BsonDocument> Input(BsonValue options)
         {
-            var filename = GetOption(options, "filename", null).AsString ?? throw new LiteException(0, $"Collection ${this.Name} requires string as 'filename' or a document field 'filename'");
+            var filename = GetOption(options, "filename")?.AsString ?? throw new LiteException(0, $"Collection ${this.Name} requires string as 'filename' or a document field 'filename'");
             var encoding = GetOption(options, "encoding", "utf-8").AsString;
             var delimiter = GetOption(options, "delimiter", ",").AsString[0];
 
@@ -75,14 +73,13 @@ namespace LiteDB.Engine
                             index = 0;
                         }
                     }
-
                 }
             }
         }
 
         public override int Output(IEnumerable<BsonDocument> source, BsonValue options)
         {
-            var filename = GetOption(options, "filename", null).AsString ?? throw new LiteException(0, "Collection $file_json requires string as 'filename' or a document field 'filename'");
+            var filename = GetOption(options, "filename")?.AsString ?? throw new LiteException(0, "Collection $file_json requires string as 'filename' or a document field 'filename'");
             var overwritten = GetOption(options, "overwritten", false).AsBoolean;
             var encoding = GetOption(options, "encoding", "utf-8").AsString;
             var delimiter = GetOption(options, "delimiter", ",").AsString[0];

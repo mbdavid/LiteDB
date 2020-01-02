@@ -37,13 +37,14 @@ namespace LiteDB.Engine
                     // remove object data
                     data.Delete(pkNode.DataBlock);
 
-                    // delete all nodes (start in pk node)
-                    indexer.DeleteAll(pkNode.Position);
-
                     if (pkNode.NextNode.IsEmpty)
                     {
                         ;
                     }
+
+
+                    // delete all nodes (start in pk node)
+                    indexer.DeleteAll(pkNode.Position);
 
                     transaction.Safepoint();
 
@@ -89,7 +90,12 @@ namespace LiteDB.Engine
                         {
                             while (reader.Read())
                             {
-                                yield return reader.Current["i"];
+                                var value = reader.Current["i"];
+
+                                if (value != BsonValue.Null)
+                                {
+                                    yield return value;
+                                }
                             }
                         }
                     }

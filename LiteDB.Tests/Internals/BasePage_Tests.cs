@@ -357,7 +357,7 @@ namespace LiteDB.Internals
 
             page.Delete(index1);
 
-            page.Insert(7948, out var index3).Fill(104);
+            page.Insert(7948 - 4, out var index3).Fill(104);
 
             buffer.ShareCounter = 0;
         }

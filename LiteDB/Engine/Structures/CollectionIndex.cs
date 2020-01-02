@@ -13,6 +13,11 @@ namespace LiteDB.Engine
         public byte Slot { get; }
 
         /// <summary>
+        /// Indicate index type: 0 = SkipList (reserved for future use)
+        /// </summary>
+        public byte IndexType { get; }
+
+        /// <summary>
         /// Index name
         /// </summary>
         public string Name { get; }
@@ -58,6 +63,11 @@ namespace LiteDB.Engine
         public uint UniqueKeyCount { get; set; } = 0;
 
         /// <summary>
+        /// Free index page linked-list (all pages here must have at least 600 bytes)
+        /// </summary>
+        public uint FreeIndexPageList;
+
+        /// <summary>
         /// Get index density based on KeyCount vs UniqueKeyCount. Value are from 0 to 1.
         /// 0 means completed unique keys (best)
         /// 1 means has only 1 single unique key in all index (worst)
@@ -84,14 +94,48 @@ namespace LiteDB.Engine
             get { return string.IsNullOrEmpty(this.Name); }
         }
 
-        public CollectionIndex(byte slot, string name, string expr, bool unique)
+        public CollectionIndex(byte slot, byte indexType, string name, string expr, bool unique)
         {
             this.Slot = slot;
+            this.IndexType = indexType;
             this.Name = name;
             this.Expression = expr;
             this.Unique = unique;
+            this.FreeIndexPageList = uint.MaxValue;
 
             this.BsonExpr = BsonExpression.Create(expr);
+        }
+
+        public CollectionIndex(BufferReader reader)
+        {
+            this.Slot = reader.ReadByte();
+            this.IndexType = reader.ReadByte();
+            this.Name = reader.ReadCString();
+            this.Expression = reader.ReadCString();
+            this.Unique = reader.ReadBoolean();
+            this.Head = reader.ReadPageAddress(); // 5
+            this.Tail = reader.ReadPageAddress(); // 5
+            this.MaxLevel = reader.ReadByte(); // 1
+            this.KeyCount = reader.ReadUInt32(); // 4
+            this.UniqueKeyCount = reader.ReadUInt32(); // 4
+            this.FreeIndexPageList = reader.ReadUInt32(); // 4
+
+            this.BsonExpr = BsonExpression.Create(this.Expression);
+        }
+
+        public void UpdateBuffer(BufferWriter writer)
+        {
+            writer.Write(this.Slot);
+            writer.Write(this.IndexType);
+            writer.WriteCString(this.Name);
+            writer.WriteCString(this.Expression);
+            writer.Write(this.Unique);
+            writer.Write(this.Head);
+            writer.Write(this.Tail);
+            writer.Write(this.MaxLevel);
+            writer.Write(this.KeyCount);
+            writer.Write(this.UniqueKeyCount);
+            writer.Write(this.FreeIndexPageList);
         }
 
         /// <summary>
@@ -109,6 +153,7 @@ namespace LiteDB.Engine
         {
             return
                 1 + // Slot
+                1 + // IndexType
                 Encoding.UTF8.GetByteCount(name) + 1 + // Name + \0
                 Encoding.UTF8.GetByteCount(expr) + 1 + // Expression + \0
                 1 + // Unique
@@ -116,7 +161,8 @@ namespace LiteDB.Engine
                 PageAddress.SIZE + // Tail
                 1 + // MaxLevel
                 4 + // KeyCount
-                4; // UniqueKeyCount
+                4 + // UniqueKeyCount
+                (PAGE_FREE_LIST_SLOTS * PageAddress.SIZE); // FreeListPage
         }
     }
 }

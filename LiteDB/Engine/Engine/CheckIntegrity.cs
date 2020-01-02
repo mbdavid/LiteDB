@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -24,13 +25,15 @@ namespace LiteDB.Engine
             writer.WriteLine("=============================");
 
             var result = new List<bool>();
+            var linkedPages = new List<uint>(new uint[] { 0 });
 
             result.Add(this.Run(writer, "Data file", "{0}", () => _disk.GetName(FileOrigin.Data) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Data)) + ")"));
             result.Add(this.Run(writer, "Log file", "{0}", () => _disk.GetName(FileOrigin.Log) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Log)) + ")"));
             result.Add(this.Run(writer, "Clear cache memory", "OK ({0} pages)", () => _disk.Cache.Clear()));
-            result.Add(this.Run(writer, "Verify free empty list", "OK ({0} pages)", () => this.VerifyFreeEmptyList()));
-            result.Add(this.Run(writer, "Verify data pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Data)));
-            result.Add(this.Run(writer, "Verify index pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Index)));
+            result.Add(this.Run(writer, "Verify free empty list", "OK ({0} pages)", () => this.VerifyFreeEmptyList(linkedPages)));
+            result.Add(this.Run(writer, "Verify data pages links", "OK ({0} pages)", () => this.VerifyDataPagesFreeList(linkedPages)));
+            result.Add(this.Run(writer, "Verify index pages links", "OK ({0} pages)", () => this.VerifyIndexPagesFreeList(linkedPages)));
+            result.Add(this.Run(writer, "Verify all linked pages", "OK ({0} pages)", () => this.VerifyAllPagesList(linkedPages)));
             result.Add(this.Run(writer, "Verify index nodes", "OK ({0} nodes)", () => this.VerifyIndexNodes()));
             result.Add(this.Run(writer, "Verify data blocks", "OK ({0} blocks)", () => this.VerifyDataBlocks()));
             result.Add(this.Run(writer, "Verify documents", "OK ({0} documents)", () => this.VerifyDataBlocks()));
@@ -65,12 +68,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Check if all free empty list pages are OK
         /// </summary>
-        private int VerifyFreeEmptyList()
+        private int VerifyFreeEmptyList(List<uint> linkedPages)
         {
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Read, "_", false);
-                var next = _header.FreeEmptyPageID;
+                var next = _header.FreeEmptyPageList;
                 var counter = 0;
 
                 while(next != uint.MaxValue)
@@ -81,6 +84,8 @@ namespace LiteDB.Engine
                     {
                         throw new LiteException(0, $"Page {page.PageID} should be Empty type");
                     }
+
+                    linkedPages.Add(page.PageID);
 
                     next = page.NextPageID;
 
@@ -94,9 +99,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Checks if all data/index pages are linked
+        /// Checks if all data pages are in free list
         /// </summary>
-        private int VerifyPagesType(PageType type)
+        private int VerifyDataPagesFreeList(List<uint> linkedPages)
         {
             return this.AutoTransaction(transaction =>
             {
@@ -106,20 +111,22 @@ namespace LiteDB.Engine
                 {
                     var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
 
-                    for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
+                    linkedPages.Add(col.Value);
+
+                    for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
                     {
-                        var next = type == PageType.Data ?
-                            snapshot.CollectionPage.FreeDataPageID[slot] :
-                            snapshot.CollectionPage.FreeIndexPageID[slot];
+                        var next = snapshot.CollectionPage.FreeDataPageList[slot];
 
                         while (next != uint.MaxValue)
                         {
                             var page = snapshot.GetPage<BasePage>(next);
 
-                            if (page.PageType != type)
+                            if (page.PageType != PageType.Data)
                             {
-                                throw new LiteException(0, $"Page {page.PageID} should be {type} type");
+                                throw new LiteException(0, $"Page {page.PageID} should be DataPage type");
                             }
+
+                            linkedPages.Add(page.PageID);
 
                             counter++;
                             next = page.NextPageID;
@@ -133,6 +140,63 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Checks if all index pages are in free list
+        /// </summary>
+        private int VerifyIndexPagesFreeList(List<uint> linkedPages)
+        {
+            return this.AutoTransaction(transaction =>
+            {
+                var counter = 0;
+
+                foreach (var col in _header.GetCollections())
+                {
+                    var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
+
+                    foreach (var index in snapshot.CollectionPage.GetCollectionIndexes())
+                    {
+                        var next = index.FreeIndexPageList;
+
+                        while (next != uint.MaxValue)
+                        {
+                            var page = snapshot.GetPage<BasePage>(next);
+
+                            if (page.PageType != PageType.Index)
+                            {
+                                throw new LiteException(0, $"Page {page.PageID} should be IndexPage type");
+                            }
+
+                            linkedPages.Add(page.PageID);
+
+                            counter++;
+                            next = page.NextPageID;
+                            transaction.Safepoint();
+                        }
+                    }
+                }
+
+                return counter;
+            });
+        }
+
+        /// <summary>
+        /// Check if all pages are linked 
+        /// </summary>
+        private int VerifyAllPagesList(List<uint> linkedPages)
+        {
+            linkedPages.Sort();
+
+            for(var i = 0; i <= _header.LastPageID; i++)
+            {
+                if (linkedPages[i] != i)
+                {
+                    throw new LiteException(0, $"Invalid linked page sort order. PageID {linkedPages[i]} should be {i}");
+                }
+            }
+
+            return (int)_header.LastPageID;
+        }
+
+        /// <summary>
         /// Check for all nodes pointers
         /// </summary>
         public int VerifyIndexNodes()
@@ -141,59 +205,59 @@ namespace LiteDB.Engine
             {
                 var counter = 0;
 
-                foreach(var col in _header.GetCollections())
-                {
-                    var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
+                //foreach(var col in _header.GetCollections())
+                //{
+                //    var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
 
-                    var indexSlots = new HashSet<byte>(snapshot.CollectionPage.GetCollectionIndexes().Select(x => x.Slot));
+                //    var indexSlots = new HashSet<byte>(snapshot.CollectionPage.GetCollectionIndexes().Select(x => x.Slot));
 
-                    for (var pageSlot = 0; pageSlot < CollectionPage.PAGE_FREE_LIST_SLOTS; pageSlot++)
-                    {
-                        var next = snapshot.CollectionPage.FreeIndexPageID[pageSlot];
+                //    for (var pageSlot = 0; pageSlot < PAGE_FREE_LIST_SLOTS; pageSlot++)
+                //    {
+                //        var next = snapshot.CollectionPage.FreeIndexPageID[pageSlot];
 
-                        while (next != uint.MaxValue)
-                        {
-                            var page = snapshot.GetPage<IndexPage>(next);
+                //        while (next != uint.MaxValue)
+                //        {
+                //            var page = snapshot.GetPage<IndexPage>(next);
 
-                            var nodes = page.GetIndexNodes().ToArray();
+                //            var nodes = page.GetIndexNodes().ToArray();
 
-                            foreach(var node in nodes)
-                            {
-                                if (!indexSlots.Contains(node.Slot))
-                                {
-                                    throw new LiteException(0, $"Invalid index slot in this IndexNode: {node.Key} [{node.Position}]");
-                                }
+                //            foreach(var node in nodes)
+                //            {
+                //                if (!indexSlots.Contains(node.Slot))
+                //                {
+                //                    throw new LiteException(0, $"Invalid index slot in this IndexNode: {node.Key} [{node.Position}]");
+                //                }
 
-                                // head/tail
-                                if (node.Key.IsMaxValue || node.Key.IsMinValue)
-                                {
-                                    counter++;
-                                    continue;
-                                }
+                //                // head/tail
+                //                if (node.Key.IsMaxValue || node.Key.IsMinValue)
+                //                {
+                //                    counter++;
+                //                    continue;
+                //                }
 
-                                var dataPage = snapshot.GetPage<BasePage>(node.DataBlock.PageID);
+                //                var dataPage = snapshot.GetPage<BasePage>(node.DataBlock.PageID);
 
-                                if (dataPage.PageType != PageType.Data)
-                                {
-                                    throw new LiteException(0, $"Invalid page type on index node data block point: {node.DataBlock}");
-                                }
+                //                if (dataPage.PageType != PageType.Data)
+                //                {
+                //                    throw new LiteException(0, $"Invalid page type on index node data block point: {node.DataBlock}");
+                //                }
 
-                                LookupNode(node.NextNode, snapshot, null, 0);
+                //                LookupNode(node.NextNode, snapshot, null, 0);
 
-                                for (var i = 0; i < node.Level; i++)
-                                {
-                                    LookupNode(node.Prev[i], snapshot, node.Key, -1);
-                                    LookupNode(node.Next[i], snapshot, node.Key, +1);
-                                }
+                //                for (var i = 0; i < node.Level; i++)
+                //                {
+                //                    LookupNode(node.Prev[i], snapshot, node.Key, -1);
+                //                    LookupNode(node.Next[i], snapshot, node.Key, +1);
+                //                }
 
-                                counter++;
-                            }
+                //                counter++;
+                //            }
 
-                            next = page.NextPageID;
-                            transaction.Safepoint();
-                        }
-                    }
-                }
+                //            next = page.NextPageID;
+                //            transaction.Safepoint();
+                //        }
+                //    }
+                //}
 
                 return counter;
             });
@@ -232,9 +296,9 @@ namespace LiteDB.Engine
                     var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
                     var data = new DataService(snapshot);
 
-                    for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
+                    for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
                     {
-                        var next = snapshot.CollectionPage.FreeDataPageID[slot];
+                        var next = snapshot.CollectionPage.FreeDataPageList[slot];
 
                         while (next != uint.MaxValue)
                         {
@@ -272,9 +336,9 @@ namespace LiteDB.Engine
                     var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
                     var data = new DataService(snapshot);
 
-                    for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
+                    for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
                     {
-                        var next = snapshot.CollectionPage.FreeDataPageID[slot];
+                        var next = snapshot.CollectionPage.FreeDataPageList[slot];
 
                         while (next != uint.MaxValue)
                         {

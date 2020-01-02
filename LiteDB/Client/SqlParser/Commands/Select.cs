@@ -201,7 +201,14 @@ namespace LiteDB
                 {
                     tokenizer.ReadToken(); // read (
 
-                    options = new JsonReader(tokenizer).Deserialize();
+                    if (tokenizer.LookAhead().Type == TokenType.CloseParenthesis)
+                    {
+                        options = null;
+                    }
+                    else
+                    {
+                        options = new JsonReader(tokenizer).Deserialize();
+                    }
 
                     tokenizer.ReadToken().Expect(TokenType.CloseParenthesis); // read )
                 }

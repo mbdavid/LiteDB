@@ -18,43 +18,42 @@ namespace LiteDB.Internals
         [Fact]
         public void FreeIndexSlot_Ranges()
         {
-            BasePage.FreeIndexSlot(0).Should().Be(4);
-            BasePage.FreeIndexSlot(200).Should().Be(4);
-            BasePage.FreeIndexSlot(2447).Should().Be(4);
+            DataPage.FreeIndexSlot(0).Should().Be(4);
+            DataPage.FreeIndexSlot(200).Should().Be(4);
+            DataPage.FreeIndexSlot(2447).Should().Be(4);
 
-            BasePage.FreeIndexSlot(2448).Should().Be(3);
-            BasePage.FreeIndexSlot(4895).Should().Be(3);
+            DataPage.FreeIndexSlot(2448).Should().Be(3);
+            DataPage.FreeIndexSlot(4895).Should().Be(3);
 
-            BasePage.FreeIndexSlot(4896).Should().Be(2);
-            BasePage.FreeIndexSlot(6119).Should().Be(2);
+            DataPage.FreeIndexSlot(4896).Should().Be(2);
+            DataPage.FreeIndexSlot(6119).Should().Be(2);
 
-            BasePage.FreeIndexSlot(6120).Should().Be(1);
-            BasePage.FreeIndexSlot(7343).Should().Be(1);
+            DataPage.FreeIndexSlot(6120).Should().Be(1);
+            DataPage.FreeIndexSlot(7343).Should().Be(1);
 
-            BasePage.FreeIndexSlot(7344).Should().Be(0);
-            BasePage.FreeIndexSlot(8160).Should().Be(0);
+            DataPage.FreeIndexSlot(7344).Should().Be(0);
+            DataPage.FreeIndexSlot(8160).Should().Be(0);
         }
 
         [Fact]
         public void MinimumIndexSlot_Ranges()
         {
-            BasePage.GetMinimumIndexSlot(1).Should().Be(3);
-            BasePage.GetMinimumIndexSlot(200).Should().Be(3);
-            BasePage.GetMinimumIndexSlot(2447).Should().Be(3);
+            DataPage.GetMinimumIndexSlot(1).Should().Be(3);
+            DataPage.GetMinimumIndexSlot(200).Should().Be(3);
+            DataPage.GetMinimumIndexSlot(2447).Should().Be(3);
 
-            BasePage.GetMinimumIndexSlot(2448).Should().Be(2);
-            BasePage.GetMinimumIndexSlot(4895).Should().Be(2);
+            DataPage.GetMinimumIndexSlot(2448).Should().Be(2);
+            DataPage.GetMinimumIndexSlot(4895).Should().Be(2);
 
-            BasePage.GetMinimumIndexSlot(4896).Should().Be(1);
-            BasePage.GetMinimumIndexSlot(6119).Should().Be(1);
+            DataPage.GetMinimumIndexSlot(4896).Should().Be(1);
+            DataPage.GetMinimumIndexSlot(6119).Should().Be(1);
 
-            BasePage.GetMinimumIndexSlot(6120).Should().Be(0);
-            BasePage.GetMinimumIndexSlot(7343).Should().Be(0);
+            DataPage.GetMinimumIndexSlot(6120).Should().Be(0);
+            DataPage.GetMinimumIndexSlot(7343).Should().Be(0);
 
             // need new page (returns -1)
-            BasePage.GetMinimumIndexSlot(8160).Should().Be(-1);
-            BasePage.GetMinimumIndexSlot(7344).Should().Be(-1);
-
+            DataPage.GetMinimumIndexSlot(8160).Should().Be(-1);
+            DataPage.GetMinimumIndexSlot(7344).Should().Be(-1);
         }
     }
 }

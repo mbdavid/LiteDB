@@ -12,17 +12,18 @@ namespace LiteDB.Engine
     /// </summary>
     internal class SysQuery : SystemCollection
     {
-        public SysQuery() : base("$query")
+        private readonly ILiteEngine _engine;
+
+        public SysQuery(ILiteEngine engine) : base("$query")
         {
+            _engine = engine; 
         }
 
-        public override bool IsFunction => true;
-
-        public override IEnumerable<BsonDocument> Input(LiteEngine engine, BsonValue options)
+        public override IEnumerable<BsonDocument> Input(BsonValue options)
         {
-            var query = options.AsString;
+            var query = options?.AsString ?? throw new LiteException(0, $"Collection $query(sql) requires `sql` string parameter");
 
-            var sql = new SqlParser(engine, new Tokenizer(query), null);
+            var sql = new SqlParser(_engine, new Tokenizer(query), null);
 
             using (var reader = sql.Execute())
             {
@@ -34,7 +35,5 @@ namespace LiteDB.Engine
                 }
             }
         }
-
-        public override int Output(IEnumerable<BsonDocument> source, BsonValue options) => throw new NotSupportedException("$query do not support as output function");
     }
 }
