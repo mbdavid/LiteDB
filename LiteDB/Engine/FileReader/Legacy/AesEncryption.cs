@@ -94,6 +94,7 @@ namespace LiteDB
         {
             if (_aes != null)
             {
+                _aes.Dispose();
                 _aes = null;
             }
         }

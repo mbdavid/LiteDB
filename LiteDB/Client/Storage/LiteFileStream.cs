@@ -87,6 +87,7 @@ namespace LiteDB
             if (disposing && this.CanWrite)
             {
                 this.Flush();
+                _buffer?.Dispose();
             }
 
             _disposed = true;
