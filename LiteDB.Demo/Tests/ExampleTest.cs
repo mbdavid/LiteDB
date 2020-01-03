@@ -33,7 +33,7 @@ namespace LiteDB.Demo
                 ["name"] = "John" 
             });
 
-            db.ExecuteScalar("insert into orders values {a:1}");
+            db.ExecuteScalar("insert into orders1 values {a:1}");
             db.ExecuteScalar("insert into customers values {a:1}");
 
             // o ERRO ocorre quando:

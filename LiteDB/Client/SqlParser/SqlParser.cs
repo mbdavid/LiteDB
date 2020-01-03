@@ -40,7 +40,6 @@ namespace LiteDB
                 case "RENAME": return this.ParseRename();
                 case "CREATE": return this.ParseCreate();
 
-                case "ANALYZE": return this.ParseAnalyze();
                 case "CHECKPOINT": return this.ParseCheckpoint();
                 case "SHRINK": return this.ParseShrink();
 

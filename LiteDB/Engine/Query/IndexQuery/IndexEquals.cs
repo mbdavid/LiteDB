@@ -20,22 +20,9 @@ namespace LiteDB.Engine
 
         public override uint GetCost(CollectionIndex index)
         {
-            if (index.Unique)
-            {
-                return 1; // best case, ever!
-            }
-            else if(index.KeyCount == 0)
-            {
-                return uint.MaxValue; // index are not analyzed
-            }
-            else
-            {
-                var density = index.Density;
+            if (index.Unique) return 1; // best index cost
 
-                var cost = density == 0 ? index.KeyCount : (uint)Math.Round(1d / density);
-
-                return cost;
-            }
+            return 10; // 
         }
 
         public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)

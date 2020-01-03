@@ -32,11 +32,10 @@ namespace LiteDB.Engine
         private const int P_LAST_PAGE_ID = 64; // 64-67 (4 bytes)
         private const int P_CREATION_TIME = 68; // 68-75 (8 bytes)
         private const int P_USER_VERSION = 76; // 76-79 (4 bytes)
-        // reserved 80-95 (15 bytes)
-        private const int P_COLLECTIONS = 96; // 96-8095 (8000 bytes)
-        // reserved 8096-8191 (96 bytes)
+        // reserved 80-127 (48 bytes)
+        private const int P_COLLECTIONS = 128; // 128-8159 (8064 bytes)
 
-        private const int COLLECTIONS_SIZE = 8000; // 250 blocks with 32 bytes each
+        private const int COLLECTIONS_SIZE = 8064; // 252 blocks with 32 bytes each
 
         #endregion
 

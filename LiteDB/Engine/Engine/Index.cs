@@ -108,8 +108,6 @@ namespace LiteDB.Engine
                     transaction.Safepoint();
                 }
 
-                index.KeyCount = count;
-
                 return true;
             });
         }

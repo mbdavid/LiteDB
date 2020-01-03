@@ -40,8 +40,6 @@ namespace LiteDB.Demo
             this.Engine.Insert("col1", this.GetDocs(400), BsonAutoId.Int32);
 
             this.Engine.DeleteMany("col1", "1=1");
-
-            this.Engine.CheckIntegrity(Console.Out);
         }
 
         private IEnumerable<BsonDocument> GetDocs(int count)

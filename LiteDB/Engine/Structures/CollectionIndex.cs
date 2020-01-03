@@ -53,38 +53,9 @@ namespace LiteDB.Engine
         public byte MaxLevel { get; set; } = 1;
 
         /// <summary>
-        /// Counter of keys in this index
-        /// </summary>
-        public uint KeyCount { get; set; } = 0;
-
-        /// <summary>
-        /// Counter of unique keys in this index (online but be dirty on delete index nodes... will fix on next analyze)
-        /// </summary>
-        public uint UniqueKeyCount { get; set; } = 0;
-
-        /// <summary>
         /// Free index page linked-list (all pages here must have at least 600 bytes)
         /// </summary>
         public uint FreeIndexPageList;
-
-        /// <summary>
-        /// Get index density based on KeyCount vs UniqueKeyCount. Value are from 0 to 1.
-        /// 0 means completed unique keys (best)
-        /// 1 means has only 1 single unique key in all index (worst)
-        /// </summary>
-        public double Density
-        {
-            get
-            {
-                if (this.Unique) return 0;
-                if (this.UniqueKeyCount == 0 || this.KeyCount == 0) return 1;
-
-                var density = (double)Math.Min(this.UniqueKeyCount, this.KeyCount) /
-                    (double)this.KeyCount;
-
-                return Math.Round(density, 2);
-            }
-        }
 
         /// <summary>
         /// Returns if this index slot is empty and can be used as new index
@@ -116,8 +87,6 @@ namespace LiteDB.Engine
             this.Head = reader.ReadPageAddress(); // 5
             this.Tail = reader.ReadPageAddress(); // 5
             this.MaxLevel = reader.ReadByte(); // 1
-            this.KeyCount = reader.ReadUInt32(); // 4
-            this.UniqueKeyCount = reader.ReadUInt32(); // 4
             this.FreeIndexPageList = reader.ReadUInt32(); // 4
 
             this.BsonExpr = BsonExpression.Create(this.Expression);
@@ -133,8 +102,6 @@ namespace LiteDB.Engine
             writer.Write(this.Head);
             writer.Write(this.Tail);
             writer.Write(this.MaxLevel);
-            writer.Write(this.KeyCount);
-            writer.Write(this.UniqueKeyCount);
             writer.Write(this.FreeIndexPageList);
         }
 
@@ -160,8 +127,6 @@ namespace LiteDB.Engine
                 PageAddress.SIZE + // Head
                 PageAddress.SIZE + // Tail
                 1 + // MaxLevel
-                4 + // KeyCount
-                4 + // UniqueKeyCount
                 (PAGE_FREE_LIST_SLOTS * PageAddress.SIZE); // FreeListPage
         }
     }

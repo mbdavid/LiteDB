@@ -5,7 +5,6 @@ namespace LiteDB.Engine
 {
     public interface ILiteEngine : IDisposable
     {
-        int Analyze(string[] collections);
         void Checkpoint();
         long Shrink();
 

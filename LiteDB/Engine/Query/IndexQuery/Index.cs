@@ -173,7 +173,7 @@ namespace LiteDB.Engine
         #region Executing Index Search
 
         /// <summary>
-        /// Calculate cost based on type/value/collection - From 1 (best) to Collection.KeyCount (worst)
+        /// Calculate cost based on type/value/collection - Lower is best (1)
         /// </summary>
         public abstract uint GetCost(CollectionIndex index);
 

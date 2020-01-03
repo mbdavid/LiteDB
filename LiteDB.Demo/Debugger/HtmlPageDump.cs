@@ -191,11 +191,13 @@ namespace LiteDB.Demo
             h += this.SpanItem(h, 7, null, "CreationTime", (byte[] b, int i) => new DateTime(BitConverter.ToInt64(b, i)).ToString("o"));
             h += this.SpanItem(h, 3, null, "UserVersion", BitConverter.ToInt32);
 
-            this.SpanItem(96, 3, null, "Length", BitConverter.ToInt32);
+            var collectionPosition = 128;
 
-            var p = 100;
+            this.SpanItem(collectionPosition, 3, null, "Length", BitConverter.ToInt32);
+            
+            var p = collectionPosition + 4;
 
-            while (p < 100 + BitConverter.ToInt32(_buffer, 96) - 5)
+            while (p < collectionPosition + 4 + BitConverter.ToInt32(_buffer, collectionPosition) - 5)
             {
                 var initial = p;
 
@@ -210,7 +212,6 @@ namespace LiteDB.Demo
 
                 color++;
             }
-
         }
 
         private void SpanCollectionPage()
@@ -221,9 +222,6 @@ namespace LiteDB.Demo
             {
                 this.SpanPageID(32 + (i * 4), "DataPageList #" + i, false, true);
             }
-
-            this.SpanItem(32 + (5 * 4), 7, null, "CreationTime", (byte[] b, int i) => new DateTime(BitConverter.ToInt64(b, i)).ToString("o"));
-            this.SpanItem(32 + (5 * 4) + 8, 7, null, "LastAnalyzed", (byte[] b, int i) => new DateTime(BitConverter.ToInt64(b, i)).ToString("yyyy-MM-dd"));
 
             var h = 96;
             var indexes = _buffer[h];
@@ -242,8 +240,6 @@ namespace LiteDB.Demo
                 h += this.SpanPageID(h, "Head", true, false);
                 h += this.SpanPageID(h, "Tail", true, false);
                 h += this.SpanItem<byte>(h, 0, null, "MaxLevel", null);
-                h += this.SpanItem(h, 3, null, "KeyCount", BitConverter.ToUInt32);
-                h += this.SpanItem(h, 3, null, "UniqueKeyCount", BitConverter.ToUInt32);
                 h += this.SpanPageID(h, "IndexPageList", false, true);
 
                 for (var k = initial; k <= h; k++)
@@ -337,7 +333,7 @@ namespace LiteDB.Demo
             _writer.AppendLine("* { box-sizing: border-box; }");
             _writer.AppendLine("body { font-family: monospace; }");
             _writer.AppendLine("h1 { border-bottom: 2px solid #545454; color: #545454; margin: 0; }");
-            _writer.AppendLine("textarea { margin: 0px; width: 1164px; height: 61px; vertical-align: top; }");
+            _writer.AppendLine("textarea { margin: 0px; width: 1000px; height: 61px; vertical-align: top; }");
             _writer.AppendLine(".page { display: flex; min-width: 1245px; }");
             _writer.AppendLine($".rules > div {{ padding: 9px 0 0; height: 31px; width: {BLOCK_WIDTH}px; color: gray; background-color: #f1f1f1; margin: 1px; text-align: center; position: relative; }}");
             _writer.AppendLine(".line { min-width: 1024px; }");
@@ -418,7 +414,7 @@ namespace LiteDB.Demo
 
                 span -= (item.Span + 1);
 
-                this.RenderItem(item, span);
+                var renderText = this.RenderItem(item, span);
 
                 if (span <= 0)
                 {
@@ -426,7 +422,11 @@ namespace LiteDB.Demo
 
                     if (span < 0)
                     {
-                        this.RenderItem(new PageItem { Color = item.Color, Span = Math.Abs(span + 1), Text = "&nbsp;" }, 0);
+                        var overflow = new PageItem { Color = item.Color, Span = Math.Abs(span + 1), Text = "&nbsp;" };
+
+                        if (renderText == false) overflow.Text = item.Text;
+
+                        this.RenderItem(overflow, 0);
                     }
 
                     span = 32 + span;
@@ -439,8 +439,10 @@ namespace LiteDB.Demo
             _writer.AppendLine("</div>");
         }
 
-        private void RenderItem(PageItem item, int span)
+        private bool RenderItem(PageItem item, int span)
         {
+            var renderText = true;
+
             _writer.Append($"<a title='{item.Index}'");
 
             if (!string.IsNullOrEmpty(item.Href))
@@ -462,6 +464,11 @@ namespace LiteDB.Demo
             {
                 var s = item.Span + (span < 0 ? span : 0);
 
+                if (s < item.Span && Math.Abs(span) > s)
+                {
+                    renderText = false;
+                }
+
                 _writer.Append($" style='min-width: {BLOCK_WIDTH * (s + 1) + (s * 2)}px'");
             }
 
@@ -476,8 +483,10 @@ namespace LiteDB.Demo
             }
 
             _writer.Append(">");
-            _writer.Append(item.Text ?? item.Value.ToString());
+            _writer.Append(renderText ? (item.Text ?? item.Value.ToString()) : "&#8594;");
             _writer.Append("</a>");
+
+            return renderText;
         }
 
         private void RenderFooter()

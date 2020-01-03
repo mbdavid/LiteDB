@@ -20,11 +20,7 @@ namespace LiteDB.Engine
 
         public override uint GetCost(CollectionIndex index)
         {
-            // no analyzed index
-            if (index.KeyCount == 0) return uint.MaxValue;
-
-            // index full scan
-            return index.KeyCount;
+            return 80;
         }
 
         public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)

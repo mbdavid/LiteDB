@@ -156,8 +156,6 @@ namespace LiteDB.Demo
 
             // finalize database
             this.OnCleanUp(new Database("OnCleanUp", _db, _logger, watch, concurrent, 0));
-
-            this.Engine.CheckIntegrity(Console.Out);
         }
 
         /// <summary>

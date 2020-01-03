@@ -23,16 +23,6 @@ namespace LiteDB.Engine
         public uint[] FreeDataPageList { get; } = new uint[PAGE_FREE_LIST_SLOTS];
 
         /// <summary>
-        /// DateTime when collection was created
-        /// </summary>
-        public DateTime CreationTime { get; private set; }
-
-        /// <summary>
-        /// DateTime from last index counter
-        /// </summary>
-        public DateTime LastAnalyzed { get; set; }
-
-        /// <summary>
         /// All indexes references for this collection
         /// </summary>
         private readonly Dictionary<string, CollectionIndex> _indexes = new Dictionary<string, CollectionIndex>();
@@ -40,10 +30,6 @@ namespace LiteDB.Engine
         public CollectionPage(PageBuffer buffer, uint pageID)
             : base(buffer, pageID, PageType.Collection)
         {
-            // initialize page version
-            this.CreationTime = DateTime.Now;
-            this.LastAnalyzed = DateTime.MinValue;
-
             for(var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
             {
                 this.FreeDataPageList[i] = uint.MaxValue;
@@ -67,10 +53,6 @@ namespace LiteDB.Engine
                 {
                     this.FreeDataPageList[i] = r.ReadUInt32();
                 }
-
-                // read create/last analyzed (16 bytes)
-                this.CreationTime = r.ReadDateTime();
-                this.LastAnalyzed = r.ReadDateTime();
 
                 // skip reserved area
                 r.Skip(P_INDEXES - PAGE_HEADER_SIZE - r.Position);
@@ -101,10 +83,6 @@ namespace LiteDB.Engine
                 {
                     w.Write(this.FreeDataPageList[i]);
                 }
-
-                // write creation/last analyzed (16 bytes)
-                w.Write(this.CreationTime);
-                w.Write(this.LastAnalyzed);
 
                 // skip reserved area (indexes starts at position 96)
                 w.Skip(P_INDEXES - PAGE_HEADER_SIZE - w.Position);

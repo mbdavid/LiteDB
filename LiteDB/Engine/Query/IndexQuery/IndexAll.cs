@@ -17,11 +17,7 @@ namespace LiteDB.Engine
 
         public override uint GetCost(CollectionIndex index)
         {
-            // no analyzed index
-            if (index.KeyCount == 0) return uint.MaxValue;
-
-            // always worst cost - return all documents with no index use (just for order)
-            return index.KeyCount;
+            return 100; // worst index cost
         }
 
         public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)

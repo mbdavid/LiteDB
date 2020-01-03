@@ -281,14 +281,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Analyze indexes in collections to better index choose decision
-        /// </summary>
-        public int Analyze(params string[] collections)
-        {
-            return _engine.Value.Analyze(collections);
-        }
-
-        /// <summary>
         /// Rebuild all database to remove unused pages - reduce data file
         /// </summary>
         public long Shrink()

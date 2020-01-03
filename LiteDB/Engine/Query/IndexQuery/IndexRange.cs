@@ -28,11 +28,7 @@ namespace LiteDB.Engine
 
         public override uint GetCost(CollectionIndex index)
         {
-            // no analyzed index
-            if (index.KeyCount == 0) return uint.MaxValue;
-
-            // need some statistics here (histogram)... assuming read 20% of total
-            return (uint)(index.KeyCount * (0.2));
+            return 20;
         }
 
         public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)

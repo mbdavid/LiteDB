@@ -180,20 +180,6 @@ namespace LiteDB
 
         #region Write Operations
 
-        public int Analyze(string[] collections)
-        {
-            this.OpenDatabase();
-
-            try
-            {
-                return _engine.Analyze(collections);
-            }
-            finally
-            {
-                this.CloseDatabase();
-            }
-        }
-
         public void Checkpoint()
         {
             this.OpenDatabase();
