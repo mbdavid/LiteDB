@@ -29,7 +29,9 @@ namespace LiteDB.Engine
         {
             foreach (var value in _values.Distinct())
             {
-                foreach (var node in Index.EQ(this.Name, value).Execute(indexer, index))
+                var idx = new IndexEquals(this._values, value);
+
+                foreach (var node in idx.Execute(indexer, index))
                 {
                     yield return node;
                 }
