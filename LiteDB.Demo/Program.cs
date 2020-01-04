@@ -24,11 +24,15 @@ namespace LiteDB.Demo
             Console.Write("Enter test duration (minutes): ");
             var timer = Console.ReadLine();
 
-            using (var e = new ExampleStressTest(@"C:\Git\Temp\stress\example.db"))
+            using (var e = new ExampleStressTest(@"example.db"))
             {
-                e.Synced = true;
+                //e.Synced = true;
             
                 e.Run(TimeSpan.FromMinutes(string.IsNullOrEmpty(timer) ? .5 : Convert.ToDouble(timer)));
+
+
+
+
             }
 
             Console.WriteLine("End");

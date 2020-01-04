@@ -40,9 +40,9 @@ namespace LiteDB.Demo
                 File.Delete(GetSufixFile(settings.Filename, "-log", false));
                 File.Delete(GetSufixFile(settings.Filename, "-tmp", false));
 
-                _logger = new Logger(GetSufixFile(settings.Filename, "-eventLog", true));
+                //_logger = new Logger(GetSufixFile(settings.Filename, "-eventLog", true));
             }
-            else
+            //else
             {
                 _logger = null;
             }
@@ -64,10 +64,11 @@ namespace LiteDB.Demo
         public virtual void Run(TimeSpan timer)
         {
             var running = true;
-            var finish = DateTime.Now.Add(timer);
             var watch = new Stopwatch();
             var concurrent = new ConcurrentCounter();
             var exec = 0;
+            var paused = false;
+            var waiter = new ManualResetEventSlim();
 
             Console.WriteLine("Start running: " + this.GetType().Name);
 
@@ -95,7 +96,7 @@ namespace LiteDB.Demo
                         var count = 0;
 
                         // running loop
-                        while (running && DateTime.Now < finish)
+                        while (running && watch.Elapsed < timer)
                         {
                             var wait = count == 0 ? method.Item2.Start : method.Item2.Repeat;
                             var delay = wait + rnd.Next(0, method.Item2.Random);
@@ -104,6 +105,13 @@ namespace LiteDB.Demo
                             var sql = new Database(name, _db, _logger, watch, concurrent, index);
 
                             Task.Delay(delay).GetAwaiter().GetResult();
+
+                            if (paused)
+                            {
+                                Console.WriteLine("Pausing thread #" + Task.CurrentId);
+                                waiter.Wait();
+                                Console.WriteLine("Running thread #" + Task.CurrentId);
+                            }
 
                             try
                             {
@@ -139,15 +147,54 @@ namespace LiteDB.Demo
             // progress task
             tasks.Add(Task.Factory.StartNew(() =>
             {
-                while (running && DateTime.Now < finish)
+                while (running && watch.Elapsed < timer)
                 {
-                    Task.Delay(10000).GetAwaiter().GetResult();
-
                     Console.WriteLine(string.Format("{0:00}:{1:00}:{2:00}: {3}",
                         watch.Elapsed.Hours,
                         watch.Elapsed.Minutes,
                         watch.Elapsed.Seconds,
                         exec));
+
+                    Task.Delay(10000).GetAwaiter().GetResult();
+
+                    if (paused) waiter.Wait();
+                }
+            }));
+
+            // pause tasks
+            tasks.Add(Task.Factory.StartNew(() =>
+            {
+                while(running && watch.Elapsed < timer)
+                {
+                    var key = Console.ReadKey(true);
+
+                    if (key.Key == ConsoleKey.P)
+                    {
+                        if (paused == false)
+                        {
+                            Console.WriteLine(string.Format("{0:00}:{1:00}:{2:00}: {3}",
+                                watch.Elapsed.Hours,
+                                watch.Elapsed.Minutes,
+                                watch.Elapsed.Seconds,
+                                exec));
+
+                            Console.WriteLine("[Paused]");
+                            waiter.Reset();
+                            paused = true;
+                            watch.Stop();
+                        }
+                        else
+                        {
+                            Console.WriteLine("[Running]");
+                            paused = false;
+                            waiter.Set();
+                            watch.Start();
+                        }
+                    }
+                    else
+                    {
+                        running = false;
+                    }
                 }
             }));
 
