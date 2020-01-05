@@ -8,6 +8,7 @@ matrix:
     - os: linux
       dist: bionic
     - os: osx
+      dotnet: 3.1.100
 
 env:
   global:
