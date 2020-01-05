@@ -12,6 +12,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexService
     {
+        private static Random _rnd = new Random();
+
         private readonly Snapshot _snapshot;
 
         public IndexService(Snapshot snapshot)
@@ -54,7 +56,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Insert a new node index inside an collection index. Flip coin to know level
         /// </summary>
-        public IndexNode AddNode(CollectionIndex index, BsonValue key, PageAddress dataBlock, IndexNode last, FlipCoin flipCoin)
+        public IndexNode AddNode(CollectionIndex index, BsonValue key, PageAddress dataBlock, IndexNode last)
         {
             // do not accept Min/Max value as index key (only head/tail can have this value)
             if (key.IsMaxValue || key.IsMinValue)
@@ -63,7 +65,7 @@ namespace LiteDB.Engine
             }
 
             // random level (flip coin mode) - return number between 1-32
-            var level = flipCoin.Flip();
+            var level = this.Flip();
 
             // set index collection with max-index level
             if (level > index.MaxLevel)
@@ -150,6 +152,23 @@ namespace LiteDB.Engine
             _snapshot.AddOrRemoveFreeIndexList(node.Page, ref index.FreeIndexPageList);
 
             return node;
+        }
+
+
+        /// <summary>
+        /// Flip coin - skip list - returns level node (start in 1)
+        /// </summary>
+        public byte Flip()
+        {
+            byte level = 1;
+
+            for (int R = _rnd.Next(); (R & 1) == 1; R >>= 1)
+            {
+                level++;
+                if (level == MAX_LEVEL_LENGTH) break;
+            }
+
+            return level;
         }
 
         /// <summary>

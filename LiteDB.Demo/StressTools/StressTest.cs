@@ -29,7 +29,6 @@ namespace LiteDB.Demo
 
         public StressTest(EngineSettings settings, bool synced)
         {
-            settings.Seed = 0;
             settings.Timeout = TimeSpan.FromHours(1);
 
             if (settings.Filename != null)

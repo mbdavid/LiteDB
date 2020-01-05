@@ -33,8 +33,6 @@ namespace LiteDB.Engine
         // immutable settings
         private readonly EngineSettings _settings;
 
-        private readonly FlipCoin _flipCoin;
-
         private bool _disposed = false;
 
         #endregion
@@ -71,9 +69,6 @@ namespace LiteDB.Engine
 
             try
             {
-                // create new flip coin
-                _flipCoin = new FlipCoin(settings.Seed);
-
                 // initialize locker service (no dependency)
                 _locker = new LockService(settings.Timeout, settings.ReadOnly);
 
