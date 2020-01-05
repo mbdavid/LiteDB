@@ -22,23 +22,17 @@ namespace LiteDB.Demo
             Console.WriteLine("Stress Test");
             Console.WriteLine("===========");
             Console.Write("Enter test duration (minutes): ");
-            var timer = Console.ReadLine();
 
-            using (var e = new ExampleStressTest(@"example.db"))
+            var input = Console.ReadLine();
+            var timer = TimeSpan.FromMinutes(string.IsNullOrEmpty(input) ? 1 : Convert.ToDouble(input));
+
+            using (var test = new InsertStressTest(@"example.db"))
             {
-                //e.Synced = true;
-            
-                e.Run(TimeSpan.FromMinutes(string.IsNullOrEmpty(timer) ? .5 : Convert.ToDouble(timer)));
-
-
-
-
+                test.Run(timer);
             }
 
             Console.WriteLine("End");
             Console.ReadKey();
         }
     }
-
-
 }

@@ -17,19 +17,14 @@ namespace LiteDB.Demo
 {
     public class Logger : IDisposable
     {
-        private readonly LiteRepository _db;
-        private List<Log> _cache = new List<Log>();
+        private readonly string _filename;
+        private readonly List<LogItem> _cache = new List<LogItem>();
 
         public Logger(string filename)
         {
-            _db = new LiteRepository(new ConnectionString
-            {
-                Filename = filename,
-                Mode = ConnectionMode.Shared
-            });
         }
 
-        public void Insert(Log log)
+        public void Insert(LogItem log)
         {
             lock(_cache)
             {
@@ -47,15 +42,25 @@ namespace LiteDB.Demo
 
             Task.Factory.StartNew(() =>
             {
-                _db.Insert((IEnumerable<Log>)logs, "EventLog");
+                //_db.Insert((IEnumerable<Log>)logs, "EventLog");
             });
         }
 
         public void Dispose()
         {
             this.Flush();
-
-            _db.Dispose();
         }
+    }
+
+    public class LogItem
+    {
+        public DateTime Date { get; } = DateTime.Now;
+        public string Task { get; set; }
+        public int Index { get; set; }
+        public int? Thread { get; set; }
+        public double Elapsed { get; set; }
+        public int Concurrent { get; set; }
+        public string Command { get; set; }
+        public string Error { get; set; }
     }
 }

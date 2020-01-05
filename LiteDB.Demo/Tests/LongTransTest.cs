@@ -14,29 +14,24 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Demo
 {
-    public class InsertStressTest : StressTest
+    public class LongTransTest : StressTest
     {
-        public InsertStressTest(string filename, bool synced = false) : 
+        public LongTransTest(string filename, bool synced = false) : 
             base(new EngineSettings { Filename = filename }, synced)
         {
         }
 
         public override void OnInit(DbContext db)
         {
-            db.Execute("CREATE INDEX idx_name ON col1(UPPER($.name))");
+        }
+
+        [Task(Start = 0, Repeat = 2000, Random = 0, Threads = 3)]
+        public void Insert(DbContext db)
+        {
         }
 
         public override void OnCleanUp(DbContext db)
         {
-            var total = db.Query("SELECT COUNT(*) AS qtd FROM col1")[0]["qtd"].AsInt32;
-
-            Console.WriteLine("Total inserted: " + total);
-        }
-
-        [Task(Start = 0, Repeat = 0, Random = 0, Threads = 1)]
-        public void Insert(DbContext db)
-        {
-            db.Insert("col1", db.GetDocs(this.Timer));
         }
     }
 }

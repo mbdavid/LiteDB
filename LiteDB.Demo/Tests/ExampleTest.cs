@@ -16,8 +16,8 @@ namespace LiteDB.Demo
 {
     public class ExampleStressTest : StressTest
     {
-        public ExampleStressTest(string filename) : 
-            base(new EngineSettings { Filename = filename })
+        public ExampleStressTest(string filename, bool synced = false) : 
+            base(new EngineSettings { Filename = filename }, synced)
         {
         }
 
@@ -25,7 +25,7 @@ namespace LiteDB.Demo
         /// Use this method to initialize your stress test.
         /// You can drop existing collection, load initial data and run checkpoint before finish
         /// </summary>
-        public override void OnInit(Database db)
+        public override void OnInit(DbContext db)
         {
             db.Insert("col1", new BsonDocument 
             { 
@@ -33,25 +33,25 @@ namespace LiteDB.Demo
                 ["name"] = "John" 
             });
 
-            db.ExecuteScalar("insert into orders1 values {a:1}");
-            db.ExecuteScalar("insert into customers values {a:1}");
+            db.Execute("insert into orders1 values {a:1}");
+            db.Execute("insert into customers values {a:1}");
 
             // o ERRO ocorre quando:
             // 3 indices + update/delete exception 'Invalid IndexPage buffer on 589' (3:42)
 
-            db.ExecuteScalar("CREATE INDEX idx_name ON col1(upper(name))");
-            db.ExecuteScalar("CREATE INDEX idx_rnd ON col1(rnd)");
-            db.ExecuteScalar("CREATE INDEX idx_name2 ON col1(lower(name))");
-            db.ExecuteScalar("CREATE INDEX idx_rnd2 ON col1(rnd + 10)");
+            db.Execute("CREATE INDEX idx_name ON col1(upper(name))");
+            db.Execute("CREATE INDEX idx_rnd ON col1(rnd)");
+            db.Execute("CREATE INDEX idx_name2 ON col1(lower(name))");
+            db.Execute("CREATE INDEX idx_rnd2 ON col1(rnd + 10)");
         }
 
         [Task(Start = 0, Repeat = 10, Random = 10, Threads = 5)]
-        public void Insert(Database db)
+        public void Insert(DbContext db)
         {
             db.Insert("col1", new BsonDocument
             {
                 ["name"] = "John " + Guid.NewGuid(),
-                ["rnd"] = this.rnd.Next(0, 1000000),
+                ["rnd"] = this.Rnd.Next(0, 1000000),
                 ["r"] = "myvalue",
                 //["r"] = "-".PadLeft(rnd.Next(5000, 20000), '-'),
                 ["t"] = 0,
@@ -60,24 +60,24 @@ namespace LiteDB.Demo
         }
 
         [Task(Start = 2000, Repeat = 2000, Random = 1000, Threads = 2)]
-        public void Update_Active(Database db)
+        public void Update_Active(DbContext db)
         {
-            db.ExecuteScalar("UPDATE col1 SET active = true, rnd = 0, r = LPAD(r, RANDOM(5000, 20000), '-') WHERE active = false"); 
+            db.Execute("UPDATE col1 SET active = true, rnd = 0, r = LPAD(r, RANDOM(5000, 20000), '-') WHERE active = false"); 
         }
 
         [Task(Start = 5000, Repeat = 4000, Random = 500, Threads = 2)]
-        public void Delete_Active(Database db)
+        public void Delete_Active(DbContext db)
         {
-            db.ExecuteScalar("DELETE col1 WHERE active = true");
+            db.Execute("DELETE col1 WHERE active = true");
         }
 
         [Task(Start = 100, Repeat = 75, Random = 25, Threads = 1)]
-        public void QueryCount(Database db)
+        public void QueryCount(DbContext db)
         {
             db.Query("SELECT COUNT(*) FROM col1");
         }
 
-        public override void OnCleanUp(Database db)
+        public override void OnCleanUp(DbContext db)
         {
             //db.ExecuteScalar("CHECKPOINT");
         }

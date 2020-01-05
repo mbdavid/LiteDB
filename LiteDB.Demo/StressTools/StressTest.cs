@@ -19,17 +19,15 @@ namespace LiteDB.Demo
     public abstract class StressTest : IDisposable
     {
         // "fixed" random number order
-        protected readonly Random rnd = new Random(0);
-
-        public LiteEngine Engine { get; }
+        protected Random Rnd { get; } = new Random(0);
+        protected TimeSpan Timer { get; private set; }
 
         private readonly LiteDatabase _db;
-
         private readonly Logger _logger;
+        private readonly bool _synced = false;
+        private readonly DatabaseDebugger _debugger;
 
-        public bool Synced { get; set; } = false;
-
-        public StressTest(EngineSettings settings)
+        public StressTest(EngineSettings settings, bool synced)
         {
             settings.Seed = 0;
             settings.Timeout = TimeSpan.FromHours(1);
@@ -38,25 +36,20 @@ namespace LiteDB.Demo
             {
                 File.Delete(settings.Filename);
                 File.Delete(GetSufixFile(settings.Filename, "-log", false));
-                File.Delete(GetSufixFile(settings.Filename, "-tmp", false));
-
-                //_logger = new Logger(GetSufixFile(settings.Filename, "-eventLog", true));
-            }
-            //else
-            {
-                _logger = null;
             }
 
-            this.Engine = new LiteEngine(settings);
+            var engine = new LiteEngine(settings);
 
-            _db = new LiteDatabase(this.Engine);
+            _db = new LiteDatabase(engine);
 
-            new DatabaseDebugger(_db).Start(8001);
+            _debugger = new DatabaseDebugger(_db);
+
+            _debugger.Start(8001);
         }
 
-        public abstract void OnInit(Database db);
+        public abstract void OnInit(DbContext db);
 
-        public abstract void OnCleanUp(Database db);
+        public abstract void OnCleanUp(DbContext db);
 
         /// <summary>
         /// Run all methods
@@ -72,8 +65,10 @@ namespace LiteDB.Demo
 
             Console.WriteLine("Start running: " + this.GetType().Name);
 
+            this.Timer = timer;
+
             // initialize database
-            this.OnInit(new Database("OnInit", _db, _logger, watch, concurrent, 0));
+            this.OnInit(new DbContext("OnInit", 0, _db, _logger, watch, concurrent));
 
             var tasks = new List<Task>();
             var methods = this.GetType()
@@ -95,29 +90,25 @@ namespace LiteDB.Demo
                     {
                         var count = 0;
 
+                        var context = new DbContext(method.Item1.Name, index, _db, _logger, watch, concurrent);
+
                         // running loop
                         while (running && watch.Elapsed < timer)
                         {
                             var wait = count == 0 ? method.Item2.Start : method.Item2.Repeat;
-                            var delay = wait + rnd.Next(0, method.Item2.Random);
-                            var name = method.Item2.Threads == 1 ? method.Item1.Name : method.Item1.Name + "_" + index;
-
-                            var sql = new Database(name, _db, _logger, watch, concurrent, index);
+                            var delay = wait + this.Rnd.Next(0, method.Item2.Random);
 
                             Task.Delay(delay).GetAwaiter().GetResult();
 
-                            if (paused)
-                            {
-                                Console.WriteLine("Pausing thread #" + Task.CurrentId);
-                                waiter.Wait();
-                                Console.WriteLine("Running thread #" + Task.CurrentId);
-                            }
+                            if (running == false || watch.Elapsed > timer) break;
+
+                            if (paused) waiter.Wait();
 
                             try
                             {
-                                if (this.Synced) Monitor.Enter(_db);
+                                if (_synced) Monitor.Enter(_db);
 
-                                method.Item1.Invoke(this, new object[] { sql });
+                                method.Item1.Invoke(this, new object[] { context });
 
                                 exec++;
                             }
@@ -135,7 +126,7 @@ namespace LiteDB.Demo
                             }
                             finally
                             {
-                                if (this.Synced) Monitor.Exit(_db);
+                                if (_synced) Monitor.Exit(_db);
                             }
 
                             count++;
@@ -166,6 +157,10 @@ namespace LiteDB.Demo
             {
                 while(running && watch.Elapsed < timer)
                 {
+                    Task.Delay(250).GetAwaiter().GetResult();
+
+                    if (Console.KeyAvailable == false) continue;
+
                     var key = Console.ReadKey(true);
 
                     if (key.Key == ConsoleKey.P)
@@ -191,10 +186,6 @@ namespace LiteDB.Demo
                             watch.Start();
                         }
                     }
-                    else
-                    {
-                        running = false;
-                    }
                 }
             }));
 
@@ -202,7 +193,7 @@ namespace LiteDB.Demo
             Task.WaitAll(tasks.ToArray());
 
             // finalize database
-            this.OnCleanUp(new Database("OnCleanUp", _db, _logger, watch, concurrent, 0));
+            this.OnCleanUp(new DbContext("OnInit", 0, _db, _logger, watch, concurrent));
         }
 
         /// <summary>
@@ -228,6 +219,8 @@ namespace LiteDB.Demo
 
         public void Dispose()
         {
+            _debugger.Dispose();
+
             _db.Dispose();
         }
     }
