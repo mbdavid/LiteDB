@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -32,7 +33,9 @@ namespace LiteDB.Engine
         private const int P_LAST_PAGE_ID = 64; // 64-67 (4 bytes)
         private const int P_CREATION_TIME = 68; // 68-75 (8 bytes)
         private const int P_USER_VERSION = 76; // 76-79 (4 bytes)
-        // reserved 80-127 (48 bytes)
+        private const int P_LCID = 80; // 80-83 (4 bytes)
+        private const int P_COMPARE_OPTIONS = 84; // 84-87 (4bytes)
+        // reserved 88-127 (40 bytes)
         private const int P_COLLECTIONS = 128; // 128-8159 (8064 bytes)
 
         private const int COLLECTIONS_SIZE = 8064; // 252 blocks with 32 bytes each
@@ -52,12 +55,17 @@ namespace LiteDB.Engine
         /// <summary>
         /// DateTime when database was created [8 bytes]
         /// </summary>
-        public DateTime CreationTime { get; private set; }
+        public DateTime CreationTime { get; }
 
         /// <summary>	
         /// UserVersion int - for user get/set database version changes	
         /// </summary>	
         public int UserVersion { get; set; }
+
+        /// <summary>
+        /// Get database collation
+        /// </summary>
+        public Collation Collation { get; }
 
         /// <summary>
         /// All collections names/link pointers are stored inside this document
@@ -72,11 +80,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new Header Page
         /// </summary>
-        public HeaderPage(PageBuffer buffer, uint pageID)
-            : base(buffer, pageID, PageType.Header)
+        public HeaderPage(PageBuffer buffer, Collation collation)
+            : base(buffer, 0, PageType.Header)
         {
             // initialize page version
             this.CreationTime = DateTime.UtcNow;
+            this.Collation = collation;
             this.FreeEmptyPageList = uint.MaxValue;
             this.LastPageID = 0;
             this.UserVersion = 0;
@@ -85,6 +94,8 @@ namespace LiteDB.Engine
             _buffer.Write(HEADER_INFO, P_HEADER_INFO);
             _buffer.Write(FILE_VERSION, P_FILE_VERSION);
             _buffer.Write(this.CreationTime, P_CREATION_TIME);
+            _buffer.Write(this.Collation.LCID, P_LCID);
+            _buffer.Write((int)this.Collation.CompareOptions, P_COMPARE_OPTIONS);
 
             // initialize collections
             _collections = new BsonDocument();
@@ -96,6 +107,9 @@ namespace LiteDB.Engine
         public HeaderPage(PageBuffer buffer)
             : base(buffer)
         {
+            this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
+            this.Collation = new Collation(_buffer.ReadInt32(P_LCID), (CompareOptions)_buffer.ReadInt32(P_COMPARE_OPTIONS));
+
             this.LoadPage();
         }
 
@@ -114,7 +128,6 @@ namespace LiteDB.Engine
             }
 
             // CreateTime is readonly
-            this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
             this.FreeEmptyPageList = _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
             this.LastPageID = _buffer.ReadUInt32(P_LAST_PAGE_ID);
             this.UserVersion = _buffer.ReadInt32(P_USER_VERSION);

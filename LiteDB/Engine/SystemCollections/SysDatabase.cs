@@ -31,6 +31,9 @@ namespace LiteDB.Engine
             doc["lastTransactionID"] = _walIndex.LastTransactionID;
 
             doc["userVersion"] = _header.UserVersion;
+            doc["lcid"] = _header.Collation.LCID;
+            doc["culture"] = _header.Collation.Culture.Name;
+            doc["sort"] = _header.Collation.CompareOptions.ToString();
 
             doc["cache"] = new BsonDocument
             {

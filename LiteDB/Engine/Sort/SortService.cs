@@ -26,7 +26,7 @@ namespace LiteDB.Engine
         private readonly Done _done = new Done { Running = true };
 
         private readonly int _order;
-
+        private readonly Collation _collation;
         private readonly BufferSlice _buffer;
         private readonly Lazy<Stream> _reader;
 
@@ -40,11 +40,11 @@ namespace LiteDB.Engine
         /// </summary>
         public IReadOnlyCollection<SortContainer> Containers => _containers;
 
-        public SortService(SortDisk disk, int order)
+        public SortService(SortDisk disk, int order, Collation collation)
         {
             _disk = disk;
             _order = order;
-
+            _collation = collation;
             _containerSize = disk.ContainerSize;
 
             _reader = new Lazy<Stream>(() => _disk.GetReader());
@@ -86,7 +86,7 @@ namespace LiteDB.Engine
             // slit all items in sorted containers
             foreach (var containerItems in this.SliptValues(items, _done))
             {
-                var container = new SortContainer(_containerSize);
+                var container = new SortContainer(_collation, _containerSize);
 
                 // insert segmented items inside a container - reuse same buffer slice
                 container.Insert(containerItems, _order, _buffer);
@@ -138,7 +138,7 @@ namespace LiteDB.Engine
                 {
                     foreach (var container in _containers.Where(x => !x.IsEOF))
                     {
-                        var diff = container.Current.Key.CompareTo(current.Current.Key);
+                        var diff = container.Current.Key.CompareTo(current.Current.Key, _collation);
 
                         if (diff == diffOrder)
                         {

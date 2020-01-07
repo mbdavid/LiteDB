@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB.Engine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -159,7 +160,9 @@ namespace LiteDB
         {
             if (left.IsString && right.IsString)
             {
-                return left.AsString.SqlLike(right.AsString);
+                throw new NotImplementedException();
+
+                //return left.AsString.SqlLike(right.AsString);
             }
             else
             {

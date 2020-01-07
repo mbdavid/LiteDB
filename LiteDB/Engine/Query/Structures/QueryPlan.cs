@@ -97,25 +97,25 @@ namespace LiteDB.Engine
         /// <summary>
         /// Select corrent pipe
         /// </summary>
-        public BasePipe GetPipe(TransactionService transaction, Snapshot snapshot, SortDisk tempDisk, bool utcDate)
+        public BasePipe GetPipe(TransactionService transaction, Snapshot snapshot, SortDisk tempDisk, Collation collation, bool utcDate)
         {
             if (this.GroupBy == null)
             {
-                return new QueryPipe(transaction, this.GetLookup(snapshot, utcDate), tempDisk, utcDate);
+                return new QueryPipe(transaction, this.GetLookup(snapshot, collation, utcDate), tempDisk, collation, utcDate);
             }
             else
             {
-                return new GroupByPipe(transaction, this.GetLookup(snapshot, utcDate), tempDisk, utcDate);
+                return new GroupByPipe(transaction, this.GetLookup(snapshot, collation, utcDate), tempDisk, collation, utcDate);
             }
         }
 
         /// <summary>
         /// Get corrent IDocumentLookup
         /// </summary>
-        public IDocumentLookup GetLookup(Snapshot snapshot, bool utcDate)
+        public IDocumentLookup GetLookup(Snapshot snapshot, Collation collation, bool utcDate)
         {
             var data = new DataService(snapshot);
-            var indexer = new IndexService(snapshot);
+            var indexer = new IndexService(snapshot, collation);
 
             // define document loader
             // if index are VirtualIndex - it's also lookup document

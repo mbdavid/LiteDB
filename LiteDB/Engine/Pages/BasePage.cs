@@ -744,7 +744,6 @@ namespace LiteDB.Engine
         public static T CreatePage<T>(PageBuffer buffer, uint pageID)
             where T : BasePage
         {
-            if (typeof(T) == typeof(HeaderPage)) return (T)(object)new HeaderPage(buffer, pageID);
             if (typeof(T) == typeof(CollectionPage)) return (T)(object)new CollectionPage(buffer, pageID);
             if (typeof(T) == typeof(IndexPage)) return (T)(object)new IndexPage(buffer, pageID);
             if (typeof(T) == typeof(DataPage)) return (T)(object)new DataPage(buffer, pageID);

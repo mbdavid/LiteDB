@@ -15,11 +15,15 @@ namespace LiteDB.Engine
         private static Random _rnd = new Random();
 
         private readonly Snapshot _snapshot;
+        private readonly Collation _collation;
 
-        public IndexService(Snapshot snapshot)
+        public IndexService(Snapshot snapshot, Collation collation)
         {
             _snapshot = snapshot;
+            _collation = collation;
         }
+
+        public Collation Collation => _collation;
 
         /// <summary>
         /// Create a new index and returns head page address (skip list)
@@ -113,7 +117,7 @@ namespace LiteDB.Engine
                     cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
 
                     // read next node to compare
-                    var diff = cache.Key.CompareTo(key);
+                    var diff = cache.Key.CompareTo(key, _collation);
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
                     if (diff == 0 && index.Unique) throw LiteException.IndexDuplicateKey(index.Name, key);
@@ -344,7 +348,7 @@ namespace LiteDB.Engine
                 for (; cur.GetNextPrev((byte)i, order).IsEmpty == false; cur = this.GetNode(cur.GetNextPrev((byte)i, order)))
                 {
                     var next = this.GetNode(cur.GetNextPrev((byte)i, order));
-                    var diff = next.Key.CompareTo(value);
+                    var diff = next.Key.CompareTo(value, _collation);
 
                     if (diff == order && (i > 0 || !sibling)) break;
                     if (diff == order && i == 0 && sibling)

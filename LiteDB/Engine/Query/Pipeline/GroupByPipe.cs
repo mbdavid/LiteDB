@@ -10,8 +10,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class GroupByPipe : BasePipe
     {
-        public GroupByPipe(TransactionService transaction, IDocumentLookup loader, SortDisk tempDisk, bool utcDate)
-            : base(transaction, loader, tempDisk, utcDate)
+        public GroupByPipe(TransactionService transaction, IDocumentLookup loader, SortDisk tempDisk, Collation collation, bool utcDate)
+            : base(transaction, loader, tempDisk, collation, utcDate)
         {
         }
 

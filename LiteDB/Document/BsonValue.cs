@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB.Engine;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -445,6 +446,11 @@ namespace LiteDB
 
         public virtual int CompareTo(BsonValue other)
         {
+            return this.CompareTo(other, Collation.Binary);
+        }
+
+        public virtual int CompareTo(BsonValue other, Collation collation)
+        {
             // first, test if types are different
             if (this.Type != other.Type)
             {
@@ -474,9 +480,7 @@ namespace LiteDB
                 case BsonType.Double: return this.AsDouble.CompareTo(other.AsDouble);
                 case BsonType.Decimal: return this.AsDecimal.CompareTo(other.AsDecimal);
 
-                case BsonType.String: return string.Compare(this.AsString, other.AsString);
-                    //var d = string.CompareOrdinal(this.AsString, other.AsString);
-                    //return d < 0 ? -1 : d > 0 ? +1 : 0;
+                case BsonType.String: return collation.Compare(this.AsString, other.AsString);
 
                 case BsonType.Document: return this.AsDocument.CompareTo(other);
                 case BsonType.Array: return this.AsArray.CompareTo(other);

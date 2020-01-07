@@ -21,7 +21,7 @@ namespace LiteDB.Internals
                 .ToArray();
 
             using (var tempDisk = new SortDisk(_factory, 10 * 8192, false))
-            using (var s = new SortService(tempDisk, Query.Ascending))
+            using (var s = new SortService(tempDisk, Query.Ascending, Collation.Binary))
             {
                 s.Insert(source);
 
@@ -47,7 +47,7 @@ namespace LiteDB.Internals
 
 
             using (var tempDisk = new SortDisk(_factory, 10 * 8192, false))
-            using (var s = new SortService(tempDisk, Query.Descending))
+            using (var s = new SortService(tempDisk, Query.Descending, Collation.Binary))
             {
                 s.Insert(source);
 

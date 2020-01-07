@@ -62,7 +62,7 @@ namespace LiteDB.Engine
                 {
                     // must still testing SqlLike method for rest of pattern - only if exists more to test (avoid slow SqlLike test)
                     if ((_testSqlLike == false) ||
-                        (_testSqlLike == true && valueString.SqlLike(_pattern) == true))
+                        (_testSqlLike == true && valueString.SqlLike(_pattern, indexer.Collation) == true))
                     {
                         yield return node;
                     }
@@ -95,7 +95,7 @@ namespace LiteDB.Engine
                     // must still testing SqlLike method for rest of pattern - only if exists more to test (avoid slow SqlLike test)
                     if (node.DataBlock.IsEmpty == false &&
                         ((_testSqlLike == false) ||
-                        (_testSqlLike == true && valueString.SqlLike(_pattern) == true)))
+                        (_testSqlLike == true && valueString.SqlLike(_pattern, indexer.Collation) == true)))
                     {
                         yield return node;
                     }
@@ -114,7 +114,7 @@ namespace LiteDB.Engine
         {
             return indexer
                 .FindAll(index, this.Order)
-                .Where(x => x.Key.IsString && x.Key.AsString.SqlLike(_pattern));
+                .Where(x => x.Key.IsString && x.Key.AsString.SqlLike(_pattern, indexer.Collation));
         }
 
         public override string ToString()

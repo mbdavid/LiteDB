@@ -13,17 +13,19 @@ namespace LiteDB.Engine
         private readonly LiteEngine _engine;
         private readonly TransactionMonitor _monitor;
         private readonly SortDisk _sortDisk;
+        private readonly Collation _collation;
         private readonly CursorInfo _cursor;
         private readonly bool _utcDate;
         private readonly string _collection;
         private readonly Query _query;
         private readonly IEnumerable<BsonDocument> _source;
 
-        public QueryExecutor(LiteEngine engine, TransactionMonitor monitor, SortDisk sortDisk, bool utcDate, string collection, Query query, IEnumerable<BsonDocument> source)
+        public QueryExecutor(LiteEngine engine, TransactionMonitor monitor, SortDisk sortDisk, Collation collation, bool utcDate, string collection, Query query, IEnumerable<BsonDocument> source)
         {
             _engine = engine;
             _monitor = monitor;
             _sortDisk = sortDisk;
+            _collation = collation;
             _utcDate = utcDate;
             _collection = collection;
             _query = query;
@@ -113,10 +115,10 @@ namespace LiteDB.Engine
                 }
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
-                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot));
+                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot, _collation));
 
                 // get current query pipe: normal or groupby pipe
-                using (var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _utcDate))
+                using (var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _collation, _utcDate))
                 {
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>

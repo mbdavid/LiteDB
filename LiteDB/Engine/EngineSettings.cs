@@ -85,6 +85,11 @@ namespace LiteDB.Engine
         public int MaxTransactionSize { get; set; } = MAX_TRANSACTION_SIZE;
 
         /// <summary>
+        /// Define collation for this database. Value will persisted in disk at first write database. After this, there is no change of collation
+        /// </summary>
+        public Collation Collation { get; set; } = Collation.Default;
+
+        /// <summary>
         /// Create new IStreamFactory for datafile
         /// </summary>
         internal IStreamFactory CreateDataFactory()

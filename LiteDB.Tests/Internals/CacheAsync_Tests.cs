@@ -36,7 +36,7 @@ namespace LiteDB.Internals
                 wa.Wait();
 
                 // test starts here!!!
-                var p0 = new HeaderPage(r.NewPage(), 0);
+                var p0 = new HeaderPage(r.NewPage(), Collation.Default);
 
                 disk.WriteAsync(new PageBuffer[] {p0.UpdateBuffer()});
 
