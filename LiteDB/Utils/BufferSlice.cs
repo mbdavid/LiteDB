@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using static LiteDB.Constants;
 
-namespace LiteDB.Engine
+namespace LiteDB
 {
     /// <summary>
     /// Internal class that implement same idea from ArraySegment[byte] but use a class (not a struct). Works for byte[] only

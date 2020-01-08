@@ -23,7 +23,7 @@ namespace LiteDB.Demo
         protected TimeSpan Timer { get; private set; }
 
         private readonly LiteDatabase _db;
-        private readonly Logger _logger;
+        private readonly Logger _logger = null;
         private readonly bool _synced = false;
         private readonly DatabaseDebugger _debugger;
 

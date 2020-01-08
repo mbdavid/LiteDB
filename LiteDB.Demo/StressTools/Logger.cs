@@ -22,6 +22,7 @@ namespace LiteDB.Demo
 
         public Logger(string filename)
         {
+            _filename = filename;
         }
 
         public void Insert(LogItem log)

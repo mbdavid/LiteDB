@@ -6,7 +6,7 @@ using System.Globalization;
 using System.IO;
 using static LiteDB.Constants;
 
-namespace LiteDB.Engine
+namespace LiteDB
 {
     /// <summary>
     /// Implement how database will compare to order by/find strings according defined culture/compare options
