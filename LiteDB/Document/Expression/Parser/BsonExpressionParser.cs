@@ -907,14 +907,15 @@ namespace LiteDB
             // method call arguments
             var args = new List<Expression>();
 
-            // getting linq expression from BsonExpression for all parameters
-            foreach (var item in method.GetParameters().Zip(pars, (parameter, expr) => new { parameter, expr }))
+            if (method.GetParameters().FirstOrDefault()?.ParameterType == typeof(Collation))
             {
-                if (item.parameter.ParameterType == typeof(Collation))
-                {
-                    args.Add(context.Collation);
-                }
-                else if (item.parameter.ParameterType.IsEnumerable() == false && item.expr.IsScalar == false)
+                args.Add(context.Collation);
+            }
+
+            // getting linq expression from BsonExpression for all parameters
+            foreach (var item in method.GetParameters().Where(x => x.ParameterType != typeof(Collation)).Zip(pars, (parameter, expr) => new { parameter, expr }))
+            {
+                if (item.parameter.ParameterType.IsEnumerable() == false && item.expr.IsScalar == false)
                 {
                     // convert enumerable expresion into scalar expression
                     args.Add(ConvertToArray(item.expr).Expression); 
@@ -1119,7 +1120,7 @@ namespace LiteDB
 
                 src.Append("]");
 
-                return Expression.Call(method, expr, Expression.Constant(index), Expression.Constant(inner), context.Root, context.Parameters);
+                return Expression.Call(method, expr, Expression.Constant(index), Expression.Constant(inner), context.Root, context.Collation, context.Parameters);
             }
 
             return null;

@@ -160,9 +160,7 @@ namespace LiteDB
         {
             if (left.IsString && right.IsString)
             {
-                throw new NotImplementedException();
-
-                //return left.AsString.SqlLike(right.AsString);
+                return left.AsString.SqlLike(right.AsString, collation);
             }
             else
             {
@@ -188,7 +186,7 @@ namespace LiteDB
             var end = arr[1];
 
             //return left >= start && right <= end;
-            return collation.Compare(left, start) >= 0 && collation.Compare(right, end) <= 0;
+            return collation.Compare(left, start) >= 0 && collation.Compare(left, end) <= 0;
         }
 
         public static BsonValue BETWEEN_ANY(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => BETWEEN(collation, x, right));
