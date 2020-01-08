@@ -71,7 +71,7 @@ namespace LiteDB.Engine
                     predicate.Left.Source == "$._id" && 
                     predicate.Right.IsValue)
                 {
-                    var id = predicate.Right.Execute().First();
+                    var id = predicate.Right.Execute(_header.Collation).First();
 
                     return this.Delete(collection, new BsonValue[] { id });
                 }

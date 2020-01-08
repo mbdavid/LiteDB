@@ -12,7 +12,7 @@ namespace LiteDB
     /// Implement how database will compare to order by/find strings according defined culture/compare options
     /// If not set, default is CurrentCulture with IgnoreCase
     /// </summary>
-    public class Collation : IComparer<BsonValue>, IComparer<string>
+    public class Collation : IComparer<BsonValue>, IComparer<string>, IEqualityComparer<BsonValue>
     {
         private readonly CompareInfo _compareInfo;
 
@@ -75,6 +75,16 @@ namespace LiteDB
         public int Compare(BsonValue left, BsonValue rigth)
         {
             return left.CompareTo(rigth, this);
+        }
+
+        public bool Equals(BsonValue x, BsonValue y)
+        {
+            return this.Compare(x, y) == 0;
+        }
+
+        public int GetHashCode(BsonValue obj)
+        {
+            return obj.GetHashCode();
         }
     }
 }

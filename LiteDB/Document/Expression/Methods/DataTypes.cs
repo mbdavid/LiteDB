@@ -103,7 +103,7 @@ namespace LiteDB
         /// <summary>
         /// Convert values into DOUBLE. Returns empty if not possible to convert
         /// </summary>
-        public static BsonValue DOUBLE(BsonValue value)
+        public static BsonValue DOUBLE(Collation collation, BsonValue value)
         {
             if (value.IsNumber)
             {
@@ -111,7 +111,7 @@ namespace LiteDB
             }
             else if(value.IsString)
             {
-                if (Double.TryParse(value.AsString, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var val))
+                if (Double.TryParse(value.AsString, NumberStyles.Any, collation.Culture.NumberFormat, out var val))
                 {
                     return val;
                 }
@@ -149,7 +149,7 @@ namespace LiteDB
         /// <summary>
         /// Convert values into DECIMAL. Returns empty if not possible to convert
         /// </summary>
-        public static BsonValue DECIMAL(BsonValue value)
+        public static BsonValue DECIMAL(Collation collation, BsonValue value)
         {
             if (value.IsNumber)
             {
@@ -157,7 +157,7 @@ namespace LiteDB
             }
             else if(value.IsString)
             {
-                if (Decimal.TryParse(value.AsString, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var val))
+                if (Decimal.TryParse(value.AsString, NumberStyles.Any, collation.Culture.NumberFormat, out var val))
                 {
                     return val;
                 }
@@ -332,7 +332,7 @@ namespace LiteDB
         /// <summary>
         /// Convert values into DATETIME. Returns empty if not possible to convert
         /// </summary>
-        public static BsonValue DATETIME(BsonValue value)
+        public static BsonValue DATETIME(Collation collation, BsonValue value)
         {
             if (value.IsDateTime)
             {
@@ -340,7 +340,7 @@ namespace LiteDB
             }
             else if(value.IsString)
             {
-                if (DateTime.TryParse(value.AsString, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.None, out var val))
+                if (DateTime.TryParse(value.AsString, collation.Culture.DateTimeFormat, DateTimeStyles.None, out var val))
                 {
                     return val;
                 }
@@ -378,7 +378,7 @@ namespace LiteDB
         /// <summary>
         /// Convert values into DATETIME. Returns empty if not possible to convert
         /// </summary>
-        public static BsonValue DATETIME_UTC(BsonValue value)
+        public static BsonValue DATETIME_UTC(Collation collation, BsonValue value)
         {
             if (value.IsDateTime)
             {
@@ -386,7 +386,7 @@ namespace LiteDB
             }
             else if(value.IsString)
             {
-                if (DateTime.TryParse(value.AsString, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.AssumeUniversal, out var val))
+                if (DateTime.TryParse(value.AsString, collation.Culture.DateTimeFormat, DateTimeStyles.AssumeUniversal, out var val))
                 {
                     return val;
                 }
@@ -553,9 +553,9 @@ namespace LiteDB
         /// <summary>
         /// Alias to DATETIME(values) and DATETIME_UTC(values)
         /// </summary>
-        public static BsonValue DATE(BsonValue value) => DATETIME(value);
+        public static BsonValue DATE(Collation collation, BsonValue value) => DATETIME(collation, value);
         public static BsonValue DATE(BsonValue values, BsonValue culture) => DATETIME(values, culture);
-        public static BsonValue DATE_UTC(BsonValue value) => DATETIME_UTC(value);
+        public static BsonValue DATE_UTC(Collation collation, BsonValue value) => DATETIME_UTC(collation, value);
         public static BsonValue DATE_UTC(BsonValue values, BsonValue culture) => DATETIME_UTC(values, culture);
 
         public static BsonValue DATE(BsonValue year, BsonValue month, BsonValue day) => DATETIME(year, month, day);

@@ -167,6 +167,17 @@ namespace LiteDB
                     if (!isLeftEnum && !right.IsScalar) throw new LiteException(0, $"Left expression `{right.Source}` must return a single value");
                     if (right.IsScalar == false) throw new LiteException(0, $"Right expression `{right.Source}` must return a single value");
 
+                    // method call parameters
+                    var args = new List<Expression>();
+
+                    if (method.GetParameters().FirstOrDefault()?.ParameterType == typeof(Collation))
+                    {
+                        args.Add(context.Collation);
+                    }
+
+                    args.Add(left.Expression);
+                    args.Add(right.Expression);
+
                     // process result in a single value
                     var result = new BsonExpression
                     {
@@ -175,7 +186,7 @@ namespace LiteDB
                         UseSource = left.UseSource || right.UseSource,
                         IsScalar = true,
                         Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
-                        Expression = Expression.Call(method, left.Expression, right.Expression),
+                        Expression = Expression.Call(method, args.ToArray()),
                         Left = left,
                         Right = right,
                         Source = left.Source + src + right.Source
@@ -696,7 +707,7 @@ namespace LiteDB
                     UseSource = true,
                     IsScalar = false,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(sourceExpr.Fields).AddRange(pathExpr.Fields),
-                    Expression = Expression.Call(_mapMethod, sourceExpr.Expression, Expression.Constant(pathExpr), context.Root, context.Parameters),
+                    Expression = Expression.Call(_mapMethod, sourceExpr.Expression, Expression.Constant(pathExpr), context.Root, context.Collation, context.Parameters),
                     Source = "MAP(*=>" + pathExpr.Source + ")"
                 };
             }
@@ -893,24 +904,29 @@ namespace LiteDB
                 isImmutable = false;
             }
 
-            var paramExpr = new List<Expression>();
+            // method call arguments
+            var args = new List<Expression>();
 
             // getting linq expression from BsonExpression for all parameters
             foreach (var item in method.GetParameters().Zip(pars, (parameter, expr) => new { parameter, expr }))
             {
-                if (item.parameter.ParameterType.IsEnumerable() == false && item.expr.IsScalar == false)
+                if (item.parameter.ParameterType == typeof(Collation))
+                {
+                    args.Add(context.Collation);
+                }
+                else if (item.parameter.ParameterType.IsEnumerable() == false && item.expr.IsScalar == false)
                 {
                     // convert enumerable expresion into scalar expression
-                    paramExpr.Add(ConvertToArray(item.expr).Expression); 
+                    args.Add(ConvertToArray(item.expr).Expression); 
                 }
                 else if (item.parameter.ParameterType.IsEnumerable() && item.expr.IsScalar)
                 {
                     // convert scalar expression into enumerable expression
-                    paramExpr.Add(ConvertToEnumerable(item.expr).Expression);
+                    args.Add(ConvertToEnumerable(item.expr).Expression);
                 }
                 else
                 {
-                    paramExpr.Add(item.expr.Expression);
+                    args.Add(item.expr.Expression);
                 }
             }
 
@@ -921,7 +937,7 @@ namespace LiteDB
                 UseSource = useSource,
                 IsScalar = method.ReturnType.IsEnumerable() == false,
                 Fields = fields,
-                Expression = Expression.Call(method, paramExpr.ToArray()),
+                Expression = Expression.Call(method, args.ToArray()),
                 Source = src.ToString()
             };
         }
@@ -1012,7 +1028,7 @@ namespace LiteDB
                     UseSource = pathExpr.UseSource || mapExpr.UseSource,
                     IsScalar = false,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(pathExpr.Fields).AddRange(mapExpr.Fields),
-                    Expression = Expression.Call(_mapMethod, pathExpr.Expression, Expression.Constant(mapExpr), context.Root, context.Parameters),
+                    Expression = Expression.Call(_mapMethod, pathExpr.Expression, Expression.Constant(mapExpr), context.Root, context.Collation, context.Parameters),
                     Source = "(" + pathExpr.Source + "=>" + mapExpr.Source + ")"
                 };
             }
@@ -1126,6 +1142,10 @@ namespace LiteDB
             return null;
         }
 
+        /// <summary>
+        /// Parse expression functions, like MAP, FILTER or SORT.
+        /// MAP(items[*] => @.Name)
+        /// </summary>
         private static BsonExpression ParseFunction(MethodInfo method, BsonExpressionType type, Tokenizer tokenizer, ExpressionContext context, bool isRoot)
         {
             // check if next token are ( otherwise returns null (is not a function)
@@ -1161,10 +1181,11 @@ namespace LiteDB
                 UseSource = left.UseSource || right.UseSource,
                 IsScalar = false,
                 Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
-                Expression = Expression.Call(method, left.Expression, Expression.Constant(right), context.Root, context.Parameters),
+                Expression = Expression.Call(method, left.Expression, Expression.Constant(right), context.Root, context.Collation, context.Parameters),
                 Source = method.Name + "(" + left.Source + "=>" + right.Source + ")"
             };
         }
+
         /// <summary>
         /// Create an array expression with 2 values (used only in BETWEEN statement)
         /// </summary>

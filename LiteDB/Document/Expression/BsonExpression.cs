@@ -145,7 +145,7 @@ namespace LiteDB
         /// <summary>
         /// Execute expression with an empty document (used only for resolve math/functions).
         /// </summary>
-        public IEnumerable<BsonValue> Execute(Collation collation)
+        public IEnumerable<BsonValue> Execute(Collation collation = null)
         {
             var root = new BsonDocument();
             var source = new BsonDocument[] { root };
@@ -184,13 +184,13 @@ namespace LiteDB
         {
             if (this.IsScalar)
             {
-                var value = _funcScalar(source, root, current, collation, this.Parameters);
+                var value = _funcScalar(source, root, current, collation ?? Collation.Binary, this.Parameters);
 
                 yield return value;
             }
             else
             {
-                var values = _func(source, root, current, collation, this.Parameters);
+                var values = _func(source, root, current, collation ?? Collation.Binary, this.Parameters);
 
                 foreach (var value in values)
                 {
@@ -206,12 +206,12 @@ namespace LiteDB
         /// <summary>
         /// Execute scalar expression with an blank document and empty source (used only for resolve math/functions).
         /// </summary>
-        public BsonValue ExecuteScalar()
+        public BsonValue ExecuteScalar(Collation collation = null)
         {
             var root = new BsonDocument();
             var source = new BsonDocument[] { };
 
-            return this.ExecuteScalar(source, root, root);
+            return this.ExecuteScalar(source, root, root, collation);
         }
 
         /// <summary>
@@ -233,7 +233,7 @@ namespace LiteDB
         {
             if (this.IsScalar)
             {
-                return _funcScalar(source, root, current, collation, this.Parameters);
+                return _funcScalar(source, root, current, collation ?? Collation.Binary, this.Parameters);
             }
             else
             {

@@ -81,7 +81,7 @@ namespace LiteDB.Engine
                     // if query use Source (*) need runs with empty data source
                     if (_query.Select.UseSource)
                     {
-                        yield return _query.Select.ExecuteScalar().AsDocument;
+                        yield return _query.Select.ExecuteScalar(_collation).AsDocument;
                     }
 
                     transaction.OpenCursors.Remove(_cursor);
@@ -95,7 +95,7 @@ namespace LiteDB.Engine
                 }
 
                 // execute optimization before run query (will fill missing _query properties instance)
-                var optimizer = new QueryOptimization(snapshot, _query, _source);
+                var optimizer = new QueryOptimization(snapshot, _query, _source, _collation);
 
                 var queryPlan = optimizer.ProcessQuery();
 

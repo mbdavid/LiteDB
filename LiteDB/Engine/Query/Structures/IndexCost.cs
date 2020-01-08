@@ -28,7 +28,7 @@ namespace LiteDB.Engine
         /// </summary>
         public Index Index { get; }
 
-        public IndexCost(CollectionIndex index, BsonExpression expr, BsonExpression value)
+        public IndexCost(CollectionIndex index, BsonExpression expr, BsonExpression value, Collation collation)
         {
             // copy root expression parameters to my value expression
             expr.Parameters.CopyTo(value.Parameters);
@@ -37,7 +37,7 @@ namespace LiteDB.Engine
             this.Expression = expr;
 
             // create index instance
-            this.Index = value.Execute().Select(x => this.CreateIndex(expr.Type, index.Name, x)).FirstOrDefault();
+            this.Index = value.Execute(collation).Select(x => this.CreateIndex(expr.Type, index.Name, x)).FirstOrDefault();
 
             ENSURE(this.Index != null, "index must be not null");
 

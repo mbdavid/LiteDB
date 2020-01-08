@@ -59,7 +59,7 @@ namespace LiteDB.Engine
 
             foreach (var doc in source)
             {
-                foreach (var value in path.Execute(doc)
+                foreach (var value in path.Execute(doc, _collation)
                                         .Where(x => x.IsDocument || x.IsArray)
                                         .ToList())
                 {
@@ -141,7 +141,7 @@ namespace LiteDB.Engine
             foreach(var doc in source)
             {
                 // checks if any result of expression is true
-                var result = expr.ExecuteScalar(doc);
+                var result = expr.ExecuteScalar(doc, _collation);
 
                 if(result.IsBoolean && result.AsBoolean)
                 {
@@ -156,7 +156,7 @@ namespace LiteDB.Engine
         protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
         {
             var keyValues = source
-                .Select(x => new KeyValuePair<BsonValue, PageAddress>(expr.ExecuteScalar(x), x.RawId));
+                .Select(x => new KeyValuePair<BsonValue, PageAddress>(expr.ExecuteScalar(x, _collation), x.RawId));
 
             using (var sorter = new SortService(_tempDisk, order, _collation))
             {
