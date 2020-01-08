@@ -9,8 +9,9 @@ namespace LiteDB
     {
         private readonly string _collection;
         private readonly Lazy<ILiteEngine> _engine;
-        private readonly BsonMapper _mapper;
         private readonly List<BsonExpression> _includes;
+        private readonly BsonMapper _mapper;
+        private readonly EntityMapper _entity;
         private readonly MemberMapper _id;
         private readonly BsonAutoId _autoId;
 
@@ -18,6 +19,11 @@ namespace LiteDB
         /// Get collection name
         /// </summary>
         public string Name => _collection;
+
+        /// <summary>
+        /// Getting entity mapper from current collection. Returns null if collection are BsonDocument type
+        /// </summary>
+        public EntityMapper EntityMapper => _entity;
 
         internal LiteCollection(string name, BsonAutoId autoId, Lazy<ILiteEngine> engine, BsonMapper mapper)
         {
@@ -29,13 +35,14 @@ namespace LiteDB
             // if strong typed collection, get _id member mapped (if exists)
             if (typeof(T) == typeof(BsonDocument))
             {
+                _entity = null;
                 _id = null;
                 _autoId = autoId;
             }
             else
             {
-                var entity = mapper.GetEntityMapper(typeof(T));
-                _id = entity.Id;
+                _entity = mapper.GetEntityMapper(typeof(T));
+                _id = _entity.Id;
 
                 if (_id != null && _id.AutoId)
                 {
