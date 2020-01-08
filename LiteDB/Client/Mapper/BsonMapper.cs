@@ -212,7 +212,7 @@ namespace LiteDB
         /// <summary>
         /// Get property mapper between typed .NET class and BsonDocument - Cache results
         /// </summary>
-        internal EntityMapper GetEntityMapper(Type type)
+        public EntityMapper GetEntityMapper(Type type)
         {
             //TODO: needs check if Type if BsonDocument? Returns empty EntityMapper?
 
