@@ -387,17 +387,24 @@ namespace LiteDB
             }
         }
 
-        public static IEnumerable<BsonValue> SORT(IEnumerable<BsonValue> input, BsonExpression sortExpr, BsonDocument root, Collation collation, BsonDocument parameters)
+        public static IEnumerable<BsonValue> SORT(IEnumerable<BsonValue> input, BsonExpression sortExpr, BsonValue order, BsonDocument root, Collation collation, BsonDocument parameters)
         {
-            //TODO: implement a sort function here
-
             // update parameters in expression
             parameters.CopyTo(sortExpr.Parameters);
 
-            foreach (var item in input)
+            IEnumerable<Tuple<BsonValue, BsonValue>> source()
             {
-                yield return item;
+                foreach(var item in input)
+                {
+                    var value = sortExpr.ExecuteScalar(new BsonDocument[] { root }, root, item, collation);
+
+                    yield return new Tuple<BsonValue, BsonValue>(item, value);
+                }
             }
+
+            return order > 0 ? 
+                source().OrderBy(x => x.Item2, collation).Select(x => x.Item1) :
+                source().OrderByDescending(x => x.Item2, collation).Select(x => x.Item1);
         }
 
         #endregion
