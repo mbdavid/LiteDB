@@ -82,9 +82,9 @@ namespace LiteDB
         public int? LCID { get; set; }
 
         /// <summary>
-        /// "compare_options": Define how database will sort/compare strings. Can't be changed after database creation
+        /// "sort_options": Define how database will sort/compare strings. Can't be changed after database creation
         /// </summary>
-        public CompareOptions? CompareOptions { get; set; }
+        public CompareOptions? SortOptions { get; set; }
 
         /// <summary>
         /// "upgrade": Check if data file is an old version and convert before open (default: false)
@@ -133,7 +133,7 @@ namespace LiteDB
             this.MemorySegmentSize = _values.GetValue<int?>("memory_segment_size");
             this.Culture = _values.GetValue<string>("culture");
             this.LCID = _values.GetValue<int?>("lcid");
-            this.CompareOptions = _values.GetValue<CompareOptions?>("compare_options");
+            this.SortOptions = _values.GetValue<CompareOptions?>("sort_options");
 
             this.Upgrade = _values.GetValue("upgrade", this.Upgrade);
         }
