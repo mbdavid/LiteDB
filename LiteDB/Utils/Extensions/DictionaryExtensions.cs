@@ -132,7 +132,7 @@ namespace LiteDB
         /// <summary>
         /// Get value from dictionary converting datatype T
         /// </summary>
-        public static T GetValue<T>(this Dictionary<string, string> dict, string key, T defaultValue)
+        public static T GetValue<T>(this Dictionary<string, string> dict, string key, T defaultValue = default(T))
         {
             try
             {
@@ -169,11 +169,11 @@ namespace LiteDB
         /// <summary>
         /// Get a value from a key converted in file size format: "1gb", "10 mb", "80000"
         /// </summary>
-        public static long GetFileSize(this Dictionary<string, string> dict, string key, long defaultValue)
+        public static long? GetFileSize(this Dictionary<string, string> dict, string key)
         {
             var size = dict.GetValue<string>(key, null);
 
-            if (size == null) return defaultValue;
+            if (size == null) return null;
 
             var match = Regex.Match(size, @"^(\d+)\s*([tgmk])?(b|byte|bytes)?$", RegexOptions.IgnoreCase);
 

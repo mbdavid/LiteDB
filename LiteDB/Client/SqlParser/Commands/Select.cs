@@ -46,7 +46,7 @@ namespace LiteDB
             {
                 // select with no FROM - just run expression (avoid DUAL table, Mr. Oracle)
                 //TODO: i think will be better add all sql into engine
-                var result = query.Select.Execute(Collation.Default);
+                var result = query.Select.Execute(_collation.Value);
 
                 var defaultName = "expr";
 

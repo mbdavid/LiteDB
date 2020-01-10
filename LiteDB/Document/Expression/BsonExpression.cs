@@ -402,7 +402,7 @@ namespace LiteDB
         /// </summary>
         private static Dictionary<string, MethodInfo> _methods =
             typeof(BsonExpressionMethods).GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .ToDictionary(m => m.Name.ToUpper() + "~" + m.GetParameters().Length);
+            .ToDictionary(m => m.Name.ToUpper() + "~" + m.GetParameters().Where(p => p.ParameterType != typeof(Collation)).Count());
 
         /// <summary>
         /// Get expression method with same name and same parameter - return null if not found

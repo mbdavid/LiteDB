@@ -144,7 +144,6 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new IStreamFactory for temporary file (sort)
         /// </summary>
-        /// <returns></returns>
         internal IStreamFactory CreateTempFactory()
         {
             if (this.TempStream != null)

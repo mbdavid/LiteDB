@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -15,7 +16,7 @@ namespace LiteDB
     {
         #region Properties
 
-        private readonly Lazy<ILiteEngine> _engine = null;
+        private readonly Lazy<ILiteEngine> _engine;
         private BsonMapper _mapper = BsonMapper.Global;
 
         /// <summary>
@@ -42,8 +43,6 @@ namespace LiteDB
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-            _mapper = mapper ?? BsonMapper.Global;
-
             if (connectionString.Upgrade)
             {
                 // try upgrade if need
@@ -51,6 +50,7 @@ namespace LiteDB
             }
 
             _engine = new Lazy<ILiteEngine>(connectionString.CreateEngine, LazyThreadSafetyMode.PublicationOnly);
+            _mapper = mapper ?? BsonMapper.Global;
         }
 
         /// <summary>
@@ -61,8 +61,6 @@ namespace LiteDB
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
-            _mapper = mapper ?? BsonMapper.Global;
-
             _engine = new Lazy<ILiteEngine>(() =>
             {
                 var settings = new EngineSettings
@@ -71,7 +69,10 @@ namespace LiteDB
                 };
 
                 return new LiteEngine(settings);
+
             }, LazyThreadSafetyMode.PublicationOnly);
+
+            _mapper = mapper ?? BsonMapper.Global;
         }
 
         /// <summary>
@@ -293,8 +294,8 @@ namespace LiteDB
         /// </summary>	
         public int UserVersion
         {
-            get => _engine.Value.UserVersion;
-            set => _engine.Value.UserVersion = value;
+            get => _engine.Value.DbParam("USER_VERSION");
+            set => _engine.Value.DbParam("USER_VERSION", value);
         }
 
         #endregion

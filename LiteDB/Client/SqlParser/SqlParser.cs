@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using LiteDB.Engine;
 using static LiteDB.Constants;
@@ -14,12 +15,14 @@ namespace LiteDB
         private readonly ILiteEngine _engine;
         private readonly Tokenizer _tokenizer;
         private readonly BsonDocument _parameters;
+        private readonly Lazy<Collation> _collation;
 
         public SqlParser(ILiteEngine engine, Tokenizer tokenizer, BsonDocument parameters)
         {
             _engine = engine;
             _tokenizer = tokenizer;
             _parameters = parameters ?? new BsonDocument();
+            _collation = new Lazy<Collation>(() => new Collation(_engine.DbParam("LCID").AsInt32, (CompareOptions)_engine.DbParam("SORT").AsInt32));
         }
 
         public IBsonDataReader Execute()
@@ -46,6 +49,8 @@ namespace LiteDB
                 case "BEGIN": return this.ParseBegin();
                 case "ROLLBACK": return this.ParseRollback();
                 case "COMMIT": return this.ParseCommit();
+
+                case "SET": return this.ParseSet();
 
                 default:  throw LiteException.UnexpectedToken(ahead);
             }

@@ -384,7 +384,7 @@ namespace LiteDB
                     src.Append(tokenizer.ReadToken().Value);
                     continue;
                 }
-                else break;
+                break;
             }
 
             src.Append("})");
@@ -654,7 +654,8 @@ namespace LiteDB
 
                     src.Append(tokenizer.Current.Value);
 
-                    if (tokenizer.Current.Type == TokenType.Comma) continue; else break;
+                    if (tokenizer.Current.Type == TokenType.Comma) continue;
+                    break;
                 }
             }
 
@@ -763,7 +764,8 @@ namespace LiteDB
 
                     src.Append(next.Value);
 
-                    if (next.Type == TokenType.Comma) continue; else break;
+                    if (next.Type == TokenType.Comma) continue; 
+                    break;
                 }
             }
 
@@ -890,7 +892,8 @@ namespace LiteDB
 
                     src.Append(next.Value);
 
-                    if (next.Type == TokenType.Comma) continue; else break;
+                    if (next.Type == TokenType.Comma) continue; 
+                    break;
                 }
             }
 
@@ -907,14 +910,15 @@ namespace LiteDB
             // method call arguments
             var args = new List<Expression>();
 
-            // getting linq expression from BsonExpression for all parameters
-            foreach (var item in method.GetParameters().Zip(pars, (parameter, expr) => new { parameter, expr }))
+            if (method.GetParameters().FirstOrDefault()?.ParameterType == typeof(Collation))
             {
-                if (item.parameter.ParameterType == typeof(Collation))
-                {
-                    args.Add(context.Collation);
-                }
-                else if (item.parameter.ParameterType.IsEnumerable() == false && item.expr.IsScalar == false)
+                args.Add(context.Collation);
+            }
+
+            // getting linq expression from BsonExpression for all parameters
+            foreach (var item in method.GetParameters().Where(x => x.ParameterType != typeof(Collation)).Zip(pars, (parameter, expr) => new { parameter, expr }))
+            {
+                if (item.parameter.ParameterType.IsEnumerable() == false && item.expr.IsScalar == false)
                 {
                     // convert enumerable expresion into scalar expression
                     args.Add(ConvertToArray(item.expr).Expression); 
@@ -1119,7 +1123,7 @@ namespace LiteDB
 
                 src.Append("]");
 
-                return Expression.Call(method, expr, Expression.Constant(index), Expression.Constant(inner), context.Root, context.Parameters);
+                return Expression.Call(method, expr, Expression.Constant(index), Expression.Constant(inner), context.Root, context.Collation, context.Parameters);
             }
 
             return null;
@@ -1156,33 +1160,77 @@ namespace LiteDB
 
             var left = ParseSingleExpression(tokenizer, context, isRoot);
 
-            // read =>
-            tokenizer.ReadToken().Expect(TokenType.Equals);
-            tokenizer.ReadToken().Expect(TokenType.Greater);
-
-            var right = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
-
-            // read )
-            tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
-
             // if left is a scalar expression, convert into enumerable expression (avoid to use [*] all the time)
             if (left.IsScalar)
             {
                 left = ConvertToEnumerable(left);
             }
 
-            if (right == null) throw LiteException.UnexpectedToken(tokenizer.Current);
-            if (right.IsScalar == false) throw new LiteException(0, $"Right parameter must be a scalar expression in {method.Name} function");
+            var args = new List<Expression>();
+            var src = new StringBuilder(method.Name + "(" + left.Source);
+            var isImmutable = left.IsImmutable;
+            var useSource = left.UseSource;
+            var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            args.Add(left.Expression);
+
+            // read =>
+            if (tokenizer.LookAhead().Type == TokenType.Equals)
+            {
+                tokenizer.ReadToken().Expect(TokenType.Equals);
+                tokenizer.ReadToken().Expect(TokenType.Greater);
+
+                var right = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
+
+                if (right.IsScalar == false) throw new LiteException(0, $"Right parameter must be a scalar expression in {method.Name} function");
+
+                src.Append("=>" + right.Source);
+                args.Add(Expression.Constant(right));
+            }
+
+            if (tokenizer.LookAhead().Type != TokenType.CloseParenthesis)
+            {
+                tokenizer.ReadToken().Expect(TokenType.Comma);
+
+                src.Append(",");
+
+                // try more parameters ,
+                while (!tokenizer.CheckEOF())
+                {
+                    var parameter = ParseFullExpression(tokenizer, context, isRoot);
+
+                    // update isImmutable only when came false
+                    if (parameter.IsImmutable == false) isImmutable = false;
+                    if (parameter.UseSource) useSource = true;
+
+                    args.Add(parameter.Expression);
+
+                    if (tokenizer.LookAhead().Type == TokenType.Comma)
+                    {
+                        src.Append(tokenizer.ReadToken().Value);
+                        continue;
+                    }
+                    break;
+                }
+            }
+
+            // read )
+            tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
+            src.Append(")");
+
+            args.Add(context.Root);
+            args.Add(context.Collation);
+            args.Add(context.Parameters);
 
             return new BsonExpression
             {
                 Type = type,
-                IsImmutable = left.IsImmutable && right.IsImmutable,
-                UseSource = left.UseSource || right.UseSource,
+                IsImmutable = isImmutable,
+                UseSource = useSource,
                 IsScalar = false,
-                Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
-                Expression = Expression.Call(method, left.Expression, Expression.Constant(right), context.Root, context.Collation, context.Parameters),
-                Source = method.Name + "(" + left.Source + "=>" + right.Source + ")"
+                Fields = fields,
+                Expression = Expression.Call(method, args.ToArray()),
+                Source = src.ToString()
             };
         }
 
