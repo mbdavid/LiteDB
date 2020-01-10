@@ -22,7 +22,7 @@ namespace LiteDB
             _engine = engine;
             _tokenizer = tokenizer;
             _parameters = parameters ?? new BsonDocument();
-            _collation = new Lazy<Collation>(() => new Collation(_engine.DbParam("LCID").AsInt32, (CompareOptions)_engine.DbParam("COLLATION").AsInt32));
+            _collation = new Lazy<Collation>(() => new Collation(_engine.DbParam("LCID").AsInt32, (CompareOptions)_engine.DbParam("SORT").AsInt32));
         }
 
         public IBsonDataReader Execute()

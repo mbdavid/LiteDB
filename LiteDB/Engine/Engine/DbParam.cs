@@ -18,7 +18,7 @@ namespace LiteDB.Engine
                 case "USER_VERSION": return _header.UserVersion;
                 case "CULTURE": return _header.Collation.Culture.Name;
                 case "LCID": return _header.Collation.LCID;
-                case "COLLATION": return (int)_header.Collation.CompareOptions;
+                case "SORT": return (int)_header.Collation.CompareOptions;
                 case "TIMEOUT": return (int)_settings.Timeout.TotalSeconds;
                 case "UTC_DATE": return _settings.UtcDate;
                 case "READ_ONLY": return _settings.ReadOnly;
@@ -49,7 +49,7 @@ namespace LiteDB.Engine
                         break;
                     case "CULTURE": 
                     case "LCID":
-                    case "COLLATION":
+                    case "SORT":
                     case "TIMEOUT":
                     case "UTC_DATE":
                     case "READ_ONLY": throw new LiteException(0, $"Parameter {name} are read-only");
