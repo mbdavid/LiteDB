@@ -91,6 +91,9 @@ namespace LiteDB
         /// </summary>
         public const int CONTAINER_SORT_SIZE = 100 * PAGE_SIZE;
 
+        public const string P_USER_VERSION = "USER_VERSION";
+        public const string COLLATION = "USER_VERSION";
+
         /// <summary>
         /// Log a message using Debug.WriteLine
         /// </summary>

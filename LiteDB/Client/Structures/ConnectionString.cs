@@ -15,7 +15,7 @@ namespace LiteDB
         /// <summary>
         /// "type": Return how engine will be open (default: Direct)
         /// </summary>
-        public ConnectionMode Mode { get; set; } = ConnectionMode.Embedded;
+        public ConnectionType Connection { get; set; } = ConnectionType.Direct;
 
         /// <summary>
         /// "filename": Full path or relative path from DLL directory
@@ -84,7 +84,7 @@ namespace LiteDB
             }
 
             // setting values to properties
-            this.Mode = _values.GetValue("mode", this.Mode);
+            this.Connection = _values.GetValue("connection", this.Connection);
             this.Filename = _values.GetValue("filename", this.Filename).Trim();
 
             this.Password = _values.GetValue("password", this.Password);
@@ -118,11 +118,11 @@ namespace LiteDB
             };
 
             // create engine implementation as Connection Type
-            if (this.Mode == ConnectionMode.Embedded)
+            if (this.Connection == ConnectionType.Direct)
             {
                 return new LiteEngine(settings);
             }
-            else if (this.Mode == ConnectionMode.Shared)
+            else if (this.Connection == ConnectionType.Shared)
             {
                 return new SharedEngine(settings);
             }

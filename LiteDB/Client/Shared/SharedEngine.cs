@@ -149,30 +149,31 @@ namespace LiteDB
             return new SharedDataReader(reader, () => this.CloseDatabase());
         }
 
-        public int UserVersion
+        public BsonValue DbParam(string name)
         {
-            get
+            this.OpenDatabase();
+
+            try
             {
-                this.OpenDatabase();
-
-                var value = _engine.UserVersion;
-
-                this.CloseDatabase();
-
-                return value;
+                return _engine.DbParam(name);
             }
-            set
+            finally
             {
-                this.OpenDatabase();
+                this.CloseDatabase();
+            }
+        }
 
-                try
-                {
-                    _engine.UserVersion = value;
-                }
-                finally
-                {
-                    this.CloseDatabase();
-                }
+        public bool DbParam(string name, BsonValue value)
+        {
+            this.OpenDatabase();
+
+            try
+            {
+                return _engine.DbParam(name, value);
+            }
+            finally
+            {
+                this.CloseDatabase();
             }
         }
 
