@@ -59,19 +59,7 @@ namespace LiteDB
                 }
             }
 
-            if (order.IsNull)
-                order = 1;
-
-            if(order.IsString)
-            {
-                var orderStr = order.RawValue as string;
-                if (orderStr.ToUpper() == "ASC")
-                    order = 1;
-                else if (orderStr.ToUpper() == "DESC")
-                    order = -1;
-            }
-
-            return order > 0 ?
+            return (order.IsInt32 && order.AsInt32 > 0) || (order.IsString && order.AsString.Equals("asc", StringComparison.OrdinalIgnoreCase)) ?
                 source().OrderBy(x => x.Item2, collation).Select(x => x.Item1) :
                 source().OrderByDescending(x => x.Item2, collation).Select(x => x.Item1);
         }

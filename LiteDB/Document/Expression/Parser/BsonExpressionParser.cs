@@ -1134,9 +1134,9 @@ namespace LiteDB
 
             switch(token.Value.ToUpper())
             {
-                case "MAP": return ParseFunction(BsonExpressionType.Map, tokenizer, context, isRoot);
-                case "FILTER": return ParseFunction(BsonExpressionType.Filter, tokenizer, context, isRoot);
-                case "SORT": return ParseFunction(BsonExpressionType.Sort, tokenizer, context, isRoot);
+                case "MAP": return ParseFunction(token.Value.ToUpper(), BsonExpressionType.Map, tokenizer, context, isRoot);
+                case "FILTER": return ParseFunction(token.Value.ToUpper(), BsonExpressionType.Filter, tokenizer, context, isRoot);
+                case "SORT": return ParseFunction(token.Value.ToUpper(), BsonExpressionType.Sort, tokenizer, context, isRoot);
             }
 
             return null;
@@ -1146,7 +1146,7 @@ namespace LiteDB
         /// Parse expression functions, like MAP, FILTER or SORT.
         /// MAP(items[*] => @.Name)
         /// </summary>
-        private static BsonExpression ParseFunction(BsonExpressionType type, Tokenizer tokenizer, ExpressionContext context, bool isRoot)
+        private static BsonExpression ParseFunction(string functionName, BsonExpressionType type, Tokenizer tokenizer, ExpressionContext context, bool isRoot)
         {
             // check if next token are ( otherwise returns null (is not a function)
             if (tokenizer.LookAhead().Type != TokenType.OpenParenthesis) return null;
@@ -1167,7 +1167,7 @@ namespace LiteDB
             args.Add(context.Collation);
             args.Add(context.Parameters);
 
-            var src = new StringBuilder("{0}(" + left.Source);
+            var src = new StringBuilder(functionName + "(" + left.Source);
             var isImmutable = left.IsImmutable;
             var useSource = left.UseSource;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1220,24 +1220,7 @@ namespace LiteDB
 
             // read )
             tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
-            src.Append(")");           
-
-            MethodInfo method = null;
-
-            if (type == BsonExpressionType.Map)
-            {
-                method = BsonExpression.GetFunction("MAP");
-            }
-            else if (type == BsonExpressionType.Filter)
-            {
-                method = BsonExpression.GetFunction("FILTER");
-            }
-            if (type == BsonExpressionType.Sort)
-            {
-                method = BsonExpression.GetFunction("SORT", args.Select(x => x.Type)
-                    .Where(t => t != typeof(BsonDocument) && t != typeof(Collation)
-                && t != typeof(IEnumerable<BsonValue>) && t != typeof(BsonExpression)).ToArray().Count());
-            }
+            src.Append(")");
 
             return new BsonExpression
             {
@@ -1246,8 +1229,8 @@ namespace LiteDB
                 UseSource = useSource,
                 IsScalar = false,
                 Fields = fields,
-                Expression = Expression.Call(method, args.ToArray()),
-                Source = string.Format(src.ToString(), method.Name)
+                Expression = Expression.Call(BsonExpression.GetFunction(functionName, args.Count - 5), args.ToArray()),
+                Source = src.ToString()
             };
         }
 
