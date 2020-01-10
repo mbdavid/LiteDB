@@ -191,9 +191,9 @@ namespace LiteDB.Demo
             h += this.SpanItem(h, 7, null, "CreationTime", (byte[] b, int i) => new DateTime(BitConverter.ToInt64(b, i)).ToString("o"));
             h += this.SpanItem(h, 3, null, "UserVersion", BitConverter.ToInt32);
             h += this.SpanItem(h, 3, null, "LCID", BitConverter.ToInt32);
-            h += this.SpanItem(h, 3, null, "CompareOptions", BitConverter.ToInt32);
+            h += this.SpanItem(h, 3, null, "SortOptions", BitConverter.ToInt32);
 
-            var collectionPosition = 128;
+            var collectionPosition = 192;
 
             this.SpanItem(collectionPosition, 3, null, "Length", BitConverter.ToInt32);
             

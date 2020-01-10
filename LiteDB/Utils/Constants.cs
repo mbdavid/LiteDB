@@ -68,7 +68,7 @@ namespace LiteDB
         /// <summary>
         /// Define how many transactions can be open simultaneously
         /// </summary>
-        public const int MAX_OPEN_TRANSACTIONS = 100; // 100
+        public const int MAX_OPEN_TRANSACTIONS = 100;
 
         /// <summary>
         /// Define how many pages all transaction will consume, in memory, before persist in disk. This amount are shared across all open transactions

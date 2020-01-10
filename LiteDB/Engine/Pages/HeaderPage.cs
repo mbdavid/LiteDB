@@ -34,11 +34,11 @@ namespace LiteDB.Engine
         private const int P_CREATION_TIME = 68; // 68-75 (8 bytes)
         private const int P_USER_VERSION = 76; // 76-79 (4 bytes)
         private const int P_LCID = 80; // 80-83 (4 bytes)
-        private const int P_COMPARE_OPTIONS = 84; // 84-87 (4bytes)
-        // reserved 88-127 (40 bytes)
-        private const int P_COLLECTIONS = 128; // 128-8159 (8064 bytes)
+        private const int P_SORT_OPTIONS = 84; // 84-87 (4bytes)
+        // reserved 88-191 (104 bytes)
+        private const int P_COLLECTIONS = 192; // 128-8159 (8064 bytes)
 
-        private const int COLLECTIONS_SIZE = 8064; // 252 blocks with 32 bytes each
+        private const int COLLECTIONS_SIZE = 8000; // 250 blocks with 32 bytes each
 
         #endregion
 
@@ -95,7 +95,7 @@ namespace LiteDB.Engine
             _buffer.Write(FILE_VERSION, P_FILE_VERSION);
             _buffer.Write(this.CreationTime, P_CREATION_TIME);
             _buffer.Write(this.Collation.LCID, P_LCID);
-            _buffer.Write((int)this.Collation.CompareOptions, P_COMPARE_OPTIONS);
+            _buffer.Write((int)this.Collation.SortOptions, P_SORT_OPTIONS);
 
             // initialize collections
             _collections = new BsonDocument();
@@ -108,7 +108,7 @@ namespace LiteDB.Engine
             : base(buffer)
         {
             this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
-            this.Collation = new Collation(_buffer.ReadInt32(P_LCID), (CompareOptions)_buffer.ReadInt32(P_COMPARE_OPTIONS));
+            this.Collation = new Collation(_buffer.ReadInt32(P_LCID), (CompareOptions)_buffer.ReadInt32(P_SORT_OPTIONS));
 
             this.LoadPage();
         }

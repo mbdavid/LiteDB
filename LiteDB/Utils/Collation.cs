@@ -16,10 +16,10 @@ namespace LiteDB
     {
         private readonly CompareInfo _compareInfo;
 
-        public Collation(int lcid, CompareOptions compareOptions)
+        public Collation(int lcid, CompareOptions sortOptions)
         {
             this.LCID = lcid;
-            this.CompareOptions = compareOptions;
+            this.SortOptions = sortOptions;
 
 #if HAVE_GET_CULTURE_INFO
             this.Culture = CultureInfo.GetCultureInfo(lcid);
@@ -49,16 +49,16 @@ namespace LiteDB
         public CultureInfo Culture { get; }
 
         /// <summary>
-        /// Get options to how string should be compared
+        /// Get options to how string should be compared in sort
         /// </summary>
-        public CompareOptions CompareOptions { get; }
+        public CompareOptions SortOptions { get; }
 
         /// <summary>
         /// Compare 2 string values using current culture/compare options
         /// </summary>
         public int Compare(string left, string right)
         {
-            var result = _compareInfo.Compare(left, right, this.CompareOptions);
+            var result = _compareInfo.Compare(left, right, this.SortOptions);
 
             return result < 0 ? -1 : result > 0 ? +1 : 0;
         }

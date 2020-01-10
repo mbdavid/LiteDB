@@ -33,7 +33,7 @@ namespace LiteDB.Engine
             doc["userVersion"] = _header.UserVersion;
             doc["lcid"] = _header.Collation.LCID;
             doc["culture"] = _header.Collation.Culture.Name;
-            doc["sort"] = _header.Collation.CompareOptions.ToString();
+            doc["sortOptions"] = _header.Collation.SortOptions.ToString();
 
             doc["cache"] = new BsonDocument
             {
