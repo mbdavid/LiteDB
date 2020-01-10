@@ -6,9 +6,9 @@ using static LiteDB.Constants;
 
 namespace LiteDB
 {
-    public enum ConnectionMode
+    public enum ConnectionType
     {
-        Embedded,
+        Direct,
         Shared
         // MimePipes
         // Tcp

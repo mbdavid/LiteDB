@@ -27,6 +27,7 @@ namespace LiteDB.Engine
         bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique);
         bool DropIndex(string collection, string name);
 
-        int UserVersion { get; set; }
+        BsonValue DbParam(string name);
+        bool DbParam(string name, BsonValue value);
     }
 }
