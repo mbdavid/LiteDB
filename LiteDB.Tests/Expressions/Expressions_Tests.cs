@@ -81,7 +81,7 @@ namespace LiteDB.Tests.Expressions
             // fields when using source (do simplify, when use * is same as $)
             F("*").ExpectValues("$");
             F("*._id").ExpectValues("$");
-            F("FIRST(MAP(* => (@._id + $.name))) + _id)").ExpectValues("$", "name", "_id");
+            F("FIRST(MAP(* => (@._id + $.name))) + _id").ExpectValues("$", "name", "_id");
         }
 
         [Fact]

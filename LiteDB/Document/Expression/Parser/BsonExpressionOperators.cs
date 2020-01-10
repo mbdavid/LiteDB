@@ -349,65 +349,7 @@ namespace LiteDB
             }
         }
 
-        #endregion
-
-        #region Map/Filter/Sort
-
-        public static IEnumerable<BsonValue> MAP(IEnumerable<BsonValue> input, BsonExpression mapExpr, BsonDocument root, Collation collation, BsonDocument parameters)
-        {
-            // update parameters in expression
-            parameters.CopyTo(mapExpr.Parameters);
-
-            foreach (var item in input)
-            {
-                // execute for each child value and except a first bool value (returns if true)
-                var values = mapExpr.Execute(new BsonDocument[] { root }, root, item, collation);
-
-                foreach (var value in values)
-                {
-                    yield return value;
-                }
-            }
-        }
-
-        public static IEnumerable<BsonValue> FILTER(IEnumerable<BsonValue> input, BsonExpression filterExpr, BsonDocument root, Collation collation, BsonDocument parameters)
-        {
-            // update parameters in expression
-            parameters.CopyTo(filterExpr.Parameters);
-
-            foreach (var item in input)
-            {
-                // execute for each child value and except a first bool value (returns if true)
-                var c = filterExpr.ExecuteScalar(new BsonDocument[] { root }, root, item, collation);
-
-                if (c.IsBoolean && c.AsBoolean == true)
-                {
-                    yield return item;
-                }
-            }
-        }
-
-        public static IEnumerable<BsonValue> SORT(IEnumerable<BsonValue> input, BsonExpression sortExpr, BsonValue order, BsonDocument root, Collation collation, BsonDocument parameters)
-        {
-            // update parameters in expression
-            parameters.CopyTo(sortExpr.Parameters);
-
-            IEnumerable<Tuple<BsonValue, BsonValue>> source()
-            {
-                foreach(var item in input)
-                {
-                    var value = sortExpr.ExecuteScalar(new BsonDocument[] { root }, root, item, collation);
-
-                    yield return new Tuple<BsonValue, BsonValue>(item, value);
-                }
-            }
-
-            return order > 0 ? 
-                source().OrderBy(x => x.Item2, collation).Select(x => x.Item1) :
-                source().OrderByDescending(x => x.Item2, collation).Select(x => x.Item1);
-        }
-
-        #endregion
+        #endregion      
 
         #region Object Creation
 

@@ -416,6 +416,34 @@ namespace LiteDB
 
         #endregion
 
+        #region FunctionCall quick access
+
+        /// <summary>
+        /// Get all registered functions for BsonExpressions
+        /// </summary>
+        public static IEnumerable<MethodInfo> Functions => _functions.Values;
+
+        /// <summary>
+        /// Load all static methods from BsonExpressionFunctions class. Use a dictionary using name + parameter count
+        /// </summary>
+        private static Dictionary<string, MethodInfo> _functions =
+            typeof(BsonExpressionFunctions).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .ToDictionary(m => m.Name.ToUpper() + "~" + m.GetParameters()
+            .Where(p => p.ParameterType != typeof(BsonDocument) && p.ParameterType != typeof(Collation)
+                && p.ParameterType != typeof(IEnumerable<BsonValue>) && p.ParameterType != typeof(BsonExpression)).Count());
+
+        /// <summary>
+        /// Get expression function with same name and same parameter - return null if not found
+        /// </summary>
+        internal static MethodInfo GetFunction(string name, int parameterCount = 0)
+        {
+            var key = name.ToUpper() + "~" + parameterCount;
+
+            return _functions.GetOrDefault(key);
+        }
+
+        #endregion
+
         public override string ToString()
         {
             return $"`{this.Source}` [{this.Type}]";
