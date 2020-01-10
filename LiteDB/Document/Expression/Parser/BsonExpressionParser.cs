@@ -1130,13 +1130,13 @@ namespace LiteDB
         /// </summary>
         private static BsonExpression TryParseFunction(Tokenizer tokenizer, ExpressionContext context, bool isRoot)
         {
-            var token = tokenizer.Current;
+            var token = tokenizer.Current.Value.ToUpper();
 
-            switch(token.Value.ToUpper())
+            switch(token)
             {
-                case "MAP": return ParseFunction(token.Value.ToUpper(), BsonExpressionType.Map, tokenizer, context, isRoot);
-                case "FILTER": return ParseFunction(token.Value.ToUpper(), BsonExpressionType.Filter, tokenizer, context, isRoot);
-                case "SORT": return ParseFunction(token.Value.ToUpper(), BsonExpressionType.Sort, tokenizer, context, isRoot);
+                case "MAP": return ParseFunction(token, BsonExpressionType.Map, tokenizer, context, isRoot);
+                case "FILTER": return ParseFunction(token, BsonExpressionType.Filter, tokenizer, context, isRoot);
+                case "SORT": return ParseFunction(token, BsonExpressionType.Sort, tokenizer, context, isRoot);
             }
 
             return null;
@@ -1222,6 +1222,8 @@ namespace LiteDB
             tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
             src.Append(")");
 
+            var method = BsonExpression.GetFunction(functionName, args.Count - 5);
+
             return new BsonExpression
             {
                 Type = type,
@@ -1229,7 +1231,7 @@ namespace LiteDB
                 UseSource = useSource,
                 IsScalar = false,
                 Fields = fields,
-                Expression = Expression.Call(BsonExpression.GetFunction(functionName, args.Count - 5), args.ToArray()),
+                Expression = Expression.Call(method, args.ToArray()),
                 Source = src.ToString()
             };
         }

@@ -429,8 +429,7 @@ namespace LiteDB
         private static Dictionary<string, MethodInfo> _functions =
             typeof(BsonExpressionFunctions).GetMethods(BindingFlags.Public | BindingFlags.Static)
             .ToDictionary(m => m.Name.ToUpper() + "~" + m.GetParameters()
-            .Where(p => p.ParameterType != typeof(BsonDocument) && p.ParameterType != typeof(Collation)
-                && p.ParameterType != typeof(IEnumerable<BsonValue>) && p.ParameterType != typeof(BsonExpression)).Count());
+            .Skip(5).Count());
 
         /// <summary>
         /// Get expression function with same name and same parameter - return null if not found
