@@ -20,7 +20,7 @@ namespace LiteDB.Engine
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var collectionPage = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
-                var indexer = new IndexService(snapshot, _header.Collation);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
 
                 if (collectionPage == null) return 0;
 
@@ -71,7 +71,7 @@ namespace LiteDB.Engine
                     predicate.Left.Source == "$._id" && 
                     predicate.Right.IsValue)
                 {
-                    var id = predicate.Right.Execute(_header.Collation).First();
+                    var id = predicate.Right.Execute(_header.Pragmas.Collation).First();
 
                     return this.Delete(collection, new BsonValue[] { id });
                 }

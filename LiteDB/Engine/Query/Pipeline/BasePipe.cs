@@ -15,16 +15,16 @@ namespace LiteDB.Engine
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLookup _lookup;
         protected readonly SortDisk _tempDisk;
+        private readonly EnginePragmas _pragmas;
         protected readonly Collation _collation;
         protected readonly bool _utcDate;
 
-        public BasePipe(TransactionService transaction, IDocumentLookup lookup, SortDisk tempDisk, Collation collation, bool utcDate)
+        public BasePipe(TransactionService transaction, IDocumentLookup lookup, SortDisk tempDisk, EnginePragmas pragmas)
         {
             _transaction = transaction;
             _lookup = lookup;
             _tempDisk = tempDisk;
-            _collation = collation;
-            _utcDate = utcDate;
+            _pragmas = pragmas;
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace LiteDB.Engine
             var keyValues = source
                 .Select(x => new KeyValuePair<BsonValue, PageAddress>(expr.ExecuteScalar(x, _collation), x.RawId));
 
-            using (var sorter = new SortService(_tempDisk, order, _collation))
+            using (var sorter = new SortService(_tempDisk, order, _pragmas))
             {
                 sorter.Insert(keyValues);
 

@@ -62,16 +62,10 @@ namespace LiteDB.Engine
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-            // clear checkpoint if database is readonly
-            if (_settings.ReadOnly) _settings.Checkpoint = 0;
-
             LOG($"start initializing{(_settings.ReadOnly ? " (readonly)" : "")}", "ENGINE");
 
             try
             {
-                // initialize locker service (no dependency)
-                _locker = new LockService(settings.Timeout, settings.ReadOnly);
-
                 // initialize disk service (will create database if needed)
                 _disk = new DiskService(settings);
 
@@ -83,6 +77,9 @@ namespace LiteDB.Engine
 
                 _header = new HeaderPage(buffer);
 
+                // initialize locker service
+                _locker = new LockService(_header.Pragmas, settings.ReadOnly);
+
                 // initialize wal-index service
                 _walIndex = new WalIndexService(_disk, _locker);
 
@@ -93,10 +90,10 @@ namespace LiteDB.Engine
                 }
 
                 // initialize sort temp disk
-                _sortDisk = new SortDisk(settings.CreateTempFactory(), CONTAINER_SORT_SIZE, settings.UtcDate);
+                _sortDisk = new SortDisk(settings.CreateTempFactory(), CONTAINER_SORT_SIZE, _header.Pragmas);
 
                 // initialize transaction monitor as last service
-                _monitor = new TransactionMonitor(_header, _locker, _disk, _walIndex, _settings);
+                _monitor = new TransactionMonitor(_header, _locker, _disk, _walIndex, _header.Pragmas);
 
                 // register system collections
                 this.InitializeSystemCollections();
@@ -144,7 +141,7 @@ namespace LiteDB.Engine
                 _monitor?.Dispose();
 
                 // do a soft checkpoint (only if exclusive lock is possible)
-                if (_settings.Checkpoint > 0) _walIndex?.Checkpoint(true);
+                if (_header.Pragmas.Checkpoint > 0) _walIndex?.Checkpoint(true);
 
                 // close all disk streams (and delete log if empty)
                 _disk?.Dispose();

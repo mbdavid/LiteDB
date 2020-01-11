@@ -22,7 +22,7 @@ namespace LiteDB
             _engine = engine;
             _tokenizer = tokenizer;
             _parameters = parameters ?? new BsonDocument();
-            _collation = new Lazy<Collation>(() => new Collation(_engine.DbParam("LCID").AsInt32, (CompareOptions)_engine.DbParam("SORT").AsInt32));
+            _collation = new Lazy<Collation>(() => new Collation(_engine.Pragma("LCID").AsInt32, (CompareOptions)_engine.Pragma("SORT").AsInt32));
         }
 
         public IBsonDataReader Execute()
@@ -50,7 +50,7 @@ namespace LiteDB
                 case "ROLLBACK": return this.ParseRollback();
                 case "COMMIT": return this.ParseCommit();
 
-                case "SET": return this.ParseSet();
+                case "PRAGMA": return this.ParsePragma();
 
                 default:  throw LiteException.UnexpectedToken(ahead);
             }

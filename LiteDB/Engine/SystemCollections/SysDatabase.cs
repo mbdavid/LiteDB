@@ -12,10 +12,8 @@ namespace LiteDB.Engine
         {
             var doc = new BsonDocument();
 
-            doc["name"] = _disk.GetName(FileOrigin.Data);    
-            doc["limitSize"] = (int)_settings.LimitSize;
-            doc["timeout"] = _settings.Timeout.TotalSeconds;
-            doc["utcDate"] = _settings.UtcDate;
+            doc["name"] = _disk.GetName(FileOrigin.Data);
+            doc["encrypted"] = _settings.Password != null;
             doc["readOnly"] = _settings.ReadOnly;
 
             doc["lastPageID"] = (int)_header.LastPageID;
@@ -30,17 +28,12 @@ namespace LiteDB.Engine
             doc["currentReadVersion"] = _walIndex.CurrentReadVersion;
             doc["lastTransactionID"] = _walIndex.LastTransactionID;
 
-            doc["userVersion"] = _header.UserVersion;
-            doc["lcid"] = _header.Collation.LCID;
-            doc["culture"] = _header.Collation.Culture.Name;
-            doc["sortOptions"] = _header.Collation.SortOptions.ToString();
-
             doc["cache"] = new BsonDocument
             {
                 ["extendSegments"] = _disk.Cache.ExtendSegments,
                 ["memoryUsage"] = 
-                    (_disk.Cache.ExtendSegments * _settings.MemorySegmentSize * PAGE_SIZE) +
-                    (40 * (_disk.Cache.ExtendSegments * _settings.MemorySegmentSize)),
+                    (_disk.Cache.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE) +
+                    (40 * (_disk.Cache.ExtendSegments * MEMORY_SEGMENT_SIZE)),
                 ["freePages"] = _disk.Cache.FreePages,
                 ["readablePages"] = _disk.Cache.GetPages().Count,
                 ["writablePages"] = _disk.Cache.WritablePages,
@@ -52,8 +45,7 @@ namespace LiteDB.Engine
                 ["open"] = _monitor.Transactions.Count,
                 ["maxOpenTransactions"] = MAX_OPEN_TRANSACTIONS,
                 ["initialTransactionSize"] = _monitor.InitialSize,
-                ["availableSize"] = _monitor.FreePages,
-                ["maxTransactionSize"] = _settings.MaxTransactionSize
+                ["availableSize"] = _monitor.FreePages
             };
 
             yield return doc;

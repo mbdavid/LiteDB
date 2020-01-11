@@ -19,7 +19,7 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var col = snapshot.CollectionPage;
-                var indexer = new IndexService(snapshot, _header.Collation);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
                 var data = new DataService(snapshot);
                 var count = 0;
 
@@ -67,7 +67,7 @@ namespace LiteDB.Engine
                             var doc = reader.Current.AsDocument;
 
                             var id = doc["_id"];
-                            var value = transform.ExecuteScalar(doc, _header.Collation);
+                            var value = transform.ExecuteScalar(doc, _header.Pragmas.Collation);
 
                             if (!value.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(transform));
 
@@ -124,7 +124,7 @@ namespace LiteDB.Engine
             foreach (var index in col.GetCollectionIndexes().Where(x => x.Name != "_id"))
             {
                 // getting all keys from expression over document
-                var keys = index.BsonExpr.Execute(doc, _header.Collation);
+                var keys = index.BsonExpr.Execute(doc, _header.Pragmas.Collation);
 
                 foreach (var key in keys)
                 {

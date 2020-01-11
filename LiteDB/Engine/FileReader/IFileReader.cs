@@ -8,7 +8,7 @@ namespace LiteDB.Engine
     /// </summary>
     interface IFileReader : IDisposable
     {
-        int UserVersion { get; }
+        EnginePragmas Pragmas { get; }
 
         /// <summary>
         /// Get all collections name from database

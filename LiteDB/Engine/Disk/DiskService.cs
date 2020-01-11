@@ -30,7 +30,7 @@ namespace LiteDB.Engine
 
         public DiskService(EngineSettings settings)
         {
-            _cache = new MemoryCache(settings.MemorySegmentSize);
+            _cache = new MemoryCache(MEMORY_SEGMENT_SIZE);
 
             // get new stream factory based on settings
             _dataFactory = settings.CreateDataFactory();
@@ -50,7 +50,7 @@ namespace LiteDB.Engine
             {
                 LOG($"creating new database: '{Path.GetFileName(_dataFactory.Name)}'", "DISK");
 
-                this.Initialize(_dataPool.Writer, settings.InitialSize, settings.Collation);
+                this.Initialize(_dataPool.Writer, settings.InitialSize);
             }
 
             // if not readonly, force open writable datafile
@@ -91,10 +91,10 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create a new empty database (use synced mode)
         /// </summary>
-        private void Initialize(Stream stream, long initialSize, Collation collation)
+        private void Initialize(Stream stream, long initialSize)
         {
             var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
-            var header = new HeaderPage(buffer, collation);
+            var header = new HeaderPage(buffer, 0);
 
             // update buffer
             header.UpdateBuffer();

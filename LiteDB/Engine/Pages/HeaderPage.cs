@@ -32,12 +32,10 @@ namespace LiteDB.Engine
         private const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63 (4 bytes)
         private const int P_LAST_PAGE_ID = 64; // 64-67 (4 bytes)
         private const int P_CREATION_TIME = 68; // 68-75 (8 bytes)
-        private const int P_USER_VERSION = 76; // 76-79 (4 bytes)
-        private const int P_LCID = 80; // 80-83 (4 bytes)
-        private const int P_SORT_OPTIONS = 84; // 84-87 (4bytes)
-        // reserved 88-191 (104 bytes)
-        private const int P_COLLECTIONS = 192; // 128-8159 (8064 bytes)
 
+        private const int P_PRAGMAS = 76; // 76-191 (4 bytes)
+
+        private const int P_COLLECTIONS = 192; // 128-8159 (8064 bytes)
         private const int COLLECTIONS_SIZE = 8000; // 250 blocks with 32 bytes each
 
         #endregion
@@ -58,14 +56,9 @@ namespace LiteDB.Engine
         public DateTime CreationTime { get; }
 
         /// <summary>	
-        /// UserVersion int - for user get/set database version changes	
+        /// Get database pragmas instance class
         /// </summary>	
-        public int UserVersion { get; set; }
-
-        /// <summary>
-        /// Get database collation
-        /// </summary>
-        public Collation Collation { get; }
+        public EnginePragmas Pragmas { get; set; }
 
         /// <summary>
         /// All collections names/link pointers are stored inside this document
@@ -80,22 +73,21 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new Header Page
         /// </summary>
-        public HeaderPage(PageBuffer buffer, Collation collation)
+        public HeaderPage(PageBuffer buffer, uint pageID)
             : base(buffer, 0, PageType.Header)
         {
             // initialize page version
             this.CreationTime = DateTime.UtcNow;
-            this.Collation = collation;
             this.FreeEmptyPageList = uint.MaxValue;
             this.LastPageID = 0;
-            this.UserVersion = 0;
+
+            // initialize pragmas
+            this.Pragmas = new EnginePragmas();
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
             _buffer.Write(HEADER_INFO, P_HEADER_INFO);
             _buffer.Write(FILE_VERSION, P_FILE_VERSION);
             _buffer.Write(this.CreationTime, P_CREATION_TIME);
-            _buffer.Write(this.Collation.LCID, P_LCID);
-            _buffer.Write((int)this.Collation.SortOptions, P_SORT_OPTIONS);
 
             // initialize collections
             _collections = new BsonDocument();
@@ -108,7 +100,6 @@ namespace LiteDB.Engine
             : base(buffer)
         {
             this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
-            this.Collation = new Collation(_buffer.ReadInt32(P_LCID), (CompareOptions)_buffer.ReadInt32(P_SORT_OPTIONS));
 
             this.LoadPage();
         }
@@ -130,7 +121,9 @@ namespace LiteDB.Engine
             // CreateTime is readonly
             this.FreeEmptyPageList = _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
             this.LastPageID = _buffer.ReadUInt32(P_LAST_PAGE_ID);
-            this.UserVersion = _buffer.ReadInt32(P_USER_VERSION);
+
+            // initialize engine pragmas
+            this.Pragmas = new EnginePragmas(_buffer);
 
             // create new buffer area to store BsonDocument collections
             var area = _buffer.Slice(P_COLLECTIONS, COLLECTIONS_SIZE);
@@ -147,7 +140,9 @@ namespace LiteDB.Engine
         {
             _buffer.Write(this.FreeEmptyPageList, P_FREE_EMPTY_PAGE_ID);
             _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
-            _buffer.Write(this.UserVersion, P_USER_VERSION);
+
+            // update engine pragmas
+            this.Pragmas.UpdateBuffer(_buffer);
 
             // update collection only if needed
             if (_isCollectionsChanged)

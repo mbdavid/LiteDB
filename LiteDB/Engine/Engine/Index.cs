@@ -28,7 +28,7 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
                 var col = snapshot.CollectionPage;
-                var indexer = new IndexService(snapshot, _header.Collation);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
                 var data = new DataService(snapshot);
 
                 // check if index already exists
@@ -61,7 +61,7 @@ namespace LiteDB.Engine
                         IndexNode first = null;
 
                         // get values from expression in document
-                        var keys = expression.Execute(doc, _header.Collation);
+                        var keys = expression.Execute(doc, _header.Pragmas.Collation);
 
                         // adding index node for each value
                         foreach (var key in keys)
@@ -126,7 +126,7 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var col = snapshot.CollectionPage;
-                var indexer = new IndexService(snapshot, _header.Collation);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
             
                 // no collection, no index
                 if (col == null) return false;

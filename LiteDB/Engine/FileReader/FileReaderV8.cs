@@ -17,11 +17,11 @@ namespace LiteDB.Engine
         private readonly Stream _stream;
         private readonly byte[] _buffer;
 
-        public int UserVersion { get; private set; }
+        public EnginePragmas Pragmas { get; private set; }
 
         public FileReaderV8(HeaderPage header, DiskService disk)
         {
-            this.UserVersion = header.UserVersion;
+            this.Pragmas = header.Pragmas;
 
             _collections = header.GetCollections().ToDictionary(x => x.Key, x => x.Value);
 

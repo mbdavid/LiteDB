@@ -44,7 +44,13 @@ namespace LiteDB.Engine
                 }
 
                 // update user version on commit	
-                transaction.Pages.Commit += h => h.UserVersion = reader.UserVersion;
+                transaction.Pages.Commit += h =>
+                {
+                    foreach (var pragma in h.Pragmas.Pragmas)
+                    {
+                        pragma.Set(reader.Pragmas.Get(pragma.Name));
+                    }
+                };
 
                 this.Commit();
             }

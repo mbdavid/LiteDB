@@ -149,13 +149,13 @@ namespace LiteDB
             return new SharedDataReader(reader, () => this.CloseDatabase());
         }
 
-        public BsonValue DbParam(string name)
+        public BsonValue Pragma(string name)
         {
             this.OpenDatabase();
 
             try
             {
-                return _engine.DbParam(name);
+                return _engine.Pragma(name);
             }
             finally
             {
@@ -163,13 +163,13 @@ namespace LiteDB
             }
         }
 
-        public bool DbParam(string name, BsonValue value)
+        public bool Pragma(string name, BsonValue value)
         {
             this.OpenDatabase();
 
             try
             {
-                return _engine.DbParam(name, value);
+                return _engine.Pragma(name, value);
             }
             finally
             {

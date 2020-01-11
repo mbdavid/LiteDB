@@ -10,12 +10,12 @@ namespace LiteDB
     internal partial class SqlParser
     {
         /// <summary>
-        /// SET [DB_PARAM] = VALUE
-        /// SET [DB_PARAM]
+        /// PRAGMA [DB_PARAM] = VALUE
+        /// PRAGMA [DB_PARAM]
         /// </summary>
-        private IBsonDataReader ParseSet()
+        private IBsonDataReader ParsePragma()
         {
-            _tokenizer.ReadToken().Expect("SET");
+            _tokenizer.ReadToken().Expect("PRAGMA");
 
             var name = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
 
@@ -25,17 +25,23 @@ namespace LiteDB
             {
                 _tokenizer.ReadToken();
 
-                var result = _engine.DbParam(name);
+                var result = _engine.Pragma(name);
 
                 return new BsonDataReader(result);
             }
             else if (eof.Type == TokenType.Equals)
             {
+                // read =
                 _tokenizer.ReadToken().Expect(TokenType.Equals);
 
+                // read <value>
                 var reader = new JsonReader(_tokenizer);
                 var value = reader.Deserialize();
-                var result = _engine.DbParam(name, value);
+
+                // read last ; \ <eof>
+                _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+
+                var result = _engine.Pragma(name, value);
 
                 return new BsonDataReader(result);
             }

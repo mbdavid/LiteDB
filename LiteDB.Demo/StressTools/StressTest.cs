@@ -29,8 +29,6 @@ namespace LiteDB.Demo
 
         public StressTest(EngineSettings settings, bool synced)
         {
-            settings.Timeout = TimeSpan.FromHours(1);
-
             if (settings.Filename != null)
             {
                 File.Delete(settings.Filename);
@@ -38,6 +36,8 @@ namespace LiteDB.Demo
             }
 
             var engine = new LiteEngine(settings);
+
+            engine.Pragma("TIMEOUT", TimeSpan.FromHours(1).TotalSeconds);
 
             _db = new LiteDatabase(engine);
 
