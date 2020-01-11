@@ -16,6 +16,20 @@ namespace LiteDB
     {
         private readonly CompareInfo _compareInfo;
 
+        public Collation(string collation)
+        {
+            var parts = collation.Split('/');
+            var culture = parts[0];
+            var sortOptions = parts.Length > 0 ? 
+                (CompareOptions)Enum.Parse(typeof(CompareOptions), parts[1]) : 
+                CompareOptions.None;
+
+            //this.Culture = CultureInfo.GetCultureInfo()
+            
+
+
+        }
+
         public Collation(int lcid, CompareOptions sortOptions)
         {
             this.LCID = lcid;
@@ -85,6 +99,11 @@ namespace LiteDB
         public int GetHashCode(BsonValue obj)
         {
             return obj.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return this.Culture.Name + "/" + this.SortOptions.ToString();
         }
     }
 }
