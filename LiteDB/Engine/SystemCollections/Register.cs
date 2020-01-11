@@ -21,6 +21,7 @@ namespace LiteDB.Engine
             this.RegisterSystemCollection("$sequences", () => this.SysSequences());
 
             this.RegisterSystemCollection("$transactions", () => this.SysTransactions());
+            this.RegisterSystemCollection("$pragmas", () => this.SysPragmas());
             this.RegisterSystemCollection("$snapshots", () => this.SysSnapshots());
             this.RegisterSystemCollection("$open_cursors", () => this.SysOpenCursors());
 

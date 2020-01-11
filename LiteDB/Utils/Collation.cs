@@ -20,14 +20,20 @@ namespace LiteDB
         {
             var parts = collation.Split('/');
             var culture = parts[0];
-            var sortOptions = parts.Length > 0 ? 
+            var sortOptions = parts.Length > 1 ? 
                 (CompareOptions)Enum.Parse(typeof(CompareOptions), parts[1]) : 
                 CompareOptions.None;
 
-            //this.Culture = CultureInfo.GetCultureInfo()
-            
+            this.LCID = LiteDB.LCID.GetLCID(culture);
+            this.SortOptions = sortOptions;
 
+#if HAVE_GET_CULTURE_INFO
+            this.Culture = CultureInfo.GetCultureInfo(culture);
+#else
+            this.Culture = new CultureInfo(culture);
+#endif
 
+            _compareInfo = this.Culture.CompareInfo;
         }
 
         public Collation(int lcid, CompareOptions sortOptions)

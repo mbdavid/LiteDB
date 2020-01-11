@@ -458,6 +458,19 @@ namespace LiteDB
             }
         }
 
+        public static int GetLCID(string culture)
+        {
+            foreach(var item in _mappings)
+            {
+                if (item.Value == culture)
+                {
+                    return item.Key;
+                }
+            }
+
+            throw new LiteException(0, $"Invalid culture name");
+        }
+
         /// <summary>
         /// Get current thread LCID culture
         /// </summary>

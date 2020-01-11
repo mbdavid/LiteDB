@@ -28,9 +28,9 @@ namespace LiteDB.Engine
         private long _dataLength;
         private long _logLength;
 
-        public DiskService(EngineSettings settings)
+        public DiskService(EngineSettings settings, int memorySegmentSize)
         {
-            _cache = new MemoryCache(MEMORY_SEGMENT_SIZE);
+            _cache = new MemoryCache(memorySegmentSize);
 
             // get new stream factory based on settings
             _dataFactory = settings.CreateDataFactory();

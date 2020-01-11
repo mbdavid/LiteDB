@@ -17,8 +17,7 @@ namespace LiteDB.Tests.Engine
 
             var s = new EngineSettings
             {
-                DataStream = new MemoryStream(),
-                Collation = collation
+                DataStream = new MemoryStream()
             };
 
             var names = new string[] { "Ze", "Ana", "Ána", "Ánã", "Ana Paula", "ana lucia" };
@@ -28,6 +27,8 @@ namespace LiteDB.Tests.Engine
 
             using(var e = new LiteEngine(s))
             {
+                e.Rebuild(new RebuildOptions { Collation = collation });
+
                 e.Insert("col1", names.Select(x => new BsonDocument { ["name"] = x }), BsonAutoId.Int32);
 
                 // sort by merge sort

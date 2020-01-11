@@ -157,21 +157,23 @@ namespace LiteDB.Engine
                 return pragma.Get();
             }
 
-            throw new LiteException(0, $"Parameter ${name} do not exists");
+            throw new LiteException(0, $"Pragma `{name}` not exist");
         }
 
         public void Set(string name, BsonValue value, bool validateReadonly)
         {
             if (_pragmas.TryGetValue(name, out var pragma))
             {
-                if (validateReadonly && pragma.ReadOnly == true) throw new LiteException(0, $"Parameter ${pragma.Name} are read only");
+                if (validateReadonly && pragma.ReadOnly == true) throw new LiteException(0, $"Pragma `{pragma.Name}` is read only");
 
                 pragma.Set(value);
 
                 _isDirty = true;
             }
-
-            throw new LiteException(0, $"Parameter ${name} do not exists");
+            else
+            {
+                throw new LiteException(0, $"Pragma `{name}` not exist");
+            }
         }
     }
 }

@@ -195,13 +195,13 @@ namespace LiteDB
             }
         }
 
-        public long Shrink()
+        public long Rebuild(RebuildOptions options)
         {
             this.OpenDatabase();
 
             try
             {
-                return _engine.Shrink();
+                return _engine.Rebuild(options);
             }
             finally
             {

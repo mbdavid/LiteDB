@@ -22,7 +22,7 @@ namespace LiteDB
             _engine = engine;
             _tokenizer = tokenizer;
             _parameters = parameters ?? new BsonDocument();
-            _collation = new Lazy<Collation>(() => new Collation(_engine.Pragma("LCID").AsInt32, (CompareOptions)_engine.Pragma("SORT").AsInt32));
+            _collation = new Lazy<Collation>(() => new Collation(_engine.Pragma("COLLATION")));
         }
 
         public IBsonDataReader Execute()
@@ -44,7 +44,7 @@ namespace LiteDB
                 case "CREATE": return this.ParseCreate();
 
                 case "CHECKPOINT": return this.ParseCheckpoint();
-                case "SHRINK": return this.ParseShrink();
+                case "REBUILD": return this.ParseRebuild();
 
                 case "BEGIN": return this.ParseBegin();
                 case "ROLLBACK": return this.ParseRollback();

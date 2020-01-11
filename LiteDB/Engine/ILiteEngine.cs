@@ -6,7 +6,7 @@ namespace LiteDB.Engine
     public interface ILiteEngine : IDisposable
     {
         void Checkpoint();
-        long Shrink();
+        long Rebuild(RebuildOptions options);
 
         bool BeginTrans();
         bool Commit();

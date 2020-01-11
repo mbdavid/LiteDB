@@ -26,9 +26,7 @@ namespace LiteDB.Internals
                 toBlock?.Wait();
             }
 
-            ;
-
-            var disk = new DiskService(new EngineSettings {DataStream = new MemoryStream(), MemorySegmentSize = 10});
+            var disk = new DiskService(new EngineSettings { DataStream = new MemoryStream() }, 10);
 
             var ta = new Task(() =>
             {
@@ -36,7 +34,7 @@ namespace LiteDB.Internals
                 wa.Wait();
 
                 // test starts here!!!
-                var p0 = new HeaderPage(r.NewPage(), Collation.Default);
+                var p0 = new HeaderPage(r.NewPage(), 0);
 
                 disk.WriteAsync(new PageBuffer[] {p0.UpdateBuffer()});
 

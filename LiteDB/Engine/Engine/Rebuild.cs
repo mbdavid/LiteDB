@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -14,51 +8,60 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Fill current database with data inside file reader - run inside a transacion
         /// </summary>
-        internal void Rebuild(IFileReader reader)
+        public long Rebuild(RebuildOptions options)
         {
-            // begin transaction and get TransactionID
-            var transaction = _monitor.GetTransaction(true, out var isNew);
+            _walIndex.Checkpoint(false);
+
+            if (_disk.GetLength(FileOrigin.Log) > 0) throw new LiteException(0, "Shrink operation requires no log file - run Checkpoint before continue");
+
+            _locker.EnterReserved(true);
+
+            var originalLength = _disk.GetLength(FileOrigin.Data);
+
+            // create a savepoint in header page - restore if any error occurs
+            var savepoint = _header.Savepoint();
+
+            // must clear all cache pages because all of them will change
+            _disk.Cache.Clear();
 
             try
             {
-                var transactionID = transaction.TransactionID;
-
-                foreach (var collection in reader.GetCollections())
+                // initialize V8 file reader
+                using (var reader = new FileReaderV8(_header, _disk))
                 {
-                    // first create all user indexes (exclude _id index)
-                    foreach (var index in reader.GetIndexes(collection))
-                    {
-                        this.EnsureIndex(collection,
-                            index.Name,
-                            BsonExpression.Create(index.Expression),
-                            index.Unique);
-                    }
+                    // clear current header
+                    _header.FreeEmptyPageList = uint.MaxValue;
+                    _header.LastPageID = 0;
+                    _header.GetCollections().ToList().ForEach(c => _header.DeleteCollection(c.Key));
 
-                    // get all documents from current collection
-                    var docs = reader.GetDocuments(collection);
+                    // override collation
+                    _header.Pragmas.Set("COLLATION", options.Collation.ToString(), false);
 
-                    // and insert into 
-                    this.Insert(collection, docs, BsonAutoId.ObjectId);
+                    //TODO: change password
+
+                    // rebuild entrie database using FileReader
+                    this.RebuildContent(reader);
+
+                    // crop data file
+                    var newLength = BasePage.GetPagePosition(_header.LastPageID);
+
+                    _disk.SetLength(newLength, FileOrigin.Data);
+
+                    return originalLength - newLength;
                 }
-
-                // update user version on commit	
-                transaction.Pages.Commit += h =>
-                {
-                    foreach (var pragma in h.Pragmas.Pragmas)
-                    {
-                        pragma.Set(reader.Pragmas.Get(pragma.Name));
-                    }
-                };
-
-                this.Commit();
             }
-            catch(Exception ex)
+            catch(Exception)
             {
-                this.Rollback();
+                _header.Restore(savepoint);
 
-                throw ex;
+                throw;
+            }
+            finally
+            {
+                _locker.ExitReserved(true);
+
+                _walIndex.Checkpoint(false);
             }
         }
     }

@@ -15,7 +15,6 @@ namespace LiteDB.Engine
         private readonly SortDisk _sortDisk;
         private readonly EnginePragmas _pragmas;
         private readonly CursorInfo _cursor;
-        private readonly bool _utcDate;
         private readonly string _collection;
         private readonly Query _query;
         private readonly IEnumerable<BsonDocument> _source;

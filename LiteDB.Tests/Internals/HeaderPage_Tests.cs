@@ -17,7 +17,7 @@ namespace LiteDB.Internals
             buffer.ShareCounter = Constants.BUFFER_WRITABLE;
 
             // create new header page
-            var header = new HeaderPage(buffer, Collation.Default);
+            var header = new HeaderPage(buffer, 0);
 
             header.InsertCollection("my-col1", 1);
             header.InsertCollection("my-col2", 2);
@@ -50,7 +50,7 @@ namespace LiteDB.Internals
             buffer.ShareCounter = Constants.BUFFER_WRITABLE;
 
             // create new header page
-            var header = new HeaderPage(buffer, Collation.Default);
+            var header = new HeaderPage(buffer, 0);
 
             header.InsertCollection("my-col1", 1);
             header.InsertCollection("my-col2", 2);

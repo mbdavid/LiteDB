@@ -284,9 +284,9 @@ namespace LiteDB
         /// <summary>
         /// Rebuild all database to remove unused pages - reduce data file
         /// </summary>
-        public long Shrink()
+        public long Rebuild(RebuildOptions options)
         {
-            return _engine.Value.Shrink();
+            return _engine.Value.Rebuild(options);
         }
 
         /// <summary>	

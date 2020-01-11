@@ -67,7 +67,7 @@ namespace LiteDB.Engine
             try
             {
                 // initialize disk service (will create database if needed)
-                _disk = new DiskService(settings);
+                _disk = new DiskService(settings, MEMORY_SEGMENT_SIZE);
 
                 // read page with no cache ref (has a own PageBuffer) - do not Release() support
                 var buffer = _disk.ReadFull(FileOrigin.Data).First();
