@@ -82,10 +82,6 @@ namespace LiteDB
         private static readonly MethodInfo _arrayIndexMethod = M("ARRAY_INDEX");
         private static readonly MethodInfo _arrayFilterMethod = M("ARRAY_FILTER");
 
-        private static readonly MethodInfo _mapMethod = M("MAP");
-        private static readonly MethodInfo _filterMethod = M("FILTER");
-        private static readonly MethodInfo _sortMethod = M("SORT");
-
         private static readonly MethodInfo _documentInitMethod = M("DOCUMENT_INIT");
         private static readonly MethodInfo _arrayInitMethod = M("ARRAY_INIT");
 
@@ -708,7 +704,7 @@ namespace LiteDB
                     UseSource = true,
                     IsScalar = false,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(sourceExpr.Fields).AddRange(pathExpr.Fields),
-                    Expression = Expression.Call(_mapMethod, sourceExpr.Expression, Expression.Constant(pathExpr), context.Root, context.Collation, context.Parameters),
+                    Expression = Expression.Call(BsonExpression.GetFunction("MAP"), context.Root, context.Collation, context.Parameters, sourceExpr.Expression, Expression.Constant(pathExpr)),
                     Source = "MAP(*=>" + pathExpr.Source + ")"
                 };
             }
@@ -1032,7 +1028,7 @@ namespace LiteDB
                     UseSource = pathExpr.UseSource || mapExpr.UseSource,
                     IsScalar = false,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(pathExpr.Fields).AddRange(mapExpr.Fields),
-                    Expression = Expression.Call(_mapMethod, pathExpr.Expression, Expression.Constant(mapExpr), context.Root, context.Collation, context.Parameters),
+                    Expression = Expression.Call(BsonExpression.GetFunction("MAP"), context.Root, context.Collation, context.Parameters, pathExpr.Expression, Expression.Constant(mapExpr)),
                     Source = "(" + pathExpr.Source + "=>" + mapExpr.Source + ")"
                 };
             }
@@ -1134,13 +1130,13 @@ namespace LiteDB
         /// </summary>
         private static BsonExpression TryParseFunction(Tokenizer tokenizer, ExpressionContext context, bool isRoot)
         {
-            var token = tokenizer.Current;
+            var token = tokenizer.Current.Value.ToUpper();
 
-            switch(token.Value.ToUpper())
+            switch(token)
             {
-                case "MAP": return ParseFunction(_mapMethod, BsonExpressionType.Map, tokenizer, context, isRoot);
-                case "FILTER": return ParseFunction(_filterMethod, BsonExpressionType.Filter, tokenizer, context, isRoot);
-                case "SORT": return ParseFunction(_sortMethod, BsonExpressionType.Sort, tokenizer, context, isRoot);
+                case "MAP": return ParseFunction(token, BsonExpressionType.Map, tokenizer, context, isRoot);
+                case "FILTER": return ParseFunction(token, BsonExpressionType.Filter, tokenizer, context, isRoot);
+                case "SORT": return ParseFunction(token, BsonExpressionType.Sort, tokenizer, context, isRoot);
             }
 
             return null;
@@ -1150,7 +1146,7 @@ namespace LiteDB
         /// Parse expression functions, like MAP, FILTER or SORT.
         /// MAP(items[*] => @.Name)
         /// </summary>
-        private static BsonExpression ParseFunction(MethodInfo method, BsonExpressionType type, Tokenizer tokenizer, ExpressionContext context, bool isRoot)
+        private static BsonExpression ParseFunction(string functionName, BsonExpressionType type, Tokenizer tokenizer, ExpressionContext context, bool isRoot)
         {
             // check if next token are ( otherwise returns null (is not a function)
             if (tokenizer.LookAhead().Type != TokenType.OpenParenthesis) return null;
@@ -1167,12 +1163,17 @@ namespace LiteDB
             }
 
             var args = new List<Expression>();
-            var src = new StringBuilder(method.Name + "(" + left.Source);
+            args.Add(context.Root);
+            args.Add(context.Collation);
+            args.Add(context.Parameters);
+
+            var src = new StringBuilder(functionName + "(" + left.Source);
             var isImmutable = left.IsImmutable;
             var useSource = left.UseSource;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             args.Add(left.Expression);
+            fields.AddRange(left.Fields);
 
             // read =>
             if (tokenizer.LookAhead().Type == TokenType.Equals)
@@ -1182,10 +1183,11 @@ namespace LiteDB
 
                 var right = BsonExpression.Parse(tokenizer, BsonExpressionParserMode.Full, false);
 
-                if (right.IsScalar == false) throw new LiteException(0, $"Right parameter must be a scalar expression in {method.Name} function");
+                if (right.IsScalar == false) throw new LiteException(0, $"Right parameter must be a scalar expression in function.");
 
                 src.Append("=>" + right.Source);
                 args.Add(Expression.Constant(right));
+                fields.AddRange(right.Fields);
             }
 
             if (tokenizer.LookAhead().Type != TokenType.CloseParenthesis)
@@ -1204,6 +1206,8 @@ namespace LiteDB
                     if (parameter.UseSource) useSource = true;
 
                     args.Add(parameter.Expression);
+                    src.Append(parameter.Source);
+                    fields.AddRange(parameter.Fields);
 
                     if (tokenizer.LookAhead().Type == TokenType.Comma)
                     {
@@ -1218,9 +1222,7 @@ namespace LiteDB
             tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
             src.Append(")");
 
-            args.Add(context.Root);
-            args.Add(context.Collation);
-            args.Add(context.Parameters);
+            var method = BsonExpression.GetFunction(functionName, args.Count - 5);
 
             return new BsonExpression
             {
