@@ -49,7 +49,7 @@ namespace LiteDB
                 LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
             }
 
-            _engine = new Lazy<ILiteEngine>(connectionString.CreateEngine, LazyThreadSafetyMode.PublicationOnly);
+            _engine = new Lazy<ILiteEngine>(connectionString.CreateEngine, true);
             _mapper = mapper ?? BsonMapper.Global;
         }
 
@@ -70,7 +70,7 @@ namespace LiteDB
 
                 return new LiteEngine(settings);
 
-            }, LazyThreadSafetyMode.PublicationOnly);
+            }, true);
 
             _mapper = mapper ?? BsonMapper.Global;
         }
@@ -82,7 +82,7 @@ namespace LiteDB
         {
             if (engine == null) throw new ArgumentNullException(nameof(engine));
 
-            _engine = new Lazy<ILiteEngine>(() => engine, LazyThreadSafetyMode.PublicationOnly);
+            _engine = new Lazy<ILiteEngine>(() => engine, true);
             _mapper = mapper ?? BsonMapper.Global;
         }
 

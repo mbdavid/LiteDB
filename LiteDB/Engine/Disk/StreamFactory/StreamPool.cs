@@ -26,7 +26,7 @@ namespace LiteDB.Engine
         {
             _factory = factory;
 
-            _writer = new Lazy<Stream>(() => _factory.GetStream(true, appendOnly), LazyThreadSafetyMode.PublicationOnly);
+            _writer = new Lazy<Stream>(() => _factory.GetStream(true, appendOnly), true);
         }
 
         /// <summary>
