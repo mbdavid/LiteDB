@@ -8,12 +8,13 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
+        /// Recreate database using empty LOG file to re-write all documents with all indexes
         /// </summary>
         public long Rebuild(RebuildOptions options)
         {
             _walIndex.Checkpoint(false);
 
-            if (_disk.GetLength(FileOrigin.Log) > 0) throw new LiteException(0, "Shrink operation requires no log file - run Checkpoint before continue");
+            if (_disk.GetLength(FileOrigin.Log) > 0) throw new LiteException(0, "Rebuild operation requires no log file - run Checkpoint before continue");
 
             _locker.EnterReserved(true);
 
@@ -38,15 +39,20 @@ namespace LiteDB.Engine
                     // override collation
                     _header.Pragmas.Set("COLLATION", options.Collation.ToString(), false);
 
-                    //TODO: change password
-
                     // rebuild entrie database using FileReader
                     this.RebuildContent(reader);
 
-                    // crop data file
-                    var newLength = BasePage.GetPagePosition(_header.LastPageID);
+                    // change password (can be a problem if any error occurs after here)
+                    _disk.ChangePassword(options.Password, _settings);
 
-                    _disk.SetLength(newLength, FileOrigin.Data);
+                    // exit reserved before checkpoint
+                    _locker.ExitReserved(true);
+
+                    // do checkpoint
+                    _walIndex.Checkpoint(false);
+
+                    // get new filelength to compare
+                    var newLength = _disk.GetLength(FileOrigin.Data);
 
                     return originalLength - newLength;
                 }
@@ -55,13 +61,58 @@ namespace LiteDB.Engine
             {
                 _header.Restore(savepoint);
 
-                throw;
-            }
-            finally
-            {
                 _locker.ExitReserved(true);
 
-                _walIndex.Checkpoint(false);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Fill current database with data inside file reader - run inside a transacion
+        /// </summary>
+        internal void RebuildContent(IFileReader reader)
+        {
+            // begin transaction and get TransactionID
+            var transaction = _monitor.GetTransaction(true, out var isNew);
+
+            try
+            {
+                var transactionID = transaction.TransactionID;
+
+                foreach (var collection in reader.GetCollections())
+                {
+                    // first create all user indexes (exclude _id index)
+                    foreach (var index in reader.GetIndexes(collection))
+                    {
+                        this.EnsureIndex(collection,
+                            index.Name,
+                            BsonExpression.Create(index.Expression),
+                            index.Unique);
+                    }
+
+                    // get all documents from current collection
+                    var docs = reader.GetDocuments(collection);
+
+                    // and insert into 
+                    this.Insert(collection, docs, BsonAutoId.ObjectId);
+                }
+
+                // update user version on commit	
+                transaction.Pages.Commit += h =>
+                {
+                    foreach (var pragma in h.Pragmas.Pragmas.Where(x => x.ReadOnly == false))
+                    {
+                        _header.Pragmas.Set(pragma.Name, reader.Pragmas.Get(pragma.Name), false);
+                    }
+                };
+
+                this.Commit();
+            }
+            catch (Exception)
+            {
+                this.Rollback();
+
+                throw;
             }
         }
     }

@@ -19,10 +19,10 @@ namespace LiteDB.Engine
         private readonly MemoryCache _cache;
         private readonly Lazy<DiskWriterQueue> _queue;
 
+        private IStreamFactory _dataFactory;
         private readonly IStreamFactory _logFactory;
-        private readonly IStreamFactory _dataFactory;
 
-        private readonly StreamPool _dataPool;
+        private StreamPool _dataPool;
         private readonly StreamPool _logPool;
 
         private long _dataLength;
@@ -198,6 +198,34 @@ namespace LiteDB.Engine
             {
                 return _dataLength + PAGE_SIZE;
             }
+        }
+
+        /// <summary>
+        /// Change password from all data stream
+        /// </summary>
+        public void ChangePassword(string password, EngineSettings settings)
+        {
+            if (settings.Password == password) return;
+
+            // empty data file
+            this.SetLength(0, FileOrigin.Data);
+
+            // close all streams
+            _dataPool.Dispose();
+            
+            // delete data file
+            _dataFactory.Delete();
+
+            settings.Password = password;
+
+            // new datafile will be created with new password
+            _dataFactory = settings.CreateDataFactory();
+
+            // create stream pool
+            _dataPool = new StreamPool(_dataFactory, false);
+
+            // get initial data file length
+            _dataLength = - PAGE_SIZE;
         }
 
         #region Sync Read/Write operations

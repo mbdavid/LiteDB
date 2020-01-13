@@ -127,6 +127,8 @@ namespace LiteDB.Engine
                     Write = (b) => b.Write(this.Checkpoint, P_CHECKPOINT)
                 }
             };
+
+            _isDirty = true;
         }
 
         public EnginePragmas(BufferSlice buffer)
@@ -136,6 +138,8 @@ namespace LiteDB.Engine
             {
                 pragma.Read(buffer);
             }
+
+            _isDirty = false;
         }
 
         public void UpdateBuffer(BufferSlice buffer)

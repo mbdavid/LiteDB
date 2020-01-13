@@ -22,7 +22,7 @@ namespace LiteDB.Engine
 
         private byte[] _buffer = new byte[V7_PAGE_SIZE];
 
-        public EnginePragmas Pragmas { get; private set; }
+        public EnginePragmas Pragmas { get; }
 
         public FileReaderV7(Stream stream, string password)
         {
