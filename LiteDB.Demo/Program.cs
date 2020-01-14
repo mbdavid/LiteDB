@@ -21,6 +21,7 @@ namespace LiteDB.Demo
         {
             Console.WriteLine("Stress Test");
             Console.WriteLine("===========");
+
             Console.Write("Enter test duration (minutes): ");
 
             var input = Console.ReadLine();

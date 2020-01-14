@@ -34,7 +34,7 @@ namespace LiteDB.Demo
                     {
                         // concurrent insert task
                         await Task.Yield();
-                        db.BeginTrans();
+                        //db.BeginTrans();
                         var collection = db.GetCollection<EntityA>("HogeCollection");
                         for (int i = 0; i < TOTAL_NUM / TOTAL_TASKS; i++)
                         {
@@ -45,7 +45,7 @@ namespace LiteDB.Demo
                                 Y = $"{idx}_{i}"
                             });
                         }
-                        db.Commit();
+                        //db.Commit();
                     })
                 ).ConfigureAwait(false);
             }
