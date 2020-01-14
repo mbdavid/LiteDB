@@ -11,12 +11,12 @@ namespace LiteDB.Engine
     internal class SysDump : SystemCollection
     {
         private readonly HeaderPage _header;
-        private readonly LiteEngine _engine;
+        private readonly TransactionMonitor _monitor;
 
-        public SysDump(HeaderPage header, LiteEngine engine) : base("$dump")
+        public SysDump(HeaderPage header, TransactionMonitor monitor) : base("$dump")
         {
             _header = header;
-            _engine = engine;
+            _monitor = monitor;
         }
 
         public override IEnumerable<BsonDocument> Input(BsonValue options)
@@ -28,10 +28,9 @@ namespace LiteDB.Engine
 
         private IEnumerable<BsonDocument> DumpPages(uint? pageID)
         {
-            var monitor = _engine.GetMonitor();
             var collections = _header.GetCollections().ToDictionary(x => x.Value, x => x.Key);
 
-            var transaction = monitor.GetTransaction(true, out var isNew);
+            var transaction = _monitor.GetTransaction(true, out var isNew);
 
             try
             {

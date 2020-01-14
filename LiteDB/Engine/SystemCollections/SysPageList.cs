@@ -11,21 +11,20 @@ namespace LiteDB.Engine
     internal class SysPageList : SystemCollection
     {
         private readonly HeaderPage _header;
-        private readonly LiteEngine _engine;
+        private readonly TransactionMonitor _monitor;
         private Dictionary<uint, string> _collections;
 
-        public SysPageList(HeaderPage header, LiteEngine engine) : base("$page_list")
+        public SysPageList(HeaderPage header, TransactionMonitor monitor) : base("$page_list")
         {
             _header = header;
-            _engine = engine;
+            _monitor = monitor;
         }
 
         public override IEnumerable<BsonDocument> Input(BsonValue options)
         {
             var pageID = GetOption(options, "pageID");
-            var monitor = _engine.GetMonitor();
 
-            var transaction = monitor.GetTransaction(true, out var isNew);
+            var transaction = _monitor.GetTransaction(true, out var isNew);
             var snapshot = transaction.CreateSnapshot(LockMode.Read, "$", false);
 
             _collections = _header.GetCollections().ToDictionary(x => x.Value, x => x.Key);
