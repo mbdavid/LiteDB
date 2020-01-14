@@ -258,6 +258,20 @@ namespace LiteDB.Tests.Expressions
             // using map
             P("ARRAY(MAP(ITEMS(@0) => (@ + @1)))", new BsonArray(new BsonValue[] {10, 11, 12}), 5)
                 .ExpectArray(15, 16, 17);
+
+            // sort ascending
+            P("ARRAY(SORT(ITEMS(@0) => @, @1))", new BsonArray(new BsonValue[] { 30, 20, 50 }), 1)
+                .ExpectArray(20, 30, 50);
+
+            P("ARRAY(SORT(ITEMS(@0) => @, @1))", new BsonArray(new BsonValue[] { 30, 20, 50 }), "asc")
+                .ExpectArray(20, 30, 50);
+
+            // sort descending
+            P("ARRAY(SORT(ITEMS(@0) => @, @1))", new BsonArray(new BsonValue[] { 30, 20, 50 }), -1)
+                .ExpectArray(50, 30, 20);
+
+            P("ARRAY(SORT(ITEMS(@0) => @, @1))", new BsonArray(new BsonValue[] { 30, 20, 50 }), "desc")
+                .ExpectArray(50, 30, 20);
         }
 
         [Fact]
