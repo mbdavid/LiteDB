@@ -84,7 +84,7 @@ namespace LiteDB.Engine
 
             foreach (var doc in source)
             {
-                var value = select.ExecuteScalar(doc, _collation);
+                var value = select.ExecuteScalar(doc, _pragmas.Collation);
 
                 if (value.IsDocument)
                 {
@@ -103,7 +103,7 @@ namespace LiteDB.Engine
         private IEnumerable<BsonDocument> SelectAll(IEnumerable<BsonDocument> source, BsonExpression select)
         {
             var defaultName = select.DefaultFieldName();
-            var result = select.Execute(source, _collation);
+            var result = select.Execute(source, _pragmas.Collation);
 
             //TODO: pode ter algum tipo de CACHE caso a expressão contenha mais de 1 "UseSource"... 
             // evita executar todo pipe -- pior dos casos dá um ToArray() (ou usa um DocumentGroup)

@@ -464,7 +464,7 @@ namespace LiteDB
         /// <summary>
         /// Return true if value is INT32
         /// </summary>
-        public static BsonValue IS_INT32(BsonValue value) => value.AsInt32;
+        public static BsonValue IS_INT32(BsonValue value) => value.IsInt32;
 
         /// <summary>
         /// Return true if value is INT64

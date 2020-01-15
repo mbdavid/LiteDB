@@ -15,9 +15,7 @@ namespace LiteDB.Engine
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLookup _lookup;
         protected readonly SortDisk _tempDisk;
-        private readonly EnginePragmas _pragmas;
-        protected readonly Collation _collation;
-        protected readonly bool _utcDate;
+        protected readonly EnginePragmas _pragmas;
 
         public BasePipe(TransactionService transaction, IDocumentLookup lookup, SortDisk tempDisk, EnginePragmas pragmas)
         {
@@ -59,7 +57,7 @@ namespace LiteDB.Engine
 
             foreach (var doc in source)
             {
-                foreach (var value in path.Execute(doc, _collation)
+                foreach (var value in path.Execute(doc, _pragmas.Collation)
                                         .Where(x => x.IsDocument || x.IsArray)
                                         .ToList())
                 {
@@ -100,10 +98,10 @@ namespace LiteDB.Engine
 
                     // initialize services
                     snapshot = _transaction.CreateSnapshot(LockMode.Read, last, false);
-                    indexer = new IndexService(snapshot, _collation);
+                    indexer = new IndexService(snapshot, _pragmas.Collation);
                     data = new DataService(snapshot);
 
-                    lookup = new DatafileLookup(data, _utcDate, null);
+                    lookup = new DatafileLookup(data, _pragmas.UtcDate, null);
 
                     index = snapshot.CollectionPage?.PK;
                 }
@@ -141,7 +139,7 @@ namespace LiteDB.Engine
             foreach(var doc in source)
             {
                 // checks if any result of expression is true
-                var result = expr.ExecuteScalar(doc, _collation);
+                var result = expr.ExecuteScalar(doc, _pragmas.Collation);
 
                 if(result.IsBoolean && result.AsBoolean)
                 {
@@ -156,7 +154,7 @@ namespace LiteDB.Engine
         protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
         {
             var keyValues = source
-                .Select(x => new KeyValuePair<BsonValue, PageAddress>(expr.ExecuteScalar(x, _collation), x.RawId));
+                .Select(x => new KeyValuePair<BsonValue, PageAddress>(expr.ExecuteScalar(x, _pragmas.Collation), x.RawId));
 
             using (var sorter = new SortService(_tempDisk, order, _pragmas))
             {

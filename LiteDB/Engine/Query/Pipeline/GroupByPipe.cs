@@ -68,7 +68,7 @@ namespace LiteDB.Engine
 
                 while (done.Running)
                 {
-                    var key = groupBy.Expression.ExecuteScalar(enumerator.Current, _collation);
+                    var key = groupBy.Expression.ExecuteScalar(enumerator.Current, _pragmas.Collation);
 
                     groupBy.Select.Parameters["key"] = key;
 
@@ -88,7 +88,7 @@ namespace LiteDB.Engine
 
             while (done.Running = enumerator.MoveNext())
             {
-                var current = groupBy.Expression.ExecuteScalar(enumerator.Current, _collation);
+                var current = groupBy.Expression.ExecuteScalar(enumerator.Current, _pragmas.Collation);
 
                 if (key == current)
                 {
@@ -122,12 +122,12 @@ namespace LiteDB.Engine
                 {
                     if (groupBy.Having != null)
                     {
-                        var filter = groupBy.Having.ExecuteScalar(group, group.Root, group.Root, _collation);
+                        var filter = groupBy.Having.ExecuteScalar(group, group.Root, group.Root, _pragmas.Collation);
 
                         if (!filter.IsBoolean || !filter.AsBoolean) continue;
                     }
 
-                    value = groupBy.Select.ExecuteScalar(group, group.Root, group.Root, _collation);
+                    value = groupBy.Select.ExecuteScalar(group, group.Root, group.Root, _pragmas.Collation);
                 }
                 finally
                 {

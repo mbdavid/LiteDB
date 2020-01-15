@@ -79,11 +79,9 @@ namespace LiteDB.Tests.Engine
 
             using(var e = new LiteEngine())
             {
-                var d = e.Query("$database", new Query()).First();
+                var d = e.Pragma("COLLATION");
 
-                d["culture"].AsString.Should().Be("fi");
-                d["lcid"].AsInt32.Should().Be(11);
-                d["collation"].AsString.Should().Be("IgnoreCase");
+                d.AsString.Should().Be("fi/IgnoreCase");
             }
 
             Thread.CurrentThread.CurrentCulture = current;
