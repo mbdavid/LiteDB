@@ -346,6 +346,11 @@ namespace LiteDB.Engine
                 }
                 else
                 {
+                    // checks if not exceeded data file limit size
+                    var newLength = (_header.LastPageID + 1) * PAGE_SIZE;
+
+                    if (newLength > _header.Pragmas.LimitSize) throw new LiteException(0, $"Maximum data file size has been reached: {FileHelper.FormatFileSize(_header.Pragmas.LimitSize)}");
+
                     // increase LastPageID from shared page
                     pageID = ++_header.LastPageID;
 
