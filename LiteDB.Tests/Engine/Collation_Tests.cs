@@ -13,6 +13,7 @@ namespace LiteDB.Tests.Engine
         [Fact]
         public void Culture_Ordinal_Sort()
         {
+            // 1046 = pt-BR
             var collation = new Collation(1046, CompareOptions.IgnoreCase);
 
             var s = new EngineSettings
@@ -27,7 +28,7 @@ namespace LiteDB.Tests.Engine
 
             using(var e = new LiteEngine(s))
             {
-                e.Rebuild(new RebuildOptions { Collation = collation });
+                //e.Rebuild(new RebuildOptions { Collation = collation });
 
                 e.Insert("col1", names.Select(x => new BsonDocument { ["name"] = x }), BsonAutoId.Int32);
 

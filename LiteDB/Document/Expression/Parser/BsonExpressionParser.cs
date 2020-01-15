@@ -442,7 +442,7 @@ namespace LiteDB
                     IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = constant,
-                    Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
+                    Source = number.ToString("0.0########", CultureInfo.InvariantCulture.NumberFormat)
                 };
             }
 
