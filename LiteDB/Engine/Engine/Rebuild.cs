@@ -112,6 +112,8 @@ namespace LiteDB.Engine
             {
                 this.Rollback();
 
+                _walIndex.Clear();
+
                 throw;
             }
         }
