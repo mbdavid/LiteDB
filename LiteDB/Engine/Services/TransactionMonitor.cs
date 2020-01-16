@@ -20,7 +20,6 @@ namespace LiteDB.Engine
         private readonly LockService _locker;
         private readonly DiskService _disk;
         private readonly WalIndexService _walIndex;
-        private readonly EnginePragmas _pragmas;
 
         private int _freePages;
         private readonly int _initialSize;
@@ -30,13 +29,12 @@ namespace LiteDB.Engine
         public int FreePages => _freePages;
         public int InitialSize => _initialSize;
 
-        public TransactionMonitor(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, EnginePragmas pragmas)
+        public TransactionMonitor(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex)
         {
             _header = header;
             _locker = locker;
             _disk = disk;
             _walIndex = walIndex;
-            _pragmas = pragmas;
 
             // initialize free pages with all avaiable pages in memory
             _freePages = MAX_TRANSACTION_SIZE;

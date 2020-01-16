@@ -13,7 +13,6 @@ namespace LiteDB
         private readonly Mutex _mutex;
         private LiteEngine _engine;
         private int _stack = 0;
-        private bool _disposed = false;
 
         public SharedEngine(EngineSettings settings)
         {
@@ -67,20 +66,6 @@ namespace LiteDB
 
                     _mutex.ReleaseMutex();
                 }
-            }
-        }
-
-        public void Dispose()
-        {
-            if (_disposed) return;
-
-            _disposed = true;
-
-            if (_engine != null)
-            {
-                _engine.Dispose();
-
-                _mutex.ReleaseMutex();
             }
         }
 
@@ -350,5 +335,29 @@ namespace LiteDB
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~SharedEngine()
+        {
+            this.Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_engine != null)
+                {
+                    _engine.Dispose();
+
+                    _mutex.ReleaseMutex();
+                }
+            }
+        }
     }
 }

@@ -93,7 +93,7 @@ namespace LiteDB.Engine
                 _sortDisk = new SortDisk(settings.CreateTempFactory(), CONTAINER_SORT_SIZE, _header.Pragmas);
 
                 // initialize transaction monitor as last service
-                _monitor = new TransactionMonitor(_header, _locker, _disk, _walIndex, _header.Pragmas);
+                _monitor = new TransactionMonitor(_header, _locker, _disk, _walIndex);
 
                 // register system collections
                 this.InitializeSystemCollections();
@@ -121,6 +121,18 @@ namespace LiteDB.Engine
         /// Run checkpoint command to copy log file into data file
         /// </summary>
         public void Checkpoint() => _walIndex.Checkpoint(false);
+
+        public void Dispose()
+        {
+            // dispose data file
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~LiteEngine()
+        {
+            this.Dispose(false);
+        }
 
         /// <summary>
         /// Shutdown process:
@@ -153,15 +165,10 @@ namespace LiteDB.Engine
                 _locker?.Dispose();
             }
 
+            LOG("engine disposed", "ENGINE");
+
             _disposed = true;
         }
 
-        public void Dispose()
-        {
-            // dispose data file
-            this.Dispose(true);
-
-            LOG("engine disposed", "ENGINE");
-        }
     }
 }

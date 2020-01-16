@@ -13,14 +13,14 @@ namespace LiteDB.Engine
     /// based on collection. Eventualy, write operation can change header page that has an exclusive locker for.
     /// [ThreadSafe]
     /// </summary>
-    public class LockService : IDisposable
+    internal class LockService : IDisposable
     {
         private readonly EnginePragmas _variables;
         private readonly bool _readonly;
 
-        private ReaderWriterLockSlim _transaction = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-        private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
-        private ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private readonly ReaderWriterLockSlim _transaction = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private readonly ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
+        private readonly ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
         internal LockService(EnginePragmas variables, bool @readonly)
         {

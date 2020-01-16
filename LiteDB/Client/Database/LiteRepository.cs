@@ -325,7 +325,21 @@ namespace LiteDB
 
         public void Dispose()
         {
-            _db.Dispose();
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~LiteRepository()
+        {
+            this.Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _db.Dispose();
+            }
         }
     }
 }

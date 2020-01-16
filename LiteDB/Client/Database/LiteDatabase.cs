@@ -302,7 +302,21 @@ namespace LiteDB
 
         public void Dispose()
         {
-            if (_engine.IsValueCreated) _engine.Value.Dispose();
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~LiteDatabase()
+        {
+            this.Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_engine.IsValueCreated) _engine.Value.Dispose();
+            }
         }
     }
 }
