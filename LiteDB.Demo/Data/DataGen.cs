@@ -14,11 +14,11 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Demo
 {
-    public class SampleData
+    public class DataGen
     {
-        public IEnumerable<BsonDocument> GetMovies()
+        public static IEnumerable<BsonDocument> Movies()
         {
-            using (var stream = typeof(SampleData).Assembly.GetManifestResourceStream("LiteDB.Demo.SampleData.movies.json"))
+            using (var stream = typeof(DataGen).Assembly.GetManifestResourceStream("LiteDB.Demo.SampleData.movies.json"))
             {
                 using(var textReader = new StreamReader(stream))
                 {

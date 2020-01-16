@@ -562,51 +562,77 @@ namespace LiteDB.Engine
         /// </summary>
         public void DropCollection(Action safePoint)
         {
-            ENSURE(_transPages.DeletedPages == 0, "transaction should be clean before any drop collection");
+            var indexer = new IndexService(this, _header.Pragmas.Collation);
 
-            throw new NotImplementedException();
+            // CollectionPage will be last deleted page (there is no NextPageID from CollectionPage)
+            _transPages.FirstDeletedPageID = _collectionPage.PageID;
+            _transPages.LastDeletedPageID = _collectionPage.PageID;
 
+            // mark collection page as empty
+            _collectionPage.MarkAsEmtpy();
 
-            //// CollectionPage will be last deleted page (there is no NextPageID from CollectionPage)
-            //_transPages.FirstDeletedPageID = _collectionPage.PageID;
-            //_transPages.LastDeletedPageID = _collectionPage.PageID;
+            _transPages.DeletedPages = 1;
 
-            //// mark collection page as empty
-            //_collectionPage.MarkAsEmtpy();
+            var indexPages = new HashSet<uint>();
 
-            //_transPages.DeletedPages = 1;
+            // getting all indexes pages from all indexes
+            foreach(var index in _collectionPage.GetCollectionIndexes())
+            {
+                foreach (var node in indexer.FindAll(index, Query.Ascending))
+                {
+                    indexPages.Add(node.Page.PageID);
 
-            //for (var type = PageType.Index; type <= PageType.Data; type++)
-            //{
-            //    for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
-            //    {
-            //        var next = type == PageType.Data ?
-            //            _collectionPage.FreeDataPageID[slot] :
-            //            _collectionPage.FreeIndexPageID[slot];
+                    safePoint();
+                }
+            }
 
-            //        while (next != uint.MaxValue)
-            //        {
-            //            var page = this.GetPage<BasePage>(next);
+            // now, mark all pages as deleted
+            foreach (var pageID in indexPages)
+            {
+                var page = this.GetPage<IndexPage>(pageID);
 
-            //            next = page.NextPageID;
+                // let's clean page links before mark page as deleted (there is no need to Add/Remove list becase all list will be deleted)
+                page.PrevPageID = page.NextPageID = uint.MaxValue;
 
-            //            page.MarkAsEmtpy();
+                // mark page as delete and fix deleted page list
+                page.MarkAsEmtpy();
 
-            //            // fix last free linked link page
-            //            page.NextPageID = _transPages.FirstDeletedPageID;
+                page.NextPageID = _transPages.FirstDeletedPageID;
+                _transPages.FirstDeletedPageID = page.PageID;
 
-            //            _transPages.FirstDeletedPageID = page.PageID;
+                _transPages.DeletedPages++;
 
-            //            _transPages.DeletedPages++;
+                safePoint();
+            }
 
-            //            // safepoint
-            //            safePoint();
-            //        }
-            //    }
-            //}
+            // adding all data pages
+            foreach (var startPageID in _collectionPage.FreeDataPageList)
+            {
+                var next = startPageID;
 
-            //// remove collection name (in header) at commit time
-            //_transPages.Commit += (h) => h.DeleteCollection(_collectionName);
+                while(next != uint.MaxValue)
+                {
+                    var page = this.GetPage<DataPage>(next);
+
+                    // let's clean page links before mark page as deleted (there is no need to Add/Remove list becase all list will be deleted)
+                    page.PrevPageID = page.NextPageID = uint.MaxValue;
+
+                    // mark page as delete and fix deleted page list
+                    page.MarkAsEmtpy();
+
+                    page.NextPageID = _transPages.FirstDeletedPageID;
+                    _transPages.FirstDeletedPageID = page.PageID;
+
+                    _transPages.DeletedPages++;
+
+                    next = page.NextPageID;
+
+                    safePoint();
+                }
+            }
+
+            // remove collection name (in header) at commit time
+            _transPages.Commit += (h) => h.DeleteCollection(_collectionName);
         }
 
         #endregion
