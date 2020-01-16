@@ -105,10 +105,25 @@ namespace LiteDB
 
         public void Dispose()
         {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~BsonDataReader()
+        {
+            this.Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
             if (_disposed) return;
 
-            _source?.Dispose();
             _disposed = true;
+
+            if (disposing)
+            {
+                _source?.Dispose();
+            }
         }
     }
 }

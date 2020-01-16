@@ -145,7 +145,7 @@ namespace LiteDB.Engine
         /// </summary>
         internal BsonDataReader ExecuteQueryInto(string into, BsonAutoId autoId)
         {
-            IEnumerable<BsonDocument> getResultset()
+            IEnumerable<BsonDocument> GetResultset()
             {
                 using (var reader = this.ExecuteQuery(false))
                 {
@@ -165,12 +165,12 @@ namespace LiteDB.Engine
             
                 var sys = _engine.GetSystemCollection(name);
             
-                result = sys.Output(getResultset(), options);
+                result = sys.Output(GetResultset(), options);
             }
             // otherwise insert as normal collection
             else
             {
-                result = _engine.Insert(into, getResultset(), autoId);
+                result = _engine.Insert(into, GetResultset(), autoId);
             }
 
             return new BsonDataReader(result);
