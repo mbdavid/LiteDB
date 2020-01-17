@@ -32,13 +32,7 @@ namespace LiteDB.Engine
         private readonly uint _transactionID;
         private readonly DateTime _startTime;
         private LockMode _mode = LockMode.Read;
-        private bool _disposed
-        {
-            get => this.__disposed;
-            set => this.__disposed = value;
-        }
-
-        private bool __disposed = false;
+        private bool _disposed = false;
 
         // expose (as read only)
         public int ThreadID => _threadID;
