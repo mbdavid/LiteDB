@@ -591,9 +591,6 @@ namespace LiteDB.Engine
             {
                 var page = this.GetPage<IndexPage>(pageID);
 
-                // let's clean page links before mark page as deleted (there is no need to Add/Remove list becase all list will be deleted)
-                page.PrevPageID = page.NextPageID = uint.MaxValue;
-
                 // mark page as delete and fix deleted page list
                 page.MarkAsEmtpy();
 
@@ -615,9 +612,6 @@ namespace LiteDB.Engine
                     var page = this.GetPage<DataPage>(next);
 
                     next = page.NextPageID;
-
-                    // let's clean page links before mark page as deleted (there is no need to Add/Remove list becase all list will be deleted)
-                    page.PrevPageID = page.NextPageID = uint.MaxValue;
 
                     // mark page as delete and fix deleted page list
                     page.MarkAsEmtpy();

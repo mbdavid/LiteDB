@@ -78,7 +78,7 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database using custom ILiteEngine implementation
         /// </summary>
-        public LiteDatabase(ILiteEngine engine, BsonMapper mapper = null)
+        private LiteDatabase(ILiteEngine engine, BsonMapper mapper = null)
         {
             if (engine == null) throw new ArgumentNullException(nameof(engine));
 

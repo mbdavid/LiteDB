@@ -93,8 +93,6 @@ namespace LiteDB.Engine
 
             while (page != null)
             {
-                if (page.NextPageID == uint.MaxValue) break;
-
                 _collections.TryGetValue(page.ColID, out var collection);
 
                 yield return new BsonDocument
@@ -107,6 +105,8 @@ namespace LiteDB.Engine
                     ["freeBytes"] = page.FreeBytes,
                     ["itemsCount"] = (int)page.ItemsCount
                 };
+
+                if (page.NextPageID == uint.MaxValue) break;
 
                 transaction.Safepoint();
 
