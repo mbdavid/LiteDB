@@ -130,7 +130,6 @@ namespace LiteDB.Engine
             }
         }
 
-
         /// <summary>
         /// WHERE: Filter document according expression. Expression must be an Bool result
         /// </summary>

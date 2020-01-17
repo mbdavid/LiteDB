@@ -472,7 +472,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get current thread LCID culture
+        /// Get current system operation LCID culture
         /// </summary>
         public static int Current
         {

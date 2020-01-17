@@ -60,7 +60,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// GROUP BY: Apply groupBy expression and aggregate results in DocumentGroup
         /// </summary>
-        private IEnumerable<DocumentGroup> GroupBy(IEnumerable<BsonDocument> source, GroupBy groupBy)
+        private IEnumerable<DocumentCacheEnumerable> GroupBy(IEnumerable<BsonDocument> source, GroupBy groupBy)
         {
             using (var enumerator = source.GetEnumerator())
             {
@@ -74,7 +74,7 @@ namespace LiteDB.Engine
 
                     var group = YieldDocuments(key, enumerator, groupBy, done);
 
-                    yield return new DocumentGroup(key, enumerator.Current, group, _lookup);
+                    yield return new DocumentCacheEnumerable(group, _lookup);
                 }
             }
         }
@@ -109,7 +109,7 @@ namespace LiteDB.Engine
         /// Run Select expression over a group source - each group will return a single value
         /// If contains Having expression, test if result = true before run Select
         /// </summary>
-        private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<DocumentGroup> groups, GroupBy groupBy)
+        private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<DocumentCacheEnumerable> groups, GroupBy groupBy)
         {
             var defaultName = groupBy.Select.DefaultFieldName();
 
@@ -122,12 +122,12 @@ namespace LiteDB.Engine
                 {
                     if (groupBy.Having != null)
                     {
-                        var filter = groupBy.Having.ExecuteScalar(group, group.Root, group.Root, _pragmas.Collation);
+                        var filter = groupBy.Having.ExecuteScalar(group, null, null, _pragmas.Collation);
 
                         if (!filter.IsBoolean || !filter.AsBoolean) continue;
                     }
 
-                    value = groupBy.Select.ExecuteScalar(group, group.Root, group.Root, _pragmas.Collation);
+                    value = groupBy.Select.ExecuteScalar(group, null, null, _pragmas.Collation);
                 }
                 finally
                 {

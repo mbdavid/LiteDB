@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -51,7 +52,7 @@ namespace LiteDB
         }
 
 #if HAVE_GET_CULTURE_INFO
-        public static Collation Default = new Collation(CultureInfo.CurrentCulture.LCID, CompareOptions.IgnoreCase);
+        public static Collation Default = new Collation(Thread.CurrentThread.CurrentCulture.LCID, CompareOptions.IgnoreCase);
 #else
         public static Collation Default = new Collation(LiteDB.LCID.Current, CompareOptions.IgnoreCase);
 #endif
