@@ -82,7 +82,7 @@ namespace LiteDB.Engine
             this.LastPageID = 0;
 
             // initialize pragmas
-            this.Pragmas = new EnginePragmas();
+            this.Pragmas = new EnginePragmas(this);
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
             _buffer.Write(HEADER_INFO, P_HEADER_INFO);
@@ -123,7 +123,7 @@ namespace LiteDB.Engine
             this.LastPageID = _buffer.ReadUInt32(P_LAST_PAGE_ID);
 
             // initialize engine pragmas
-            this.Pragmas = new EnginePragmas(_buffer);
+            this.Pragmas = new EnginePragmas(_buffer, this);
 
             // create new buffer area to store BsonDocument collections
             var area = _buffer.Slice(P_COLLECTIONS, COLLECTIONS_SIZE);

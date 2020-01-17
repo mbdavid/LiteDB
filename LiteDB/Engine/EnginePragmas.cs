@@ -58,32 +58,35 @@ namespace LiteDB.Engine
 
         private readonly Dictionary<string, Pragma> _pragmas;
         private bool _isDirty = false;
+        private readonly HeaderPage _headerPage;
 
         /// <summary>
         /// Get all pragmas
         /// </summary>
         public IEnumerable<Pragma> Pragmas => _pragmas.Values;
 
-        public EnginePragmas()
+        public EnginePragmas(HeaderPage headerPage)
         {
+            _headerPage = headerPage;
+
             _pragmas = new Dictionary<string, Pragma>(StringComparer.OrdinalIgnoreCase)
             {
                 ["USER_VERSION"] = new Pragma
                 {
                     Name = "USER_VERSION",
-                    ReadOnly = false,
                     Get = () => this.UserVersion,
                     Set = (v) => this.UserVersion = v.AsInt32,
                     Read = (b) => this.UserVersion = b.ReadInt32(P_USER_VERSION),
+                    Validate = (v, h) => { },
                     Write =  (b) => b.Write(this.UserVersion, P_USER_VERSION)
                 },
                 ["COLLATION"] = new Pragma
                 {
                     Name = "COLLATION",
-                    ReadOnly = true,
                     Get = () => this.Collation.ToString(),
                     Set = (v) => this.Collation = new Collation(v.AsString),
                     Read = (b) => this.Collation = new Collation(b.ReadInt32(P_COLLATION_LCID), (CompareOptions)b.ReadInt32(P_COLLATION_SORT)),
+                    Validate = (v, h) => { throw new LiteException(0, "Pragma COLLATION is read only"); },
                     Write = (b) => 
                     { 
                         b.Write(this.Collation.LCID, P_COLLATION_LCID);
@@ -93,37 +96,41 @@ namespace LiteDB.Engine
                 ["TIMEOUT"] = new Pragma
                 {
                     Name = "TIMEOUT",
-                    ReadOnly = false,
                     Get = () => (int)this.Timeout.TotalSeconds,
                     Set = (v) => this.Timeout = TimeSpan.FromSeconds(v.AsInt32),
                     Read = (b) => this.Timeout = TimeSpan.FromSeconds(b.ReadInt32(P_TIMEOUT)),
+                    Validate = (v, h) => { if(v <= 0) throw new LiteException(0, "Pragma TIMEOUT must be greater than zero"); },
                     Write = (b) => b.Write((int)this.Timeout.TotalSeconds, P_TIMEOUT)
                 },
                 ["LIMIT_SIZE"] = new Pragma
                 {
                     Name = "LIMIT_SIZE",
-                    ReadOnly = false,
                     Get = () => this.LimitSize,
                     Set = (v) => this.LimitSize = v.AsInt64,
                     Read = (b) => this.LimitSize = b.ReadInt64(P_LIMIT_SIZE),
+                    Validate = (v, h) =>
+                    {
+                        if (v < 4 * PAGE_SIZE) throw new LiteException(0, "Pragma LIMIT_SIZE must be at least 4 pages (32768 bytes)");
+                        if (h != null && v.AsInt64 < (h.LastPageID + 1) * Constants.PAGE_SIZE) throw new LiteException(0, "Pragma LIMIT_SIZE must be greater or equal to the current file size");
+                    },
                     Write = (b) => b.Write(this.LimitSize, P_LIMIT_SIZE)
                 },
                 ["UTC_DATE"] = new Pragma
                 {
                     Name = "UTC_DATE",
-                    ReadOnly = false,
                     Get = () => this.UtcDate,
                     Set = (v) => this.UtcDate = v.AsBoolean,
                     Read = (b) => this.UtcDate = b.ReadBool(P_UTC_DATE),
+                    Validate = (v, h) => { },
                     Write = (b) => b.Write(this.UtcDate, P_UTC_DATE)
                 },
                 ["CHECKPOINT"] = new Pragma
                 {
                     Name = "CHECKPOINT",
-                    ReadOnly = false,
                     Get = () => this.Checkpoint,
                     Set = (v) => this.Checkpoint = v.AsInt32,
                     Read = (b) => this.Checkpoint = b.ReadInt32(P_CHECKPOINT),
+                    Validate = (v, h) => { if (v < 0) throw new LiteException(0, "Pragma CHECKPOINT must be greater or equal to zero"); },
                     Write = (b) => b.Write(this.Checkpoint, P_CHECKPOINT)
                 }
             };
@@ -131,8 +138,8 @@ namespace LiteDB.Engine
             _isDirty = true;
         }
 
-        public EnginePragmas(BufferSlice buffer)
-            : this()
+        public EnginePragmas(BufferSlice buffer, HeaderPage headerPage)
+            : this(headerPage)
         {
             foreach(var pragma in _pragmas.Values)
             {
@@ -164,11 +171,12 @@ namespace LiteDB.Engine
             throw new LiteException(0, $"Pragma `{name}` not exist");
         }
 
-        public void Set(string name, BsonValue value, bool validateReadonly)
+        public void Set(string name, BsonValue value, bool validate)
         {
             if (_pragmas.TryGetValue(name, out var pragma))
             {
-                if (validateReadonly && pragma.ReadOnly == true) throw new LiteException(0, $"Pragma `{pragma.Name}` is read only");
+                if (validate)
+                    pragma.Validate(value, _headerPage);
 
                 pragma.Set(value);
 

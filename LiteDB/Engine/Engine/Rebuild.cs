@@ -100,7 +100,7 @@ namespace LiteDB.Engine
                 // update user version on commit	
                 transaction.Pages.Commit += h =>
                 {
-                    foreach (var pragma in h.Pragmas.Pragmas.Where(x => x.ReadOnly == false))
+                    foreach (var pragma in h.Pragmas.Pragmas)
                     {
                         _header.Pragmas.Set(pragma.Name, reader.Pragmas.Get(pragma.Name), false);
                     }

@@ -31,7 +31,7 @@ namespace LiteDB.Engine
             // only userVersion was avaiable in old file format versions
             _header = this.ReadPage(0);
 
-            this.Pragmas = new EnginePragmas();
+            this.Pragmas = new EnginePragmas(null);
             this.Pragmas.Set("USER_VERSION", _header["userVersion"], true);
 
             if (password == null && _header["salt"].AsBinary.IsFullZero() == false)

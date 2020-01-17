@@ -20,7 +20,7 @@ namespace LiteDB.Internals
                 .Select(x => new KeyValuePair<BsonValue, PageAddress>(x, PageAddress.Empty))
                 .ToArray();
 
-            var pragmas = new EnginePragmas();
+            var pragmas = new EnginePragmas(null);
             pragmas.Set("COLLATION", Collation.Binary.ToString(), false);
 
             using (var tempDisk = new SortDisk(_factory, 10 * 8192, pragmas))
@@ -48,7 +48,7 @@ namespace LiteDB.Internals
                 .Select(x => new KeyValuePair<BsonValue, PageAddress>(rnd.Next(1, 30000), PageAddress.Empty))
                 .ToArray();
 
-            var pragmas = new EnginePragmas();
+            var pragmas = new EnginePragmas(null);
             pragmas.Set("COLLATION", Collation.Binary.ToString(), false);
 
             using (var tempDisk = new SortDisk(_factory, 10 * 8192, pragmas))
