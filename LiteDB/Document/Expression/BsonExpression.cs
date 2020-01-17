@@ -172,9 +172,7 @@ namespace LiteDB
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
-            var root = source.FirstOrDefault();
-
-            return this.Execute(source, root, root, collation);
+            return this.Execute(source, null, null, collation);
         }
 
         /// <summary>
@@ -224,6 +222,16 @@ namespace LiteDB
             var source = new BsonDocument[] { root };
 
             return this.ExecuteScalar(source, root, root, collation);
+        }
+
+        /// <summary>
+        /// Execute scalar expression over multiple documents and return a single value (or BsonNull when empty). Throws exception if expression are not scalar expression
+        /// </summary>
+        public BsonValue ExecuteScalar(IEnumerable<BsonDocument> source, Collation collation = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            return this.ExecuteScalar(source, null, null, collation);
         }
 
         /// <summary>

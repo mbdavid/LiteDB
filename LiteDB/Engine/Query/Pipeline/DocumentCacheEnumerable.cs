@@ -12,21 +12,15 @@ namespace LiteDB.Engine
     /// Implement an IEnumerable document cache that read data first time and store in memory/disk cache
     /// Used in GroupBy operation and MUST read all IEnumerable source before dispose because are need be linear from main resultset
     /// </summary>
-    internal class DocumentGroup : IEnumerable<BsonDocument>, IDisposable
+    internal class DocumentCacheEnumerable : IEnumerable<BsonDocument>, IDisposable
     {
         private IEnumerator<BsonDocument> _enumerator;
 
         private readonly List<PageAddress> _cache = new List<PageAddress>();
         private readonly IDocumentLookup _lookup;
-        private readonly BsonValue _key;
 
-        public BsonDocument Root { get; }
-
-        public DocumentGroup(BsonValue key, BsonDocument root, IEnumerable<BsonDocument> source, IDocumentLookup lookup)
+        public DocumentCacheEnumerable(IEnumerable<BsonDocument> source, IDocumentLookup lookup)
         {
-            this.Root = root;
-
-            _key = key;
             _enumerator = source.GetEnumerator();
             _lookup = lookup;
         }
@@ -48,10 +42,6 @@ namespace LiteDB.Engine
 
             // the index of the current item in the cache.
             var index = 0;
-
-#if DEBUG
-            if (_cache.Count > 0) LOG($"document group cache request (key: {_key}, size: {_cache.Count})", "GROUPBY");
-#endif
 
             // enumerate the _cache first
             for (; index < _cache.Count; index++)

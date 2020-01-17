@@ -301,7 +301,7 @@ namespace LiteDB.Tests.Expressions
             A("JOIN(*.c, '#')").ExpectValues("First#Second#Last");
 
             // when use $ over multiple values, only first result are used
-            A("JOIN(MAP($.arr[*] => (@ + 1)), '-')").ExpectValues("2-3");
+            A("JOIN(MAP(*.arr[*] => (@ + 1)), '-')").ExpectValues("2-3-2-4-6-10-2-6-6");
 
             // flaten
             A("*.arr[*]").ExpectValues(1, 2, 1, 3, 5, 9, 1, 5, 5);

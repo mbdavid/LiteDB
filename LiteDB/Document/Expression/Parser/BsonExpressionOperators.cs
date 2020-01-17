@@ -259,6 +259,13 @@ namespace LiteDB
         /// </summary>
         public static BsonValue MEMBER_PATH(BsonValue value, string name)
         {
+            // if value is null is because there is no "current document", only "all documents"
+            // SELECT COUNT(*), $.pageID FROM $page_list IS invalid!
+            if (value == null)
+            {
+                throw new LiteException(0, $"Field '{name}' is invalid in the select list because it is not contained in either an aggregate function or the GROUP BY clause.");
+            }
+
             if (string.IsNullOrEmpty(name))
             {
                 return value;

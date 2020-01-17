@@ -102,11 +102,10 @@ namespace LiteDB.Engine
         /// </summary>
         private IEnumerable<BsonDocument> SelectAll(IEnumerable<BsonDocument> source, BsonExpression select)
         {
-            var defaultName = select.DefaultFieldName();
-            var result = select.Execute(source, _pragmas.Collation);
+            var cached = new DocumentCacheEnumerable(source, _lookup);
 
-            //TODO: pode ter algum tipo de CACHE caso a expressão contenha mais de 1 "UseSource"... 
-            // evita executar todo pipe -- pior dos casos dá um ToArray() (ou usa um DocumentGroup)
+            var defaultName = select.DefaultFieldName();
+            var result = select.Execute(cached, _pragmas.Collation);
 
             foreach (var value in result)
             {
