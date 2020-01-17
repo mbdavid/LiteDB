@@ -22,7 +22,7 @@ namespace LiteDB.Engine
         public FileReaderV8(HeaderPage header, DiskService disk)
         {
             // get a copy of pragmas
-            this.Pragmas = new EnginePragmas(header.UpdateBuffer());
+            this.Pragmas = new EnginePragmas(header.UpdateBuffer(), header);
 
             _collections = header.GetCollections().ToDictionary(x => x.Key, x => x.Value);
 

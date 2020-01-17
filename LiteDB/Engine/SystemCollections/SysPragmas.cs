@@ -14,7 +14,8 @@ namespace LiteDB.Engine
             {
                 yield return new BsonDocument
                 {
-                    [pragma.Name] = pragma.Get()
+                    ["_id"] = pragma.Name,
+                    ["value"] = pragma.Get()
                 };
             }
         }
