@@ -130,7 +130,7 @@ namespace LiteDB.Engine
                     Get = () => this.Checkpoint,
                     Set = (v) => this.Checkpoint = v.AsInt32,
                     Read = (b) => this.Checkpoint = b.ReadInt32(P_CHECKPOINT),
-                    Validate = (v, h) => { if (v <= 0) throw new LiteException(0, "Pragma CHECKPOINT must be greater than zero"); },
+                    Validate = (v, h) => { if (v < 0) throw new LiteException(0, "Pragma CHECKPOINT must be greater or equal to zero"); },
                     Write = (b) => b.Write(this.Checkpoint, P_CHECKPOINT)
                 }
             };
