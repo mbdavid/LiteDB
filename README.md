@@ -29,7 +29,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 Take a look at the all [new version v5 here](#v5)
 
-![LiteDB Studio](https://pbs.twimg.com/media/D_142rzWwAECJDd?format=jpg&name=900x900)
+![LiteDB Studio](https://pbs.twimg.com/media/EOXVKvtX0AA-ldy?format=jpg&name=medium)
 
 ## Documentation
 
@@ -218,7 +218,7 @@ After more than a year of hard working, v5 is comming!
 > What was dropped?
 
 - Single process only - optimized for multi thread (open file as exclusive mode)
-- Dropped .NET 3.5/4.0 - works only in .NET 4.5+ and .NETStandard 2.0
+- Dropped .NET 3.5/4.0 - works only in .NET 4.5+ and .NETStandard 1.3/2.0
 - Shell commands (use SQL commands)
     
 .. but still...   
