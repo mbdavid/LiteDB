@@ -25,8 +25,7 @@ namespace LiteDB.Engine
             this.RegisterSystemCollection("$snapshots", () => this.SysSnapshots());
             this.RegisterSystemCollection("$open_cursors", () => this.SysOpenCursors());
 
-            this.RegisterSystemCollection(new SysFileJson());
-            this.RegisterSystemCollection(new SysFileCsv());
+            this.RegisterSystemCollection(new SysFile()); // use single $file(?) for all file formats
             this.RegisterSystemCollection(new SysDump(_header, _monitor));
             this.RegisterSystemCollection(new SysPageList(_header, _monitor));
 
