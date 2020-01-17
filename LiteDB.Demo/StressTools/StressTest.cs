@@ -27,19 +27,14 @@ namespace LiteDB.Demo
         private readonly bool _synced = false;
         private readonly DatabaseDebugger _debugger;
 
-        public StressTest(EngineSettings settings, bool synced)
+        public StressTest(string filename, bool synced)
         {
-            if (settings.Filename != null)
-            {
-                File.Delete(settings.Filename);
-                File.Delete(GetSufixFile(settings.Filename, "-log", false));
-            }
+            File.Delete(filename);
+            File.Delete(GetSufixFile(filename, "-log", false));
 
-            var engine = new LiteEngine(settings);
+            _db = new LiteDatabase(filename);
 
-            engine.Pragma("TIMEOUT", TimeSpan.FromHours(1).TotalSeconds);
-
-            _db = new LiteDatabase(engine);
+            _db.Execute("PRAGMA TIMEOUT = 3600");
 
             _debugger = new DatabaseDebugger(_db);
 

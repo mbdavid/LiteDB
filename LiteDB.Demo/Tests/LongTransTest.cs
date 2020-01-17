@@ -17,7 +17,7 @@ namespace LiteDB.Demo
     public class LongTransTest : StressTest
     {
         public LongTransTest(string filename, bool synced = false) : 
-            base(new EngineSettings { Filename = filename }, synced)
+            base(filename, synced)
         {
         }
 

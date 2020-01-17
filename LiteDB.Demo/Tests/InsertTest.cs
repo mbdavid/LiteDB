@@ -17,7 +17,7 @@ namespace LiteDB.Demo
     public class InsertStressTest : StressTest
     {
         public InsertStressTest(string filename, bool synced = false) : 
-            base(new EngineSettings { Filename = filename }, synced)
+            base(filename, synced)
         {
         }
 
