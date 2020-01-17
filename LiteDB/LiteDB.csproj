@@ -13,7 +13,7 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <Title>LiteDB</Title>
     <PackageId>LiteDB</PackageId>
-    <PackageVersion>5.0.0-beta</PackageVersion>
+    <PackageVersion>5.0.0-rc</PackageVersion>
     <PackageTags>database nosql embedded</PackageTags>
     <PackageIconUrl>http://www.litedb.org/img/logo_64x64.png</PackageIconUrl>
     <PackageProjectUrl>https://www.litedb.org</PackageProjectUrl>
