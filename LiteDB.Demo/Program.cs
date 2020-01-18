@@ -27,7 +27,7 @@ namespace LiteDB.Demo
             var input = Console.ReadLine();
             var timer = TimeSpan.FromMinutes(string.IsNullOrEmpty(input) ? 1 : Convert.ToDouble(input));
 
-            using (var test = new InsertStressTest(@"example.db"))
+            using (var test = new ExampleStressTest(@"example.db"))
             {
                 test.Run(timer);
             }
