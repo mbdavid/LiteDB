@@ -24,7 +24,7 @@ namespace LiteDB.Tests.QueryTest
             r0.Should().Equal(r1);
         }
 
-        [Fact]
+        [Fact(Skip = "Checks PageBuffer SharedCounter")]
         public void Query_OrderBy_Using_Index_Desc()
         {
             collection.EnsureIndex(x => x.Name);
