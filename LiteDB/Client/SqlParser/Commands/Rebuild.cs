@@ -22,6 +22,8 @@ namespace LiteDB
 
             if (next.Type == TokenType.EOF || next.Type == TokenType.SemiColon)
             {
+                options = null;
+
                 _tokenizer.ReadToken();
             }
             else

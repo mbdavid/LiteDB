@@ -66,7 +66,7 @@ namespace LiteDB.Engine
 
                 return originalLength - newLength;
             }
-            catch(Exception)
+            catch
             {
                 _header.Restore(savepoint);
 
