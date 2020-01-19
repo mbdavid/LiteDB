@@ -106,15 +106,6 @@ namespace LiteDB.Engine
                     this.Insert(collection, docs, BsonAutoId.ObjectId);
                 }
 
-                // update user version on commit	
-                transaction.Pages.Commit += h =>
-                {
-                    foreach (var pragma in h.Pragmas.Pragmas)
-                    {
-                        _header.Pragmas.Set(pragma.Name, reader.Pragmas.Get(pragma.Name), false);
-                    }
-                };
-
                 this.Commit();
             }
             catch (Exception)
