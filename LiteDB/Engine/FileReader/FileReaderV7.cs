@@ -22,17 +22,12 @@ namespace LiteDB.Engine
 
         private byte[] _buffer = new byte[V7_PAGE_SIZE];
 
-        public EnginePragmas Pragmas { get; }
-
         public FileReaderV7(Stream stream, string password)
         {
             _stream = stream;
 
             // only userVersion was avaiable in old file format versions
             _header = this.ReadPage(0);
-
-            this.Pragmas = new EnginePragmas(null);
-            this.Pragmas.Set("USER_VERSION", _header["userVersion"], true);
 
             if (password == null && _header["salt"].AsBinary.IsFullZero() == false)
             {

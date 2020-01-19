@@ -17,13 +17,8 @@ namespace LiteDB.Engine
         private readonly Stream _stream;
         private readonly byte[] _buffer;
 
-        public EnginePragmas Pragmas { get; }
-
         public FileReaderV8(HeaderPage header, DiskService disk)
         {
-            // get a copy of pragmas
-            this.Pragmas = new EnginePragmas(header.UpdateBuffer(), header);
-
             _collections = header.GetCollections().ToDictionary(x => x.Key, x => x.Value);
 
             // using writer stream from pool (no need to return)
