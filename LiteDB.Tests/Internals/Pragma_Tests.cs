@@ -22,7 +22,6 @@ namespace LiteDB.Internals
             // create new header page
             var header = new HeaderPage(buffer, 0);
 
-
             this.Invoking(x => header.Pragmas.Get("INEXISTENT_PRAGMA")).Should().Throw<Exception>();
 
             this.Invoking(x => header.Pragmas.Set("USER_VERSION", "invalid value", true)).Should().Throw<Exception>();
@@ -40,6 +39,9 @@ namespace LiteDB.Internals
             this.Invoking(x => header.Pragmas.Set("UTC_DATE", true, true)).Should().NotThrow();
 
             this.Invoking(x => header.Pragmas.Set("CHECKPOINT", -1, true)).Should().Throw<Exception>();
+
+            // MUST clear sharecount before finalize
+            buffer.ShareCounter = 0;
         }
     }
 }

@@ -6,7 +6,7 @@ namespace LiteDB.Tests.Engine
 {
     public class DropCollection_Tests
     {
-        [Fact(Skip = "not implemented")]
+        [Fact]
         public void DropCollection()
         {
             using (var file = new TempFile())

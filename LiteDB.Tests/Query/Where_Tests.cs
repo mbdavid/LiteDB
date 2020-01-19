@@ -35,7 +35,7 @@ namespace LiteDB.Tests.QueryTest
             AssertEx.ArrayEqual(r0, r1, true);
         }
 
-        [Fact(Skip = "Checks PageBuffer SharedCounter")]
+        [Fact]
         public void Query_Single_Where_With_And()
         {
             var r0 = local
