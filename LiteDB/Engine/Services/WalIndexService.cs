@@ -53,6 +53,7 @@ namespace LiteDB.Engine
             _confirmTransactions.Clear();
             _index.Clear();
 
+            _lastTransactionID = 0;
             _currentReadVersion = 0;
 
             // clear cache
@@ -258,6 +259,7 @@ namespace LiteDB.Engine
             // write all log pages into data file (sync)
             _disk.Write(source(), FileOrigin.Data);
 
+            // clear log file, clear wal index, memory cache,
             this.Clear();
 
             // remove exclusive lock

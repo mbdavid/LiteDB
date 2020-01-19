@@ -1,86 +1,123 @@
-﻿//** namespace LiteDB.Tests.Engine
-//** {
-//**     [TestClass]
-//**     public class Shrink_Tests
-//**     {
-//**         [Fact]
-//**         public void Shrink_After_DropCollection()
-//**         {
-//**             using (var file = new TempFile())
-//**             using (var db = new LiteDatabase(file.Filename))
-//**             {
-//**                 var col = db.GetCollection<Zip>();
-//** 
-//**                 col.Insert(DataGen.Zip());
-//** 
-//**                 db.DropCollection("col");
-//** 
-//**                 // full disk usage
-//**                 var size = file.Size;
-//** 
-//**                 var r = db.Shrink();
-//** 
-//**                 // only header page
-//**                 Assert.Equal(8192, size - r);
-//**             }
-//**         }
-//** 
-//**         [Fact]
-//**         public void Shrink_Large_Files()
-//**         {
-//**             // do some tests
-//**             void DoTest(LiteDatabase db, LiteCollection<Zip> col)
-//**             {
-//**                 Assert.Equal(1, col.Count());
-//**                 Assert.Equal(99, db.UserVersion);
-//**             };
-//** 
-//**             using (var file = new TempFile())
-//**             {
-//**                 using (var db = new LiteDatabase(file.Filename))
-//**                 {
-//**                     var col = db.GetCollection<Zip>();
-//** 
-//**                     db.UserVersion = 99;
-//** 
-//**                     col.EnsureIndex("city", false);
-//** 
-//**                     var inserted = col.Insert(DataGen.Zip()); // 29.353 docs
-//**                     var deleted = col.DeleteMany(x => x.Id != "01001"); // delete 29.352 docs
-//** 
-//**                     Assert.Equal(29353, inserted);
-//**                     Assert.Equal(29352, deleted);
-//** 
-//**                     Assert.Equal(1, col.Count());
-//** 
-//**                     // must checkpoint
-//**                     db.Checkpoint();
-//** 
-//**                     // file still large than 5mb (even with only 1 document)
-//**                     Assert.True(file.Size > 5 * 1024 * 1024);
-//** 
-//**                     // reduce datafile (use temp disk) (from LiteDatabase)
-//**                     var reduced = db.Shrink();
-//** 
-//**                     // now file are small than 50kb
-//**                     Assert.True(file.Size < 50 * 1024);
-//** 
-//**                     DoTest(db, col);
-//**                 }
-//** 
-//**                 // re-open and shrink again
-//**                 using (var db = new LiteDatabase(file.Filename))
-//**                 {
-//**                     var col = db.GetCollection<Zip>();
-//** 
-//**                     DoTest(db, col);
-//** 
-//**                     db.Shrink();
-//** 
-//**                     DoTest(db, col);
-//**                 }
-//**             }
-//**         }
-//**     }
-//** }
+﻿using FluentAssertions;
+using LiteDB.Engine;
+using System;
+using Xunit;
+
+namespace LiteDB.Tests.Engine
+{
+    public class Rebuild_Tests
+    {
+        [Fact]
+        public void Rebuild_After_DropCollection()
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteDatabase(file.Filename))
+            {
+                var col = db.GetCollection<Zip>("zip");
+
+                col.Insert(DataGen.Zip());
+
+                db.DropCollection("zip");
+
+                db.Checkpoint();
+
+                // full disk usage
+                var size = file.Size;
+
+                var r = db.Rebuild();
+
+                // only header page
+                Assert.Equal(8192, size - r);
+            }
+        }
+
+        [Fact]
+        public void Rebuild_Large_Files()
+        {
+            // do some tests
+            void DoTest(LiteDatabase db, LiteCollection<Zip> col)
+            {
+                Assert.Equal(1, col.Count());
+                Assert.Equal(99, db.UserVersion);
+            };
+
+            using (var file = new TempFile())
+            {
+                using (var db = new LiteDatabase(file.Filename))
+                {
+                    var col = db.GetCollection<Zip>();
+
+                    db.UserVersion = 99;
+
+                    col.EnsureIndex("city", false);
+
+                    var inserted = col.Insert(DataGen.Zip()); // 29.353 docs
+                    var deleted = col.DeleteMany(x => x.Id != "01001"); // delete 29.352 docs
+
+                    Assert.Equal(29353, inserted);
+                    Assert.Equal(29352, deleted);
+
+                    Assert.Equal(1, col.Count());
+
+                    // must checkpoint
+                    db.Checkpoint();
+
+                    // file still large than 5mb (even with only 1 document)
+                    Assert.True(file.Size > 5 * 1024 * 1024);
+
+                    // reduce datafile
+                    var reduced = db.Rebuild();
+
+                    // now file are small than 50kb
+                    Assert.True(file.Size < 50 * 1024);
+
+                    DoTest(db, col);
+                }
+
+                // re-open and rebuild again
+                using (var db = new LiteDatabase(file.Filename))
+                {
+                    var col = db.GetCollection<Zip>();
+
+                    DoTest(db, col);
+
+                    db.Rebuild();
+
+                    DoTest(db, col);
+                }
+            }
+        }
+
+        [Fact]
+        public void Rebuild_Change_Culture_Error()
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteDatabase(file.Filename))
+            {
+                // remove string comparer ignore case
+                db.Rebuild(new RebuildOptions { Collation = new Collation("en-US/None") });
+
+                // insert 2 documents with different ID in case sensitive
+                db.GetCollection("col1").Insert(new BsonDocument[]
+                {
+                    new BsonDocument { ["_id"] = "ana" },
+                    new BsonDocument { ["_id"] = "ANA" }
+                });
+
+                // try migrate to ignorecase
+                try
+                {
+                    db.Rebuild(new RebuildOptions { Collation = new Collation("en-US/IgnoreCase") });
+                }
+                catch(LiteException ex)
+                {
+                    ex.Message.Should().Contain("duplicate"); // duplicate id
+                }
+
+                // test if current pragma still with collation none
+                db.Pragma("COLLATION").AsString.Should().Be("en-US/None");
+            }
+        }
+    }
+}
 

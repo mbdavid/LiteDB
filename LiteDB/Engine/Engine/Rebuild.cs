@@ -36,26 +36,35 @@ namespace LiteDB.Engine
                     _header.LastPageID = 0;
                     _header.GetCollections().ToList().ForEach(c => _header.DeleteCollection(c.Key));
 
-                    // override collation
-                    _header.Pragmas.Set("COLLATION", options.Collation.ToString(), false);
+                    // override collation pragma
+                    if (options?.Collation != null)
+                    {
+                        _header.Pragmas.Set("COLLATION", options.Collation.ToString(), false);
+                    }
 
                     // rebuild entrie database using FileReader
                     this.RebuildContent(reader);
-
-                    // change password (can be a problem if any error occurs after here)
-                    _disk.ChangePassword(options.Password, _settings);
-
-                    // exit reserved before checkpoint
-                    _locker.ExitReserved(true);
-
-                    // do checkpoint
-                    _walIndex.Checkpoint(false);
-
-                    // get new filelength to compare
-                    var newLength = _disk.GetLength(FileOrigin.Data);
-
-                    return originalLength - newLength;
                 }
+
+                // change password (can be a problem if any error occurs after here)
+                if (options != null)
+                {
+                    _disk.ChangePassword(options.Password, _settings);
+                }
+
+                // exit reserved before checkpoint
+                _locker.ExitReserved(true);
+
+                // do checkpoint
+                _walIndex.Checkpoint(false);
+
+                // set new fileLength
+                _disk.SetLength((_header.LastPageID + 1) * PAGE_SIZE, FileOrigin.Data);
+
+                // get new filelength to compare
+                var newLength = _disk.GetLength(FileOrigin.Data);
+
+                return originalLength - newLength;
             }
             catch(Exception)
             {

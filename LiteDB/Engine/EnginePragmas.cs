@@ -86,7 +86,7 @@ namespace LiteDB.Engine
                     Get = () => this.Collation.ToString(),
                     Set = (v) => this.Collation = new Collation(v.AsString),
                     Read = (b) => this.Collation = new Collation(b.ReadInt32(P_COLLATION_LCID), (CompareOptions)b.ReadInt32(P_COLLATION_SORT)),
-                    Validate = (v, h) => { throw new LiteException(0, "Pragma COLLATION is read only"); },
+                    Validate = (v, h) => { throw new LiteException(0, "Pragma COLLATION is read only. Use Rebuild options."); },
                     Write = (b) => 
                     { 
                         b.Write(this.Collation.LCID, P_COLLATION_LCID);

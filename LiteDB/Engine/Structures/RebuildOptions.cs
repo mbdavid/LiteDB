@@ -16,6 +16,6 @@ namespace LiteDB.Engine
         /// <summary>
         /// Define a new collation when rebuild
         /// </summary>
-        public Collation Collation { get; set; } = Collation.Default;
+        public Collation Collation { get; set; } = null;
     }
 }

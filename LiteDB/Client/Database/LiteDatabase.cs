@@ -273,9 +273,25 @@ namespace LiteDB
         /// <summary>
         /// Rebuild all database to remove unused pages - reduce data file
         /// </summary>
-        public long Rebuild(RebuildOptions options)
+        public long Rebuild(RebuildOptions options = null)
         {
             return _engine.Value.Rebuild(options);
+        }
+
+        /// <summary>
+        /// Get value from internal engine variables
+        /// </summary>
+        public BsonValue Pragma(string name)
+        {
+            return _engine.Value.Pragma(name);
+        }
+
+        /// <summary>
+        /// Set new value to internal engine variables
+        /// </summary>
+        public BsonValue Pragma(string name, BsonValue value)
+        {
+            return _engine.Value.Pragma(name, value);
         }
 
         /// <summary>	
