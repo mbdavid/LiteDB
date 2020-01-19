@@ -15,9 +15,9 @@
     <PackageId>LiteDB</PackageId>
     <PackageVersion>5.0.0-rc</PackageVersion>
     <PackageTags>database nosql embedded</PackageTags>
-    <PackageIcon>http://www.litedb.org/img/logo_64x64.png</PackageIcon>
+    <PackageIcon>icon_64x64.png</PackageIcon>
     <PackageProjectUrl>https://www.litedb.org</PackageProjectUrl>
-    <PackageLicense>https://raw.github.com/mbdavid/LiteDB/master/LICENSE</PackageLicense>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/mbdavid/LiteDB</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RootNamespace>LiteDB</RootNamespace>
@@ -54,6 +54,10 @@
   </PropertyGroup>
 
   <!-- Begin References -->
+  <ItemGroup>
+    <None Include="..\LICENSE" Pack="true" PackagePath="\"/>
+    <None Include="..\icon_64x64.png" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <Reference Include="System" />
