@@ -87,6 +87,7 @@ namespace LiteDB.Engine
 
             var index = 0;
 
+            IList<string> headerFields = null;
             FileStream fs = null;
             StreamWriter writer = null;
 
@@ -98,6 +99,8 @@ namespace LiteDB.Engine
                     {
                         fs = new FileStream(filename, overwritten ? FileMode.OpenOrCreate : FileMode.CreateNew);
                         writer = new StreamWriter(fs, Encoding.GetEncoding(encoding));
+
+                        headerFields = doc.Keys.ToList();
 
                         // print file header
                         if (header)
@@ -120,14 +123,13 @@ namespace LiteDB.Engine
 
                     var idxValue = 0;
 
-                    foreach (var elem in doc)
+                    foreach(var field in headerFields)
                     {
+                        var value = doc[field];
+
                         if (idxValue++ > 0) writer.Write(delimiter);
 
-                        if (elem.Value.IsNull == false)
-                        {
-                            this.WriteString(elem.Value.AsString, writer);
-                        }
+                        this.WriteValue(value, writer);
                     }
                 }
 
@@ -145,33 +147,39 @@ namespace LiteDB.Engine
             return index;
         }
 
-        /// <summary>
-        /// Write string adding quotes (and escaping quote inside string)
-        /// </summary>
-        private void WriteString(string s, StreamWriter writer)
+        private void WriteValue(BsonValue value, StreamWriter writer)
         {
-            writer.Write('\"');
-
-            var l = s.Length;
-
-            for (var index = 0; index < l; index++)
+            switch (value.Type)
             {
-                var c = s[index];
-
-                switch (c)
-                {
-                    case '\"':
-                        writer.Write('"');
-                        writer.Write('"');
-                        break;
-
-                    default:
-                        writer.Write(c);
-                        break;
-                }
+                case BsonType.MinValue:
+                case BsonType.Null:
+                case BsonType.Document:
+                case BsonType.Array:
+                case BsonType.MaxValue:
+                    writer.Write("null");
+                    break;
+                case BsonType.Int64:
+                    writer.Write(value.AsInt64.ToString(CultureInfo.InvariantCulture.NumberFormat));
+                    break;
+                case BsonType.Decimal:
+                    writer.Write(value.AsDecimal.ToString(CultureInfo.InvariantCulture.NumberFormat));
+                    break;
+                case BsonType.Binary:
+                    writer.Write($"\"{Convert.ToBase64String(value.AsBinary)}\"");
+                    break;
+                case BsonType.ObjectId:
+                    writer.Write($"\"{value.AsObjectId.ToString()}\"");
+                    break;
+                case BsonType.Guid:
+                    writer.Write($"\"{value.AsGuid.ToString()}\"");
+                    break;
+                case BsonType.DateTime:
+                    writer.Write($"\"{value.AsDateTime.ToUniversalTime().ToString("o")}\"");
+                    break;
+                default:
+                    writer.Write(value.ToString());
+                    break;
             }
-
-            writer.Write('\"');
         }
 
         private string ReadString(TextReader reader, char delimiter, out bool newLine)

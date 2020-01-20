@@ -16,9 +16,6 @@ namespace LiteDB.Internals
             var data = new byte[Constants.PAGE_SIZE];
             var buffer = new PageBuffer(data, 0, 1);
 
-            // mark buffer as writable (debug propose)
-            buffer.ShareCounter = Constants.BUFFER_WRITABLE;
-
             // create new header page
             var header = new HeaderPage(buffer, 0);
 
@@ -39,9 +36,6 @@ namespace LiteDB.Internals
             this.Invoking(x => header.Pragmas.Set("UTC_DATE", true, true)).Should().NotThrow();
 
             this.Invoking(x => header.Pragmas.Set("CHECKPOINT", -1, true)).Should().Throw<Exception>();
-
-            // MUST clear sharecount before finalize
-            buffer.ShareCounter = 0;
         }
     }
 }
