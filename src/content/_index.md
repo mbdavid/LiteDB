@@ -114,3 +114,34 @@ LiteDB v5 project contains another way to connect, see and modify your database:
 ### Compatibility
 
 This new version is not direct compatible with v4, but support full database upgrade and keeps almost the same API from v4.
+
+# Meet LiteDB team
+
+Meet who is working in this project to provide
+
+<table>
+    <tr>
+        <td>Mauricio</td>
+        <td>Leonardo</td>
+        <td>Cassiano</td>
+    <tr>
+</table>
+
+# How is using LiteDB
+
+<table>
+    <tr>
+        <td>Mauricio</td>
+        <td>Leonardo</td>
+        <td>Cassiano</td>
+    <tr>
+</table>
+
+
+# Register to LiteDB Community
+
+Help LiteDB grow its user community by answering this simple survey.
+
+# Mission
+
+My mission is provide a great NoSQL database solution for .NET users with 

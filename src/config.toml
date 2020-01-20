@@ -14,19 +14,29 @@ pygmentsUseClasses = true
     weight = 1
 
 [[menu.main]]
+    name = "EXAMPLES"
+    url = "/examples/"
+    weight = 2
+
+[[menu.main]]
     name = "DOCS"
     url = "/docs/"
-    weight = 2
+    weight = 3
 
 [[menu.main]]
     name = "API"
     url = "/api/"
-    weight = 3
+    weight = 4
+
+[[menu.main]]
+    name = "TRY ONLINE"
+    url = "/try/"
+    weight = 5
 
 [[menu.main]]
     name = "DOWNLOAD"
     url = "https://www.nuget.org/packages/LiteDB/"
-    weight = 3
+    weight = 6
 
 [params]
   google_analytics_id=""
@@ -34,7 +44,7 @@ pygmentsUseClasses = true
   homepage_button_text = 'Read The Docs'
   homepage_intro = 'LiteDB : LiteDB - A .NET NoSQL Document Store database in a single data file.'
   homepage_image = ''
-  mainSections = ['docs', 'api']
+  mainSections = ['examples', 'docs', 'api']
 
   [params.homepage_meta_tags]
     meta_description = "LiteDB : LiteDB - A .NET NoSQL Document Store database in a single data file."
