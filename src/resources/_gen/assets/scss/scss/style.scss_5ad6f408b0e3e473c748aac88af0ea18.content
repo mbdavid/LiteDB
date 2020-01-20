@@ -7883,4 +7883,52 @@ body {
   list-style: disc;
   margin-left: 20px; }
 
+.team {
+  background-color: #f3f3f3; }
+
+.team-item {
+  padding: 35px 0 15px 0;
+  text-align: center; }
+
+.team-avatar {
+  border-radius: 50%;
+  width: 160px;
+  height: 160px; }
+
+.team-name {
+  font-weight: bold !important;
+  font-size: 18px !important;
+  margin: 15px 0; }
+
+.team-footer {
+  font-size: 12px !important;
+  font-style: italic;
+  color: gray !important; }
+
+.cust {
+  background-color: #f3f3f3; }
+
+.cust-item {
+  padding: 15px; }
+
+.cust-center {
+  text-align: center; }
+
+.cust-logo {
+  width: 160px;
+  margin: 0 auto; }
+
+.cust-title {
+  font-weight: bold;
+  margin: 15px 0; }
+
+.cust-text {
+  text-align: justify; }
+
+.cust-footer {
+  font-size: 12px !important;
+  font-style: italic;
+  color: gray !important;
+  margin: 15px 0 0 0; }
+
 /*# sourceMappingURL=style.css.map */

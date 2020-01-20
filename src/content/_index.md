@@ -119,23 +119,54 @@ This new version is not direct compatible with v4, but support full database upg
 
 Meet who is working in this project to provide
 
-<table>
-    <tr>
-        <td>Mauricio</td>
-        <td>Leonardo</td>
-        <td>Cassiano</td>
-    <tr>
-</table>
+<div class="team row">
+    <div class="col-md-4 team-item">
+        <img class="team-avatar" src="mbdavid.jpg">
+        <p class="team-name">Maurício David</p>
+        <p class="team-footer">CEO/Software Engineer</p>
+    </div>
+    <div class="col-md-4 team-item">
+        <img class="team-avatar" src="mbdavid.jpg">
+        <p class="team-name">Maurício David</p>
+        <p class="team-footer">CEO/Software Engineer</p>
+    </div>
+    <div class="col-md-4 team-item">
+        <img class="team-avatar" src="mbdavid.jpg">
+        <p class="team-name">Maurício David</p>
+        <p class="team-footer">CEO/Software Engineer</p>
+    </div>
+</div>
 
-# How is using LiteDB
+# Who is using LiteDB
 
-<table>
-    <tr>
-        <td>Mauricio</td>
-        <td>Leonardo</td>
-        <td>Cassiano</td>
-    <tr>
-</table>
+Meet some companies that are using LiteDB in production:
+
+<div class="cust row">
+    <div class="cust-item col-md-4">
+        <div class="cust-center">
+            <img class="cust-logo" src="screen1.png">
+            <div class="cust-title">Company A</div>
+        </div>
+        <div class="cust-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec fermentum mi, vel placerat est. Phasellus venenatis leo eu commodo suscipit. Praesent maximus in est tincidunt pulvinar.</div>
+        <div class="cust-footer">John Doe, CEO</div>
+    </div>
+    <div class="cust-item col-md-4">
+        <div class="cust-center">
+            <img class="cust-logo" src="screen1.png">
+            <div class="cust-title">Company A</div>
+        </div>
+        <div class="cust-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec fermentum mi, vel placerat est. Phasellus venenatis leo eu commodo suscipit. Praesent maximus in est tincidunt pulvinar.</div>
+        <div class="cust-footer">John Doe, CEO</div>
+    </div>
+    <div class="cust-item col-md-4">
+        <div class="cust-center">
+            <img class="cust-logo" src="screen1.png">
+            <div class="cust-title">Company A</div>
+        </div>
+        <div class="cust-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec fermentum mi, vel placerat est. Phasellus venenatis leo eu commodo suscipit. Praesent maximus in est tincidunt pulvinar.</div>
+        <div class="cust-footer">John Doe, CEO</div>
+    </div>
+</div>
 
 
 # Register to LiteDB Community
