@@ -70,7 +70,7 @@ namespace LiteDB.Engine
             }
             else if (!string.IsNullOrEmpty(this.Filename))
             {
-                return new FileStreamFactory(this.Filename, this.Password, this.ReadOnly);
+                return new FileStreamFactory(this.Filename, this.Password, this.ReadOnly, false);
             }
 
             throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");
@@ -97,7 +97,7 @@ namespace LiteDB.Engine
             {
                 var logName = FileHelper.GetLogFile(this.Filename);
 
-                return new FileStreamFactory(logName, this.Password, this.ReadOnly);
+                return new FileStreamFactory(logName, this.Password, this.ReadOnly, false);
             }
 
             return new StreamFactory(new MemoryStream(), this.Password);
@@ -124,7 +124,7 @@ namespace LiteDB.Engine
             {
                 var tempName = FileHelper.GetTempFile(this.Filename);
 
-                return new FileStreamFactory(tempName, this.Password, false);
+                return new FileStreamFactory(tempName, this.Password, false, true);
             }
 
             return new StreamFactory(new TempStream(), this.Password);
