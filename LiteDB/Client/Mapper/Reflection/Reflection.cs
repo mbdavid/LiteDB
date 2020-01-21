@@ -213,6 +213,30 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Return if type is simple value
+        /// </summary>
+        public static bool IsSimpleType(Type type)
+        {
+            return
+                type == typeof(string) ||
+                type == typeof(Boolean) ||
+                type == typeof(Byte) ||
+                type == typeof(SByte) ||
+                type == typeof(Int16) ||
+                type == typeof(Int32) ||
+                type == typeof(Int64) ||
+                type == typeof(UInt16) ||
+                type == typeof(UInt32) ||
+                type == typeof(UInt64) ||
+                type == typeof(Double) ||
+                type == typeof(Single) ||
+                type == typeof(Decimal) ||
+                type == typeof(ObjectId) ||
+                type == typeof(DateTime) ||
+                type == typeof(Guid);
+        }
+
+        /// <summary>
         /// Returns true if Type implement ICollection (like List, HashSet)
         /// </summary>
         public static bool IsCollection(Type type)

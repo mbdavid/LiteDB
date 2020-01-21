@@ -52,6 +52,10 @@ namespace LiteDB
                         _id.DataType == typeof(Guid) || _id.DataType == typeof(Guid?) ? BsonAutoId.Guid :
                         BsonAutoId.ObjectId;
                 }
+                else
+                {
+                    _autoId = BsonAutoId.ObjectId;
+                }
             }
         }
     }
