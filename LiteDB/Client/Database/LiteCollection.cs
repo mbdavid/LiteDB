@@ -8,7 +8,7 @@ namespace LiteDB
     public sealed partial class LiteCollection<T>
     {
         private readonly string _collection;
-        private readonly Lazy<ILiteEngine> _engine;
+        private readonly ILiteEngine _engine;
         private readonly List<BsonExpression> _includes;
         private readonly BsonMapper _mapper;
         private readonly EntityMapper _entity;
@@ -25,7 +25,7 @@ namespace LiteDB
         /// </summary>
         public EntityMapper EntityMapper => _entity;
 
-        internal LiteCollection(string name, BsonAutoId autoId, Lazy<ILiteEngine> engine, BsonMapper mapper)
+        internal LiteCollection(string name, BsonAutoId autoId, ILiteEngine engine, BsonMapper mapper)
         {
             _collection = name ?? mapper.ResolveCollectionName(typeof(T));
             _engine = engine;

@@ -14,7 +14,7 @@ namespace LiteDB
         /// </summary>
         public ILiteQueryable<T> Query()
         {
-            return new LiteQueryable<T>(_engine.Value, _mapper, _collection, new Query());
+            return new LiteQueryable<T>(_engine, _mapper, _collection, new Query());
         }
 
         #region Find
@@ -44,7 +44,7 @@ namespace LiteDB
             query.Offset = skip;
             query.Limit = limit;
 
-            return new LiteQueryable<T>(_engine.Value, _mapper, _collection, query)
+            return new LiteQueryable<T>(_engine, _mapper, _collection, query)
                 .ToEnumerable();
         }
 

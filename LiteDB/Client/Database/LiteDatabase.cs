@@ -16,8 +16,8 @@ namespace LiteDB
     {
         #region Properties
 
-        private readonly Lazy<ILiteEngine> _engine;
-        private BsonMapper _mapper = BsonMapper.Global;
+        private readonly ILiteEngine _engine;
+        private readonly BsonMapper _mapper;
 
         /// <summary>
         /// Get current instance of BsonMapper used in this database instance (can be BsonMapper.Global)
@@ -49,7 +49,7 @@ namespace LiteDB
                 LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
             }
 
-            _engine = new Lazy<ILiteEngine>(connectionString.CreateEngine, true);
+            _engine = connectionString.CreateEngine();
             _mapper = mapper ?? BsonMapper.Global;
         }
 
@@ -61,17 +61,12 @@ namespace LiteDB
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
-            _engine = new Lazy<ILiteEngine>(() =>
+            var settings = new EngineSettings
             {
-                var settings = new EngineSettings
-                {
-                    DataStream = stream
-                };
+                DataStream = stream
+            };
 
-                return new LiteEngine(settings);
-
-            }, true);
-
+            _engine = new LiteEngine(settings);
             _mapper = mapper ?? BsonMapper.Global;
         }
 
@@ -124,17 +119,17 @@ namespace LiteDB
         /// Initialize a new transaction. Transaction are created "per-thread". There is only one single transaction per thread.
         /// Return true if transaction was created or false if current thread already in a transaction.
         /// </summary>
-        public bool BeginTrans() => _engine.Value.BeginTrans();
+        public bool BeginTrans() => _engine.BeginTrans();
 
         /// <summary>
         /// Commit current transaction
         /// </summary>
-        public bool Commit() => _engine.Value.Commit();
+        public bool Commit() => _engine.Commit();
 
         /// <summary>
         /// Rollback current transaction
         /// </summary>
-        public bool Rollback() => _engine.Value.Rollback();
+        public bool Rollback() => _engine.Rollback();
 
         #endregion
 
@@ -195,7 +190,7 @@ namespace LiteDB
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return _engine.Value.DropCollection(name);
+            return _engine.DropCollection(name);
         }
 
         /// <summary>
@@ -206,7 +201,7 @@ namespace LiteDB
             if (oldName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(oldName));
             if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(newName));
 
-            return _engine.Value.RenameCollection(oldName, newName);
+            return _engine.RenameCollection(oldName, newName);
         }
 
         #endregion
@@ -221,7 +216,7 @@ namespace LiteDB
             if (commandReader == null) throw new ArgumentNullException(nameof(commandReader));
 
             var tokenizer = new Tokenizer(commandReader);
-            var sql = new SqlParser(_engine.Value, tokenizer, parameters);
+            var sql = new SqlParser(_engine, tokenizer, parameters);
             var reader = sql.Execute();
 
             return reader;
@@ -235,7 +230,7 @@ namespace LiteDB
             if (command == null) throw new ArgumentNullException(nameof(command));
 
             var tokenizer = new Tokenizer(command);
-            var sql = new SqlParser(_engine.Value, tokenizer, parameters);
+            var sql = new SqlParser(_engine, tokenizer, parameters);
             var reader = sql.Execute();
 
             return reader;
@@ -267,7 +262,7 @@ namespace LiteDB
         /// </summary>
         public void Checkpoint()
         {
-            _engine.Value.Checkpoint();
+            _engine.Checkpoint();
         }
 
         /// <summary>
@@ -275,7 +270,7 @@ namespace LiteDB
         /// </summary>
         public long Rebuild(RebuildOptions options = null)
         {
-            return _engine.Value.Rebuild(options);
+            return _engine.Rebuild(options);
         }
 
         /// <summary>
@@ -283,7 +278,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Pragma(string name)
         {
-            return _engine.Value.Pragma(name);
+            return _engine.Pragma(name);
         }
 
         /// <summary>
@@ -291,7 +286,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Pragma(string name, BsonValue value)
         {
-            return _engine.Value.Pragma(name, value);
+            return _engine.Pragma(name, value);
         }
 
         /// <summary>	
@@ -299,8 +294,8 @@ namespace LiteDB
         /// </summary>	
         public int UserVersion
         {
-            get => _engine.Value.Pragma("USER_VERSION");
-            set => _engine.Value.Pragma("USER_VERSION", value);
+            get => _engine.Pragma("USER_VERSION");
+            set => _engine.Pragma("USER_VERSION", value);
         }
 
         #endregion
@@ -320,7 +315,7 @@ namespace LiteDB
         {
             if (disposing)
             {
-                if (_engine.IsValueCreated) _engine.Value.Dispose();
+                _engine.Dispose();
             }
         }
     }

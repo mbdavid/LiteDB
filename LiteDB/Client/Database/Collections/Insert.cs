@@ -17,7 +17,7 @@ namespace LiteDB
             var doc = _mapper.ToDocument(entity);
             var removed = this.RemoveDocId(doc);
 
-            _engine.Value.Insert(_collection, new[] { doc }, _autoId);
+            _engine.Insert(_collection, new[] { doc }, _autoId);
 
             var id = doc["_id"];
 
@@ -42,7 +42,7 @@ namespace LiteDB
 
             doc["_id"] = id;
 
-            _engine.Value.Insert(_collection, new [] { doc }, _autoId);
+            _engine.Insert(_collection, new [] { doc }, _autoId);
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace LiteDB
         {
             if (entities == null) throw new ArgumentNullException(nameof(entities));
 
-            return _engine.Value.Insert(_collection, this.GetBsonDocs(entities), _autoId);
+            return _engine.Insert(_collection, this.GetBsonDocs(entities), _autoId);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace LiteDB
         {
             if (entities == null) throw new ArgumentNullException(nameof(entities));
 
-            return _engine.Value.Insert(_collection, this.GetBsonDocs(entities), _autoId);
+            return _engine.Insert(_collection, this.GetBsonDocs(entities), _autoId);
         }
 
         /// <summary>

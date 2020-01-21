@@ -20,7 +20,7 @@ namespace LiteDB
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
             if (string.IsNullOrEmpty(expression)) throw new ArgumentNullException(nameof(expression));
 
-            return _engine.Value.EnsureIndex(_collection, name, expression, unique);
+            return _engine.EnsureIndex(_collection, name, expression, unique);
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace LiteDB
         /// </summary>
         public bool DropIndex(string name)
         {
-            return _engine.Value.DropIndex(_collection, name);
+            return _engine.DropIndex(_collection, name);
         }
     }
 }
