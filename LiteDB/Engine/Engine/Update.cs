@@ -71,7 +71,7 @@ namespace LiteDB.Engine
 
                             if (!value.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(transform));
 
-                            var result = value.AsDocument;
+                            var result = BsonExpressionMethods.EXTEND(doc, value.AsDocument).AsDocument;
 
                             // be sure result document will contain same _id as current doc
                             if (result.TryGetValue("_id", out var newId))

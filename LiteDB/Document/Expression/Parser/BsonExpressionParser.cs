@@ -326,7 +326,7 @@ namespace LiteDB
 
         /// <summary>
         /// Parse a document builder syntax used in UPDATE statment: 
-        /// {key0} = {expr0}, .... will be converted into EXTEND($, { key: [expr], ... })
+        /// {key0} = {expr0}, .... will be converted into { key: [expr], ... }
         /// {key: value} ... return return a new document
         /// </summary>
         public static BsonExpression ParseUpdateDocumentBuilder(Tokenizer tokenizer, ExpressionContext context)
@@ -348,7 +348,7 @@ namespace LiteDB
             var useSource = false;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            src.Append("EXTEND($,{");
+            src.Append("{");
 
             while (!tokenizer.CheckEOF())
             {
@@ -383,24 +383,22 @@ namespace LiteDB
                 break;
             }
 
-            src.Append("})");
+            src.Append("}");
 
             var arrKeys = Expression.NewArrayInit(typeof(string), keys.ToArray());
             var arrValues = Expression.NewArrayInit(typeof(BsonValue), values.ToArray());
 
-            // create linq expression for "EXTEND($, { doc })"
+            // create linq expression for "{ doc }"
             var docExpr = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues });
-            var rootExpr = Expression.Call(_memberPathMethod, context.Root, Expression.Constant("")) as Expression;
-            var extendExpr = Expression.Call(BsonExpression.GetMethod("EXTEND", 2), rootExpr, docExpr); 
 
             return new BsonExpression
             {
-                Type = BsonExpressionType.Call,
+                Type = BsonExpressionType.Document,
                 IsImmutable = isImmutable,
                 UseSource = useSource,
                 IsScalar = true,
                 Fields = fields,
-                Expression = extendExpr,
+                Expression = docExpr,
                 Source = src.ToString()
             };
 
