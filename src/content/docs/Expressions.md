@@ -2,7 +2,7 @@
 title: 'Expressions'
 date: 2019-02-11T19:30:08+10:00
 draft: false
-weight: 2
+weight: 5
 ---
 
 Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path (http://goessner.net/articles/JsonPath/), LiteDB supports a similar syntax to navigate inside a document. A path expression always returns a `IEnumerable<BsonValue>`.
@@ -35,7 +35,7 @@ Expressions can be used in many ways:
     - `collection.EnsureIndex("Name", true, "LOWER($.Name)")`
     - `collection.EnsureIndex(x => x.Name, true, "LOWER($.Name)")`
 - Querying documents inside a collection based on expression (full scan search)
-    - `Query.EQ("SUBSTRING($.Name, 0, 1)", "T")`
+    - `collection.Find("SUBSTRING($.Name, 0, 1) = T")`
 - Update using SQL syntax
     - `update Customers set Name = LOWER($.Name) where _id = 1`
 - Creating new document result in SELECT shell command
@@ -68,7 +68,7 @@ Inside an array, `@` acts as a sub-iterator, pointing to the current sub-documen
 
 Functions are used to manipulate data in expressions. A few examples will be provided for each category of functions. For a complete list of functions, check the API documentation.
 
-## Aggregate Functions
+#### Aggregate Functions
 
 Aggregate functions take an array as input and return a single value.
 
@@ -76,7 +76,7 @@ Aggregate functions take an array as input and return a single value.
 - `AVG(arr)` - Returns the average value in the array `arr`
 - `LAST(arr)` - Returns the last element in the array `arr`
 
-## DataType Functions
+#### DataType Functions
 
 DataType functions provide explicit data type conversion.
 
@@ -84,25 +84,25 @@ DataType functions provide explicit data type conversion.
 - `INT32(expr)` - Tries to convert the result of `expr` to an `Int32`, returning `null` if not possible
 - `DATETIME(expr)` - Tries to convert the result of `expr` to a `DateTime`, returning `null` if not possible
 
-## Date Functions
+#### Date Functions
 
 - `YEAR(date)` - Returns the year value from `date`
 - `DATEADD('year', 3, date)` - Returns a new date with 3 years added to date
-- `DATEDIFF('day', dateStart, dateEnd)` - Returns the difference in days between `dateStart` and `dateEnd`
+- `DATEDIFF('day', dateStart, dateEnd)` - Returns the difference in days between `dateEnd` and `dateStart`
 
-## Math Functions
+#### Math Functions
 
 - `ABS(num)` - Returns the absolute value of `num`
 - `ROUND(num, digits)` - Returns `num` rounded to `digits` digits
 - `POW(base, exp)` - Returns `base` to the power of `exp`
 
-## String Functions
+#### String Functions
 
 - `UPPER(str)` - Returns `str` in uppercase
 - `TRIM(str)` - Returns a new string without leading and trailing white spaces
 - `REPLACE(str, old, new)` - Returns a new string with every ocurrence of `old` in `str` replaced by `new`
 
-## High-Order Functions
+#### High-Order Functions
 
 High-Order functions take an array and a lambda expression that is applied to every document in the array
 
@@ -122,7 +122,7 @@ High-Order functions take an array and a lambda expression that is applied to ev
 	-`SORT([3,2,5,1,4] => @, 'desc')` returns `[5,4,3,2,1]`
 	-`SORT([{a:1, b:2}, {a:2}] => @.a, -1)` returns `[{a:2}, {a:1, b:2}]` 
 
-## Misc Functions
+#### Misc Functions
 
 - `JSON(str)` - Takes a string representation of a JSON and returns a parsed `BsonValue` containing the document
 - `CONCAT(arr1, arr2)` - Returns a new array containg the concatenation between arrays `arr1` and `arr2`

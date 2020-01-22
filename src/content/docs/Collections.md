@@ -2,10 +2,10 @@
 title: 'Collections'
 date: 2019-02-11T19:30:08+10:00
 draft: false
-weight: 2
+weight: 4
 ---
 
-Documents are stored and organized in collections. `LiteCollection` is a generic class to manage collections in LiteDB. Each collection must have a unique name:
+Documents are stored and organized in collections. `LiteCollection` is a generic class that is used to manage collections in LiteDB. Each collection must have a unique name:
 
 - Contains only letters, numbers and `_`
 - Collection names are **case insensitive**
@@ -20,36 +20,36 @@ Collections are auto created on first `Insert` or `EnsureIndex` operation. Runni
 In this example, both code snippets produce the same results.
 
 ```C#
-// Strong Type Class
+// Typed collection
 using(var db = new LiteDatabase("mydb.db"))
 {
     // Get collection instance
     var col = db.GetCollection<Customer>("customer");
     
-    // Insert document to collection - if collection do not exists, create now
+    // Insert document to collection - if collection does not exist, it is created
     col.Insert(new Customer { Id = 1, Name = "John Doe" });
     
-    // Create, if not exists, new index on Name field
+    // Create an index over the Field name (if it doesn't exist)
     col.EnsureIndex(x => x.Name);
     
-    // Now, search for document your document
+    // Now, search for your document
     var customer = col.FindOne(x => x.Name == "john doe");
 }
 
-// Generic BsonDocument
+// Untyped collection (T is BsonDocument)
 using(var db = new LiteDatabase("mydb.db"))
 {
     // Get collection instance
     var col = db.GetCollection("customer");
     
-    // Insert document to collection - if collection do not exists, create now
-    col.Insert(new BsonDocument().Add("_id", 1).Add("Name", "John Doe"));
+    // Insert document to collection - if collection does not exist, it is created
+    col.Insert(new BsonDocument{ ["_id"] = 1, ["Name"] = "John Doe" });
     
-    // Create, if not exists, new index on Name field
+    // Create an index over the Field name (if it doesn't exist)
     col.EnsureIndex("Name");
     
-    // Now, search for document your document
-    var customer = col.FindOne(Query.EQ("Name", "john doe"));
+    // Now, search for your document
+    var customer = col.FindOne("$.Name = 'john doe'");
 }
 ```
 # LiteDatabase API Instance Methods

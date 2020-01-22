@@ -2,7 +2,7 @@
 title: 'Indexes'
 date: 2019-02-11T19:30:08+10:00
 draft: false
-weight: 2
+weight: 9
 ---
 
 LiteDB improves search performance by using indexes on document fields. Each index stores the value of a specific field ordered by the value (and type) of the field. Without an index, LiteDB must execute a query using a full document scan. Full document scans are inefficient because LiteDB must deserialize all documents to test each one by one.

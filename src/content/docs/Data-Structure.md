@@ -5,7 +5,7 @@ draft: false
 weight: 2
 ---
 
-LiteDB stores data as documents, which are JSON-like field and value pairs. Documents are a schema-less data structure. Each document has your data and structure together.
+LiteDB stores data as documents, which are JSON-like objects containing key-value pairs. Documents are a schema-less data structure. Each document stores both its data and its structure.
 
 ```JS
 {
@@ -25,11 +25,11 @@ LiteDB stores data as documents, which are JSON-like field and value pairs. Docu
 - `createDate` contains a `DateTime` value
 - `phones` contains an array of `String`
 
-LiteDB stores documents in collections. A collection is a group of related documents that have a set of shared indices. Collections are analogous to a table in relational databases.
+LiteDB stores documents in collections. A collection is a group of related documents that have a set of shared indices. Collections are analogous to tables in relational databases.
 
 ### BSON
 
-LiteDB stores documents in the BSON (Binary JSON) data format. BSON is a binary representation of JSON with additional type information. In the documents, the value of a field can be any of the BSON data types, including other documents, arrays, and arrays of documents. BSON is a fast and simple way to serialize documents in binary format.
+LiteDB stores documents using BSON (Binary JSON). BSON is a binary representation of JSON with additional type information. In the documents, the value of a field can be any of the BSON data types, including other documents, arrays, and arrays of documents. BSON is a fast and simple way to serialize documents in binary format.
 
 LiteDB uses only a subset of [BSON data types](http://bsonspec.org/spec.html). See all supported LiteDB BSON data types and .NET equivalents.
 
@@ -51,13 +51,12 @@ LiteDB uses only a subset of [BSON data types](http://bsonspec.org/spec.html). S
 |DateTime  |`System.DateTime`                                           |
 |MaxValue  |-                                                           |
 
-### DateTime Attention
-Because of BSON spec `DateTime` store with **ms** precision **without** `DateTimeKind`.<br>
-All `DateTime` values converts to UTC before store and converts back to local on retrieve.
+> Following the BSON specification, `DateTime` values are stored only up to the miliseconds.
+All `DateTime` values are converted to UTC on storage and converted back to local time on retrieval.
 
-### JSON Extended
+### Extended JSON
 
-To serialize a document to JSON, LiteDB uses an extended version of JSON so as not to lose any BSON type information that does not exist in JSON. Extended data type is represented as an embedded document, using an initial `$` key and value as string.
+To serialize a BSON document to JSON, LiteDB uses an extended version of JSON so as not to lose any BSON type information. Extended data types are represented as embedded documents, using a key starting with `$` and string value.
 
 |BSON data type|JSON representation                                   |Description                        |
 |--------------|------------------------------------------------------|-----------------------------------|
@@ -70,14 +69,16 @@ To serialize a document to JSON, LiteDB uses an extended version of JSON so as n
 |MinValue      |`{ "$minValue": "1" }`                                |                                   |
 |MaxValue      |`{ "$maxValue": "1" }`                                |                                   |
 
-LiteDB implements JSON in its `JsonSerializer` static class. Serialize and deserialize only accepts `BsonValue`s as input/output. If you want to convert your object type to a BsonValue, you need use a `BsonMapper`.
+LiteDB implements JSON in its `JsonSerializer` static class.
+
+If you want to convert your object type to a BsonValue, you must use a `BsonMapper`.
 
 ```C#
 var customer = new Customer { Id = 1, Name = "John Doe" };
 
 var doc = BsonMapper.Global.ToDocument(customer);
 
-var jsonString = JsonSerialize.Serialize(doc, pretty, includeBinaryData);
+var jsonString = JsonSerialize.Serialize(doc);
 ```
 
 `JsonSerialize` also supports `TextReader` and `TextWriter` to read/write directly from a file or `Stream`.

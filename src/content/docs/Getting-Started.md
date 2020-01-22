@@ -1,11 +1,11 @@
 ---
 title: 'Getting Started'
-date: 2019-02-11T19:30:08+10:00
+date: 2020-01-22T18:26:17.1079568Z
 draft: false
 weight: 1
 ---
 
-LiteDB is a simple, fast and lightweight embedded .NET document database. LiteDB was inspired by the MongoDB database and its API is very similar to MongoDB's official .NET API.
+LiteDB is a simple, fast and lightweight embedded .NET document database. LiteDB was inspired by the MongoDB database and its API is very similar to the official MongoDB .NET API.
 
 ### How to install
 
@@ -43,7 +43,7 @@ using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
     col.Insert(customer);
 	
     // Update a document inside a collection
-    customer.Name = "Joana Doe";
+    customer.Name = "Jane Doe";
 	
     col.Update(customer);
 	
@@ -52,7 +52,7 @@ using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
 	
     // Use LINQ to query documents (filter, sort, transform)
     var results = col.Query()
-        .Where(x => x.Name.StartsWith("Jo"))
+        .Where(x => x.Name.StartsWith("J"))
         .OrderBy(x => x.Name)
         .Select(x => new { x.Name, NameUpper = x.Name.ToUpper() })
         .Limit(10)
