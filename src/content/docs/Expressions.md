@@ -5,18 +5,18 @@ draft: false
 weight: 2
 ---
 
-Expressions are path or formulas to access and modify your document data. Based on JSON path article (http://goessner.net/articles/JsonPath/), LiteDB support a near syntax to navigate in a single document. Path always returns an `IEnumerable<BsonValue>` in any case.
+Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path (http://goessner.net/articles/JsonPath/), LiteDB supports a similar syntax to navigate inside a document. A path expression always returns a `IEnumerable<BsonValue>`.
 
-`BsonExpression` are the class that parse a string expression (or path) and compile into a LINQ Expression to be fast evaluate by LiteDB. Parser uses
+`BsonExpression` is the class that parses a path expression and compiles it into a Linq Expression to be evaluated by LiteDB.
 
-- Path starts with `$`: `$.Address.Street`
-- Int values starts with `[0-9]*`: `123`
-- Double values starts with `[0-9].[0-9]`: `123.45`
+- Path starts with `$`: `$.Address.Street`, where `$` represents the root document
+- Int values are defined by `[0-9]*`: `123`
+- Double values are defined by `[0-9].[0-9]`: `123.45`
 - Strings are represented with a single quote `'`: `'Hello World'`
-- Null are just `null`
-- Bool are represented using `true` or `false` keyword.
+- Null is represented by `null`
+- Bool is represented using `true` or `false` keywords.
 - Document starts with `{ key1: <value|expression>, key2: ... }`
-- Arrays are represented with `[values, expressions, paths, ...]`
+- Arrays are represented with `[<value|expression>, <value|expression>, ...]`
 - Functions are represented with `FUNCTION_NAME(par1, par2, ...)`: `LOWER($.Name)`
 
 Examples:
@@ -29,166 +29,101 @@ var expr = new BsonExpression("SUM($.Items[*].Unity * $.Items[*].Price)");
 var total = expr.Execute(doc, true).First().AsDecimal;
 ```
 
-Expressions also can be used in:
+Expressions can be used in many ways:
 
-- Create an index based on an expression:
+- Creating an index based on an expression:
     - `collection.EnsureIndex("Name", true, "LOWER($.Name)")`
     - `collection.EnsureIndex(x => x.Name, true, "LOWER($.Name)")`
-- Query documents inside a collection based on expression (full scan search)
+- Querying documents inside a collection based on expression (full scan search)
     - `Query.EQ("SUBSTRING($.Name, 0, 1)", "T")`
-- Update shell command
-    - `db.customers.update $.Name = LOWER($.Name) where _id = 1`
-- Create new document result in SELECT shell command
-    - `db.customers.select { upper_titles: ARRAY(UPPER($.Books[*].Title)) } where $.Name startswith "John"`
+- Update using SQL syntax
+    - `update Customers set Name = LOWER($.Name) where _id = 1`
+- Creating new document result in SELECT shell command
+    - `select { upper_titles: ARRAY(UPPER($.Books[*].Title)) } where $.Name like "John%"`	
+- Querying documents using the SQL syntax
+	- `select $.Name, $.Phones[@.Type = "Mobile"] from customers`
 
 # Path 
 
 - `$` - Root
-- `$.Name` - Name field
-- `$.Name.First` - First field from a Name subdocument  
-- `$.Books` - Returns book array value 
-- `$.Books[0]` - Return first book inside books array
-- `$.Books[*]` - Return all books inside books array
-- `$.Books[*].Title` Return titles from all books
-- `$.Books[-1]` - Return last book inside books array
+- `$.Name` - `Name` field
+- `$.Name.First` - `First` field from `Name` subdocument  
+- `$.Books` - Returns an array of books 
+- `$.Books[0]` - Returns the first book inside Books array
+- `$.Books[*]` - Returns every book inside Books
+- `$.Books[*].Title` Returns the title from every book in Books
+- `$.Books[-1]` - Returns the last book inside Books array
 
-Path also support expression to filter child node
+Path also supports expressions to filter child nodes
 
-- `$.Books[@.Title = 'John Doe']` - Return all books where title is John Doe
-- `$.Books[@.Price > 100].Title` - Return all titles where book price are greater than 100
+- `$.Books[@.Title = 'John Doe']` - Returns all books where `Title` is `'John Doe'`
 
-Inside array, `@` represent current sub document. It's possible use functions inside expressions too:
+- `$.Books[@.Price > 100].Title` - Returns all titles where `Price` is greater than `100`
 
-- `$.Books[SUBSTRING(LOWER(@.Title), 0, 1) = 'j']` - Return all books with title starts with T or t.
+Inside an array, `@` acts as a sub-iterator, pointing to the current sub-document. It's possible use functions inside expressions too:
+
+- `$.Books[SUBSTRING(LOWER(@.Title), 0, 1) = 't']` - Returns all books whose `Title` starts with `'T'` or `'t'`.
 
 # Functions
 
-Functions are always works in `IEnumerable<BsonValue>` as input/output parameters.
+Functions are used to manipulate data in expressions. A few examples will be provided for each category of functions. For a complete list of functions, check the API documentation.
 
-- `LOWER($.Name)` - Returns `IEnumerable` with a single element
-- `LOWER($.Books[*].Title)` - Returns `IEnumerable` with all values in lower case
+## Aggregate Functions
 
-## Operators
+Aggregate functions take an array as input and return a single value.
 
-Operators are function to implement same math syntax. Support
+- `COUNT(arr)` - Returns the number of elements in the array `arr`
+- `AVG(arr)` - Returns the average value in the array `arr`
+- `LAST(arr)` - Returns the last element in the array `arr`
 
-- `ADD(<left>, <right>)`: `<left> + <right>` (If any side are string, concat values and return as string.)
-- `MINUS(<left>, <right>)`: `<left> - <right>`
-- `MULTIPLY(<left>, <right>)`: `<left> * <right>`
-- `DIVIDE(<left>, <right>)`: `<left> / <right>`
-- `MOD(<left>, <right>)`: `<left> % <right>`
-- `EQ(<left>, <right>)`: `<left> = <right>`
-- `NEQ(<left>, <right>)`: `<left> != <right>`
-- `GT(<left>, <right>)`: `<left> > <right>`
-- `GTE(<left>, <right>)`: `<left> >= <right>`
-- `LT(<left>, <right>)`: `<left> < <right>`
-- `LTE(<left>, <right>)`: `<left> <= <right>`
-- `AND(<left>, <right>)`: `<left> && <right>` (Left and right must be a boolean)
-- `OR(<left>, <right>)`: `<left> || <right>`: Left and right must be a boolean)
+## DataType Functions
 
-### Examples
+DataType functions provide explicit data type conversion.
 
-- `db.dummy.select ((2 + 11 % 7)-2)/3` => `1.33333`
-- `db.dummy.select 'My Id is ' + $._id` => `"My Id is 1"`
-- `db.customers.select { info: IIF($._id < 20, 'Less', 'Greater') + ' than twenty' }`
-    - => `{ info: "Less than twenty" }`
-## String
+- `STRING(expr)` - Returns the result of `expr` converted to string
+- `INT32(expr)` - Tries to convert the result of `expr` to an `Int32`, returning `null` if not possible
+- `DATETIME(expr)` - Tries to convert the result of `expr` to a `DateTime`, returning `null` if not possible
 
-String function will work only if your `<values>` are string. Any other data type will skip results
+## Date Functions
 
-| Function | Description
-| --- | ---
-| `LOWER(<values>)` | Same `ToLower()` from `String`. Returns a string
-| `UPPER(<values>)` | Same `ToUpper()` from `String`. Returns a string
-| `SUBSTRING(<values>, <index>, <length>)` | Same `Substring()` from `String`. Returns a string
-| `LPAD(<values>, <totalWidth>, <paddingChar>)` | Same `PadLeft()` from `String`. Returns a string
-| `RPAD(<values>, <totalWidth>, <paddingChar>)` | Same `PadRight()` from `String`. Returns a string
-| `FORMAT(<values>, <format>)` | Same `Format()` from `String`. Works if any data type (use `RawValue`). Returns a string
+- `YEAR(date)` - Returns the year value from `date`
+- `DATEADD('year', 3, date)` - Returns a new date with 3 years added to date
+- `DATEDIFF('day', dateStart, dateEnd)` - Returns the difference in days between `dateStart` and `dateEnd`
 
-## Aggregates
+## Math Functions
 
-| Function | Description
-| --- | ---
-| `SUM(<values>)` | Sum all number values and returns a number
-| `COUNT(<values>)` | Count all values and returns a integer
-| `MIN(<values>)` | Get min value in value list
-| `MAX(<values>)` | Get max value in value list
-| `AVG(<values>)` | Calculate average in list of values
-| `FIRST(<values>)` | Get first value from list of values
-| `LAST(<values>)` | Get last value from list of values
-| `ARRAY(<values>)` | Convert all values into a single array
+- `ABS(num)` - Returns the absolute value of `num`
+- `ROUND(num, digits)` - Returns `num` rounded to `digits` digits
+- `POW(base, exp)` - Returns `base` to the power of `exp`
 
-All aggregates functions works in a single document and always with an IEnumerable selector of an array: (`SUM($.Items[*].Price)`)
+## String Functions
 
-## DataType
+- `UPPER(str)` - Returns `str` in uppercase
+- `TRIM(str)` - Returns a new string without leading and trailing white spaces
+- `REPLACE(str, old, new)` - Returns a new string with every ocurrence of `old` in `str` replaced by `new`
 
-| Function | Description
-| --- | ---
-| `EXTEND(<src>, <extend>)` | Copy, into source document, all field from extend document `EXTEND({a:1}, {b:2})` = `{a:1, b:2}`
-| `JSON(<strings>)` | Deserialize string value into a `BsonDocument` value. `JSON('{a:1}')` = `{a:1}`
-| `IS_MINVALUE(<values>)` | Return true for each value that are minvalue
-| `IS_NULL(<values>)` | Return true for each value that are null
-| `IS_INT32(<values>)` or `IS_INT(<values>)` | Return true for each value that are int
-| `IS_INT64(<values>)` or `IS_LONG(<values>)`| Return true for each value that are long
-| `IS_DOUBLE(<values>)` | Return true for each value that are double
-| `IS_DECIMAL(<values>)` | Return true for each value that are decimal
-| `IS_NUMBER(<values>)` | Return true for each value that are number
-| `IS_STRING(<values>)` | Return true for each value that are string
-| `IS_ARRAY(<values>)` | Return true for each value that are array
-| `IS_BINARY(<values>)` | Return true for each value that are binary
-| `IS_OBJECTID(<values>)` | Return true for each value that are objectid
-| `IS_GUID(<values>)` | Return true for each value that are guid
-| `IS_BOOLEAN(<values>)` or `IS_BOOL(<values>)` | Return true for each value that are boolean
-| `IS_DATETIME(<values>)` or `IS_DATE(<values>)` | Return true for each value that are datetime
-| `IS_MAXVALUE(<values>)` | Return true for each value that are maxvalue
-| `MINVALUE()` | Return new min value
-| `MAXVALUE()` | Return new max value
-| `INT32(<values>)` or `INT(<values>)` | Convert all possible values into int
-| `INT64(<values>)` or `LONG(<values>)` | Convert all possible values into long
-| `DOUBLE(<values>)` | Convert all possible values into double
-| `DECIMAL(<values>)` | Convert all possible values into decimal
-| `STRING(<values>)` | Convert each value as string
-| `OBJECTID()` | Return new objectid
-| `OBJECTID(<values>)` | Convert all possible values (string) into objectid
-| `GUID()` | Return new guid
-| `GUID(<values>)` | Convert all possible values (string) into guid
-| `DATETIME()` or `DATE()`  | Return new date (now)
-| `DATETIME(<values>)` or `DATE(<values>)`  | Convert all possible values (string) into datetime
-| `DATETIME(<year>, <month>, <day>)` or `DATE(<year>, <month>, <day>)`  | Create new date based on year, month, day (int) passed
+## High-Order Functions
 
+High-Order functions take an array and a lambda expression that is applied to every document in the array
 
-## Date
+- `MAP(arr => expr)` returns a new array with the map expression applied to each element
+	- `MAP([1,2,3] => @*2)` returns `[2,4,6]`
+	- `MAP([{a:1, b:2}, {a:3, b:4}] => @.a)` returns `[1,3]`
+	
+- `FILTER(arr => expr)` returns a new array containing only the elements for which the filter expression returns `true`
+	- `FILTER([1,2,3,4,5] => @ > 3)` returns `[4,5]`
+	- `FILTER([{a:1, b:2}, {a:2}] => @.b != null)` returns `[{a:1, b:2}]`
+	
+- `SORT(arr => expr)` returns a new array sorted by the result of `expr` in ascending order
+	-`SORT([3,2,5,1,4] => @)` returns `[1,2,3,4,5]`
+	-`SORT([{a:2}, {a:1, b:2}] => @.a)` returns `[{a:1, b:2}, {a:2}]`
+	
+- `SORT(arr => expr, order)` returns a new array sorted by the result of `expr` with the order defined by `order` (ascending if `order` is `1` or `'asc'`, descending if `order` is `-1` or `'desc'`)
+	-`SORT([3,2,5,1,4] => @, 'desc')` returns `[5,4,3,2,1]`
+	-`SORT([{a:1, b:2}, {a:2}] => @.a, -1)` returns `[{a:2}, {a:1, b:2}]` 
 
-| Function | Description |
-| --- | --- |
-| `YEAR(<date>)` | Return year (as int) from date
-| `MONTH(<date>)` | Return month(as int) from date
-| `DAY(<date>)` | Return day (as int) from date
-| `HOUR(<date>)` | Return hour (as int) from date
-| `MINUTE(<date>)` | Return minute (as int) from date
-| `SECOND(<date>)` | Return second (as int) from date
-| `DATEADD(<datePart>, <number>, <date>)` | Return new date adding internal from date
-| `DATEDIFF(<datePart>, <dateStart>, <dateEnd>)` | Return interval between start and end date
+## Misc Functions
 
-### DateParts
-
-Date parts are strings used in `DATEADD` and `DATEDIFF`
-
-- `y` or `year` = Year
-- `M` or `month` = Month
-- `d` or `day` = Day
-- `h` or `hour` = Hour
-- `m` or `minute` = Minute
-- `s` or `second` = Second
-
-`db.orders.select { in_days: DATEDIFF('day', $.DueDate, DATE()) }`
-
-## Misc
-
-| Function | Description
-| --- | ---
-| `KEYS(<docs>)` | Returns all keys from all documents. `KEYS({a:1, b:2})` = `a`, `b`
-| `IIF(<condition>, <ifTrue>, <ifFalse>)` | Condition must be a boolean value
-| `LENGTH(<values>)`| Returns value length (String.Length or Array.Length or ByteArray.Length or Document.Keys.Length)
-
-All function are static methods from `BsonExpression`.
+- `JSON(str)` - Takes a string representation of a JSON and returns a parsed `BsonValue` containing the document
+- `CONCAT(arr1, arr2)` - Returns a new array containg the concatenation between arrays `arr1` and `arr2`
+- `RANDOM(min, max)` - Returns a random `Int32` between `min` and `max`
