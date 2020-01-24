@@ -73,7 +73,9 @@ namespace LiteDB.Tests.Engine
         [Fact]
         public void Create_Database_Using_Current_Culture()
         {
-            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("fi");
+            var current = CultureInfo.CurrentCulture;
+
+            CultureInfo.CurrentCulture = new CultureInfo("fi");
 
             using (var e = new LiteEngine())
             {
@@ -81,6 +83,8 @@ namespace LiteDB.Tests.Engine
 
                 d.AsString.Should().Be("fi/IgnoreCase");
             }
+
+            CultureInfo.CurrentCulture = current;
         }
 
         [Fact]
@@ -88,7 +92,9 @@ namespace LiteDB.Tests.Engine
         {
             using(var f = new TempFile())
             {
-                CultureInfo.DefaultThreadCurrentCulture = CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("fi");
+                var current = CultureInfo.CurrentCulture;
+
+                CultureInfo.CurrentCulture = new CultureInfo("fi");
 
                 // store in database using "fi" culture
                 using (var e = new LiteEngine(f.Filename))
@@ -97,7 +103,7 @@ namespace LiteDB.Tests.Engine
                 }
 
                 // change current culture do "en-GB"
-                CultureInfo.DefaultThreadCurrentCulture = CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-gb");
+                CultureInfo.CurrentCulture = new CultureInfo("en-gb");
 
                 using (var e = new LiteEngine(f.Filename))
                 {
@@ -108,6 +114,8 @@ namespace LiteDB.Tests.Engine
                         doc["_id"].AsString.Should().Be(id);
                     }
                 }
+
+                CultureInfo.CurrentCulture = current;
             }
         }
 
