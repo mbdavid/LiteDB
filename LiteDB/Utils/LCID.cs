@@ -482,9 +482,10 @@ namespace LiteDB
 
                 var lcid = _mappings.FirstOrDefault(x => x.Value == current);
 
+                // for 4096 culture LCID, returns 127 (invariant culture)
                 if (lcid.Key == 0)
                 {
-                    throw new ArgumentOutOfRangeException($"Current culture name `{current}` has no LCID");
+                    return 127;
                 }
 
                 return lcid.Key;

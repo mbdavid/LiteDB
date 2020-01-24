@@ -70,12 +70,12 @@ namespace LiteDB.Tests.Engine
             }
         }
 
-        [Fact (Skip = "Must fix Thread.Current.CurrentCulture")]
+        [Fact]
         public void Create_Database_Using_Thread_Culture()
         {
-            var current = Thread.CurrentThread.CurrentCulture;
+            var current = CultureInfo.CurrentCulture;
 
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("fi");
+            CultureInfo.CurrentCulture = new CultureInfo("fi");
 
             using(var e = new LiteEngine())
             {
@@ -84,7 +84,7 @@ namespace LiteDB.Tests.Engine
                 d.AsString.Should().Be("fi/IgnoreCase");
             }
 
-            Thread.CurrentThread.CurrentCulture = current;
+            CultureInfo.CurrentCulture = current;
         }
 
         [Fact]

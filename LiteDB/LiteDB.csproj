@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard1.3;netstandard2.0</TargetFrameworks>
-    <PackageId>LiteDB</PackageId>
     <AssemblyVersion>5.0.0</AssemblyVersion>
     <FileVersion>5.0.0</FileVersion>
     <VersionPrefix>5.0.0</VersionPrefix>
@@ -37,7 +36,6 @@
   HAVE_PROCESS
   HAVE_ENVIRONMENT
   HAVE_SHA1_MANAGED
-  HAVE_GET_CULTURE_INFO
   -->
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
@@ -45,11 +43,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
-    <DefineConstants>HAVE_GET_CULTURE_INFO;HAVE_SHA1_MANAGED;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT</DefineConstants>
+    <DefineConstants>HAVE_SHA1_MANAGED;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>HAVE_GET_CULTURE_INFO;HAVE_SHA1_MANAGED</DefineConstants>
+    <DefineConstants>HAVE_SHA1_MANAGED</DefineConstants>
   </PropertyGroup>
 
   <!-- Begin References -->

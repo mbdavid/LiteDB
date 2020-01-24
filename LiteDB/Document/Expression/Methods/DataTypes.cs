@@ -131,11 +131,7 @@ namespace LiteDB
             }
             else if(value.IsString && culture.IsString)
             {
-#if HAVE_GET_CULTURE_INFO
-                var c = CultureInfo.GetCultureInfo(culture.AsString); // en-US
-#else
                 var c = new CultureInfo(culture.AsString); // en-US
-#endif
 
                 if (Double.TryParse(value.AsString, NumberStyles.Any, c.NumberFormat, out var val))
                 {
@@ -177,11 +173,7 @@ namespace LiteDB
             }
             else if(value.IsString && culture.IsString)
             {
-#if HAVE_GET_CULTURE_INFO
-                var c = CultureInfo.GetCultureInfo(culture.AsString); // en-US
-#else
                 var c = new CultureInfo(culture.AsString); // en-US
-#endif
 
                 if (Decimal.TryParse(value.AsString, NumberStyles.Any, c.NumberFormat, out var val))
                 {
@@ -360,11 +352,7 @@ namespace LiteDB
             }
             else if(value.IsString && culture.IsString)
             {
-#if HAVE_GET_CULTURE_INFO
-                var c = CultureInfo.GetCultureInfo(culture.AsString); // en-US
-#else
                 var c = new CultureInfo(culture.AsString); // en-US
-#endif
 
                 if (DateTime.TryParse(value.AsString, c.DateTimeFormat, DateTimeStyles.None, out var val))
                 {
@@ -406,11 +394,7 @@ namespace LiteDB
             }
             else if(value.IsString && culture.IsString)
             {
-#if HAVE_GET_CULTURE_INFO
-                var c = CultureInfo.GetCultureInfo(culture.AsString); // en-US
-#else
                 var c = new CultureInfo(culture.AsString); // en-US
-#endif
 
                 if (DateTime.TryParse(value.AsString, c.DateTimeFormat, DateTimeStyles.AssumeUniversal, out var val))
                 {

@@ -27,12 +27,7 @@ namespace LiteDB
 
             this.LCID = LiteDB.LCID.GetLCID(culture);
             this.SortOptions = sortOptions;
-
-#if HAVE_GET_CULTURE_INFO
-            this.Culture = CultureInfo.GetCultureInfo(culture);
-#else
             this.Culture = new CultureInfo(culture);
-#endif
 
             _compareInfo = this.Culture.CompareInfo;
         }
@@ -41,21 +36,12 @@ namespace LiteDB
         {
             this.LCID = lcid;
             this.SortOptions = sortOptions;
-
-#if HAVE_GET_CULTURE_INFO
-            this.Culture = CultureInfo.GetCultureInfo(lcid);
-#else
             this.Culture = LiteDB.LCID.GetCulture(lcid);
-#endif
 
             _compareInfo = this.Culture.CompareInfo;
         }
 
-#if HAVE_GET_CULTURE_INFO
-        public static Collation Default = new Collation(Thread.CurrentThread.CurrentCulture.LCID, CompareOptions.IgnoreCase);
-#else
         public static Collation Default = new Collation(LiteDB.LCID.Current, CompareOptions.IgnoreCase);
-#endif
 
         public static Collation Binary = new Collation(127 /* Invariant */, CompareOptions.Ordinal);
 
