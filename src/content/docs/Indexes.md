@@ -1,17 +1,19 @@
 ---
 title: 'Indexes'
-date: 2019-02-11T19:30:08+10:00
+date: 2020-01-23T20:36:40.6243457Z
 draft: false
 weight: 9
 ---
 
-LiteDB improves search performance by using indexes on document fields. Each index stores the value of a specific field ordered by the value (and type) of the field. Without an index, LiteDB must execute a query using a full document scan. Full document scans are inefficient because LiteDB must deserialize all documents to test each one by one.
+LiteDB improves search performance by using indexes on document fields or expressions. Each index storess the value of a specific expression ordered by the value (and type). Without an index, LiteDB must execute a query using a full document scan. Full document scans are inefficient because LiteDB must deserialize every document in the collection.
 
 ### Index Implementation
 
-LiteDB uses a simple index solution: **Skip Lists**. Skip lists are double linked sorted list with up to 32 levels. Skip lists are super easy to implement (only 15 lines of code) and statistically balanced. The results are great: insert and find results has an average of O(ln n) = 1 million of documents = 13 steps. If you want to know more about skip lists, see [this great video](https://www.youtube.com/watch?v=kBwUoWpeH_Q). 
+Indexes in LiteDB are implemented using **Skip lists**. Skip lists are double linked sorted list with up to 32 levels. Skip lists are very easy to implement (only 15 lines of code) and statistically balanced.
 
-Documents are schema-less, even if they are in the same collection. So, you can create an index on a field that can be one type in one document and another type in another document. When you have a field with different types, LiteDB compares only the types. Each type has an order:
+Insert and search operations have an average complexity of *O*(log n). This means that in a collection with 1 million documents, a search operation over an indexed expression will take about 13 steps to find the desired document. If you want to know more about skip lists, [check this great video](https://www.youtube.com/watch?v=kBwUoWpeH_Q). 
+
+Given that collections are schema-less, it is possible for an expression to return different data types when applied over different documents. In such cases, the documents will be ordered by the type returned by the indexing expression, following the table below:
 
 |BSON Type                     |Order|
 |------------------------------|-----|
@@ -28,16 +30,19 @@ Documents are schema-less, even if they are in the same collection. So, you can 
 |DateTime                      |11   |
 |MaxValue                      |12   |
 
-- Numbers (Int32, Int64, Double or Decimal) have the same order. If you mix these number types in the same document field, LiteDB will convert them to `Decimal` when comparing.
+- When comparing documents, the values in the key-value pairs are compared in the order that they appear until a tie is broken.
+
+- When comparing arrays, every position in the arrays is compeared until a tie is broken.
+
+- All numeric values are converted to `Decimal` before comparison.
 
 ### Primary key (= auto id) 
 
-Primary key is also one of the indexes. By default primary key `_id` will be created and inserted automatically when you call method `col.Insert()` . 
-However it won't be created if Custom types are used in Id property.
+By default, an index over `_id` is created upon the first insertion. However, please note that no index will be created if the type of `_id` is any other than `ObjectId`, `Guid`, `Int32`, `Int64` and `DateTime`.
 
 ### EnsureIndex()
 
-Indexes are created via `EnsureIndex`. This instance method ensures an index: create the index if it does not exist or do nothing if already exists. In v4 there is no more re-create index in change definition. If you want re-create an index you must drop before and runs `EnsureIndex` again.
+Indexes are created via `EnsureIndex`. This method create the index if it does not exist and does nothing if already exists. In v4 there is no more re-create index in change definition. If you want re-create an index you must drop before and runs `EnsureIndex` again.
 
 Indexes are identified by document field name. LiteDB only supports 1 field per index, but this field can be any BSON type, even an embedded document.
 
