@@ -9,7 +9,7 @@ namespace LiteDB.Shell
     {
         public Display Display { get; set; }
         public InputCommand Input { get; set; }
-        public LiteDatabase Database { get; set; }
+        public ILiteDatabase Database { get; set; }
         public bool Running { get; set; } = false;
     }
 }

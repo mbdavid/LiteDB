@@ -11,7 +11,7 @@ namespace LiteDB
         /// Run an include action in each document returned by Find(), FindById(), FindOne() and All() methods to load DbRef documents
         /// Returns a new Collection with this action included
         /// </summary>
-        public LiteCollection<T> Include<K>(Expression<Func<T, K>> keySelector)
+        public ILiteCollection<T> Include<K>(Expression<Func<T, K>> keySelector)
         {
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
@@ -24,7 +24,7 @@ namespace LiteDB
         /// Run an include action in each document returned by Find(), FindById(), FindOne() and All() methods to load DbRef documents
         /// Returns a new Collection with this action included
         /// </summary>
-        public LiteCollection<T> Include(BsonExpression keySelector)
+        public ILiteCollection<T> Include(BsonExpression keySelector)
         {
             if (string.IsNullOrEmpty(keySelector)) throw new ArgumentNullException(nameof(keySelector));
 

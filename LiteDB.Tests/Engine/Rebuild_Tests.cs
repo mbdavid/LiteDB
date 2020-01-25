@@ -35,7 +35,7 @@ namespace LiteDB.Tests.Engine
         public void Rebuild_Large_Files()
         {
             // do some tests
-            void DoTest(LiteDatabase db, LiteCollection<Zip> col)
+            void DoTest(ILiteDatabase db, ILiteCollection<Zip> col)
             {
                 Assert.Equal(1, col.Count());
                 Assert.Equal(99, db.UserVersion);
