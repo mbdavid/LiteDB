@@ -135,12 +135,12 @@ namespace LiteDB
 
         #region FileStorage
 
-        private LiteStorage<string> _fs = null;
+        private ILiteStorage<string> _fs = null;
 
         /// <summary>
         /// Returns a special collection for storage files/stream inside datafile. Use _files and _chunks collection names. FileId is implemented as string. Use "GetStorage" for custom options
         /// </summary>
-        public LiteStorage<string> FileStorage
+        public ILiteStorage<string> FileStorage
         {
             get { return _fs ?? (_fs = this.GetStorage<string>()); }
         }
@@ -148,7 +148,7 @@ namespace LiteDB
         /// <summary>
         /// Get new instance of Storage using custom FileId type, custom "_files" collection name and custom "_chunks" collection. LiteDB support multiples file storages (using different files/chunks collection names)
         /// </summary>
-        public LiteStorage<TFileId> GetStorage<TFileId>(string filesCollection = "_files", string chunksCollection = "_chunks")
+        public ILiteStorage<TFileId> GetStorage<TFileId>(string filesCollection = "_files", string chunksCollection = "_chunks")
         {
             return new LiteStorage<TFileId>(this, filesCollection, chunksCollection);
         }
