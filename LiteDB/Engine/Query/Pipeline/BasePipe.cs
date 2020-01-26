@@ -8,10 +8,8 @@ namespace LiteDB.Engine
     /// <summary>
     /// Abstract class with workflow method to be used in pipeline implementation
     /// </summary>
-    internal abstract class BasePipe : IDisposable
+    internal abstract class BasePipe
     {
-        public event EventHandler Disposing = null;
-
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLookup _lookup;
         protected readonly SortDisk _tempDisk;
@@ -170,12 +168,6 @@ namespace LiteDB.Engine
                     yield return doc;
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            // call disposing event
-            this.Disposing?.Invoke(this, EventArgs.Empty);
         }
     }
 }

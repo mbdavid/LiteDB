@@ -116,27 +116,23 @@ namespace LiteDB.Engine
                 var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot, _pragmas.Collation));
 
                 // get current query pipe: normal or groupby pipe
-                using (var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas))
+                var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas);
+
+                // call safepoint just before return each document
+                foreach (var doc in pipe.Pipe(nodes, queryPlan))
                 {
-                    // commit transaction before close pipe
-                    pipe.Disposing += (s, e) =>
-                    {
-                        transaction.OpenCursors.Remove(_cursor);
+                    _cursor.Fetched++;
 
-                        if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
-                        {
-                            transaction.Commit();
-                        }
-                    };
-
-                    // call safepoint just before return each document
-                    foreach (var doc in pipe.Pipe(nodes, queryPlan))
-                    {
-                        _cursor.Fetched++;
-
-                        yield return doc;
-                    }
+                    yield return doc;
                 }
+
+                transaction.OpenCursors.Remove(_cursor);
+
+                if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
+                {
+                    transaction.Commit();
+                }
+
             };
         }
 
