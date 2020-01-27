@@ -25,11 +25,5 @@ namespace LiteDB.Engine
         public int Fetched { get; set; }
 
         public Stopwatch Elapsed { get; } = new Stopwatch();
-
-        public CursorInfo Start()
-        {
-            this.Elapsed.Start();
-            return this;
-        }
     }
 }

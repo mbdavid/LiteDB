@@ -23,6 +23,7 @@ namespace LiteDB.Engine
                         ["collection"] = cursor.Collection,
                         ["mode"] = cursor.Query.ForUpdate ? "write" : "read",
                         ["sql"] = cursor.Query.ToSQL(cursor.Collection).Replace(Environment.NewLine, " "),
+                        ["running"] = cursor.Elapsed.IsRunning,
                         ["fetched"] = cursor.Fetched
                     };
                 }
