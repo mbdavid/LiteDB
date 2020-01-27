@@ -16,7 +16,7 @@ namespace LiteDB.Shell.Commands
 
         public void Execute(StringScanner s, Env env)
         {
-            var assembly = typeof(LiteDatabase).Assembly.GetName();
+            var assembly = typeof(ILiteDatabase).Assembly.GetName();
 
             env.Display.WriteLine(assembly.FullName);
         }

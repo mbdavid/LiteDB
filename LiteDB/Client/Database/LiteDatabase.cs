@@ -12,7 +12,7 @@ namespace LiteDB
     /// <summary>
     /// The LiteDB database. Used for create a LiteDB instance and use all storage resources. It's the database connection
     /// </summary>
-    public partial class LiteDatabase : IDisposable
+    public partial class LiteDatabase : ILiteDatabase
     {
         #region Properties
 
@@ -78,7 +78,7 @@ namespace LiteDB
         /// Get a collection using a entity class as strong typed document. If collection does not exits, create a new one.
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
-        public LiteCollection<T> GetCollection<T>(string name)
+        public ILiteCollection<T> GetCollection<T>(string name)
         {
             return new LiteCollection<T>(name, BsonAutoId.ObjectId, _engine, _mapper);
         }
@@ -86,7 +86,7 @@ namespace LiteDB
         /// <summary>
         /// Get a collection using a name based on typeof(T).Name (BsonMapper.ResolveCollectionName function)
         /// </summary>
-        public LiteCollection<T> GetCollection<T>()
+        public ILiteCollection<T> GetCollection<T>()
         {
             return this.GetCollection<T>(null);
         }
@@ -94,7 +94,7 @@ namespace LiteDB
         /// <summary>
         /// Get a collection using a name based on typeof(T).Name (BsonMapper.ResolveCollectionName function)
         /// </summary>
-        public LiteCollection<T> GetCollection<T>(BsonAutoId autoId)
+        public ILiteCollection<T> GetCollection<T>(BsonAutoId autoId)
         {
             return this.GetCollection<T>(null);
         }
@@ -104,7 +104,7 @@ namespace LiteDB
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
         /// <param name="autoId">Define autoId data type (when document contains no _id field)</param>
-        public LiteCollection<BsonDocument> GetCollection(string name, BsonAutoId autoId = BsonAutoId.ObjectId)
+        public ILiteCollection<BsonDocument> GetCollection(string name, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
@@ -135,12 +135,12 @@ namespace LiteDB
 
         #region FileStorage
 
-        private LiteStorage<string> _fs = null;
-        
+        private ILiteStorage<string> _fs = null;
+
         /// <summary>
         /// Returns a special collection for storage files/stream inside datafile. Use _files and _chunks collection names. FileId is implemented as string. Use "GetStorage" for custom options
         /// </summary>
-        public LiteStorage<string> FileStorage
+        public ILiteStorage<string> FileStorage
         {
             get { return _fs ?? (_fs = this.GetStorage<string>()); }
         }
@@ -148,7 +148,7 @@ namespace LiteDB
         /// <summary>
         /// Get new instance of Storage using custom FileId type, custom "_files" collection name and custom "_chunks" collection. LiteDB support multiples file storages (using different files/chunks collection names)
         /// </summary>
-        public LiteStorage<TFileId> GetStorage<TFileId>(string filesCollection = "_files", string chunksCollection = "_chunks")
+        public ILiteStorage<TFileId> GetStorage<TFileId>(string filesCollection = "_files", string chunksCollection = "_chunks")
         {
             return new LiteStorage<TFileId>(this, filesCollection, chunksCollection);
         }
@@ -244,7 +244,7 @@ namespace LiteDB
             var p = new BsonDocument();
             var index = 0;
 
-            foreach(var arg in args)
+            foreach (var arg in args)
             {
                 p[index.ToString()] = arg;
                 index++;
@@ -258,7 +258,7 @@ namespace LiteDB
         #region Analyze/Checkpoint/Shrink/UserVersion
 
         /// <summary>
-        /// Do database checkpoint. Copy all commited transaction from log file into datafile. 
+        /// Do database checkpoint. Copy all commited transaction from log file into datafile.
         /// </summary>
         public void Checkpoint()
         {
@@ -289,9 +289,9 @@ namespace LiteDB
             return _engine.Pragma(name, value);
         }
 
-        /// <summary>	
-        /// Get/Set database user version - use this version number to control database change model	
-        /// </summary>	
+        /// <summary>
+        /// Get/Set database user version - use this version number to control database change model
+        /// </summary>
         public int UserVersion
         {
             get => _engine.Pragma("USER_VERSION");
