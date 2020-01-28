@@ -16,11 +16,12 @@
         display: inline-block;
         font-weight: normal;
         text-decoration: none;
-        color: #BCBEC0;
+        color: white;
         font-weight: bold;
+        margin-left: 20px;
         &:hover {
           text-decoration: none;
-          color: #BCBEC0;
+          color: white;
           background-color: rgba(0,0,0,.5);
         }
       }

@@ -50,13 +50,16 @@
       display: block;
       position: relative;
       opacity: 0;
+      & + li {
+        margin-top: 20px;
+      }
       a {
         display: block;
         position: relative;
         color: #ffffff;
         text-decoration: none;
         overflow: hidden;
-        font-weight: lighter;
+        font-weight: bold;
         &:hover::after,
         &:focus::after,
         &:active::after {

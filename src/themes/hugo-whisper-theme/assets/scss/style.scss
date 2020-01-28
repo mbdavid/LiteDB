@@ -1,5 +1,5 @@
 // Font
-@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Lora:400,700|Roboto+Mono:300,400|Lato:300,400,700');
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Lora:400,700|Roboto+Mono:300,400');
 
 // Bootstrap
 @import 'bootstrap/functions';
@@ -35,7 +35,7 @@
 @import 'components/overview';
 
 // Pages
-@import 'pages/home';
+@import 'pages/index';
 
 // Global
 body {
@@ -51,135 +51,22 @@ body {
 }
 
 // Display breakpoints for DEV
-// body:after {
-//   color: #000000;
-//   font-size: 12px;
-//   padding: 5px;
-//   font-weight: bold;
-//   right: 10px;
-//   position: fixed;
-//   text-align: center;
-//   text-transform: uppercase;
-//   bottom: 10px;
-//   width: 200px;
-//   z-index: 9999;
-//   border: solid 1px #000000;
-//   @each $name, $value in $grid-breakpoints {
-//     @include media-breakpoint-up($name) {
-//       content: "#{$name} - min-width: #{$value}";
-//     }
-//   }
-// }
-
-.install {
-	text-align: center;
-  padding: 60px 0px;
-}
-
-.install span {
-	background-color: #283542;
-	color: #BCBEC0;
-	font-family: Courier New, Courier, monospace;
-	font-size: 14px;
-	padding: 15px;
-  display: inline-block;
-}
-
-.install a {
-	background-color: #0e83cd;
-	font-size: 14px;
-	padding: 15px;
-	color: white;
-  display: inline-block;
-  position: relative;
-  top: +1px;
-}
-
-.social-buttons {
-  text-align: center;
-}
-
-.social-share {
-	width: 100px !important;
-  height: 20px !important;
-  border: none;
-  overflow: hidden;
-  margin: 2px;
-}
-
-.feature h1 {
-  font-size: 28px;
-  color: #171F26;
-  font-weight: bold;
-  margin-bottom: 20px;
-}
-
-.feature h1 > i {
-  margin-right: 10px;
-}
-
-.feature ul {
-  list-style: disc;
-  margin-left: 20px;
-}
-
-.team {
-    background-color: #f3f3f3;
-}
-
-.team-item {
-    padding: 35px 0 15px 0;
-    text-align: center;
-}
-
-.team-avatar {
-    border-radius: 50%;
-    width: 160px;
-    height: 160px;
-}
-
-.team-name {
-    font-weight: bold !important;
-    font-size: 18px !important;
-    margin: 15px 0;
-}
-
-.team-footer {
-    font-size: 12px !important;
-    font-style: italic;
-    color: gray !important;
-}
-
-
-.cust {
-    background-color: #f3f3f3;
-}
-
-.cust-item {
-    padding: 15px;
-}
-
-.cust-center {
-    text-align: center;
-}
-
-.cust-logo {
-    width: 160px;
-    margin: 0 auto;
-}
-
-.cust-title {
-    font-weight: bold;
-    margin: 15px 0;
-}
-
-.cust-text {
-    text-align: justify;
-}
-
-.cust-footer {
-    font-size: 12px !important;
-    font-style: italic;
-    color: gray !important;
-    margin: 15px 0 0 0;
-}
+ body:after {
+   color: red;
+   font-size: 12px;
+   padding: 5px;
+   font-weight: bold;
+   right: 10px;
+   position: fixed;
+   text-align: center;
+   text-transform: uppercase;
+   bottom: 10px;
+   width: 200px;
+   z-index: 9999;
+   border: solid 1px red;
+   @each $name, $value in $grid-breakpoints {
+     @include media-breakpoint-up($name) {
+       content: "#{$name} - min-width: #{$value}";
+     }
+   }
+ }

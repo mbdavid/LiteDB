@@ -14,29 +14,19 @@ pygmentsUseClasses = true
     weight = 1
 
 [[menu.main]]
-    name = "EXAMPLES"
-    url = "/examples/"
-    weight = 2
-
-[[menu.main]]
     name = "DOCS"
     url = "/docs/"
-    weight = 3
+    weight = 2
 
 [[menu.main]]
     name = "API"
     url = "/api/"
-    weight = 4
-
-[[menu.main]]
-    name = "TRY ONLINE"
-    url = "/try/"
-    weight = 5
+    weight = 3
 
 [[menu.main]]
     name = "DOWNLOAD"
     url = "https://www.nuget.org/packages/LiteDB/"
-    weight = 6
+    weight = 4
 
 [params]
   google_analytics_id=""
