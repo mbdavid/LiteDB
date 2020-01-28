@@ -233,6 +233,7 @@ namespace LiteDB.Engine
             this.IsConfirmed = false;
 
             // block information
+            this.ItemsCount = 0;
             this.UsedBytes = 0;
             this.FragmentedBytes = 0;
             this.NextFreePosition = PAGE_HEADER_SIZE; // 32
