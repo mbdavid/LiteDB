@@ -38,13 +38,13 @@ Given that collections are schema-less, it is possible for an expression to retu
 
 ### Primary key (= auto id) 
 
-By default, an index over `_id` is created upon the first insertion. However, please note that no index will be created if the type of `_id` is any other than `ObjectId`, `Guid`, `Int32`, `Int64` and `DateTime`.
+By default, an index over `_id` is created upon the first insertion.
 
 ### EnsureIndex()
 
-Indexes are created via `EnsureIndex`. This method create the index if it does not exist and does nothing if already exists. In v4 there is no more re-create index in change definition. If you want re-create an index you must drop before and runs `EnsureIndex` again.
+Indexes are created via `EnsureIndex`. This method create the index if it does not exist and does nothing if already exists.
 
-Indexes are identified by document field name. LiteDB only supports 1 field per index, but this field can be any BSON type, even an embedded document.
+An index can be created over any valid `BsonExpression.`
 
 ```JS
 {
