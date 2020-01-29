@@ -1,6 +1,5 @@
 ---
-title: 'SQL Syntax'
-date: 2019-02-11T19:30:08+10:00
+title: 'SELECT'
 draft: false
 weight: 10
 ---

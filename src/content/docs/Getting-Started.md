@@ -1,6 +1,5 @@
 ---
 title: 'Getting Started'
-date: 2020-01-22T18:26:17.1079568Z
 draft: false
 weight: 1
 ---

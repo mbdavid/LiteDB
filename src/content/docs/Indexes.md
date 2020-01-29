@@ -1,6 +1,5 @@
 ---
 title: 'Indexes'
-date: 2020-01-23T20:36:40.6243457Z
 draft: false
 weight: 9
 ---

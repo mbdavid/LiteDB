@@ -1,6 +1,5 @@
 ---
 title: 'Object Mapping'
-date: 2020-01-21T13:12:43.2524655Z
 draft: false
 weight: 3
 ---
