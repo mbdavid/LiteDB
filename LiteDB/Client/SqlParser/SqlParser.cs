@@ -38,7 +38,7 @@ namespace LiteDB
                     return this.ParseSelect();
                 case "INSERT": return this.ParseInsert();
                 case "DELETE": return this.ParseDelete();
-                case "UPDATE": return this.ParseUpadate();
+                case "UPDATE": return this.ParseUpdate();
                 case "DROP": return this.ParseDrop();
                 case "RENAME": return this.ParseRename();
                 case "CREATE": return this.ParseCreate();
