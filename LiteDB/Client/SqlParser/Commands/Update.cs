@@ -15,7 +15,7 @@ namespace LiteDB
         ///     SET [{key} = {exprValue}, {key} = {exprValue} | { newDoc }]
         /// [ WHERE {whereExpr} ]
         /// </summary>
-        private BsonDataReader ParseUpadate()
+        private BsonDataReader ParseUpdate()
         {
             _tokenizer.ReadToken().Expect("UPDATE");
 
