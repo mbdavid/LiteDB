@@ -23,9 +23,8 @@ In LiteDB v5, pragmas are variables that can alter the behavior of a datafile. T
 
 - `pragma UTC_DATE = true;` sets UTC_DATE to true
 
+<span id="rebuildOptions">
 ## Rebuild Options
-
-<span id="rebuildOptions"></rebuildOptions>
 
 Rebuild options are used to configure a rebuild.
 
@@ -41,3 +40,5 @@ Rebuilds are also useful to defragment a datafile, making it smaller and faster 
 - `rebuild;` rebuilds the database with the default collation and no password
 - `rebuild {"collation": "en-GB/IgnoreCase"};` rebuilds the datafile with the `en-GB` culture and case-insensitive string comparison
 - `rebuild {"collation": "en-GB/IgnoreCase", "password" : "1234"};` rebuilds the datafile with the `en-GB` culture, case-insensitive string comparison and sets the password to "1234"
+
+</rebuildOptions>

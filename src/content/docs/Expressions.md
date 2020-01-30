@@ -19,6 +19,7 @@ Expressions are path or formulas to access and modify the data inside a document
 - Functions are represented with `FUNCTION_NAME(par1, par2, ...)`: `LOWER($.Name)`
 
 Examples:
+
 - `$.Price`
 - `$.Price + 100`
 - `SUM($.Items[*].Price)`

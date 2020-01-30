@@ -7,16 +7,16 @@ weight: 10
 The following structure defines the SQL query syntax in LiteDB. Keyworks and function names are case-insensitive.
 ```
 [ EXPLAIN ]
-  SELECT   {selectExpr0}  [, {selectExprN}]
-[ INTO     {collection|$file(param)} [ : {autoId} ] ]
-[ FROM     {collection|$systemCollection} ]
-[ INCLUDE  {pathExpr0} [, {pathExprN} ]
-[ WHERE    {filterExpr} ]
-[ GROUP BY {groupByExpr} ]
-[ HAVING   {filterExpr} ]
-[ ORDER BY {orderByExpr} [ ASC | DESC ] ]
-[ LIMIT    {number} ]
-[ OFFSET   {number} ]
+  SELECT   <selectExpr0>  [, <selectExprN>]
+[ INTO     <collection>|<$file(param)> [ : <autoIdType> ] ]
+[ FROM     <collection>|<$systemCollection> ]
+[ INCLUDE  <pathExpr0> [, <pathExprN> ]
+[ WHERE    <filterExpr> ]
+[ GROUP BY <groupByExpr>} ]
+[ HAVING   <filterExpr> ]
+[ ORDER BY <orderByExpr> [ ASC | DESC ] ]
+[ LIMIT    <number> ]
+[ OFFSET   <number> ]
 [ FOR UPDATE ]
 ```
 ##### Explain
@@ -34,7 +34,7 @@ The `GROUP BY` clause restricts the possible values in this clause. For more inf
 ##### Into
 If this clause is present, the result of the query is inserted into `collection` and the query returns the number of documents inserted.
 
-If the result does not containt a `$_id` field, `autoId` is used to generate one of the specified type (`GUID`, `INT`, `LONG` or `OBJECTID`). If no `autoId` is present, the default is `OBJECTID`.
+If the result does not containt a `$_id` field, `autoIdType` is used to generate one of the specified type (`GUID`, `INT`, `LONG` or `OBJECTID`). If no `autoIdType` is present, the default is `OBJECTID`.
 
 If `collection` is the system collection `$file`, the result will be written to a file. For more information, check the System Collections documentation.
 
@@ -57,11 +57,12 @@ Every path expression must be a valid JSON path that points to an embedded docum
 
 The field `$ref` indicates which collection is being referenced and the field `$id` corresponds to the `$_id` field in the document being referenced.
 
+<span id="where">
 ##### Where
 If this clause is present, the results are filtered by a filter expression.
 
-A filter expression is a series of expressions joined by the logical operators `AND` or `OR`. Every expression must resolve to a boolean value. For more information, check the Expressions documentation.
-
+A filter expression is a series of expressions joined by the logical operators `AND` or `OR`. Every expression must resolve to a boolean value. For more information, check the [Expressions documentation](../../docs/expressions).
+</span>
 ##### Group By
 If this clause is present, the results are grouped by an expression and the query returns a document for each group.
 
