@@ -115,6 +115,8 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<KeyValuePair<BsonValue, PageAddress>> Sort()
         {
+            if (_containers.Count == 0) yield break;
+
             // starts with first container as current
             var current = _containers[0];
 

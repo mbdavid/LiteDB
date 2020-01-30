@@ -55,7 +55,7 @@ namespace LiteDB.Engine
         {
             var transaction = _monitor.GetTransaction(true, out var isNew);
 
-            transaction.OpenCursors.Add(_cursor.Start());
+            transaction.OpenCursors.Add(_cursor);
 
             try
             {
@@ -66,6 +66,10 @@ namespace LiteDB.Engine
             {
                 // if any error, rollback transaction
                 transaction.Rollback();
+
+                // remove cursor
+                 transaction.OpenCursors.Remove(_cursor);
+
                 throw;
             }
 
@@ -118,13 +122,22 @@ namespace LiteDB.Engine
                 // get current query pipe: normal or groupby pipe
                 var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas);
 
+                // start cursor elapsed timer
+                _cursor.Elapsed.Start();
+
                 // call safepoint just before return each document
                 foreach (var doc in pipe.Pipe(nodes, queryPlan))
                 {
                     _cursor.Fetched++;
+                    _cursor.Elapsed.Stop();
 
                     yield return doc;
+
+                    _cursor.Elapsed.Start();
                 }
+
+                // stop cursor elapsed
+                _cursor.Elapsed.Stop();
 
                 transaction.OpenCursors.Remove(_cursor);
 

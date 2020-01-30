@@ -10,8 +10,8 @@ namespace LiteDB.Tests.QueryTest
     {
         private Person[] local;
 
-        private LiteDatabase db;
-        private LiteCollection<Person> collection;
+        private ILiteDatabase db;
+        private ILiteCollection<Person> collection;
 
         public GroupBy_Tests()
         {
@@ -32,12 +32,12 @@ namespace LiteDB.Tests.QueryTest
             //**     .Select(x => new { Age = x.Key, Count = x.Count() })
             //**     .OrderBy(x => x.Age)
             //**     .ToArray();
-            //** 
+            //**
             //** var r1 = collection.Query()
             //**     .GroupBy(x => x.Age)
             //**     .Select(x => new { Age = x.Key, Count = x.Count() })
             //**     .ToArray();
-            //** 
+            //**
             //** foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
             //** {
             //**     r.left.Age.Should().Be(r.right.Age);
@@ -53,12 +53,12 @@ namespace LiteDB.Tests.QueryTest
             //**     .Select(x => new { Year = x.Key, Sum = x.Sum(q => q.Age) })
             //**     .OrderBy(x => x.Year)
             //**     .ToArray();
-            //** 
+            //**
             //** var r1 = collection.Query()
             //**     .GroupBy(x => x.Date.Year)
             //**     .Select(x => new { Year = x.Key, Sum = x.Sum(q => q.Age) })
             //**     .ToArray();
-            //** 
+            //**
             //** foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
             //** {
             //**     r.left.Year.Should().Be(r.right.Year);
@@ -74,12 +74,12 @@ namespace LiteDB.Tests.QueryTest
             //**     .Select(x => new { Year = x.Key, Count = x.Count() })
             //**     .OrderBy(x => x.Year)
             //**     .ToArray();
-            //** 
+            //**
             //** var r1 = collection.Query()
             //**     .GroupBy(x => x.Date.Year)
             //**     .Select(x => new { x.Date.Year, Count = x })
             //**     .ToArray();
-            //** 
+            //**
             //** foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
             //** {
             //**     Assert.Equal(r.left.Year, r.right.Year);
@@ -105,7 +105,7 @@ namespace LiteDB.Tests.QueryTest
             //**     })
             //**     .Limit(10)
             //**     .ToArray();
-            //** 
+            //**
             //** // test first only
             //** Assert.Equal(5, r[0].Users.Length);
             //** Assert.Equal("imperdiet.us", r[0].Domain);
