@@ -12,7 +12,7 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <Title>LiteDB</Title>
     <PackageId>LiteDB</PackageId>
-    <PackageVersion>5.0.0-rc</PackageVersion>
+    <PackageVersion>5.0.0</PackageVersion>
     <PackageTags>database nosql embedded</PackageTags>
     <PackageIconUrl>http://www.litedb.org/img/logo_64x64.png</PackageIconUrl>
     <PackageLicenseUrl>https://raw.github.com/mbdavid/LiteDB/master/LICENSE</PackageLicenseUrl>
