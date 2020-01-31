@@ -14,7 +14,7 @@
     <PackageId>LiteDB</PackageId>
     <PackageVersion>5.0.0</PackageVersion>
     <PackageTags>database nosql embedded</PackageTags>
-    <PackageIcon>logo_64x64.png</PackageIcon>
+    <PackageIcon>icon_64x64.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://www.litedb.org</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mbdavid/LiteDB</RepositoryUrl>
