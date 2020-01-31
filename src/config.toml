@@ -29,7 +29,7 @@ pygmentsUseClasses = true
     weight = 4
 
 [params]
-  google_analytics_id=""
+  google_analytics_id="UA-54329029-1"
   homepage_button_link = '/docs'
   homepage_button_text = 'Read The Docs'
   homepage_intro = 'LiteDB : LiteDB - A .NET NoSQL Document Store database in a single data file.'

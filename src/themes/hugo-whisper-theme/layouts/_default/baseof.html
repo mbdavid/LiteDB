@@ -9,7 +9,7 @@
   {{ block "meta_tags" . }}{{end}}
   <link rel="icon" href="{{ "favicon.png" | absURL}}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   
   {{ if .Site.IsServer }}
   {{ $style := resources.Get "scss/style.scss" | toCSS (dict "targetPath" "css/style.css" "enableSourceMap" true) }}

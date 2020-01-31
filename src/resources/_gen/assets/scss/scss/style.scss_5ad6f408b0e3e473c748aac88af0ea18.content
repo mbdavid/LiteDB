@@ -96,11 +96,11 @@ sup {
   top: -.5em; }
 
 a {
-  color: #007bff;
+  color: #fd7e14;
   text-decoration: none;
   background-color: transparent; }
   a:hover {
-    color: #66b0ff;
+    color: #feb679;
     text-decoration: underline; }
 
 a:not([href]):not([tabindex]) {
@@ -281,12 +281,12 @@ template {
   vertical-align: text-top !important; }
 
 .bg-primary {
-  background-color: #007bff !important; }
+  background-color: #fd7e14 !important; }
 
 a.bg-primary:hover, a.bg-primary:focus,
 button.bg-primary:hover,
 button.bg-primary:focus {
-  background-color: #0062cc !important; }
+  background-color: #dc6502 !important; }
 
 .bg-secondary {
   background-color: #ffca28 !important; }
@@ -381,7 +381,7 @@ button.bg-dark:focus {
   border-left: 0 !important; }
 
 .border-primary {
-  border-color: #007bff !important; }
+  border-color: #fd7e14 !important; }
 
 .border-secondary {
   border-color: #ffca28 !important; }
@@ -5982,10 +5982,10 @@ button.bg-dark:focus {
   color: #fff !important; }
 
 .text-primary {
-  color: #007bff !important; }
+  color: #fd7e14 !important; }
 
 a.text-primary:hover, a.text-primary:focus {
-  color: #0056b3 !important; }
+  color: #c35a02 !important; }
 
 .text-secondary {
   color: #ffca28 !important; }
@@ -6696,19 +6696,19 @@ a.text-dark:hover, a.text-dark:focus {
 .table-primary,
 .table-primary > th,
 .table-primary > td {
-  background-color: #b8daff; }
+  background-color: #fedbbd; }
 
 .table-primary th,
 .table-primary td,
 .table-primary thead th,
 .table-primary tbody + tbody {
-  border-color: #7abaff; }
+  border-color: #febc85; }
 
 .table-hover .table-primary:hover {
-  background-color: #9fcdff; }
+  background-color: #fecda4; }
   .table-hover .table-primary:hover > td,
   .table-hover .table-primary:hover > th {
-    background-color: #9fcdff; }
+    background-color: #fecda4; }
 
 .table-secondary,
 .table-secondary > th,
@@ -6952,7 +6952,7 @@ a.text-dark:hover, a.text-dark:focus {
   .hamburger-inner, .hamburger-inner::before, .hamburger-inner::after {
     width: 32px;
     height: 3px;
-    background-color: #007bff;
+    background-color: #fd7e14;
     border-radius: 3px;
     position: absolute;
     transition-property: transform;
@@ -7470,7 +7470,7 @@ p {
 
 .main-menu-mobile {
   position: fixed;
-  background: #007bff;
+  background: #fd7e14;
   top: 0;
   left: 0;
   width: 100%;
@@ -7561,12 +7561,12 @@ p {
     margin: 0;
     padding: 4px 0 4px 0; }
     .docs-menu ul li.active a {
-      color: #3395ff;
+      color: #fd9a47;
       font-weight: 400; }
     .docs-menu ul li a {
       color: #212529; }
       .docs-menu ul li a:hover {
-        color: #007bff; }
+        color: #fd7e14; }
 
 .hamburger {
   padding: 10px 0 10px 10px;
@@ -7581,7 +7581,7 @@ p {
   .hamburger .hamburger-inner,
   .hamburger .hamburger-inner::before,
   .hamburger .hamburger-inner::after {
-    background: #007bff; }
+    background: #fd7e14; }
   .hamburger .hamburger-inner::after {
     width: 18px;
     right: 0; }
@@ -7593,7 +7593,7 @@ p {
   white-space: nowrap;
   display: inline-block;
   padding: 8px 15px 6px 15px;
-  background: #007bff;
+  background: #fd7e14;
   font-weight: normal;
   text-transform: uppercase;
   color: white;
@@ -7603,7 +7603,7 @@ p {
   border-radius: 3px; }
   .button:hover {
     color: #fff;
-    background-color: #3395ff;
+    background-color: #fd9a47;
     text-decoration: none; }
 
 .button-white {
@@ -7761,13 +7761,13 @@ p {
     transform: skewY(-5deg); }
 
 .strip-primary-gradient {
-  background-image: linear-gradient(to right, #007bff, #ffca28); }
+  background-image: linear-gradient(to right, #fd7e14, #ffca28); }
 
 .strip-primary-gradient-top-bottom {
-  background-image: linear-gradient(to bottom, #007bff, #ffca28); }
+  background-image: linear-gradient(to bottom, #fd7e14, #ffca28); }
 
 .strip-primary {
-  background-color: #007bff; }
+  background-color: #fd7e14; }
 
 .strip-secondary {
   background-color: #ffca28; }
@@ -7965,32 +7965,5 @@ body {
 .container {
   padding-left: 20px;
   padding-right: 20px; }
-
-body:after {
-  color: red;
-  font-size: 12px;
-  padding: 5px;
-  font-weight: bold;
-  right: 10px;
-  position: fixed;
-  text-align: center;
-  text-transform: uppercase;
-  bottom: 10px;
-  width: 200px;
-  z-index: 9999;
-  border: solid 1px red;
-  content: "xs - min-width: 0"; }
-  @media (min-width: 576px) {
-    body:after {
-      content: "sm - min-width: 576px"; } }
-  @media (min-width: 768px) {
-    body:after {
-      content: "md - min-width: 768px"; } }
-  @media (min-width: 992px) {
-    body:after {
-      content: "lg - min-width: 992px"; } }
-  @media (min-width: 1300px) {
-    body:after {
-      content: "xl - min-width: 1300px"; } }
 
 /*# sourceMappingURL=style.css.map */

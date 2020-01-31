@@ -41,8 +41,8 @@
         <div class="row feature-box">
             <div class="col-md-4">
                 <h1><i class="fa fa-check-square-o"></i>&nbsp;Standalone database</h1>
-                <p>LiteDB is serverless database delivered in a single DLL (less than 450kb) fully written in .NET C# managed code (compatible with .NET 4.5 and NETStandard 2.0).</p>
-                <p>Install via NuGet or just copy DLL to your bin project folder.</p>
+                <p>LiteDB is a serverless database delivered in a single small DLL (< 450kb) fully written in .NET C# managed code (compatible with .NET 4.5 and NETStandard 2.0).</p>
+                <p>Install it via NuGet or just copy the DLL to your bin project folder.</p>
             </div>
             <div class="col-md-4">
                 <h1><i class="fa fa-flash"></i>&nbsp;Fast and lightweight</h1>
@@ -59,7 +59,7 @@
                 <h1><i class="fa fa-cog"></i>&nbsp;And much more...</h1>
                 <ul>
                     <li>Portable UWP and Xamarin iOS/Android</li>
-                    <li>ACID transaction</li>
+                    <li>ACID transactions</li>
                     <li>Single datafile (like SQLite)</li>
                     <li>Recovery data in writing failure (<a href="https://en.wikipedia.org/wiki/Write-ahead_logging" target="_blank">WAL</a> mode)</li>
                     <li>Map your POCO class to BsonDocument</li>
@@ -77,16 +77,16 @@
         
         <div class="row feature-item">
             <div class="col-md-7">
-                <img src="screen_1.png" />
+                <img src="screen_5.png" />
             </div>
             
             <div class="col-md-5">
                 <h2>SQL Syntax</h2>
                 <ul>
-                    <li>LiteDB supports SQL-like language for data and structure manipulations. You can insert, update, delete or query your database using a very similar SQL relational language.</li>
-                    <li>Can be used LINQ expressions (lambda functions) to create fluent API query in your C# code.</li>
-                    <li>All SQL commands are supported in new <a href="https://github.com/mbdavid/LiteDB.Studio" target="_blank">LiteDB.Studio</a> admin tool.</li>
-                    <li>You can also get detail EXPLAIN planner from query engine to check if your query will run with the best performance.</li>
+                    <li>LiteDB supports SQL-like language for data and structure manipulations. You can insert, update, delete or query your database using a very similar SQL relational language</li>
+                    <li>LINQ expressions (lambda functions) can be used to create fluent API query in your C# code</li>
+                    <li>All SQL commands are supported in new <a href="https://github.com/mbdavid/LiteDB.Studio" target="_blank">LiteDB.Studio</a> admin tool</li>
+                    <li>You can also get detailed EXPLAIN PLAN from the query engine to check if your query will run with the best performance</li>
                 </ul>
             </div>
         </div>
@@ -97,11 +97,11 @@
             <div class="col-md-5">
                 <h2>Awesome features</h2>
                 <ul>
-                    <li>Thread safe with cross collection transaction.</li>
-                    <li>No locks for readers and writer locks are per collection</li>
-                    <li>Partial document lookup/loader and index only query supported.</li>
-                    <li>FileStorage to store files and streams inside your database.</li>
-                    <li>System collections to easy import/export data and manage your database.</li>
+                    <li>Thread-safe with cross collection transaction</li>
+                    <li>No locks for readers. Per collection writer locks</li>
+                    <li>Partial document lookup/loader and index-only queries supported</li>
+                    <li>FileStorage to store files and streams inside your database</li>
+                    <li>System collections to easily import/export data and manage your database</li>
                 </ul>
             </div>
             <div class="col-md-7">
@@ -119,7 +119,7 @@
             <div class="col-md-5">
                 <h2>Work everywhere</h2>
                 <ul>
-                    <li>LiteDB was wrote in pure C# managed code.</li>
+                    <li>LiteDB is fully written in C# managed code</li>
                     <li>Support .NET Framework 4.5 and .NET Standard 1.3 and 2.0, .NET Core 2.0+, UWP, Linux, mobile Xamarin (iOS and Android), Unity... in every .NET platform</li>
                     <li>Did I mention that LiteDB is free and open source? <i class="fa fa-heart" style="color: red"></i></li>
                 </ul>
@@ -128,19 +128,22 @@
         
         <div class="hr"></div>
         
+        <h1 class="feature-title">LiteDB Community</h1>
+        
         <div class="row feature-item">
-    
-            <div class="col-md-12">
-                <h2>LiteDB Community</h2>
+            <div class="col-md-4" style="text-align: center">
+                <img src="community.png" style="box-shadow: none;">
+            </div>
+            <div class="col-md-8">
+                <p style="color: white">LiteDB is a growing community that needs your help. You can contribute with LiteDB in many ways:</p>
                 <ul>
-                    <li>Help LiteDB grow its user community by answering this 
-                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSc4cNG7wyLKXXcOLIt7Ea4TlXCG6s-51_EfHPu2p5WZ2dIx7A/viewform?usp=sf_link" target="_blank">
-                            <i class="fa fa-check-square-o"></i> simple survey
-                        <a/>.
-                    </li>
+                    <li>Open a bug issue on <a href="https://github.com/mbdavid/LiteDB/issues" target="_blank"><i class="fa fa-github"></i> Github</a></li>
+                    <li>Chat with us on <a href="https://gitter.im/mbdavid/LiteDB"><i class="fa fa-gitter"></i> Gitter</a></li>
+                    <li>Make a question on <a href="https://stackoverflow.com/questions/ask" target="_blank"><i class="fa fa-stack-overflow"></i> StackOverflow</a></li>
+                    <li>Answer these <a href="https://docs.google.com/forms/d/e/1FAIpQLSc4cNG7wyLKXXcOLIt7Ea4TlXCG6s-51_EfHPu2p5WZ2dIx7A/viewform?usp=sf_link" target="_blank"><i class="fa fa-check-square-o"></i> few questions about how you use LiteDB</a></li>
+                    <li>And follow us on <a href="https://docs.google.com/forms/d/e/1FAIpQLSc4cNG7wyLKXXcOLIt7Ea4TlXCG6s-51_EfHPu2p5WZ2dIx7A/viewform?usp=sf_link" target="_blank"><i class="fa fa-twitter"></i> Twitter</a></li>
                 </ul>
             </div>
-            
         </div>
         
     </div>
