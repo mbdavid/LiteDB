@@ -7951,6 +7951,10 @@ p {
   background-color: var(--body-bg);
   height: 618px; }
 
+.gradient-bg {
+  background: #22c1c3;
+  background: linear-gradient(0deg, #22c1c3 0%, #ba4498 100%); }
+
 body {
   font-family: "Roboto", Arial, sans-serif, -apple-system;
   font-size: 1rem;
