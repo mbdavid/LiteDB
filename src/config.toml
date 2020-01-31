@@ -1,4 +1,4 @@
-baseURL = "www.litedb.org"
+baseURL = "/"
 languageCode = "en-us"
 title = "LiteDB :: A .NET embedded NoSQL database"
 themesDir = "themes"
