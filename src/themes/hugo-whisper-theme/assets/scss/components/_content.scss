@@ -1,0 +1,136 @@
+.content {
+  -webkit-font-smoothing: antialiased;
+  .highlight {
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+  code {
+    background: #f5f5f5;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-family: $font-family-mono;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  pre {
+    font-family: $font-family-mono;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin: 0;
+    padding: 10px;
+    border-radius: 1px;
+    code {
+      font-family: $font-family-mono;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      border-radius: none;
+      padding: 0;
+      margin: 0;
+      background: none;
+    }
+  }
+  
+  strong {
+    font-weight: bold;
+  }
+  em {
+    font-style: italic;
+    font-weight: normal;
+  }
+  ol {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    list-style-type: decimal;
+    li {
+      margin-bottom: 5px;
+      margin-left: 20px;
+    }
+  }
+  ul {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    list-style-type: disc;
+    li {
+      margin-bottom: 5px;
+      margin-left: 20px;
+    }
+  }
+  a {
+    text-decoration: underline;
+  }
+  p {
+    font-family: $font-family-base;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: lighten($black, 10%);
+    font-weight: 400;
+  }
+  h1 {
+    font-family: $font-family-base;
+    font-size: 2.6rem;
+    line-height: 1.4;
+    font-weight: 300;
+    margin-bottom: 20px;
+  }
+  h2 {
+    font-size: 2.2rem;
+    line-height: 1.4;
+    font-weight: 300;
+    letter-spacing: -0.01em;
+    font-family: $font-family-base;
+    margin-bottom: 20px;
+  }
+  h3 {
+    font-size: 1.6rem;
+    line-height: 1.4;
+    font-weight: 400;
+    font-family: $font-family-base;
+    margin-bottom: 20px;
+  }
+  h4 {
+    font-size: 1.5rem;
+    line-height: 1.4;
+    font-weight: 500;
+    font-family: $font-family-base;
+    margin-bottom: 20px;
+  }
+  h5 {
+    font-size: 1.4rem;
+    line-height: 1.4;
+    font-weight: 600;
+    font-family: $font-family-base;
+    margin-bottom: 20px;
+  }
+  h6 {
+    font-size: 1.2rem;
+    line-height: 1.4;
+    font-weight: 700;
+    font-family: $font-family-base;
+    margin-bottom: 20px;
+  }
+  blockquote {
+    background: #f9f9f9;
+    border-left: 10px solid #ccc;
+    margin: 1.5em 10px;
+    padding: 0.5em 10px;
+    quotes: '\201C''\201D''\2018''\2019';
+  }
+  blockquote:before {
+    color: #ccc;
+    content: open-quote;
+    font-size: 4em;
+    line-height: 0.1em;
+    margin-right: 0.25em;
+    vertical-align: -0.4em;
+  }
+  blockquote p {
+    display: inline;
+  }
+  table {
+    @extend .table;
+  }
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}

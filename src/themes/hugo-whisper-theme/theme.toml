@@ -1,0 +1,12 @@
+name = "Whisper"
+license = "MIT"
+licenselink = "https://github.com/JugglerX/hugo-whisper-theme/blob/master/LICENSE"
+description = "Whisper is a minimal documentation theme built for Hugo. The design and functionality is intentionally minimal."
+homepage = "https://github.com/jugglerx/hugo-whisper-theme"
+tags = ["documentation","responsive","minimal","clean","bootstrap","zerostatic"]
+features = ["docs"]
+min_version = 0.51
+
+[author]
+  name = "Robert Austin"
+  homepage = "https://www.zerostatic.io"

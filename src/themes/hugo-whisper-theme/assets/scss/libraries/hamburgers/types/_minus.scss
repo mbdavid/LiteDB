@@ -1,0 +1,34 @@
+@if index($hamburger-types, minus) {
+  /*
+   * Minus
+   */
+  .hamburger--minus {
+    .hamburger-inner {
+      &::before,
+      &::after {
+        transition: bottom 0.08s 0s ease-out,
+                    top 0.08s 0s ease-out,
+                    opacity 0s linear;
+      }
+    }
+
+    &.is-active {
+      .hamburger-inner {
+        &::before,
+        &::after {
+          opacity: 0;
+          transition: bottom 0.08s ease-out,
+                      top 0.08s ease-out,
+                      opacity 0s 0.08s linear;
+        }
+        &::before {
+          top: 0;
+        }
+
+        &::after {
+          bottom: 0;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Overview - LiteDB :: A .NET embedded NoSQL database</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="www.litedb.org/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  
+  
+  <link rel="stylesheet" href="/www.litedb.org/css/style.min.80c4975c2143419d29740f44dab842d29887572b68eea2718cf5c164c94f1b9f.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-list'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.litedb.org/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs active">
+      <a href="www.litedb.org/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.litedb.org/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="www.litedb.org"><img alt="Logo" src="/www.litedb.org/images/logo_litedb.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="www.litedb.org"><img alt="Logo" src="/www.litedb.org/images/logo_litedb.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.litedb.org/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs active">
+      <a href="www.litedb.org/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.litedb.org/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Docs</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/getting-started/">Getting Started</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/data-structure/">Data Structure</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/object-mapping/">Object Mapping</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/collections/">Collections</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/bsondocument/">BsonDocument</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/expressions/">Expressions</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/dbref/">DbRef</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/connection-string/">Connection String</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/filestorage/">FileStorage</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/indexes/">Indexes</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/encryption/">Encryption</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/collation/">Collation</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/pragmas/">Pragmas</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+
+<span class="overview">Overview</span>
+<h1 class="title">Overview</h1>
+<div class="content">
+  
+
+<h2 id="litedb-v5-a-net-nosql-document-store-in-a-single-data-file">LiteDB v5 - A .NET NoSQL Document Store in a single data file</h2>
+
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/getting-started/">Getting Started</a></h2>
+  <p> LiteDB is a simple, fast and lightweight embedded .NET document database. LiteDB was inspired by the MongoDB database and its API is very …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/data-structure/">Data Structure</a></h2>
+  <p> LiteDB stores data as documents, which are JSON-like objects containing key-value pairs. Documents are a schema-less data structure. Each …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/object-mapping/">Object Mapping</a></h2>
+  <p> LiteDB supports POCO classes to strongly type documents. When you get a LiteCollection instance from LiteDatabase.GetCollection, T will be …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/collections/">Collections</a></h2>
+  <p> Documents are stored and organized in collections. LiteCollection is a generic class that is used to manage collections in LiteDB. Each …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/bsondocument/">BsonDocument</a></h2>
+  <p>The BsonDocument class is LiteDB’s implementation of documents. Internally, a BsonDocument stores key-value pairs in a Dictionary.
+var …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/expressions/">Expressions</a></h2>
+  <p> Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/dbref/">DbRef</a></h2>
+  <p> LiteDB is a document database, so there is no JOIN between collections. You can use embedded documents (sub-documents) or create a …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/connection-string/">Connection String</a></h2>
+  <p> LiteDatabase can be initialized using a string connection, with key1=value1; key2=value2; ... syntax. If there is no = in your connection …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/filestorage/">FileStorage</a></h2>
+  <p>To keep its memory profile slim, limits the size of a documents to 1MB. For most documents, this is plenty. However, 1MB is too small for a …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/indexes/">Indexes</a></h2>
+  <p> LiteDB improves search performance by using indexes on document fields or expressions. Each index storess the value of a specific …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/encryption/">Encryption</a></h2>
+  <p>LiteDB uses salted AES (as defined by RFC 2898) as its encryption. This is implemented by the Rfc2898DeriveBytes class.
+The Aes object used …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/collation/">Collation</a></h2>
+  <p> A collation is a special pragma (for more info, see Pragmas) that allows users to specify a culture and string compare options for a …</p>
+</div>
+
+
+<div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="www.litedb.org/docs/pragmas/">Pragmas</a></h2>
+  <p> In LiteDB v5, pragmas are variables that can alter the behavior of a datafile. They are stored in the header of the datafile.
+   Name …</p>
+</div>
+
+
+
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li>
+                Made with ♥ by LiteDB team - <a href="https://twitter.com/mbdavid" target="_blank">@mbdavid</a> - MIT License
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/www.litedb.org/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+      
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-54329029-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-54329029-1');
+      </script>
+    
+  
+
+
+</body>
+
+</html>

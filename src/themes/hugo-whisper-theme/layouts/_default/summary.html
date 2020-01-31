@@ -1,0 +1,7 @@
+<div class="summary mb-2">
+  {{ if .Params.image }}
+  <img alt="{{ .Title }}" src="{{ .Params.image }}" />
+  {{ end}}
+  <h2 class="title-summary"><a href="{{ .Permalink }}">{{ .Title }}</a></h2>
+  <p>{{ htmlUnescape .Content | plainify | truncate 140 }}</p>
+</div>

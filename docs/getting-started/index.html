@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Getting Started - LiteDB :: A .NET embedded NoSQL database</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="www.litedb.org/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  
+  
+  <link rel="stylesheet" href="/www.litedb.org/css/style.min.80c4975c2143419d29740f44dab842d29887572b68eea2718cf5c164c94f1b9f.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-single'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.litedb.org/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.litedb.org/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.litedb.org/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="www.litedb.org"><img alt="Logo" src="/www.litedb.org/images/logo_litedb.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="www.litedb.org"><img alt="Logo" src="/www.litedb.org/images/logo_litedb.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.litedb.org/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.litedb.org/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.litedb.org/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Docs</h4>
+  <ul>
+    
+    <li class="active ">
+      <a href="www.litedb.org/docs/getting-started/">Getting Started</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/data-structure/">Data Structure</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/object-mapping/">Object Mapping</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/collections/">Collections</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/bsondocument/">BsonDocument</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/expressions/">Expressions</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/dbref/">DbRef</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/connection-string/">Connection String</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/filestorage/">FileStorage</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/indexes/">Indexes</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/encryption/">Encryption</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/collation/">Collation</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/pragmas/">Pragmas</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">Getting Started</h1>
+<div class="content">
+  
+
+<p>LiteDB is a simple, fast and lightweight embedded .NET document database. LiteDB was inspired by the MongoDB database and its API is very similar to the official MongoDB .NET API.</p>
+
+<h3 id="how-to-install">How to install</h3>
+
+<p>LiteDB is a serverless database, so there is no installation. Just copy <a href="https://github.com/mbdavid/LiteDB/releases">LiteDB.dll</a> into your Bin folder and add it as Reference. Or, if you prefer, you can install via NuGet: <code>Install-Package LiteDB</code>. If you are running in a web environment, make sure that your IIS user has write permission to the data folder.</p>
+
+<h3 id="first-example">First example</h3>
+
+<p>A quick example to store and search for documents:</p>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Create your POCO class entity
+</span><span class="c1"></span><span class="k">public</span> <span class="k">class</span> <span class="nc">Customer</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">Id</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Name</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">string</span><span class="na">[]</span> <span class="n">Phones</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">bool</span> <span class="n">IsActive</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Open database (or create if doesn&#39;t exist)
+</span><span class="c1"></span><span class="n">using</span><span class="p">(</span><span class="kt">var</span> <span class="n">db</span> <span class="p">=</span> <span class="k">new</span> <span class="n">LiteDatabase</span><span class="p">(</span><span class="s">@&#34;C:\Temp\MyData.db&#34;</span><span class="p">))</span>
+<span class="p">{</span>
+    <span class="c1">// Get a collection (or create, if doesn&#39;t exist)
+</span><span class="c1"></span>    <span class="kt">var</span> <span class="n">col</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">&lt;</span><span class="n">Customer</span><span class="p">&gt;(</span><span class="s">&#34;customers&#34;</span><span class="p">);</span>
+
+    <span class="c1">// Create your new customer instance
+</span><span class="c1"></span>    <span class="kt">var</span> <span class="n">customer</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Customer</span>
+    <span class="p">{</span> 
+        <span class="n">Name</span> <span class="p">=</span> <span class="s">&#34;John Doe&#34;</span><span class="p">,</span> 
+        <span class="n">Phones</span> <span class="p">=</span> <span class="k">new</span> <span class="kt">string</span><span class="na">[]</span> <span class="p">{</span> <span class="s">&#34;8000-0000&#34;</span><span class="p">,</span> <span class="s">&#34;9000-0000&#34;</span> <span class="p">},</span> 
+        <span class="n">IsActive</span> <span class="p">=</span> <span class="k">true</span>
+    <span class="p">};</span>
+    
+    <span class="c1">// Insert new customer document (Id will be auto-incremented)
+</span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="n">customer</span><span class="p">);</span>
+    
+    <span class="c1">// Update a document inside a collection
+</span><span class="c1"></span>    <span class="n">customer</span><span class="p">.</span><span class="n">Name</span> <span class="p">=</span> <span class="s">&#34;Jane Doe&#34;</span><span class="p">;</span>
+    
+    <span class="n">col</span><span class="p">.</span><span class="n">Update</span><span class="p">(</span><span class="n">customer</span><span class="p">);</span>
+    
+    <span class="c1">// Index document using document Name property
+</span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">EnsureIndex</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Name</span><span class="p">);</span>
+    
+    <span class="c1">// Use LINQ to query documents (filter, sort, transform)
+</span><span class="c1"></span>    <span class="kt">var</span> <span class="n">results</span> <span class="p">=</span> <span class="n">col</span><span class="p">.</span><span class="n">Query</span><span class="p">()</span>
+        <span class="p">.</span><span class="n">Where</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Name</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&#34;J&#34;</span><span class="p">))</span>
+        <span class="p">.</span><span class="n">OrderBy</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Name</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">Select</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="p">{</span> <span class="n">x</span><span class="p">.</span><span class="n">Name</span><span class="p">,</span> <span class="n">NameUpper</span> <span class="p">=</span> <span class="n">x</span><span class="p">.</span><span class="n">Name</span><span class="p">.</span><span class="n">ToUpper</span><span class="p">()</span> <span class="p">})</span>
+        <span class="p">.</span><span class="n">Limit</span><span class="p">(</span><span class="m">10</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">ToList</span><span class="p">();</span>
+
+    <span class="c1">// Let&#39;s create an index in phone numbers (using expression). It&#39;s a multikey index
+</span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">EnsureIndex</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Phones</span><span class="p">);</span> 
+
+    <span class="c1">// and now we can query phones
+</span><span class="c1"></span>    <span class="kt">var</span> <span class="n">r</span> <span class="p">=</span> <span class="n">col</span><span class="p">.</span><span class="n">FindOne</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Phones</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&#34;8888-5555&#34;</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="working-with-files">Working with files</h3>
+
+<p>Need to store files? No problem: use FileStorage.</p>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Get file storage with Int Id
+</span><span class="c1"></span><span class="kt">var</span> <span class="n">storage</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetStorage</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;();</span>
+
+<span class="c1">// Upload a file from file system to database
+</span><span class="c1"></span><span class="n">storage</span><span class="p">.</span><span class="n">Upload</span><span class="p">(</span><span class="m">123</span><span class="p">,</span> <span class="s">@&#34;C:\Temp\picture-01.jpg&#34;</span><span class="p">);</span>
+
+<span class="c1">// And download later
+</span><span class="c1"></span><span class="n">storage</span><span class="p">.</span><span class="n">Download</span><span class="p">(</span><span class="m">123</span><span class="p">,</span> <span class="s">@&#34;C:\Temp\copy-of-picture-01.jpg&#34;</span><span class="p">);</span>
+</code></pre></div>
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li>
+                Made with ♥ by LiteDB team - <a href="https://twitter.com/mbdavid" target="_blank">@mbdavid</a> - MIT License
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/www.litedb.org/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+      
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-54329029-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-54329029-1');
+      </script>
+    
+  
+
+
+</body>
+
+</html>

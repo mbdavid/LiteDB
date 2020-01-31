@@ -1,0 +1,35 @@
+@if index($hamburger-types, 3dy-r) {
+  /*
+   * 3DY Reverse
+   */
+  .hamburger--3dy-r {
+    .hamburger-box {
+      perspective: $hamburger-layer-width * 2;
+    }
+
+    .hamburger-inner {
+      transition: transform 0.15s cubic-bezier(0.645, 0.045, 0.355, 1),
+                  background-color 0s 0.1s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+      &::before,
+      &::after {
+        transition: transform 0s 0.1s cubic-bezier(0.645, 0.045, 0.355, 1);
+      }
+    }
+
+    &.is-active {
+      .hamburger-inner {
+        background-color: transparent !important;
+        transform: rotateX(180deg);
+
+        &::before {
+          transform: translate3d(0, $hamburger-layer-height + $hamburger-layer-spacing, 0) rotate(45deg);
+        }
+
+        &::after {
+          transform: translate3d(0, ($hamburger-layer-height + $hamburger-layer-spacing) * -1, 0) rotate(-45deg);
+        }
+      }
+    }
+  }
+}

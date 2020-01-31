@@ -1,0 +1,16 @@
+@if index($hamburger-types, arrow-r) {
+  /*
+   * Arrow Right
+   */
+  .hamburger--arrow-r.is-active {
+    .hamburger-inner {
+      &::before {
+        transform: translate3d($hamburger-layer-width * 0.2, 0, 0) rotate(45deg) scale(0.7, 1);
+      }
+
+      &::after {
+        transform: translate3d($hamburger-layer-width * 0.2, 0, 0) rotate(-45deg) scale(0.7, 1);
+      }
+    }
+  }
+}

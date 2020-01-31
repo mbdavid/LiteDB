@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Expressions - LiteDB :: A .NET embedded NoSQL database</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="www.litedb.org/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  
+  
+  <link rel="stylesheet" href="/www.litedb.org/css/style.min.80c4975c2143419d29740f44dab842d29887572b68eea2718cf5c164c94f1b9f.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-single'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.litedb.org/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.litedb.org/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.litedb.org/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="www.litedb.org"><img alt="Logo" src="/www.litedb.org/images/logo_litedb.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="www.litedb.org"><img alt="Logo" src="/www.litedb.org/images/logo_litedb.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.litedb.org/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.litedb.org/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.litedb.org/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Docs</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/getting-started/">Getting Started</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/data-structure/">Data Structure</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/object-mapping/">Object Mapping</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/collections/">Collections</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/bsondocument/">BsonDocument</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.litedb.org/docs/expressions/">Expressions</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/dbref/">DbRef</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/connection-string/">Connection String</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/filestorage/">FileStorage</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/indexes/">Indexes</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/encryption/">Encryption</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/collation/">Collation</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/pragmas/">Pragmas</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">Expressions</h1>
+<div class="content">
+  
+
+<p>Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path (<a href="http://goessner.net/articles/JsonPath/">http://goessner.net/articles/JsonPath/</a>), LiteDB supports a similar syntax to navigate inside a document. A path expression always returns a <code>IEnumerable&lt;BsonValue&gt;</code>.</p>
+
+<p><code>BsonExpression</code> is the class that parses a path expression and compiles it into a Linq Expression to be evaluated by LiteDB.</p>
+
+<ul>
+<li>Path starts with <code>$</code>: <code>$.Address.Street</code>, where <code>$</code> represents the root document</li>
+<li>Int values are defined by <code>[0-9]*</code>: <code>123</code></li>
+<li>Double values are defined by <code>[0-9].[0-9]</code>: <code>123.45</code></li>
+<li>Strings are represented with a single quote <code>'</code>: <code>'Hello World'</code></li>
+<li>Null is represented by <code>null</code></li>
+<li>Bool is represented using <code>true</code> or <code>false</code> keywords.</li>
+<li>Document starts with <code>{ key1: &lt;value|expression&gt;, key2: ... }</code></li>
+<li>Arrays are represented with <code>[&lt;value|expression&gt;, &lt;value|expression&gt;, ...]</code></li>
+<li>Functions are represented with <code>FUNCTION_NAME(par1, par2, ...)</code>: <code>LOWER($.Name)</code></li>
+</ul>
+
+<p>Examples:</p>
+
+<ul>
+<li><code>$.Price</code></li>
+<li><code>$.Price + 100</code></li>
+<li><code>SUM($.Items[*].Price)</code></li>
+</ul>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="kt">var</span> <span class="n">expr</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonExpression</span><span class="p">(</span><span class="s">&#34;SUM($.Items[*].Unity * $.Items[*].Price)&#34;</span><span class="p">);</span>
+<span class="kt">var</span> <span class="n">total</span> <span class="p">=</span> <span class="n">expr</span><span class="p">.</span><span class="n">Execute</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="k">true</span><span class="p">).</span><span class="n">First</span><span class="p">().</span><span class="n">AsDecimal</span><span class="p">;</span>
+</code></pre></div>
+<p>Expressions can be used in many ways:</p>
+
+<ul>
+<li>Creating an index based on an expression:
+
+<ul>
+<li><code>collection.EnsureIndex(&quot;Name&quot;, true, &quot;LOWER($.Name)&quot;)</code></li>
+<li><code>collection.EnsureIndex(x =&gt; x.Name, true, &quot;LOWER($.Name)&quot;)</code></li>
+</ul></li>
+<li>Querying documents inside a collection based on expression (full scan search)
+
+<ul>
+<li><code>collection.Find(&quot;SUBSTRING($.Name, 0, 1) = T&quot;)</code></li>
+</ul></li>
+<li>Update using SQL syntax
+
+<ul>
+<li><code>update Customers set Name = LOWER($.Name) where _id = 1</code></li>
+</ul></li>
+<li>Creating new document result in SELECT shell command
+
+<ul>
+<li><code>select { upper_titles: ARRAY(UPPER($.Books[*].Title)) } where $.Name like &quot;John%&quot;</code><br /></li>
+</ul></li>
+<li>Querying documents using the SQL syntax
+
+<ul>
+<li><code>select $.Name, $.Phones[@.Type = &quot;Mobile&quot;] from customers</code></li>
+</ul></li>
+</ul>
+
+<h1 id="path">Path</h1>
+
+<ul>
+<li><code>$</code> - Root</li>
+<li><code>$.Name</code> - <code>Name</code> field</li>
+<li><code>$.Name.First</code> - <code>First</code> field from <code>Name</code> subdocument<br /></li>
+<li><code>$.Books</code> - Returns an array of books</li>
+<li><code>$.Books[0]</code> - Returns the first book inside Books array</li>
+<li><code>$.Books[*]</code> - Returns every book inside Books</li>
+<li><code>$.Books[*].Title</code> Returns the title from every book in Books</li>
+<li><code>$.Books[-1]</code> - Returns the last book inside Books array</li>
+</ul>
+
+<p>Path also supports expressions to filter child nodes</p>
+
+<ul>
+<li><p><code>$.Books[@.Title = 'John Doe']</code> - Returns all books where <code>Title</code> is <code>'John Doe'</code></p></li>
+
+<li><p><code>$.Books[@.Price &gt; 100].Title</code> - Returns all titles where <code>Price</code> is greater than <code>100</code></p></li>
+</ul>
+
+<p>Inside an array, <code>@</code> acts as a sub-iterator, pointing to the current sub-document. It&rsquo;s possible use functions inside expressions too:</p>
+
+<ul>
+<li><code>$.Books[SUBSTRING(LOWER(@.Title), 0, 1) = 't']</code> - Returns all books whose <code>Title</code> starts with <code>'T'</code> or <code>'t'</code>.</li>
+</ul>
+
+<h1 id="functions">Functions</h1>
+
+<p>Functions are used to manipulate data in expressions. A few examples will be provided for each category of functions. For a complete list of functions, check the API documentation.</p>
+
+<h4 id="aggregate-functions">Aggregate Functions</h4>
+
+<p>Aggregate functions take an array as input and return a single value.</p>
+
+<ul>
+<li><code>COUNT(arr)</code> - Returns the number of elements in the array <code>arr</code></li>
+<li><code>AVG(arr)</code> - Returns the average value in the array <code>arr</code></li>
+<li><code>LAST(arr)</code> - Returns the last element in the array <code>arr</code></li>
+</ul>
+
+<h4 id="datatype-functions">DataType Functions</h4>
+
+<p>DataType functions provide explicit data type conversion.</p>
+
+<ul>
+<li><code>STRING(expr)</code> - Returns the result of <code>expr</code> converted to string</li>
+<li><code>INT32(expr)</code> - Tries to convert the result of <code>expr</code> to an <code>Int32</code>, returning <code>null</code> if not possible</li>
+<li><code>DATETIME(expr)</code> - Tries to convert the result of <code>expr</code> to a <code>DateTime</code>, returning <code>null</code> if not possible</li>
+</ul>
+
+<h4 id="date-functions">Date Functions</h4>
+
+<ul>
+<li><code>YEAR(date)</code> - Returns the year value from <code>date</code></li>
+<li><code>DATEADD('year', 3, date)</code> - Returns a new date with 3 years added to date</li>
+<li><code>DATEDIFF('day', dateStart, dateEnd)</code> - Returns the difference in days between <code>dateEnd</code> and <code>dateStart</code></li>
+</ul>
+
+<h4 id="math-functions">Math Functions</h4>
+
+<ul>
+<li><code>ABS(num)</code> - Returns the absolute value of <code>num</code></li>
+<li><code>ROUND(num, digits)</code> - Returns <code>num</code> rounded to <code>digits</code> digits</li>
+<li><code>POW(base, exp)</code> - Returns <code>base</code> to the power of <code>exp</code></li>
+</ul>
+
+<h4 id="string-functions">String Functions</h4>
+
+<ul>
+<li><code>UPPER(str)</code> - Returns <code>str</code> in uppercase</li>
+<li><code>TRIM(str)</code> - Returns a new string without leading and trailing white spaces</li>
+<li><code>REPLACE(str, old, new)</code> - Returns a new string with every ocurrence of <code>old</code> in <code>str</code> replaced by <code>new</code></li>
+</ul>
+
+<h4 id="high-order-functions">High-Order Functions</h4>
+
+<p>High-Order functions take an array and a lambda expression that is applied to every document in the array</p>
+
+<ul>
+<li><p><code>MAP(arr =&gt; expr)</code> returns a new array with the map expression applied to each element</p>
+
+<ul>
+<li><code>MAP([1,2,3] =&gt; @*2)</code> returns <code>[2,4,6]</code></li>
+<li><code>MAP([{a:1, b:2}, {a:3, b:4}] =&gt; @.a)</code> returns <code>[1,3]</code>
+<br /></li>
+</ul></li>
+
+<li><p><code>FILTER(arr =&gt; expr)</code> returns a new array containing only the elements for which the filter expression returns <code>true</code></p>
+
+<ul>
+<li><code>FILTER([1,2,3,4,5] =&gt; @ &gt; 3)</code> returns <code>[4,5]</code></li>
+<li><code>FILTER([{a:1, b:2}, {a:2}] =&gt; @.b != null)</code> returns <code>[{a:1, b:2}]</code>
+<br /></li>
+</ul></li>
+
+<li><p><code>SORT(arr =&gt; expr)</code> returns a new array sorted by the result of <code>expr</code> in ascending order
+-<code>SORT([3,2,5,1,4] =&gt; @)</code> returns <code>[1,2,3,4,5]</code>
+-<code>SORT([{a:2}, {a:1, b:2}] =&gt; @.a)</code> returns <code>[{a:1, b:2}, {a:2}]</code></p></li>
+
+<li><p><code>SORT(arr =&gt; expr, order)</code> returns a new array sorted by the result of <code>expr</code> with the order defined by <code>order</code> (ascending if <code>order</code> is <code>1</code> or <code>'asc'</code>, descending if <code>order</code> is <code>-1</code> or <code>'desc'</code>)
+-<code>SORT([3,2,5,1,4] =&gt; @, 'desc')</code> returns <code>[5,4,3,2,1]</code>
+-<code>SORT([{a:1, b:2}, {a:2}] =&gt; @.a, -1)</code> returns <code>[{a:2}, {a:1, b:2}]</code></p></li>
+</ul>
+
+<h4 id="misc-functions">Misc Functions</h4>
+
+<ul>
+<li><code>JSON(str)</code> - Takes a string representation of a JSON and returns a parsed <code>BsonValue</code> containing the document</li>
+<li><code>CONCAT(arr1, arr2)</code> - Returns a new array containg the concatenation between arrays <code>arr1</code> and <code>arr2</code></li>
+<li><code>RANDOM(min, max)</code> - Returns a random <code>Int32</code> between <code>min</code> and <code>max</code></li>
+</ul>
+
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li>
+                Made with ♥ by LiteDB team - <a href="https://twitter.com/mbdavid" target="_blank">@mbdavid</a> - MIT License
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/www.litedb.org/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+      
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-54329029-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-54329029-1');
+      </script>
+    
+  
+
+
+</body>
+
+</html>

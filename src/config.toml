@@ -1,0 +1,52 @@
+baseURL = "www.litedb.org"
+languageCode = "en-us"
+title = "LiteDB :: A .NET embedded NoSQL database"
+themesDir = "themes"
+theme = "hugo-whisper-theme"
+
+pygmentsCodeFences = true
+pygmentsCodefencesGuessSyntax = true
+pygmentsUseClasses = true
+
+[[menu.main]]
+    name = "HOME"
+    url = "/"
+    weight = 1
+
+[[menu.main]]
+    name = "DOCS"
+    url = "/docs/"
+    weight = 2
+
+[[menu.main]]
+    name = "API"
+    url = "/api/"
+    weight = 3
+
+[[menu.main]]
+    name = "DOWNLOAD"
+    url = "https://www.nuget.org/packages/LiteDB/"
+    weight = 4
+
+[params]
+  google_analytics_id="UA-54329029-1"
+  homepage_button_link = '/docs'
+  homepage_button_text = 'Read The Docs'
+  homepage_intro = 'LiteDB : LiteDB - A .NET NoSQL Document Store database in a single data file.'
+  homepage_image = ''
+  mainSections = ['examples', 'docs', 'api']
+
+  [params.homepage_meta_tags]
+    meta_description = "LiteDB : LiteDB - A .NET NoSQL Document Store database in a single data file."
+    meta_og_title = "LiteDB :: A .NET embedded NoSQL database"
+    meta_og_type = "website"
+    meta_og_url = "http://www.litedb.org"
+    meta_og_image = "https://raw.githubusercontent.com/mbdavid/LiteDB/gh-pages/img/logo_64x64.png"
+    meta_og_description = "LiteDB : LiteDB - A .NET NoSQL Document Store database in a single data file."
+    meta_twitter_card = "LiteDB : LiteDB - A .NET NoSQL Document Store database in a single data file."
+    meta_twitter_site = "@mbdavid"
+    meta_twitter_creator = "@mbdavid"
+
+  [params.logo]
+      mobile = "images/logo_litedb.svg"
+      standard  = "images/logo_litedb.svg"
