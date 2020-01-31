@@ -8,7 +8,7 @@ A collation is a special pragma (for more info, see [Pragmas](../pragmas)) that 
 
 Collation is a read-only pragma and can only be changed with a rebuild.
 
-A collation is specified with the format `CultureName/CompareOption1[,CompareOptionN]`. For more info regarding the available cultures, check our list of supported cultures. For more info about compare options, check the [.NET documentation](https://docs.microsoft.com/en-us/dotnet/api/system.globalization.compareoptions).
+A collation is specified with the format `CultureName/CompareOption1[,CompareOptionN]`. For more info about compare options, check the [.NET documentation](https://docs.microsoft.com/en-us/dotnet/api/system.globalization.compareoptions).
 
 Datafiles are always created with `CultureInfo.CurrentCulture` as their culture and with `IgnoreCase` as the compare option. The collation can be change by rebuilding the datafile.
 

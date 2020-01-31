@@ -12,7 +12,7 @@ Indexes in LiteDB are implemented using **Skip lists**. Skip lists are double li
 
 Insert and search operations have an average complexity of *O*(log n). This means that in a collection with 1 million documents, a search operation over an indexed expression will take about 13 steps to find the desired document. If you want to know more about skip lists, [check this great video](https://www.youtube.com/watch?v=kBwUoWpeH_Q). 
 
-Given that collections are schema-less, it is possible for an expression to return different data types when applied over different documents. In such cases, the documents will be ordered by the type returned by the indexing expression, following the table below:
+Given that collections are schema-less, it is possible for an expression to return different data types when applied over different documents. In such cases, the documents will be ordered by the type returned by the indexing expression, according to the table below:
 
 |BSON Type                     |Order|
 |------------------------------|-----|
@@ -61,6 +61,7 @@ An index can be created over any valid `BsonExpression.`
 - Or `EnsureIndex("Address.Street")` to create an index on `Street` using dotted notation
 - Indexes are executed as `BsonDocument` fields. If you are using a custom `ResolvePropertyName` or `[BsonField]` attribute, you must use your document field name and not the property name. See [Object Mapping](Object-Mapping).
 - You can use a lambda expression to define an index field in a strongly typed collection: `EnsureIndex(x => x.Name)`
+- Indexes are identified by an unique name
 
 ### MultiKey Index
 
@@ -79,38 +80,23 @@ var customers = db.GetCollection<Customer>("customers");
 customers.Insert(new Customer { Name = "John", Phones = new string[] { "1", "2", "5" });
 customers.Insert(new Customer { Name = "Doe", Phones = new string[] { "1", "8" });
 
-customers.EnsureIndex(x => x.Phones, "$.Phones[*]");
+customers.EnsureIndex(x => x.Phones);
 
 var result = customers.Query(x => x.Phones.Contains("1")); // returns both documents
 ```
 
 ### Expressions
 
-In v4 it's possible to create an index based on a expression execution with multikey values support. With this, you can index any king information that are not direct you field value, like:
+It is now possible to create an index based on a expression execution with multikey values support. With this, you can index any kind of information that is not directly the value of a field.
 
-- `db.EnsureIndex("customer", "Name", false, "LOWER($.Name)")`
-- `db.EnsureIndex("customer", "Total", false, "SUM($.Items[*].Price)")`
-- `db.EnsureIndex("customer", "CheapBooks", false, "LOWER($.Books[@.Price < 20].Title)")`
+- `collection.EnsureIndex("Name", "LOWER($.Name)")`
+- `collection.EnsureIndex("Total", "SUM($.Items[*].Price)")`
+- `collection.EnsureIndex("CheapBooks", "LOWER($.Books[@.Price < 20].Title)")`
 
 See [Expressions](Expressions) for more details about expressions.
 
-### Changes in v4
-
-- There is no more auto index creation. You always run `EnsureIndex` in your database initialization.
-- If you try query without an index, query will be runned using full search
-- If you are using a LINQ expression with no resolution to `Query` object, query engine will run query after map to object
-- When your query has an `And` operation, engine will run only 1 side with index (if exist) and another side will use full scan. This optimize results avoiding multi index queries. Try always use left
-
-```C#
-col.EnsureIndex(x => x.Name);
-col.EnsureIndex(x= > x.Age);
-
-var r = col.Find(x => x.Name == "John" && x.Age > 20 && x.Phones.Length > 1);
-```
-
-In this example, LiteDB will use `Name` index to get first results. For `Age > 20` full scan will be used over all documents which `Name == 'John'`. And them, over result of this, query `Phones.Length > 1`
-
 ###  Limitations
 
+- Even if multiple indexed expressions are used on a query, only one of the indexes is used, with the remaining expressions being filtered using a full scan.
 - Index values must have less than 512 bytes (after BSON serialization)
 - Max of 16 indexes per collections - including the `_id` primary key

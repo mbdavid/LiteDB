@@ -51,20 +51,33 @@ using(var db = new LiteDatabase("mydb.db"))
     var customer = col.FindOne("$.Name = 'john doe'");
 }
 ```
-# LiteDatabase API Instance Methods
 
-- **`GetCollection<T>`** - This method returns a new instance of `LiteCollection`. If `<T>` is omitted, `<T>` is `BsonDocument`. This is the only way to get a collection instance.
-- **`RenameCollection`** - Rename a collection name only - do not change any document
-- **`CollectionExists`** - Check if a collection already exists in database
-- **`GetCollectionNames`** - Get all collections names in database
-- **`DropCollection`** - Delete all documents, all indexes and the collection reference on database
+## System Collections
 
-### LiteCollection API Instance Methods
+System collections are special collections that provide information about the datafile. All system collections start with `$`. All system collections, with the exception of `$file`, are read-only.
 
-- **`Insert`** - Inserts a new document or an `IEnumerable` of documents. If your document has no `_id` field, Insert will create a new one using `ObjectId`. If you have a mapped object, `AutoId` can be used. See [Object Mapping](Object-Mapping)
-- **`InsertBulk`** - Used for inserting a high volume of documents. Breaks documents into batches and controls transaction per batch. This method keeps memory usage low by cleaning a cache after each batch inserted.
-- **`Update`** - Update one document identified by `_id` field. If not found, returns false
-- **`Delete`** - Delete document by `_id` or by a `Query` result. If not found, returns false
-- **`Find`** - Find documents using LiteDB queries. See [Query](Queries)
-- **`EnsureIndex`** - Create a new index in a field. See [Indexes](Indexes)
-- **`DropIndex`** - Drop an existing index
+|Collection|Description|
+|----|----|
+|$cols()|Lists all collections in the datafile, including the system collections.|
+|$database()|Shows general info about the datafile.|
+|$indexes()|Lists all indexes in the datafile.|
+|$sequences()|Lists all the sequences in the datafile.|
+|$transactions()|Lists all the open transactions in the datafile.|
+|$snapshots()|Lists all existing snapshots.|
+|$open_cursors()|Lists all the open cursors in the datafile.|
+|$dump(pageID)|Lists advanced info about the desired page. If no pageID is provided, lists all the pages.|
+|$page_list(pageID)|Lists basic info about the desired page. If no pageID is provided, lists all the pages.|
+|$query(subquery)|Takes a query as string and returns the result of the query. Can be used for simulating subqueries. **Experimental**.|
+|$file(path)|See below.|
+
+#### $file
+The `$file` system collection can be used to read and write to external files.
+
+- `SELECT $ INTO $FILE('customers.json') FROM Customers` dumps the entire content from the collection `Customers` into a JSON file.
+- `SELECT $ FROM $FILE('customers.json')` reads the entire content from the JSON file.
+
+There is also limited support for CSV files. Only basic data types are supported and, on writing, the schema of the first document returned by the query will define the schema of the entire CSV file, with additional fields being ignored.
+
+- `SELECT $ INTO $FILE('customers.csv') FROM Customers` dumps the entire content from the collection `Customers` into a CSV file.
+- `SELECT $ FROM $FILE('customers.csv')` reads the entire content from the CSV file.
+
