@@ -48,5 +48,5 @@ pygmentsUseClasses = true
     meta_twitter_creator = "@mbdavid"
 
   [params.logo]
-      mobile = "logo_litedb.svg"
-      standard  = "logo_litedb.svg"
+      mobile = "images/logo_litedb.svg"
+      standard  = "images/logo_litedb.svg"

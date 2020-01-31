@@ -1,37 +1,64 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Overview on Hugo Whisper Theme</title>
-    <link>www.example.com/api/</link>
-    <description>Recent content in Overview on Hugo Whisper Theme</description>
+    <title>Overview on LiteDB :: A .NET embedded NoSQL database</title>
+    <link>www.litedb.org/api/</link>
+    <description>Recent content in Overview on LiteDB :: A .NET embedded NoSQL database</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Wed, 28 Nov 2018 15:14:39 +1000</lastBuildDate>
     
-	<atom:link href="www.example.com/api/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="www.litedb.org/api/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>BsonDocument</title>
-      <link>www.example.com/api/bsondocument/</link>
-      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      <title>SELECT</title>
+      <link>www.litedb.org/api/query/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>www.example.com/api/bsondocument/</guid>
-      <description>The BsonDocument class is LiteDB&amp;rsquo;s implementation of documents. Internally, a BsonDocument stores key-value pairs in a Dictionary&amp;lt;string, BsonValue&amp;gt;.
-var customer = new BsonDocument(); customer[&amp;#34;_id&amp;#34;] = ObjectId.NewObjectId(); customer[&amp;#34;Name&amp;#34;] = &amp;#34;John Doe&amp;#34;; customer[&amp;#34;CreateDate&amp;#34;] = DateTime.Now; customer[&amp;#34;Phones&amp;#34;] = new BsonArray { &amp;#34;8000-0000&amp;#34;, &amp;#34;9000-000&amp;#34; }; customer[&amp;#34;IsActive&amp;#34;] = true; customer[&amp;#34;IsAdmin&amp;#34;] = new BsonValue(true); customer.Set(&amp;#34;Address.Street&amp;#34;, &amp;#34;Av. Protasio Alves, 1331&amp;#34;);  About document field keys:
- Keys must contains only letters, numbers or _ and - Keys are case-sensitive Duplicate keys are not allowed LiteDB keeps the original key order, including mapped classes.</description>
+      <guid>www.litedb.org/api/query/</guid>
+      <description>The following structure defines the SQL query syntax in LiteDB. Keyworks and function names are case-insensitive.
+[ EXPLAIN ] SELECT &amp;lt;selectExpr0&amp;gt; [, &amp;lt;selectExprN&amp;gt;] [ INTO &amp;lt;collection&amp;gt;|&amp;lt;$file(param)&amp;gt; [ : &amp;lt;autoIdType&amp;gt; ] ] [ FROM &amp;lt;collection&amp;gt;|&amp;lt;$systemCollection&amp;gt; ] [ INCLUDE &amp;lt;pathExpr0&amp;gt; [, &amp;lt;pathExprN&amp;gt; ] [ WHERE &amp;lt;filterExpr&amp;gt; ] [ GROUP BY &amp;lt;groupByExpr&amp;gt;} ] [ HAVING &amp;lt;filterExpr&amp;gt; ] [ ORDER BY &amp;lt;orderByExpr&amp;gt; [ ASC | DESC ] ] [ LIMIT &amp;lt;number&amp;gt; ] [ OFFSET &amp;lt;number&amp;gt; ] [ FOR UPDATE ] Explain If the keywork EXPLAIN is present before a query, the result is a document that explains how the engine plans to run the query.</description>
     </item>
     
     <item>
-      <title>Collections</title>
-      <link>www.example.com/api/collections/</link>
-      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      <title>DELETE</title>
+      <link>www.litedb.org/api/delete/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>www.example.com/api/collections/</guid>
-      <description>BsonArray public class LiteDB.BsonArray : BsonValue, IComparable&amp;lt;BsonValue&amp;gt;, IEquatable&amp;lt;BsonValue&amp;gt;, IList&amp;lt;BsonValue&amp;gt;, ICollection&amp;lt;BsonValue&amp;gt;, IEnumerable&amp;lt;BsonValue&amp;gt;, IEnumerable  Properties
-| Type | Name | Summary | | &amp;mdash; | &amp;mdash; | &amp;mdash; | | Int32 | Count | | | Boolean | IsReadOnly | | | BsonValue | Item | | | IList&amp;lt;BsonValue&amp;gt; | RawValue | |
-Methods
-| Type | Name | Summary | | &amp;mdash; | &amp;mdash; | &amp;mdash; | | void | Add(BsonValue item) | | | void | AddRange(IEnumerable&amp;lt;BsonValue&amp;gt; items) | | | void | Clear() | | | Int32 | CompareTo(BsonValue other) | | | Boolean | Contains(BsonValue item) | | | void | CopyTo(BsonValue[] array, Int32 arrayIndex) | | | Int32 | GetBytesCount(Boolean recalc) | | | IEnumerator&amp;lt;BsonValue&amp;gt; | GetEnumerator() | | | Int32 | IndexOf(BsonValue item) | | | void | Insert(Int32 index, BsonValue item) | | | Boolean | Remove(BsonValue item) | | | void | RemoveAt(Int32 index) | | | String | ToString() | |</description>
+      <guid>www.litedb.org/api/delete/</guid>
+      <description>The following structure defines the SQL delete syntax in LiteDB. Keyworks and function names are case-insensitive.
+DELETE &amp;lt;collection&amp;gt; WHERE &amp;lt;filterExpr&amp;gt;
+ collection is the name of the collection where the documents will be inserted. filterExpr is any valid filter expression. For more info, check Where clause  </description>
+    </item>
+    
+    <item>
+      <title>INSERT</title>
+      <link>www.litedb.org/api/insert/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>www.litedb.org/api/insert/</guid>
+      <description>The following structure defines the SQL insert syntax in LiteDB. Keyworks are case-insensitive.
+INSERT INTO {collection}[: {autoIdType}] VALUES {doc0} [, {docN}]  collection is the name of the collection where the documents will be inserted autoIdType is one of the supported auto id types supported (GUID, INT, LONG, OBJECTID). If this construct is not present, the default value is OBJECTID. Every document after keyword VALUES must be a valid JSON object.</description>
+    </item>
+    
+    <item>
+      <title>UPDATE</title>
+      <link>www.litedb.org/api/update/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>www.litedb.org/api/update/</guid>
+      <description>The following structure defines the SQL update syntax in LiteDB. Keyworks and function names are case-insensitive.
+UPDATE &amp;lt;collection&amp;gt; SET &amp;lt;key0&amp;gt; = &amp;lt;exprValue0&amp;gt; [,&amp;lt;keyN&amp;gt; = &amp;lt;exprValueN&amp;gt;] | &amp;lt;newDoc&amp;gt; [ WHERE &amp;lt;filterExpr&amp;gt; ]  collection is the name of the collection where the documents will be inserted. Every key is the attribute name in the document and the corresponding exprValue is an expression that returns the desired value. For more info, see Expressions.</description>
+    </item>
+    
+    <item>
+      <title>Misc</title>
+      <link>www.litedb.org/api/misc/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>www.litedb.org/api/misc/</guid>
+      <description>Collection Renaming RENAME COLLECTION &amp;lt;collection&amp;gt; TO &amp;lt;newName&amp;gt;  collection is the current name of the collection. newName is the new name of the collection.  Drop DROP INDEX &amp;lt;collection&amp;gt;.&amp;lt;indexName&amp;gt; DROP COLLECTION &amp;lt;collection&amp;gt;  collection is the name of the collection. indexName is the name of the index to be dropped.  Create CREATE [ UNQIUE ] INDEX {indexName} ON {collection} ({indexExpr})  indexName is the name of the index being created.</description>
     </item>
     
   </channel>

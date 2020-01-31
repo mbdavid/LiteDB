@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Tags - LiteDB :: A .NET embedded NoSQL database</title>
+  <title>INSERT - LiteDB :: A .NET embedded NoSQL database</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="www.litedb.org/favicon.png">
@@ -20,7 +20,7 @@
 
 </head>
 
-<body class='page page-default-list'>
+<body class='page page-default-single'>
 
   <div class="github-fork-ribbon-wrapper right">
       <div class="github-fork-ribbon">
@@ -114,19 +114,63 @@
     
     
     
-
     
     
 
-<span class="overview">Overview</span>
-<h1 class="title">Tags</h1>
-<div class="content">
-  
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Api</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.litedb.org/api/query/">SELECT</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/api/delete/">DELETE</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.litedb.org/api/insert/">INSERT</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/api/update/">UPDATE</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/api/misc/">Misc</a>
+    </li>
+    
+  </ul>
 </div>
 
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">INSERT</h1>
+<div class="content">
+  <p>The following structure defines the SQL insert syntax in LiteDB. Keyworks are case-insensitive.</p>
+<div class="highlight"><pre class="chroma">INSERT INTO {collection}[: {autoIdType}]
+VALUES {doc0} [, {docN}]</pre></div>
+<ul>
+<li><code>collection</code> is the name of the collection where the documents will be inserted</li>
+<li><code>autoIdType</code> is one of the supported auto id types supported (<code>GUID</code>, <code>INT</code>, <code>LONG</code>, <code>OBJECTID</code>). If this construct is not present, the default value is <code>OBJECTID</code>.</li>
+<li>Every document after keyword <code>VALUES</code> must be a valid JSON object. Documents must be comma-separated.</li>
+</ul>
 
+</div>
+</div>
 
-
+        </div>
+      </div>
+    </div>
     
   </div>
 

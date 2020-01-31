@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Overview - LiteDB :: A .NET embedded NoSQL database</title>
+  <title>Pragmas - LiteDB :: A .NET embedded NoSQL database</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="www.litedb.org/favicon.png">
@@ -20,7 +20,7 @@
 
 </head>
 
-<body class='page page-default-list'>
+<body class='page page-default-single'>
 
   <div class="github-fork-ribbon-wrapper right">
       <div class="github-fork-ribbon">
@@ -38,7 +38,7 @@
       </a>
     </li>
     
-    <li class="menu-item-docs active">
+    <li class="menu-item-docs">
       <a href="www.litedb.org/docs/">
         <span>DOCS</span>
       </a>
@@ -77,7 +77,7 @@
       </a>
     </li>
     
-    <li class="menu-item-docs active">
+    <li class="menu-item-docs">
       <a href="www.litedb.org/docs/">
         <span>DOCS</span>
       </a>
@@ -175,7 +175,7 @@
       <a href="www.litedb.org/docs/collation/">Collation</a>
     </li>
     
-    <li class="">
+    <li class="active ">
       <a href="www.litedb.org/docs/pragmas/">Pragmas</a>
     </li>
     
@@ -186,112 +186,131 @@
         </div>
         <div class="col-12 col-md-9">
           
-
-<span class="overview">Overview</span>
-<h1 class="title">Overview</h1>
+<h1 class="title">Pragmas</h1>
 <div class="content">
   
 
-<h2 id="litedb-v5-a-net-nosql-document-store-in-a-single-data-file">LiteDB v5 - A .NET NoSQL Document Store in a single data file</h2>
+<p>In LiteDB v5, pragmas are variables that can alter the behavior of a datafile. They are stored in the header of the datafile.</p>
+
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Read-only</th>
+<th>Data type</th>
+<th>Description</th>
+<th>Default value</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>USER_VERSION</td>
+<td>no</td>
+<td>int</td>
+<td>Reserved for version control by the user. Does not affect the behavior of the datafile.</td>
+<td>0</td>
+</tr>
+
+<tr>
+<td>COLLATION</td>
+<td>yes (can be changed with a rebuild)</td>
+<td>string (internally stored as int)</td>
+<td>Check <a href="../collation">Collation</a>.</td>
+<td><code>CurrentCulture</code> and <code>IgnoreCase</code></td>
+</tr>
+
+<tr>
+<td>TIMEOUT</td>
+<td>no</td>
+<td>int</td>
+<td>Maximum amount of time (in seconds) that the engine waits for a shared resouce to be unlocked.</td>
+<td>60</td>
+</tr>
+
+<tr>
+<td>LIMIT_SIZE</td>
+<td>no</td>
+<td>long</td>
+<td>Maximum size (in bytes) that the datafile can grow to. Cannot be smaller than the current datafile size. Cannot be smaller than 4 pages (32768 bytes).</td>
+<td>long.MaxValue</td>
+</tr>
+
+<tr>
+<td>UTC_DATE</td>
+<td>no</td>
+<td>bool</td>
+<td>If <code>false</code>, dates are converted to local time on retrieval. Storage format is not affected (always in UTC).</td>
+<td>false</td>
+</tr>
+
+<tr>
+<td>CHECKPOINT</td>
+<td>no</td>
+<td>int</td>
+<td>Maximum number of pages to be stored in the log before a soft checkpoint. If set to <code>0</code>, auto-checkpoint and shutdown checkpoint are disabled.</td>
+<td>1000</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="examples">Examples</h2>
+
+<ul>
+<li><p><code>select pragmas from $database;</code> returns the pragmas in the current datafile</p></li>
+
+<li><p><code>pragma USER_VERSION = 1;</code> sets USER_VERSION to 1</p></li>
+
+<li><p><code>pragma UTC_DATE = true;</code> sets UTC_DATE to true</p></li>
+</ul>
+
+<p><span id="rebuildOptions"></p>
+
+<h2 id="rebuild-options">Rebuild Options</h2>
+
+<p>Rebuild options are used to configure a rebuild.</p>
+
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Data type</th>
+<th>Description</th>
+<th>Default value</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>collation</td>
+<td>string</td>
+<td>Check <a href="../collation">Collation</a>.</td>
+<td>null (will use <code>CurrentCulture</code> and <code>IgnoreCase</code> if null)</td>
+</tr>
+
+<tr>
+<td>password</td>
+<td>string</td>
+<td>Defines the password for an encrypted datafile.</td>
+<td>null (datafile will not be encrypted)</td>
+</tr>
+</tbody>
+</table>
+
+<p>If the <code>rebuild</code> command is issued without options, both are assumed to be null.</p>
+
+<p>Rebuilds are also useful to defragment a datafile, making it smaller and faster to access.</p>
+
+<ul>
+<li><code>rebuild;</code> rebuilds the database with the default collation and no password</li>
+<li><code>rebuild {&quot;collation&quot;: &quot;en-GB/IgnoreCase&quot;};</code> rebuilds the datafile with the <code>en-GB</code> culture and case-insensitive string comparison</li>
+<li><code>rebuild {&quot;collation&quot;: &quot;en-GB/IgnoreCase&quot;, &quot;password&quot; : &quot;1234&quot;};</code> rebuilds the datafile with the <code>en-GB</code> culture, case-insensitive string comparison and sets the password to &ldquo;1234&rdquo;</li>
+</ul>
+
+<p></rebuildOptions></p>
 
 </div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/getting-started/">Getting Started</a></h2>
-  <p> LiteDB is a simple, fast and lightweight embedded .NET document database. LiteDB was inspired by the MongoDB database and its API is very …</p>
 </div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/data-structure/">Data Structure</a></h2>
-  <p> LiteDB stores data as documents, which are JSON-like objects containing key-value pairs. Documents are a schema-less data structure. Each …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/object-mapping/">Object Mapping</a></h2>
-  <p> LiteDB supports POCO classes to strongly type documents. When you get a LiteCollection instance from LiteDatabase.GetCollection, T will be …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/collections/">Collections</a></h2>
-  <p> Documents are stored and organized in collections. LiteCollection is a generic class that is used to manage collections in LiteDB. Each …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/bsondocument/">BsonDocument</a></h2>
-  <p>The BsonDocument class is LiteDB’s implementation of documents. Internally, a BsonDocument stores key-value pairs in a Dictionary.
-var …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/expressions/">Expressions</a></h2>
-  <p> Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/dbref/">DbRef</a></h2>
-  <p> LiteDB is a document database, so there is no JOIN between collections. You can use embedded documents (sub-documents) or create a …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/connection-string/">Connection String</a></h2>
-  <p> LiteDatabase can be initialized using a string connection, with key1=value1; key2=value2; ... syntax. If there is no = in your connection …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/filestorage/">FileStorage</a></h2>
-  <p>To keep its memory profile slim, limits the size of a documents to 1MB. For most documents, this is plenty. However, 1MB is too small for a …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/indexes/">Indexes</a></h2>
-  <p> LiteDB improves search performance by using indexes on document fields or expressions. Each index storess the value of a specific …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/encryption/">Encryption</a></h2>
-  <p>LiteDB uses salted AES (as defined by RFC 2898) as its encryption. This is implemented by the Rfc2898DeriveBytes class.
-The Aes object used …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/collation/">Collation</a></h2>
-  <p> A collation is a special pragma (for more info, see Pragmas) that allows users to specify a culture and string compare options for a …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="www.litedb.org/docs/pragmas/">Pragmas</a></h2>
-  <p> In LiteDB v5, pragmas are variables that can alter the behavior of a datafile. They are stored in the header of the datafile.
-   Name …</p>
-</div>
-
-
-
 
         </div>
       </div>

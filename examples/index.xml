@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Overview on LiteDB :: A .NET embedded NoSQL database</title>
+    <link>www.litedb.org/examples/</link>
+    <description>Recent content in Overview on LiteDB :: A .NET embedded NoSQL database</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 28 Nov 2018 15:14:39 +1000</lastBuildDate>
+    
+	<atom:link href="www.litedb.org/examples/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Connect to database</title>
+      <link>www.litedb.org/examples/example1/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.litedb.org/examples/example1/</guid>
+      <description>New Features  Add support to NETStandard 2.0 (with support to Shared mode) New document Expression parser/executor - see Expression Wiki Support index creation with expressions
+col.EnsureIndex(x =&amp;gt; x.Name, &amp;#34;LOWER($.Name)&amp;#34;); col.EnsureIndex(&amp;#34;GrandTotal&amp;#34;, &amp;#34;SUM($.Items[*].Qtd * $.Items[*].Price)&amp;#34;);   Query with Include it´s supported in Engine level with ANY nested includes C# col.Include(x =&amp;gt; x.Users) .Include(x =&amp;gt; x.Users[0].Address) .Include(x =&amp;gt; x.Users[0].Address.City) .Find(...)   Support complex Linq queries using LinqQuery compiler (works as linq to object)</description>
+    </item>
+    
+    <item>
+      <title>Batch insert</title>
+      <link>www.litedb.org/examples/example2/</link>
+      <pubDate>Mon, 11 Feb 2019 19:30:08 +1000</pubDate>
+      
+      <guid>www.litedb.org/examples/example2/</guid>
+      <description>Documents are stored and organized in collections. LiteCollection is a generic class to manage collections in LiteDB. Each collection must have a unique name:
+ Contains only letters, numbers and _ Collection names are case insensitive Collection names starting with _ are reserved for internal use  The total size of all the collections names in a database is limited to 3000 bytes. If you plan to have many collections in your database, make sure to use short names for your collections.</description>
+    </item>
+    
+  </channel>
+</rss>

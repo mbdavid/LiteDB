@@ -3,112 +3,114 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>www.example.com/api/bsondocument/</loc>
+    <loc>www.litedb.org/examples/example1/</loc>
     <lastmod>2019-02-11T19:30:08+10:00</lastmod>
   </url>
   
   <url>
-    <loc>www.example.com/docs/bsondocument/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/changelog/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/api/collections/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/collections/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/concurrency/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/connection-string/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/data-structure/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/dbref/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/expressions/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/filestorage/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/getting-started/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/how-litedb-works/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/indexes/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/object-mapping/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/queries/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/docs/repository-pattern/</loc>
-    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>www.example.com/api/</loc>
+    <loc>www.litedb.org/api/</loc>
     <lastmod>2018-11-28T15:14:39+10:00</lastmod>
   </url>
   
   <url>
-    <loc>www.example.com/docs/</loc>
+    <loc>www.litedb.org/docs/</loc>
     <lastmod>2018-11-28T15:14:39+10:00</lastmod>
   </url>
   
   <url>
-    <loc>www.example.com/</loc>
+    <loc>www.litedb.org/examples/</loc>
     <lastmod>2018-11-28T15:14:39+10:00</lastmod>
   </url>
   
   <url>
-    <loc>www.example.com/categories/</loc>
+    <loc>www.litedb.org/docs/getting-started/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/examples/example2/</loc>
+    <lastmod>2019-02-11T19:30:08+10:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/data-structure/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/object-mapping/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/collections/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/bsondocument/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/expressions/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/dbref/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/connection-string/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/filestorage/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/indexes/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/api/query/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/encryption/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/collation/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/docs/pragmas/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/api/delete/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/api/insert/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/api/update/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/api/misc/</loc>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/</loc>
+    <lastmod>2018-11-28T15:14:39+10:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>www.litedb.org/categories/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>www.example.com/tags/</loc>
+    <loc>www.litedb.org/tags/</loc>
     <priority>0</priority>
   </url>
   

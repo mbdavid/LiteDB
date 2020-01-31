@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Tags - LiteDB :: A .NET embedded NoSQL database</title>
+  <title>Encryption - LiteDB :: A .NET embedded NoSQL database</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="www.litedb.org/favicon.png">
@@ -20,7 +20,7 @@
 
 </head>
 
-<body class='page page-default-list'>
+<body class='page page-default-single'>
 
   <div class="github-fork-ribbon-wrapper right">
       <div class="github-fork-ribbon">
@@ -114,19 +114,92 @@
     
     
     
-
     
     
 
-<span class="overview">Overview</span>
-<h1 class="title">Tags</h1>
-<div class="content">
-  
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Docs</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/getting-started/">Getting Started</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/data-structure/">Data Structure</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/object-mapping/">Object Mapping</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/collections/">Collections</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/bsondocument/">BsonDocument</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/expressions/">Expressions</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/dbref/">DbRef</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/connection-string/">Connection String</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/filestorage/">FileStorage</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/indexes/">Indexes</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.litedb.org/docs/encryption/">Encryption</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/collation/">Collation</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/pragmas/">Pragmas</a>
+    </li>
+    
+  </ul>
 </div>
 
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">Encryption</h1>
+<div class="content">
+  <p>LiteDB uses salted AES (as defined by <a href="https://tools.ietf.org/html/rfc2898">RFC 2898</a>) as its encryption. This is implemented by the <code>Rfc2898DeriveBytes</code> class.</p>
 
+<p>The <code>Aes</code> object used for cryptography is initialized with <code>PaddingMode.None</code> and <code>CipherMode.ECB</code>.</p>
 
+<p>The password for an encrypted datafile is defined in the connection string (for more info, check <a href="../connection-string">Connection String</a>). The password can only be changed or removed by rebuilding the datafile (for more info, check Rebuild Options in <a href="../pragmas#rebuildOptions">Pragmas</a>).</p>
 
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
     
   </div>
 

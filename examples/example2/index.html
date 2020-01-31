@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Collections - LiteDB :: A .NET embedded NoSQL database</title>
+  <title>Batch insert - LiteDB :: A .NET embedded NoSQL database</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="www.litedb.org/favicon.png">
@@ -124,59 +124,15 @@
           <div class="sidebar">
             
 <div class="docs-menu">
-  <h4>Docs</h4>
+  <h4>Examples</h4>
   <ul>
     
     <li class="">
-      <a href="www.litedb.org/docs/getting-started/">Getting Started</a>
-    </li>
-    
-    <li class="">
-      <a href="www.litedb.org/docs/data-structure/">Data Structure</a>
-    </li>
-    
-    <li class="">
-      <a href="www.litedb.org/docs/object-mapping/">Object Mapping</a>
+      <a href="www.litedb.org/examples/example1/">Connect to database</a>
     </li>
     
     <li class="active ">
-      <a href="www.litedb.org/docs/collections/">Collections</a>
-    </li>
-    
-    <li class="">
-      <a href="www.litedb.org/docs/bsondocument/">BsonDocument</a>
-    </li>
-    
-    <li class="">
-      <a href="www.litedb.org/docs/expressions/">Expressions</a>
-    </li>
-    
-    <li class="">
-      <a href="www.litedb.org/docs/dbref/">DbRef</a>
-    </li>
-    
-    <li class="">
-      <a href="www.litedb.org/docs/connection-string/">Connection String</a>
-    </li>
-    
-    <li class="">
-      <a href="www.litedb.org/docs/filestorage/">FileStorage</a>
-    </li>
-    
-    <li class="">
-      <a href="www.litedb.org/docs/indexes/">Indexes</a>
-    </li>
-    
-    <li class="">
-      <a href="www.litedb.org/docs/encryption/">Encryption</a>
-    </li>
-    
-    <li class="">
-      <a href="www.litedb.org/docs/collation/">Collation</a>
-    </li>
-    
-    <li class="">
-      <a href="www.litedb.org/docs/pragmas/">Pragmas</a>
+      <a href="www.litedb.org/examples/example2/">Batch insert</a>
     </li>
     
   </ul>
@@ -186,11 +142,11 @@
         </div>
         <div class="col-12 col-md-9">
           
-<h1 class="title">Collections</h1>
+<h1 class="title">Batch insert</h1>
 <div class="content">
   
 
-<p>Documents are stored and organized in collections. <code>LiteCollection</code> is a generic class that is used to manage collections in LiteDB. Each collection must have a unique name:</p>
+<p>Documents are stored and organized in collections. <code>LiteCollection</code> is a generic class to manage collections in LiteDB. Each collection must have a unique name:</p>
 
 <ul>
 <li>Contains only letters, numbers and <code>_</code></li>
@@ -205,122 +161,58 @@
 <p><code>LiteCollection&lt;T&gt;</code> is a generic class that can be used with <code>&lt;T&gt;</code> as <code>BsonDocument</code> for schema-less documents.  Internally LiteDB converts <code>T</code> to <code>BsonDocument</code> and all operations use the this generic document.</p>
 
 <p>In this example, both code snippets produce the same results.</p>
-<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Typed collection
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Strong Type Class
 </span><span class="c1"></span><span class="n">using</span><span class="p">(</span><span class="kt">var</span> <span class="n">db</span> <span class="p">=</span> <span class="k">new</span> <span class="n">LiteDatabase</span><span class="p">(</span><span class="s">&#34;mydb.db&#34;</span><span class="p">))</span>
 <span class="p">{</span>
     <span class="c1">// Get collection instance
 </span><span class="c1"></span>    <span class="kt">var</span> <span class="n">col</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">&lt;</span><span class="n">Customer</span><span class="p">&gt;(</span><span class="s">&#34;customer&#34;</span><span class="p">);</span>
     
-    <span class="c1">// Insert document to collection - if collection does not exist, it is created
+    <span class="c1">// Insert document to collection - if collection do not exists, create now
 </span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="k">new</span> <span class="n">Customer</span> <span class="p">{</span> <span class="n">Id</span> <span class="p">=</span> <span class="m">1</span><span class="p">,</span> <span class="n">Name</span> <span class="p">=</span> <span class="s">&#34;John Doe&#34;</span> <span class="p">});</span>
     
-    <span class="c1">// Create an index over the Field name (if it doesn&#39;t exist)
+    <span class="c1">// Create, if not exists, new index on Name field
 </span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">EnsureIndex</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Name</span><span class="p">);</span>
     
-    <span class="c1">// Now, search for your document
+    <span class="c1">// Now, search for document your document
 </span><span class="c1"></span>    <span class="kt">var</span> <span class="n">customer</span> <span class="p">=</span> <span class="n">col</span><span class="p">.</span><span class="n">FindOne</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Name</span> <span class="p">==</span> <span class="s">&#34;john doe&#34;</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="c1">// Untyped collection (T is BsonDocument)
+<span class="c1">// Generic BsonDocument
 </span><span class="c1"></span><span class="n">using</span><span class="p">(</span><span class="kt">var</span> <span class="n">db</span> <span class="p">=</span> <span class="k">new</span> <span class="n">LiteDatabase</span><span class="p">(</span><span class="s">&#34;mydb.db&#34;</span><span class="p">))</span>
 <span class="p">{</span>
     <span class="c1">// Get collection instance
 </span><span class="c1"></span>    <span class="kt">var</span> <span class="n">col</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">(</span><span class="s">&#34;customer&#34;</span><span class="p">);</span>
     
-    <span class="c1">// Insert document to collection - if collection does not exist, it is created
-</span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="k">new</span> <span class="n">BsonDocument</span><span class="p">{</span><span class="na"> [&#34;_id&#34;]</span> <span class="p">=</span> <span class="m">1</span><span class="p">,</span><span class="na"> [&#34;Name&#34;]</span> <span class="p">=</span> <span class="s">&#34;John Doe&#34;</span> <span class="p">});</span>
+    <span class="c1">// Insert document to collection - if collection do not exists, create now
+</span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="k">new</span> <span class="n">BsonDocument</span><span class="p">().</span><span class="n">Add</span><span class="p">(</span><span class="s">&#34;_id&#34;</span><span class="p">,</span> <span class="m">1</span><span class="p">).</span><span class="n">Add</span><span class="p">(</span><span class="s">&#34;Name&#34;</span><span class="p">,</span> <span class="s">&#34;John Doe&#34;</span><span class="p">));</span>
     
-    <span class="c1">// Create an index over the Field name (if it doesn&#39;t exist)
+    <span class="c1">// Create, if not exists, new index on Name field
 </span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">EnsureIndex</span><span class="p">(</span><span class="s">&#34;Name&#34;</span><span class="p">);</span>
     
-    <span class="c1">// Now, search for your document
-</span><span class="c1"></span>    <span class="kt">var</span> <span class="n">customer</span> <span class="p">=</span> <span class="n">col</span><span class="p">.</span><span class="n">FindOne</span><span class="p">(</span><span class="s">&#34;$.Name = &#39;john doe&#39;&#34;</span><span class="p">);</span>
+    <span class="c1">// Now, search for document your document
+</span><span class="c1"></span>    <span class="kt">var</span> <span class="n">customer</span> <span class="p">=</span> <span class="n">col</span><span class="p">.</span><span class="n">FindOne</span><span class="p">(</span><span class="n">Query</span><span class="p">.</span><span class="n">EQ</span><span class="p">(</span><span class="s">&#34;Name&#34;</span><span class="p">,</span> <span class="s">&#34;john doe&#34;</span><span class="p">));</span>
 <span class="p">}</span>
 </code></pre></div>
-<h2 id="system-collections">System Collections</h2>
-
-<p>System collections are special collections that provide information about the datafile. All system collections start with <code>$</code>. All system collections, with the exception of <code>$file</code>, are read-only.</p>
-
-<table>
-<thead>
-<tr>
-<th>Collection</th>
-<th>Description</th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-<td>$cols()</td>
-<td>Lists all collections in the datafile, including the system collections.</td>
-</tr>
-
-<tr>
-<td>$database()</td>
-<td>Shows general info about the datafile.</td>
-</tr>
-
-<tr>
-<td>$indexes()</td>
-<td>Lists all indexes in the datafile.</td>
-</tr>
-
-<tr>
-<td>$sequences()</td>
-<td>Lists all the sequences in the datafile.</td>
-</tr>
-
-<tr>
-<td>$transactions()</td>
-<td>Lists all the open transactions in the datafile.</td>
-</tr>
-
-<tr>
-<td>$snapshots()</td>
-<td>Lists all existing snapshots.</td>
-</tr>
-
-<tr>
-<td>$open_cursors()</td>
-<td>Lists all the open cursors in the datafile.</td>
-</tr>
-
-<tr>
-<td>$dump(pageID)</td>
-<td>Lists advanced info about the desired page. If no pageID is provided, lists all the pages.</td>
-</tr>
-
-<tr>
-<td>$page_list(pageID)</td>
-<td>Lists basic info about the desired page. If no pageID is provided, lists all the pages.</td>
-</tr>
-
-<tr>
-<td>$query(subquery)</td>
-<td>Takes a query as string and returns the result of the query. Can be used for simulating subqueries. <strong>Experimental</strong>.</td>
-</tr>
-
-<tr>
-<td>$file(path)</td>
-<td>See below.</td>
-</tr>
-</tbody>
-</table>
-
-<h4 id="file">$file</h4>
-
-<p>The <code>$file</code> system collection can be used to read and write to external files.</p>
+<h1 id="litedatabase-api-instance-methods">LiteDatabase API Instance Methods</h1>
 
 <ul>
-<li><code>SELECT $ INTO $FILE('customers.json') FROM Customers</code> dumps the entire content from the collection <code>Customers</code> into a JSON file.</li>
-<li><code>SELECT $ FROM $FILE('customers.json')</code> reads the entire content from the JSON file.</li>
+<li><strong><code>GetCollection&lt;T&gt;</code></strong> - This method returns a new instance of <code>LiteCollection</code>. If <code>&lt;T&gt;</code> is omitted, <code>&lt;T&gt;</code> is <code>BsonDocument</code>. This is the only way to get a collection instance.</li>
+<li><strong><code>RenameCollection</code></strong> - Rename a collection name only - do not change any document</li>
+<li><strong><code>CollectionExists</code></strong> - Check if a collection already exists in database</li>
+<li><strong><code>GetCollectionNames</code></strong> - Get all collections names in database</li>
+<li><strong><code>DropCollection</code></strong> - Delete all documents, all indexes and the collection reference on database</li>
 </ul>
 
-<p>There is also limited support for CSV files. Only basic data types are supported and, on writing, the schema of the first document returned by the query will define the schema of the entire CSV file, with additional fields being ignored.</p>
+<h3 id="litecollection-api-instance-methods">LiteCollection API Instance Methods</h3>
 
 <ul>
-<li><code>SELECT $ INTO $FILE('customers.csv') FROM Customers</code> dumps the entire content from the collection <code>Customers</code> into a CSV file.</li>
-<li><code>SELECT $ FROM $FILE('customers.csv')</code> reads the entire content from the CSV file.</li>
+<li><strong><code>Insert</code></strong> - Inserts a new document or an <code>IEnumerable</code> of documents. If your document has no <code>_id</code> field, Insert will create a new one using <code>ObjectId</code>. If you have a mapped object, <code>AutoId</code> can be used. See <a href="Object-Mapping">Object Mapping</a></li>
+<li><strong><code>InsertBulk</code></strong> - Used for inserting a high volume of documents. Breaks documents into batches and controls transaction per batch. This method keeps memory usage low by cleaning a cache after each batch inserted.</li>
+<li><strong><code>Update</code></strong> - Update one document identified by <code>_id</code> field. If not found, returns false</li>
+<li><strong><code>Delete</code></strong> - Delete document by <code>_id</code> or by a <code>Query</code> result. If not found, returns false</li>
+<li><strong><code>Find</code></strong> - Find documents using LiteDB queries. See <a href="Queries">Query</a></li>
+<li><strong><code>EnsureIndex</code></strong> - Create a new index in a field. See <a href="Indexes">Indexes</a></li>
+<li><strong><code>DropIndex</code></strong> - Drop an existing index</li>
 </ul>
 
 </div>

@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Tags - LiteDB :: A .NET embedded NoSQL database</title>
+  <title>Collation - LiteDB :: A .NET embedded NoSQL database</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="www.litedb.org/favicon.png">
@@ -20,7 +20,7 @@
 
 </head>
 
-<body class='page page-default-list'>
+<body class='page page-default-single'>
 
   <div class="github-fork-ribbon-wrapper right">
       <div class="github-fork-ribbon">
@@ -114,19 +114,108 @@
     
     
     
-
     
     
 
-<span class="overview">Overview</span>
-<h1 class="title">Tags</h1>
-<div class="content">
-  
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Docs</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/getting-started/">Getting Started</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/data-structure/">Data Structure</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/object-mapping/">Object Mapping</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/collections/">Collections</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/bsondocument/">BsonDocument</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/expressions/">Expressions</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/dbref/">DbRef</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/connection-string/">Connection String</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/filestorage/">FileStorage</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/indexes/">Indexes</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/encryption/">Encryption</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.litedb.org/docs/collation/">Collation</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/docs/pragmas/">Pragmas</a>
+    </li>
+    
+  </ul>
 </div>
 
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">Collation</h1>
+<div class="content">
+  
 
+<p>A collation is a special pragma (for more info, see <a href="../pragmas">Pragmas</a>) that allows users to specify a culture and string compare options for a datafile.</p>
 
+<p>Collation is a read-only pragma and can only be changed with a rebuild.</p>
 
+<p>A collation is specified with the format <code>CultureName/CompareOption1[,CompareOptionN]</code>. For more info about compare options, check the <a href="https://docs.microsoft.com/en-us/dotnet/api/system.globalization.compareoptions">.NET documentation</a>.</p>
+
+<p>Datafiles are always created with <code>CultureInfo.CurrentCulture</code> as their culture and with <code>IgnoreCase</code> as the compare option. The collation can be change by rebuilding the datafile.</p>
+
+<p>Internally, the culture info is stored in the header of the datafile using its LCID value. Cultures with LCID value 4096 are not supported. When an unsupported culture is detected, the rebuild defaults to <code>CultureInfo.InvariantCulture</code>.</p>
+
+<h3 id="examples">Examples</h3>
+
+<ul>
+<li><p><code>rebuild {&quot;collation&quot;: &quot;en-US/None&quot;};</code> rebuilds the datafile with the <code>en-US</code> culture and regular string comparison</p></li>
+
+<li><p><code>rebuild {&quot;collation&quot;: &quot;en-GB/IgnoreCase&quot;};</code> rebuilds the datafile with the <code>en-GB</code> culture and case-insensitive string comparison</p></li>
+
+<li><p><code>rebuild {&quot;collation&quot;: &quot;pt-BR/IgnoreCase,IgnoreSymbols&quot;};</code> rebuilds the datafile with the <code>en-US</code> culture and case-insensitive string comparison that also ignores symbols (white spaces, punctuation, math symbols etc.)</p></li>
+</ul>
+
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
     
   </div>
 

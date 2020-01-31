@@ -4,7 +4,7 @@
 }
 
 .banner {
-    background-image: url('../banner_bg.png');
+    background-image: url('../images/banner_bg.png');
     background-position: center center;
     background-repeat: no-repeat;
     background-color: var(--body-bg);
@@ -44,7 +44,7 @@
         &:after {
             width: 48px;
             height: 48px;
-            background-image: url('../install.png');
+            background-image: url('../images/install.png');
             background-repeat: no-repeat;
             background-position: center center;
             content: ' ';
@@ -56,7 +56,7 @@
 }
 
 .body-bg-1 {
-    background-image: url('../body_bg_1.png');
+    background-image: url('../images/body_bg_1.png');
     background-position: top center;
     background-repeat: repeat-y;
     background-color: var(--body-bg);
@@ -124,7 +124,7 @@
 }
 
 .hr {
-    background-image: url('../hr.png');
+    background-image: url('../images/hr.png');
     background-position: center center;
     background-repeat: no-repeat;
     height: 2px;
@@ -134,7 +134,7 @@
 }
 
 .team-bg {
-    background-image: url('../team_bg.png');
+    background-image: url('../images/team_bg.png');
     background-position: center center;
     background-repeat: no-repeat;
     background-color: var(--body-bg);
@@ -168,7 +168,7 @@
 }
 
 .body-bg-2 {
-    background-image: url('../body_bg_2.png');
+    background-image: url('../images/body_bg_2.png');
     background-position: center center;
     background-repeat: no-repeat;
     background-color: var(--body-bg);

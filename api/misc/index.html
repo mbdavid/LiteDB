@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Tags - LiteDB :: A .NET embedded NoSQL database</title>
+  <title>Misc - LiteDB :: A .NET embedded NoSQL database</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="www.litedb.org/favicon.png">
@@ -20,7 +20,7 @@
 
 </head>
 
-<body class='page page-default-list'>
+<body class='page page-default-single'>
 
   <div class="github-fork-ribbon-wrapper right">
       <div class="github-fork-ribbon">
@@ -114,19 +114,87 @@
     
     
     
-
     
     
 
-<span class="overview">Overview</span>
-<h1 class="title">Tags</h1>
-<div class="content">
-  
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Api</h4>
+  <ul>
+    
+    <li class="">
+      <a href="www.litedb.org/api/query/">SELECT</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/api/delete/">DELETE</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/api/insert/">INSERT</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/api/update/">UPDATE</a>
+    </li>
+    
+    <li class="active ">
+      <a href="www.litedb.org/api/misc/">Misc</a>
+    </li>
+    
+  </ul>
 </div>
 
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">Misc</h1>
+<div class="content">
+  
 
+<h3 id="collection-renaming">Collection Renaming</h3>
+<div class="highlight"><pre class="chroma">RENAME COLLECTION &lt;collection&gt; TO &lt;newName&gt;</pre></div>
+<ul>
+<li><code>collection</code> is the current name of the collection.</li>
+<li><code>newName</code> is the new name of the collection.</li>
+</ul>
 
+<h3 id="drop">Drop</h3>
+<div class="highlight"><pre class="chroma">DROP INDEX &lt;collection&gt;.&lt;indexName&gt;
+DROP COLLECTION &lt;collection&gt;</pre></div>
+<ul>
+<li><code>collection</code> is the name of the collection.</li>
+<li><code>indexName</code> is the name of the index to be dropped.</li>
+</ul>
 
+<h3 id="create">Create</h3>
+<div class="highlight"><pre class="chroma">CREATE [ UNQIUE ] INDEX {indexName} ON {collection} ({indexExpr})</pre></div>
+<ul>
+<li><code>indexName</code> is the name of the index being created.</li>
+<li><code>collection</code> is the name of the collection.</li>
+<li><code>indexExpr</code> is the expression being indexed. For more info, see <a href="../../docs/indexes">Indexes</a>.</li>
+</ul>
+
+<h3 id="begin">Begin</h3>
+<div class="highlight"><pre class="chroma">BEGIN [ TRANS | TRANSACTION ]</pre></div>
+<h3 id="rebuild">Rebuild</h3>
+<div class="highlight"><pre class="chroma">REBUILD &lt;rebuildOptions&gt;</pre></div>
+<ul>
+<li>For more info, see <a href="../../docs/pragmas#rebuildOptions">Rebuild Options</a>.</li>
+</ul>
+
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
     
   </div>
 

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>SELECT - LiteDB :: A .NET embedded NoSQL database</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="www.litedb.org/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  
+  
+  <link rel="stylesheet" href="/www.litedb.org/css/style.min.d79567a6be39680124eee492011fac5fe86e343856a417d66e60c75e90ec3cb1.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-single'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.litedb.org/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.litedb.org/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.litedb.org/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="www.litedb.org"><img alt="Logo" src="/www.litedb.org/logo_litedb.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="www.litedb.org"><img alt="Logo" src="/www.litedb.org/logo_litedb.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="www.litedb.org/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="www.litedb.org/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="www.litedb.org/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Api</h4>
+  <ul>
+    
+    <li class="active ">
+      <a href="www.litedb.org/api/query/">SELECT</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/api/delete/">DELETE</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/api/insert/">INSERT</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/api/update/">UPDATE</a>
+    </li>
+    
+    <li class="">
+      <a href="www.litedb.org/api/misc/">Misc</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">SELECT</h1>
+<div class="content">
+  
+
+<p>The following structure defines the SQL query syntax in LiteDB. Keyworks and function names are case-insensitive.</p>
+<div class="highlight"><pre class="chroma">[ EXPLAIN ]
+  SELECT   &lt;selectExpr0&gt;  [, &lt;selectExprN&gt;]
+[ INTO     &lt;collection&gt;|&lt;$file(param)&gt; [ : &lt;autoIdType&gt; ] ]
+[ FROM     &lt;collection&gt;|&lt;$systemCollection&gt; ]
+[ INCLUDE  &lt;pathExpr0&gt; [, &lt;pathExprN&gt; ]
+[ WHERE    &lt;filterExpr&gt; ]
+[ GROUP BY &lt;groupByExpr&gt;} ]
+[ HAVING   &lt;filterExpr&gt; ]
+[ ORDER BY &lt;orderByExpr&gt; [ ASC | DESC ] ]
+[ LIMIT    &lt;number&gt; ]
+[ OFFSET   &lt;number&gt; ]
+[ FOR UPDATE ]</pre></div>
+<h5 id="explain">Explain</h5>
+
+<p>If the keywork <code>EXPLAIN</code> is present before a query, the result is a document that explains how the engine plans to run the query.</p>
+
+<h5 id="select">Select</h5>
+
+<p>The <code>SELECT</code> clause defines the projections that are applied to the results. A select expression can be:</p>
+
+<ul>
+<li>A literal of any BSON type that LiteDB supports;</li>
+<li>A valid JSON path;</li>
+<li>A function over literals or JSON paths.</li>
+</ul>
+
+<p>The <code>GROUP BY</code> clause restricts the possible values in this clause. For more info, chech the <code>GROUP BY</code> documentation below.</p>
+
+<h5 id="into">Into</h5>
+
+<p>If this clause is present, the result of the query is inserted into <code>collection</code> and the query returns the number of documents inserted.</p>
+
+<p>If the result does not containt a <code>$_id</code> field, <code>autoIdType</code> is used to generate one of the specified type (<code>GUID</code>, <code>INT</code>, <code>LONG</code> or <code>OBJECTID</code>). If no <code>autoIdType</code> is present, the default is <code>OBJECTID</code>.</p>
+
+<p>If <code>collection</code> is the system collection <code>$file</code>, the result will be written to a file. For more information, check the System Collections documentation.</p>
+
+<h5 id="from">From</h5>
+
+<p>This clause is used to indicate the source collection for the query.</p>
+
+<p>If <code>collection</code> starts with <code>$</code>, it is a system collection. For more information, check the System Collections documentation.</p>
+
+<h5 id="include">Include</h5>
+
+<p>If this clause is presents, references are resolved by the query engine before returning the results.</p>
+
+<p>Every path expression must be a valid JSON path that points to an embedded document or array of embedded documents with the following structure:</p>
+<div class="highlight"><pre class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
+    <span class="nt">&#34;$id&#34;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="nt">&#34;$ref&#34;</span> <span class="p">:</span> <span class="s2">&#34;Customers&#34;</span>
+<span class="p">}</span></code></pre></div>
+<p>The field <code>$ref</code> indicates which collection is being referenced and the field <code>$id</code> corresponds to the <code>$_id</code> field in the document being referenced.</p>
+
+<p><span id="where"></p>
+
+<h5 id="where">Where</h5>
+
+<p>If this clause is present, the results are filtered by a filter expression.</p>
+
+<p>A filter expression is a series of expressions joined by the logical operators <code>AND</code> or <code>OR</code>. Every expression must resolve to a boolean value. For more information, check the <a href="../../docs/expressions">Expressions documentation</a>.
+</span></p>
+
+<h5 id="group-by">Group By</h5>
+
+<p>If this clause is present, the results are grouped by an expression and the query returns a document for each group.</p>
+
+<p>A group-by expression can be any valid expression. For more information, check the Expressions documentation.</p>
+
+<p>Please note that only one grouping expression is allowed. However, grouping by multiple fields can be achieved by using a document or array containing the desired fields as the grouping expression.</p>
+
+<p>If this clause is present, only the special parameter <code>@key</code> (which returns the value in the grouping expression) or aggregate functions can be used in the <code>SELECT</code> clause.</p>
+
+<h5 id="having">Having</h5>
+
+<p>If this clause is present, the groups are filtered by a filter expression (similarly to how a <code>WHERE</code> clause filters individual documents).</p>
+
+<p>A filter expression is a series of expressions joined by the logical operators <code>AND</code> or <code>OR</code>. Every expression must resolve to a boolean value. For more information, check the Expressions documentation.</p>
+
+<p>In the <code>HAVING</code> clause, only the special parameter <code>@key</code> (which returns the value in the grouping expression) or aggregate functions can be used.</p>
+
+<h5 id="order-by">Order By</h5>
+
+<p>If this clause is present, the resulting documents are ordered by the provided sort expression.</p>
+
+<p>A sort expression can be any valid expression. For more information, check the Expressions documentation.</p>
+
+<p>This clause cannot be used with a <code>GROUP BY</code> clause.</p>
+
+<h5 id="limit">Limit</h5>
+
+<p>Limits the amount of documents return to a maximum of <code>number</code>.</p>
+
+<h5 id="offset">Offset</h5>
+
+<p>Returns only the documents starting from the position <code>number</code>. Please note that the offset value is zero-based.</p>
+
+<h5 id="for-update">For Update</h5>
+
+<p>If this clause is present, the collections used in the query are opened with full write lock.</p>
+
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li>
+                Made with ♥ by LiteDB team - <a href="https://twitter.com/mbdavid" target="_blank">@mbdavid</a> - MIT License
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/www.litedb.org/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+      
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-54329029-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-54329029-1');
+      </script>
+    
+  
+
+
+</body>
+
+</html>
