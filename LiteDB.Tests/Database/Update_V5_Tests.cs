@@ -19,14 +19,14 @@ namespace LiteDB.Tests.Database
         [Fact]
         public void Insert_User_Test()
         {
-            using(var f = new TempFile())
+            using (var f = new TempFile())
             {
-                this.Execute(f.Filename);
-                this.Execute(f.Filename);
+                this.Execute(f.Filename, 0);
+                this.Execute(f.Filename, 1);
             }
         }
 
-        private void Execute(string filename)
+        private void Execute(string filename, int pass)
         {
             using (var db = new LiteDB.LiteDatabase(filename))
             {
@@ -38,23 +38,13 @@ namespace LiteDB.Tests.Database
                 }
 
                 var user1 = cols.FindOne(x => x.Name == "Ivan");
+                var age1 = user1.Age.Should().Be(0 + pass);
 
-                Console.WriteLine($"User1.Age: {user1.Age}");
                 user1.Age++;
                 var upd = cols.Update(user1);
 
                 var user2 = cols.FindOne(x => x.Name == "Ivan");
-
-                Console.WriteLine($"User2.Age: {user2.Age}");
-                Console.WriteLine($"-----");
-
-                /*if (db.GetCollection("User").Count() == 0)
-                {
-                    var a = db.Execute("insert into User values {Name: 'Ivan', Age: 0.0}");
-                }
-                var b = db.Execute("select $ from User where Name = 'Ivan'");
-                var c = db.Execute("update User set Age = Age + 1 where $.Name = 'Ivan'");
-                var d = db.Execute("select $ from User where Name = 'Ivan'");*/
+                var age2 = user2.Age.Should().Be(1 + pass);
             }
 
         }
