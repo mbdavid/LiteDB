@@ -29,22 +29,21 @@ namespace LiteDB.Engine
             try
             {
                 // initialize V8 file reader
-                using (var reader = new FileReaderV8(_header, _disk))
+                var reader = new FileReaderV8(_header, _disk);
+
+                // clear current header
+                _header.FreeEmptyPageList = uint.MaxValue;
+                _header.LastPageID = 0;
+                _header.GetCollections().ToList().ForEach(c => _header.DeleteCollection(c.Key));
+
+                // override collation pragma
+                if (options?.Collation != null)
                 {
-                    // clear current header
-                    _header.FreeEmptyPageList = uint.MaxValue;
-                    _header.LastPageID = 0;
-                    _header.GetCollections().ToList().ForEach(c => _header.DeleteCollection(c.Key));
-
-                    // override collation pragma
-                    if (options?.Collation != null)
-                    {
-                        _header.Pragmas.Set("COLLATION", options.Collation.ToString(), false);
-                    }
-
-                    // rebuild entrie database using FileReader
-                    this.RebuildContent(reader);
+                    _header.Pragmas.Set("COLLATION", options.Collation.ToString(), false);
                 }
+
+                // rebuild entrie database using FileReader
+                this.RebuildContent(reader);
 
                 // change password (can be a problem if any error occurs after here)
                 if (options != null)

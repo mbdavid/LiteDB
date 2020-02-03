@@ -55,22 +55,15 @@ namespace LiteDB.Engine
                     throw new LiteException(0, "Invalid data file format to upgrade");
                 }
 
-                try
+                using (var engine = new LiteEngine(settings))
                 {
-                    using (var engine = new LiteEngine(settings))
-                    {
-                        // copy all database to new Log file with NO checkpoint during all rebuild
-                        engine.Pragma("CHECKPOINT", 0);
+                    // copy all database to new Log file with NO checkpoint during all rebuild
+                    engine.Pragma("CHECKPOINT", 0);
 
-                        engine.RebuildContent(reader);
+                    engine.RebuildContent(reader);
 
-                        // after rebuild, copy log bytes into data file
-                        engine.Checkpoint();
-                    }
-                }
-                finally
-                {
-                    reader.Dispose();
+                    // after rebuild, copy log bytes into data file
+                    engine.Checkpoint();
                 }
             }
 

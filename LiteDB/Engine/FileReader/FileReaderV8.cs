@@ -15,7 +15,7 @@ namespace LiteDB.Engine
     {
         private readonly Dictionary<string, uint> _collections;
         private readonly Stream _stream;
-        private readonly byte[] _buffer;
+        private readonly byte[] _buffer = new byte[PAGE_SIZE];
 
         public FileReaderV8(HeaderPage header, DiskService disk)
         {
@@ -23,8 +23,6 @@ namespace LiteDB.Engine
 
             // using writer stream from pool (no need to return)
             _stream = disk.GetPool(FileOrigin.Data).Writer;
-
-            _buffer = BufferPool.Rent(PAGE_SIZE);
         }
 
         /// <summary>
@@ -116,11 +114,6 @@ namespace LiteDB.Engine
 
                 address = block.NextBlock;
             }
-        }
-
-        public void Dispose()
-        {
-            BufferPool.Return(_buffer);
         }
     }
 }

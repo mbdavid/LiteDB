@@ -392,9 +392,5 @@ namespace LiteDB.Engine
 
             return visited;
         }
-
-        public void Dispose()
-        {
-        }
     }
 }
