@@ -51,6 +51,16 @@ namespace LiteDB
         public const int MAX_INDEX_KEY_LENGTH = 255;
 
         /// <summary>
+        /// Get max length of 1 single index node
+        /// </summary>
+        public const int MAX_INDEX_LENGTH = 600;
+
+        /// <summary>
+        /// Get how many slots collection pages will have for free list page (data/index)
+        /// </summary>
+        public const int PAGE_FREE_LIST_SLOTS = 5;
+
+        /// <summary>
         /// Document limit size - must use max 250 pages [1 byte] => 250 * 8149 = ~2MiB
         /// </summary>
         public const int MAX_DOCUMENT_SIZE = 250 * (DataService.MAX_DATA_BYTES_PER_PAGE);
@@ -58,7 +68,7 @@ namespace LiteDB
         /// <summary>
         /// Define how many transactions can be open simultaneously
         /// </summary>
-        public const int MAX_OPEN_TRANSACTIONS = 100; // 100
+        public const int MAX_OPEN_TRANSACTIONS = 100;
 
         /// <summary>
         /// Define how many pages all transaction will consume, in memory, before persist in disk. This amount are shared across all open transactions
@@ -80,7 +90,7 @@ namespace LiteDB
         /// Define how many bytes each merge sort container will be created
         /// </summary>
         public const int CONTAINER_SORT_SIZE = 100 * PAGE_SIZE;
-
+        
         /// <summary>
         /// Log a message using Debug.WriteLine
         /// </summary>

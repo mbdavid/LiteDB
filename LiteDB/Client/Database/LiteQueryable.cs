@@ -20,7 +20,7 @@ namespace LiteDB
         protected readonly Query _query;
 
         // indicate that T type are simple and result are inside first document fields (query always return a BsonDocument)
-        private readonly bool _isSimpleType = typeof(T).GetTypeInfo().IsValueType || typeof(T) == typeof(string);
+        private readonly bool _isSimpleType = Reflection.IsSimpleType(typeof(T));
 
         internal LiteQueryable(ILiteEngine engine, BsonMapper mapper, string collection, Query query)
         {

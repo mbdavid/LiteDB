@@ -8,21 +8,19 @@ namespace LiteDB.Engine
     /// <summary>
     /// Abstract class with workflow method to be used in pipeline implementation
     /// </summary>
-    internal abstract class BasePipe : IDisposable
+    internal abstract class BasePipe
     {
-        public event EventHandler Disposing = null;
-
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLookup _lookup;
         protected readonly SortDisk _tempDisk;
-        protected readonly bool _utcDate;
+        protected readonly EnginePragmas _pragmas;
 
-        public BasePipe(TransactionService transaction, IDocumentLookup lookup, SortDisk tempDisk, bool utcDate)
+        public BasePipe(TransactionService transaction, IDocumentLookup lookup, SortDisk tempDisk, EnginePragmas pragmas)
         {
             _transaction = transaction;
             _lookup = lookup;
             _tempDisk = tempDisk;
-            _utcDate = utcDate;
+            _pragmas = pragmas;
         }
 
         /// <summary>
@@ -57,7 +55,7 @@ namespace LiteDB.Engine
 
             foreach (var doc in source)
             {
-                foreach (var value in path.Execute(doc)
+                foreach (var value in path.Execute(doc, _pragmas.Collation)
                                         .Where(x => x.IsDocument || x.IsArray)
                                         .ToList())
                 {
@@ -98,10 +96,10 @@ namespace LiteDB.Engine
 
                     // initialize services
                     snapshot = _transaction.CreateSnapshot(LockMode.Read, last, false);
-                    indexer = new IndexService(snapshot);
+                    indexer = new IndexService(snapshot, _pragmas.Collation);
                     data = new DataService(snapshot);
 
-                    lookup = new DatafileLookup(data, _utcDate, null);
+                    lookup = new DatafileLookup(data, _pragmas.UtcDate, null);
 
                     index = snapshot.CollectionPage?.PK;
                 }
@@ -130,7 +128,6 @@ namespace LiteDB.Engine
             }
         }
 
-
         /// <summary>
         /// WHERE: Filter document according expression. Expression must be an Bool result
         /// </summary>
@@ -139,7 +136,7 @@ namespace LiteDB.Engine
             foreach(var doc in source)
             {
                 // checks if any result of expression is true
-                var result = expr.ExecuteScalar(doc);
+                var result = expr.ExecuteScalar(doc, _pragmas.Collation);
 
                 if(result.IsBoolean && result.AsBoolean)
                 {
@@ -154,9 +151,9 @@ namespace LiteDB.Engine
         protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
         {
             var keyValues = source
-                .Select(x => new KeyValuePair<BsonValue, PageAddress>(expr.ExecuteScalar(x), x.RawId));
+                .Select(x => new KeyValuePair<BsonValue, PageAddress>(expr.ExecuteScalar(x, _pragmas.Collation), x.RawId));
 
-            using (var sorter = new SortService(_tempDisk, order))
+            using (var sorter = new SortService(_tempDisk, order, _pragmas))
             {
                 sorter.Insert(keyValues);
 
@@ -171,12 +168,6 @@ namespace LiteDB.Engine
                     yield return doc;
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            // call disposing event
-            this.Disposing?.Invoke(this, EventArgs.Empty);
         }
     }
 }

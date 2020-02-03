@@ -13,7 +13,6 @@ namespace LiteDB
         private readonly Mutex _mutex;
         private LiteEngine _engine;
         private int _stack = 0;
-        private bool _disposed = false;
 
         public SharedEngine(EngineSettings settings)
         {
@@ -67,20 +66,6 @@ namespace LiteDB
 
                     _mutex.ReleaseMutex();
                 }
-            }
-        }
-
-        public void Dispose()
-        {
-            if (_disposed) return;
-
-            _disposed = true;
-
-            if (_engine != null)
-            {
-                _engine.Dispose();
-
-                _mutex.ReleaseMutex();
             }
         }
 
@@ -149,50 +134,37 @@ namespace LiteDB
             return new SharedDataReader(reader, () => this.CloseDatabase());
         }
 
-        public int UserVersion
-        {
-            get
-            {
-                this.OpenDatabase();
-
-                var value = _engine.UserVersion;
-
-                this.CloseDatabase();
-
-                return value;
-            }
-            set
-            {
-                this.OpenDatabase();
-
-                try
-                {
-                    _engine.UserVersion = value;
-                }
-                finally
-                {
-                    this.CloseDatabase();
-                }
-            }
-        }
-
-        #endregion
-
-        #region Write Operations
-
-        public int Analyze(string[] collections)
+        public BsonValue Pragma(string name)
         {
             this.OpenDatabase();
 
             try
             {
-                return _engine.Analyze(collections);
+                return _engine.Pragma(name);
             }
             finally
             {
                 this.CloseDatabase();
             }
         }
+
+        public bool Pragma(string name, BsonValue value)
+        {
+            this.OpenDatabase();
+
+            try
+            {
+                return _engine.Pragma(name, value);
+            }
+            finally
+            {
+                this.CloseDatabase();
+            }
+        }
+
+        #endregion
+
+        #region Write Operations
 
         public void Checkpoint()
         {
@@ -208,13 +180,13 @@ namespace LiteDB
             }
         }
 
-        public long Shrink()
+        public long Rebuild(RebuildOptions options)
         {
             this.OpenDatabase();
 
             try
             {
-                return _engine.Shrink();
+                return _engine.Rebuild(options);
             }
             finally
             {
@@ -363,5 +335,29 @@ namespace LiteDB
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~SharedEngine()
+        {
+            this.Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_engine != null)
+                {
+                    _engine.Dispose();
+
+                    _mutex.ReleaseMutex();
+                }
+            }
+        }
     }
 }

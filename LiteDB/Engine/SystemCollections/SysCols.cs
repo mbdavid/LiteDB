@@ -24,7 +24,7 @@ namespace LiteDB.Engine
                 yield return new BsonDocument
                 {
                     ["name"] = item.Key,
-                    ["type"] = item.Value.IsFunction ? "function" : "system"
+                    ["type"] = "system"
                 };
             }
 

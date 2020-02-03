@@ -59,7 +59,12 @@ namespace LiteDB.Engine
                 // checks if this datafile are encrypted
                 var isEncrypted = _stream.ReadByte();
 
-                if (isEncrypted != 1) throw new LiteException(0, "This file is not encrypted");
+                if (isEncrypted != 1)
+                {
+                    stream.Dispose();
+
+                    throw new LiteException(0, "This file is not encrypted");
+                }
 
                 _stream.Read(this.Salt, 0, ENCRYPTION_SALT_SIZE);
             }

@@ -258,6 +258,20 @@ namespace LiteDB.Tests.Expressions
             // using map
             P("ARRAY(MAP(ITEMS(@0) => (@ + @1)))", new BsonArray(new BsonValue[] {10, 11, 12}), 5)
                 .ExpectArray(15, 16, 17);
+
+            // sort ascending
+            P("ARRAY(SORT(ITEMS(@0) => @, @1))", new BsonArray(new BsonValue[] { 30, 20, 50 }), 1)
+                .ExpectArray(20, 30, 50);
+
+            P("ARRAY(SORT(ITEMS(@0) => @, @1))", new BsonArray(new BsonValue[] { 30, 20, 50 }), "asc")
+                .ExpectArray(20, 30, 50);
+
+            // sort descending
+            P("ARRAY(SORT(ITEMS(@0) => @, @1))", new BsonArray(new BsonValue[] { 30, 20, 50 }), -1)
+                .ExpectArray(50, 30, 20);
+
+            P("ARRAY(SORT(ITEMS(@0) => @, @1))", new BsonArray(new BsonValue[] { 30, 20, 50 }), "desc")
+                .ExpectArray(50, 30, 20);
         }
 
         [Fact]
@@ -287,7 +301,7 @@ namespace LiteDB.Tests.Expressions
             A("JOIN(*.c, '#')").ExpectValues("First#Second#Last");
 
             // when use $ over multiple values, only first result are used
-            A("JOIN(MAP($.arr[*] => (@ + 1)), '-')").ExpectValues("2-3");
+            A("JOIN(MAP(*.arr[*] => (@ + 1)), '-')").ExpectValues("2-3-2-4-6-10-2-6-6");
 
             // flaten
             A("*.arr[*]").ExpectValues(1, 2, 1, 3, 5, 9, 1, 5, 5);

@@ -90,21 +90,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return document raw id (position in datapage). Works only for root document 
-        /// </summary>
-        public static BsonValue RAW_ID(BsonValue document)
-        {
-            if (document.IsDocument)
-            {
-                var doc = document.AsDocument;
-
-                return doc.RawId.IsEmpty ? BsonValue.Null : new BsonValue(doc.RawId.ToString());
-            }
-
-            return BsonValue.Null;
-        }
-
-        /// <summary>
         /// Get all KEYS names from a document
         /// </summary>
         public static IEnumerable<BsonValue> KEYS(BsonValue document)

@@ -13,12 +13,11 @@ namespace LiteDB.Internals
         {
             var settings = new EngineSettings
             {
-                MemorySegmentSize = 10,
                 DataStream = new MemoryStream(),
                 LogStream = new MemoryStream()
             };
 
-            var disk = new DiskService(settings);
+            var disk = new DiskService(settings, 10);
             var pages = new List<PageBuffer>();
 
             // let's create 100 pages with 0-99 full data

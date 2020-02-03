@@ -20,22 +20,9 @@ namespace LiteDB.Engine
 
         public override uint GetCost(CollectionIndex index)
         {
-            if (index.Unique)
-            {
-                return 1; // best case, ever!
-            }
-            else if(index.KeyCount == 0)
-            {
-                return uint.MaxValue; // index are not analyzed
-            }
-            else
-            {
-                var density = index.Density;
+            if (index.Unique) return 1; // best index cost
 
-                var cost = density == 0 ? index.KeyCount : (uint)Math.Round(1d / density);
-
-                return cost;
-            }
+            return 10; // 
         }
 
         public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
@@ -52,7 +39,7 @@ namespace LiteDB.Engine
                 var first = node;
 
                 // first go fordward
-                while (!node.Next[0].IsEmpty && ((node = indexer.GetNode(node.Next[0])).Key.CompareTo(_value) == 0))
+                while (!node.Next[0].IsEmpty && ((node = indexer.GetNode(node.Next[0])).Key.CompareTo(_value, indexer.Collation) == 0))
                 {
                     if (node.Key.IsMinValue || node.Key.IsMaxValue) break;
 
@@ -62,7 +49,7 @@ namespace LiteDB.Engine
                 node = first;
                 
                 // and than, go backward
-                while (!node.Prev[0].IsEmpty && ((node = indexer.GetNode(node.Prev[0])).Key.CompareTo(_value) == 0))
+                while (!node.Prev[0].IsEmpty && ((node = indexer.GetNode(node.Prev[0])).Key.CompareTo(_value, indexer.Collation) == 0))
                 {
                     if (node.Key.IsMinValue || node.Key.IsMaxValue) break;
 

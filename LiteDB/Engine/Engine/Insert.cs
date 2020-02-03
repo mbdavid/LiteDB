@@ -21,7 +21,7 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
                 var count = 0;
-                var indexer = new IndexService(snapshot);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
                 var data = new DataService(snapshot);
 
                 LOG($"insert `{collection}`", "COMMAND");
@@ -74,13 +74,13 @@ namespace LiteDB.Engine
             {
                 // for each index, get all keys (supports multi-key) - gets distinct values only
                 // if index are unique, get single key only
-                var keys = index.BsonExpr.Execute(doc);
+                var keys = index.BsonExpr.Execute(doc, _header.Pragmas.Collation);
 
                 // do a loop with all keys (multi-key supported)
                 foreach(var key in keys)
                 {
                     // insert node
-                    var node = indexer.AddNode(index, key, dataBlock, last, _flipCoin);
+                    var node = indexer.AddNode(index, key, dataBlock, last);
 
                     last = node;
                 }

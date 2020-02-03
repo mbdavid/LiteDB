@@ -10,14 +10,14 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexPage : BasePage
     {
-        // private readonly Dictionary<byte, IndexNode> _cache = new Dictionary<byte, IndexNode>();
-
         /// <summary>
         /// Read existing IndexPage in buffer
         /// </summary>
         public IndexPage(PageBuffer buffer)
             : base(buffer)
         {
+            ENSURE(this.PageType == PageType.Index, "page type must be index page");
+
             if (this.PageType != PageType.Index) throw new LiteException(0, $"Invalid IndexPage buffer on {PageID}");
         }
 
@@ -34,20 +34,11 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode GetIndexNode(byte index)
         {
-            //if (_cache.TryGetValue(index, out var node))
-            //{
-            //    return node;
-            //}
-            //else
-            {
-                var segment = base.Get(index);
+            var segment = base.Get(index);
 
-                var node = new IndexNode(this, index, segment);
+            var node = new IndexNode(this, index, segment);
 
-                //_cache[index] = node;
-
-                return node;
-            }
+            return node;
         }
 
         /// <summary>
@@ -79,6 +70,18 @@ namespace LiteDB.Engine
             {
                 yield return this.GetIndexNode(index);
             }
+        }
+
+        /// <summary>
+        /// Get page index slot on FreeIndexPageID 
+        /// 8160 - 600 : Slot #0
+        /// 599  -   0 : Slot #1 (no page in list)
+        /// </summary>
+        public static byte FreeIndexSlot(int freeBytes)
+        {
+            ENSURE(freeBytes >= 0, "freeBytes must be positive");
+
+            return freeBytes >= MAX_INDEX_LENGTH ? (byte)0 : (byte)1;
         }
     }
 }

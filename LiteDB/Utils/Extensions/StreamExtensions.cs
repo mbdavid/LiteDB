@@ -1,5 +1,4 @@
-﻿using LiteDB.Engine;
-using System;
+﻿using System;
 using System.IO;
 using static LiteDB.Constants;
 

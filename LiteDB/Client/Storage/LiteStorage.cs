@@ -8,15 +8,15 @@ using static LiteDB.Constants;
 namespace LiteDB
 {
     /// <summary>
-    /// Storage is a special collection to store files and streams. 
+    /// Storage is a special collection to store files and streams.
     /// </summary>
-    public class LiteStorage<TFileId>
+    public class LiteStorage<TFileId> : ILiteStorage<TFileId>
     {
-        private readonly LiteDatabase _db;
-        private readonly LiteCollection<LiteFileInfo<TFileId>> _files;
-        private readonly LiteCollection<BsonDocument> _chunks;
+        private readonly ILiteDatabase _db;
+        private readonly ILiteCollection<LiteFileInfo<TFileId>> _files;
+        private readonly ILiteCollection<BsonDocument> _chunks;
 
-        public LiteStorage(LiteDatabase db, string filesCollection, string chunksCollection)
+        public LiteStorage(ILiteDatabase db, string filesCollection, string chunksCollection)
         {
             _db = db;
             _files = db.GetCollection<LiteFileInfo<TFileId>>(filesCollection);

@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2003
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29609.76
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB", "LiteDB\LiteDB.csproj", "{9497DA19-1FCA-4C2E-A1AB-8DFAACBC76E1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Demo", "LiteDB.Demo\LiteDB.Demo.csproj", "{8E92FFDB-9C74-4DFC-BE96-593CBF21077A}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Tests", "LiteDB.Tests\LiteDB.Tests.csproj", "{74E32E43-2A57-4A38-BD8C-9108B0DCAEAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Shell", "LiteDB.Shell\LiteDB.Shell.csproj", "{99887C89-CAE4-4A8D-AC4B-87E28B9B1F87}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Shell", "LiteDB.Shell\LiteDB.Shell.csproj", "{99887C89-CAE4-4A8D-AC4B-87E28B9B1F87}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Benchmarks", "LiteDB.Benchmarks\LiteDB.Benchmarks.csproj", "{DF9C82C1-446F-458A-AA50-78E58BA17273}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +21,6 @@ Global
 		{9497DA19-1FCA-4C2E-A1AB-8DFAACBC76E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9497DA19-1FCA-4C2E-A1AB-8DFAACBC76E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9497DA19-1FCA-4C2E-A1AB-8DFAACBC76E1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8E92FFDB-9C74-4DFC-BE96-593CBF21077A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8E92FFDB-9C74-4DFC-BE96-593CBF21077A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8E92FFDB-9C74-4DFC-BE96-593CBF21077A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8E92FFDB-9C74-4DFC-BE96-593CBF21077A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{74E32E43-2A57-4A38-BD8C-9108B0DCAEAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{74E32E43-2A57-4A38-BD8C-9108B0DCAEAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74E32E43-2A57-4A38-BD8C-9108B0DCAEAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -32,6 +28,10 @@ Global
 		{99887C89-CAE4-4A8D-AC4B-87E28B9B1F87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99887C89-CAE4-4A8D-AC4B-87E28B9B1F87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99887C89-CAE4-4A8D-AC4B-87E28B9B1F87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF9C82C1-446F-458A-AA50-78E58BA17273}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF9C82C1-446F-458A-AA50-78E58BA17273}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF9C82C1-446F-458A-AA50-78E58BA17273}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF9C82C1-446F-458A-AA50-78E58BA17273}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

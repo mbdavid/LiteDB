@@ -81,7 +81,7 @@ namespace LiteDB.Tests.Expressions
             // fields when using source (do simplify, when use * is same as $)
             F("*").ExpectValues("$");
             F("*._id").ExpectValues("$");
-            F("FIRST(MAP(* => (@._id + $.name))) + _id)").ExpectValues("$", "name", "_id");
+            F("FIRST(MAP(* => (@._id + $.name))) + _id").ExpectValues("$", "name", "_id");
         }
 
         [Fact]
@@ -216,6 +216,13 @@ namespace LiteDB.Tests.Expressions
 
             // parameters
             F("items[ @0 ].price = 9").ExpectValue("$.items[@0].price=9");
+
+            // double vs int
+            F("5 % 3").ExpectValue("5%3");
+            F("5.0 % 3").ExpectValue("5.0%3");
+            F("5.00 % 3").ExpectValue("5.0%3");
+            F("5.001 % 3").ExpectValue("5.001%3");
+
         }
     }
 }

@@ -22,8 +22,7 @@ namespace LiteDB.Engine
 
         public override uint GetCost(CollectionIndex index)
         {
-            // there is no way to determine how many document are inside _source without run Count() this
-            return uint.MaxValue;
+            return 100; // virtual index is always full scan
         }
 
         public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)

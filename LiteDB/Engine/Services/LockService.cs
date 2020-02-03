@@ -13,18 +13,18 @@ namespace LiteDB.Engine
     /// based on collection. Eventualy, write operation can change header page that has an exclusive locker for.
     /// [ThreadSafe]
     /// </summary>
-    public class LockService : IDisposable
+    internal class LockService : IDisposable
     {
-        private readonly TimeSpan _timeout;
+        private readonly EnginePragmas _variables;
         private readonly bool _readonly;
 
-        private ReaderWriterLockSlim _transaction = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-        private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
-        private ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private readonly ReaderWriterLockSlim _transaction = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private readonly ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
+        private readonly ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
-        internal LockService(TimeSpan timeout, bool @readonly)
+        internal LockService(EnginePragmas variables, bool @readonly)
         {
-            _timeout = timeout;
+            _variables = variables;
             _readonly = @readonly;
         }
 
@@ -48,7 +48,7 @@ namespace LiteDB.Engine
 
             try
             {
-                if (_transaction.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("transaction", _timeout);
+                if (_transaction.TryEnterReadLock(_variables.Timeout) == false) throw LiteException.LockTimeout("transaction", _variables.Timeout);
             }
             catch (LockRecursionException)
             {
@@ -78,7 +78,7 @@ namespace LiteDB.Engine
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
 
             // try enter in read lock in collection
-            if (collection.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("read", collectionName, _timeout);
+            if (collection.TryEnterReadLock(_variables.Timeout) == false) throw LiteException.LockTimeout("read", collectionName, _variables.Timeout);
         }
 
         /// <summary>
@@ -105,17 +105,17 @@ namespace LiteDB.Engine
             if (_reserved.IsWriteLockHeld) return;
 
             // reserved locker in read lock (if not already reserved in this thread be another snapshot)
-            if (_reserved.IsReadLockHeld == false && _reserved.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("reserved", collectionName, _timeout);
+            if (_reserved.IsReadLockHeld == false && _reserved.TryEnterReadLock(_variables.Timeout) == false) throw LiteException.LockTimeout("reserved", collectionName, _variables.Timeout);
 
             // get collection locker from dictionary (or create new if doesnt exists)
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
 
             // try enter in reserved lock in collection
-            if (collection.TryEnterUpgradeableReadLock(_timeout) == false)
+            if (collection.TryEnterUpgradeableReadLock(_variables.Timeout) == false)
             {
                 // if get timeout, release first reserved lock
                 _reserved.ExitReadLock();
-                throw LiteException.LockTimeout("reserved", collectionName, _timeout);
+                throw LiteException.LockTimeout("reserved", collectionName, _variables.Timeout);
             }
         }
 
@@ -148,19 +148,19 @@ namespace LiteDB.Engine
             if (_readonly) throw new LiteException(0, "This operation are not support because engine was open in reaodnly mode");
 
             // wait finish all transactions before enter in reserved mode
-            if (_transaction.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
+            if (_transaction.TryEnterWriteLock(_variables.Timeout) == false) throw LiteException.LockTimeout("reserved", _variables.Timeout);
 
             ENSURE(_transaction.RecursiveReadCount == 0, "must have no other transaction here");
 
             try
             {
                 // reserved locker in write lock
-                if (_reserved.TryEnterWriteLock(_timeout) == false)
+                if (_reserved.TryEnterWriteLock(_variables.Timeout) == false)
                 {
                     // exit transaction write lock
                     _transaction.ExitWriteLock();
 
-                    throw LiteException.LockTimeout("reserved", _timeout);
+                    throw LiteException.LockTimeout("reserved", _variables.Timeout);
                 }
             }
             finally

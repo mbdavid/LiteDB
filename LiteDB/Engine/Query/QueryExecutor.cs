@@ -13,19 +13,22 @@ namespace LiteDB.Engine
         private readonly LiteEngine _engine;
         private readonly TransactionMonitor _monitor;
         private readonly SortDisk _sortDisk;
-        private readonly bool _utcDate;
+        private readonly EnginePragmas _pragmas;
+        private readonly CursorInfo _cursor;
         private readonly string _collection;
         private readonly Query _query;
         private readonly IEnumerable<BsonDocument> _source;
 
-        public QueryExecutor(LiteEngine engine, TransactionMonitor monitor, SortDisk sortDisk, bool utcDate, string collection, Query query, IEnumerable<BsonDocument> source)
+        public QueryExecutor(LiteEngine engine, TransactionMonitor monitor, SortDisk sortDisk, EnginePragmas pragmas, string collection, Query query, IEnumerable<BsonDocument> source)
         {
             _engine = engine;
             _monitor = monitor;
             _sortDisk = sortDisk;
-            _utcDate = utcDate;
+            _pragmas = pragmas;
             _collection = collection;
             _query = query;
+
+            _cursor = new CursorInfo(collection, query);
 
             LOG(_query.ToSQL(_collection).Replace(Environment.NewLine, " "), "QUERY");
 
@@ -52,7 +55,7 @@ namespace LiteDB.Engine
         {
             var transaction = _monitor.GetTransaction(true, out var isNew);
 
-            transaction.OpenCursors++;
+            transaction.OpenCursors.Add(_cursor);
 
             try
             {
@@ -63,6 +66,10 @@ namespace LiteDB.Engine
             {
                 // if any error, rollback transaction
                 transaction.Rollback();
+
+                // remove cursor
+                 transaction.OpenCursors.Remove(_cursor);
+
                 throw;
             }
 
@@ -73,22 +80,24 @@ namespace LiteDB.Engine
                 // no collection, no documents
                 if (snapshot.CollectionPage == null && _source == null)
                 {
-                    if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
-                    {
-                        transaction.Commit();
-                    }
-
                     // if query use Source (*) need runs with empty data source
                     if (_query.Select.UseSource)
                     {
-                        yield return _query.Select.ExecuteScalar().AsDocument;
+                        yield return _query.Select.ExecuteScalar(_pragmas.Collation).AsDocument;
+                    }
+
+                    transaction.OpenCursors.Remove(_cursor);
+
+                    if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
+                    {
+                        transaction.Commit();
                     }
 
                     yield break;
                 }
 
                 // execute optimization before run query (will fill missing _query properties instance)
-                var optimizer = new QueryOptimization(snapshot, _query, _source);
+                var optimizer = new QueryOptimization(snapshot, _query, _source, _pragmas.Collation);
 
                 var queryPlan = optimizer.ProcessQuery();
 
@@ -97,7 +106,9 @@ namespace LiteDB.Engine
                 {
                     yield return queryPlan.GetExecutionPlan();
 
-                    if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
+                    transaction.OpenCursors.Remove(_cursor);
+
+                    if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
                     {
                         transaction.Commit();
                     }
@@ -106,26 +117,35 @@ namespace LiteDB.Engine
                 }
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
-                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot));
+                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot, _pragmas.Collation));
 
                 // get current query pipe: normal or groupby pipe
-                using (var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _utcDate))
-                {
-                    // commit transaction before close pipe
-                    pipe.Disposing += (s, e) =>
-                    {
-                        if (--transaction.OpenCursors == 0 && transaction.ExplicitTransaction == false)
-                        {
-                            transaction.Commit();
-                        }
-                    };
+                var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas);
 
-                    // call safepoint just before return each document
-                    foreach (var doc in pipe.Pipe(nodes, queryPlan))
-                    {
-                        yield return doc;
-                    }
+                // start cursor elapsed timer
+                _cursor.Elapsed.Start();
+
+                // call safepoint just before return each document
+                foreach (var doc in pipe.Pipe(nodes, queryPlan))
+                {
+                    _cursor.Fetched++;
+                    _cursor.Elapsed.Stop();
+
+                    yield return doc;
+
+                    _cursor.Elapsed.Start();
                 }
+
+                // stop cursor elapsed
+                _cursor.Elapsed.Stop();
+
+                transaction.OpenCursors.Remove(_cursor);
+
+                if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
+                {
+                    transaction.Commit();
+                }
+
             };
         }
 
@@ -134,7 +154,7 @@ namespace LiteDB.Engine
         /// </summary>
         internal BsonDataReader ExecuteQueryInto(string into, BsonAutoId autoId)
         {
-            IEnumerable<BsonDocument> getResultset()
+            IEnumerable<BsonDocument> GetResultset()
             {
                 using (var reader = this.ExecuteQuery(false))
                 {
@@ -154,12 +174,12 @@ namespace LiteDB.Engine
             
                 var sys = _engine.GetSystemCollection(name);
             
-                result = sys.Output(getResultset(), options);
+                result = sys.Output(GetResultset(), options);
             }
             // otherwise insert as normal collection
             else
             {
-                result = _engine.Insert(into, getResultset(), autoId);
+                result = _engine.Insert(into, GetResultset(), autoId);
             }
 
             return new BsonDataReader(result);

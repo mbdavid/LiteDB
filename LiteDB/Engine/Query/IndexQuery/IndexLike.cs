@@ -22,18 +22,9 @@ namespace LiteDB.Engine
 
         public override uint GetCost(CollectionIndex index)
         {
-            if (index.KeyCount == 0) return uint.MaxValue;
+            if (_startsWith.Length > 0) return 10; // similar to equals non-unique
 
-            if (_startsWith.Length > 0)
-            {
-                // need some statistics here (histogram)... assuming read 20% of total
-                return (uint)(index.KeyCount * (0.2));
-            }
-            else
-            {
-                // index full scan
-                return index.KeyCount;
-            }
+            return 100; // index full scan
         }
 
         public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
@@ -71,7 +62,7 @@ namespace LiteDB.Engine
                 {
                     // must still testing SqlLike method for rest of pattern - only if exists more to test (avoid slow SqlLike test)
                     if ((_testSqlLike == false) ||
-                        (_testSqlLike == true && valueString.SqlLike(_pattern) == true))
+                        (_testSqlLike == true && valueString.SqlLike(_pattern, indexer.Collation) == true))
                     {
                         yield return node;
                     }
@@ -104,7 +95,7 @@ namespace LiteDB.Engine
                     // must still testing SqlLike method for rest of pattern - only if exists more to test (avoid slow SqlLike test)
                     if (node.DataBlock.IsEmpty == false &&
                         ((_testSqlLike == false) ||
-                        (_testSqlLike == true && valueString.SqlLike(_pattern) == true)))
+                        (_testSqlLike == true && valueString.SqlLike(_pattern, indexer.Collation) == true)))
                     {
                         yield return node;
                     }
@@ -123,7 +114,7 @@ namespace LiteDB.Engine
         {
             return indexer
                 .FindAll(index, this.Order)
-                .Where(x => x.Key.IsString && x.Key.AsString.SqlLike(_pattern));
+                .Where(x => x.Key.IsString && x.Key.AsString.SqlLike(_pattern, indexer.Collation));
         }
 
         public override string ToString()

@@ -19,16 +19,6 @@ namespace LiteDB
             _dispose = dispose;
         }
 
-        public void Dispose()
-        {
-            if (_disposed) return;
-
-            _disposed = true;
-
-            _reader.Dispose();
-            _dispose();
-        }
-
         public BsonValue this[string field] => _reader[field];
 
         public string Collection => _reader.Collection;
@@ -38,5 +28,29 @@ namespace LiteDB
         public bool HasValues => _reader.HasValues;
 
         public bool Read() => _reader.Read();
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~SharedDataReader()
+        {
+            this.Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            _disposed = true;
+
+            if (disposing)
+            {
+                _reader.Dispose();
+                _dispose();
+            }
+        }
     }
 }

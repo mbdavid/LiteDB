@@ -26,11 +26,11 @@ namespace LiteDB.Engine
                 // get registered system collection to get data source
                 var sys = this.GetSystemCollection(name);
 
-                source = sys.Input(this, options);
+                source = sys.Input(options);
                 collection = sys.Name;
             }
 
-            var exec = new QueryExecutor(this, _monitor, _sortDisk, _settings.UtcDate, collection, query, source);
+            var exec = new QueryExecutor(this, _monitor, _sortDisk, _header.Pragmas, collection, query, source);
 
             return exec.ExecuteQuery();
         }

@@ -12,15 +12,17 @@ namespace LiteDB.Engine
     {
         private readonly Snapshot _snapshot;
         private readonly Query _query;
+        private readonly Collation _collation;
         private readonly QueryPlan _queryPlan;
         private readonly List<BsonExpression> _terms = new List<BsonExpression>();
 
-        public QueryOptimization(Snapshot snapshot, Query query, IEnumerable<BsonDocument> source)
+        public QueryOptimization(Snapshot snapshot, Query query, IEnumerable<BsonDocument> source, Collation collation)
         {
             if (query.Select == null) throw new ArgumentNullException(nameof(query.Select));
 
             _snapshot = snapshot;
             _query = query;
+            _collation = collation;
 
             _queryPlan = new QueryPlan(snapshot.CollectionName)
             {
@@ -228,7 +230,7 @@ namespace LiteDB.Engine
                 if (index == null) continue;
 
                 // calculate index score and store highest score
-                var current = new IndexCost(index.Item1, expr, index.Item2);
+                var current = new IndexCost(index.Item1, expr, index.Item2, _collation);
 
                 if (lowest == null || current.Cost < lowest.Cost)
                 {

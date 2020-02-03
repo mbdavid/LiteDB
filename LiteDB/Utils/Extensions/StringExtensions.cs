@@ -62,7 +62,7 @@ namespace LiteDB
         /// https://stackoverflow.com/a/8583383/3286260
         /// I remove support for [ and ] to avoid missing close brackets
         /// </summary>
-        public static bool SqlLike(this string str, string pattern)
+        public static bool SqlLike(this string str, string pattern, Collation collation)
         {
             var isMatch = true;
             var isWildCardOn = false;
@@ -72,7 +72,6 @@ namespace LiteDB
             var endOfPattern = false;
             var lastWildCard = -1;
             var patternIndex = 0;
-            //var set = new List<char>();
             var p = '\0';
 
             for (var i = 0; i < str.Length; i++)
@@ -145,7 +144,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    if (char.ToUpper(c) == char.ToUpper(p))
+                    if (collation.Compare(c, p) == 0)
                     {
                         patternIndex++;
                     }

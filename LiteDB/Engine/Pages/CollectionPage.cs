@@ -10,14 +10,9 @@ namespace LiteDB.Engine
 {
     internal class CollectionPage : BasePage
     {
-        /// <summary>
-        /// Get how many slots collection pages will have for free list page (data/index)
-        /// </summary>
-        public const int PAGE_FREE_LIST_SLOTS = 5;
-
         #region Buffer Field Positions
 
-        private const int P_INDEXES = 96; // 96-8192
+        private const int P_INDEXES = 96; // 96-8192 (64 + 32 header = 96)
         private const int P_INDEXES_COUNT = PAGE_SIZE - P_INDEXES; // 8096
 
         #endregion
@@ -25,50 +20,27 @@ namespace LiteDB.Engine
         /// <summary>
         /// Free data page linked-list (N lists for different range of FreeBlocks)
         /// </summary>
-        public uint[] FreeDataPageID = new uint[PAGE_FREE_LIST_SLOTS];
-
-        /// <summary>
-        /// Free index page linked-list (N lists for different range of FreeBlocks)
-        /// </summary>
-        public uint[] FreeIndexPageID = new uint[PAGE_FREE_LIST_SLOTS];
-
-        /// <summary>
-        /// DateTime when collection was created
-        /// </summary>
-        public DateTime CreationTime { get; private set; }
-
-        /// <summary>
-        /// DateTime from last index counter
-        /// </summary>
-        public DateTime LastAnalyzed { get; set; }
+        public uint[] FreeDataPageList { get; } = new uint[PAGE_FREE_LIST_SLOTS];
 
         /// <summary>
         /// All indexes references for this collection
         /// </summary>
         private readonly Dictionary<string, CollectionIndex> _indexes = new Dictionary<string, CollectionIndex>();
 
-        /// <summary>
-        /// Check if indexes was changed
-        /// </summary>
-        private bool _isIndexesChanged = false;
-
         public CollectionPage(PageBuffer buffer, uint pageID)
             : base(buffer, pageID, PageType.Collection)
         {
-            // initialize page version
-            this.CreationTime = DateTime.Now;
-            this.LastAnalyzed = DateTime.MinValue;
-
             for(var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
             {
-                this.FreeDataPageID[i] = uint.MaxValue;
-                this.FreeIndexPageID[i] = uint.MaxValue;
+                this.FreeDataPageList[i] = uint.MaxValue;
             }
         }
 
         public CollectionPage(PageBuffer buffer)
             : base(buffer)
         {
+            ENSURE(this.PageType == PageType.Collection, "page type must be collection page");
+
             if (this.PageType != PageType.Collection) throw new LiteException(0, $"Invalid CollectionPage buffer on {PageID}");
 
             // create new buffer area to store BsonDocument indexes
@@ -79,34 +51,18 @@ namespace LiteDB.Engine
                 // read position for FreeDataPage and FreeIndexPage
                 for(var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
                 {
-                    this.FreeDataPageID[i] = r.ReadUInt32();
-                    this.FreeIndexPageID[i] = r.ReadUInt32();
+                    this.FreeDataPageList[i] = r.ReadUInt32();
                 }
 
-                // read create/last analyzed (16 bytes)
-                this.CreationTime = r.ReadDateTime();
-                this.LastAnalyzed = r.ReadDateTime();
-
                 // skip reserved area
-                r.Skip(P_INDEXES - r.Position);
+                r.Skip(P_INDEXES - PAGE_HEADER_SIZE - r.Position);
 
-                // read indexes count (max 256 indexes per collection)
+                // read indexes count (max 255 indexes per collection)
                 var count = r.ReadByte(); // 1 byte
 
                 for(var i = 0; i < count; i++)
                 {
-                    var index = new CollectionIndex(
-                        slot: r.ReadByte(),
-                        name: r.ReadCString(),
-                        expr: r.ReadCString(),
-                        unique: r.ReadBoolean())
-                    { 
-                        Head = r.ReadPageAddress(), // 5
-                        Tail = r.ReadPageAddress(), // 5
-                        MaxLevel = r.ReadByte(), // 1
-                        KeyCount = r.ReadUInt32(), // 4
-                        UniqueKeyCount = r.ReadUInt32() // 4
-                    };
+                    var index = new CollectionIndex(r);
 
                     _indexes[index.Name] = index;
                 }
@@ -125,36 +81,17 @@ namespace LiteDB.Engine
                 // read position for FreeDataPage and FreeIndexPage
                 for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
                 {
-                    w.Write(this.FreeDataPageID[i]);
-                    w.Write(this.FreeIndexPageID[i]);
+                    w.Write(this.FreeDataPageList[i]);
                 }
 
-                // write creation/last analyzed (16 bytes)
-                w.Write(this.CreationTime);
-                w.Write(this.LastAnalyzed);
+                // skip reserved area (indexes starts at position 96)
+                w.Skip(P_INDEXES - PAGE_HEADER_SIZE - w.Position);
 
-                // update collection only if needed
-                if (_isIndexesChanged)
+                w.Write((byte)_indexes.Count); // 1 byte
+
+                foreach (var index in _indexes.Values)
                 {
-                    // skip reserved area (indexes starts at position 96)
-                    w.Skip(P_INDEXES - w.Position);
-
-                    w.Write((byte)_indexes.Count); // 1 byte
-
-                    foreach (var index in _indexes.Values)
-                    {
-                        w.Write(index.Slot);
-                        w.WriteCString(index.Name);
-                        w.WriteCString(index.Expression);
-                        w.Write(index.Unique);
-                        w.Write(index.Head);
-                        w.Write(index.Tail);
-                        w.Write(index.MaxLevel);
-                        w.Write(index.KeyCount);
-                        w.Write(index.UniqueKeyCount);
-                    }
-
-                    _isIndexesChanged = false;
+                    index.UpdateBuffer(w);
                 }
             }
 
@@ -182,9 +119,24 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get all indexes in this collection page
         /// </summary>
-        public IEnumerable<CollectionIndex> GetCollectionIndexes()
+        public ICollection<CollectionIndex> GetCollectionIndexes()
         {
             return _indexes.Values;
+        }
+
+        /// <summary>
+        /// Get all collections array based on slot number
+        /// </summary>
+        public CollectionIndex[] GetCollectionIndexesSlots()
+        {
+            var indexes = new CollectionIndex[_indexes.Count];
+
+            foreach (var index in _indexes.Values)
+            {
+                indexes[index.Slot] = index;
+            }
+
+            return indexes;
         }
 
         /// <summary>
@@ -201,11 +153,9 @@ namespace LiteDB.Engine
 
             var slot = (byte)(_indexes.Count == 0 ? 0 : (_indexes.Max(x => x.Value.Slot) + 1));
 
-            var index = new CollectionIndex(slot, name, expr, unique);
+            var index = new CollectionIndex(slot, 0, name, expr, unique);
             
             _indexes[name] = index;
-
-            _isIndexesChanged = true;
 
             this.IsDirty = true;
 
@@ -217,8 +167,6 @@ namespace LiteDB.Engine
         /// </summary>
         public CollectionIndex UpdateCollectionIndex(string name)
         {
-            _isIndexesChanged = true;
-
             this.IsDirty = true;
 
             return _indexes[name];
@@ -232,8 +180,6 @@ namespace LiteDB.Engine
             _indexes.Remove(name);
 
             this.IsDirty = true;
-
-            _isIndexesChanged = true;
         }
 
     }

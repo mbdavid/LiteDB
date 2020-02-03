@@ -15,6 +15,7 @@ namespace LiteDB.Engine
 {
     internal class SortContainer : IDisposable
     {
+        private readonly Collation _collation;
         private readonly int _size;
 
         private int _remaining = 0;
@@ -45,15 +46,16 @@ namespace LiteDB.Engine
         /// </summary>
         public int Count => _count;
 
-        public SortContainer(int size)
+        public SortContainer(Collation collation, int size)
         {
+            _collation = collation;
             _size = size;
         }
 
         public void Insert(IEnumerable<KeyValuePair<BsonValue, PageAddress>> items, int order, BufferSlice buffer)
         {
             var query = order == Query.Ascending ?
-                items.OrderBy(x => x.Key) : items.OrderByDescending(x => x.Key);
+                items.OrderBy(x => x.Key, _collation) : items.OrderByDescending(x => x.Key, _collation);
 
             var offset = 0;
 

@@ -13,7 +13,7 @@ namespace LiteDB
         {
             if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
-            return _engine.Value.Delete(_collection, new [] { id }) == 1;
+            return _engine.Delete(_collection, new [] { id }) == 1;
         }
 
         /// <summary>
@@ -23,7 +23,7 @@ namespace LiteDB
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return _engine.Value.DeleteMany(_collection, predicate);
+            return _engine.DeleteMany(_collection, predicate);
         }
 
         /// <summary>

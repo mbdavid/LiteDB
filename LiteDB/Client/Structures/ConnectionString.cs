@@ -1,6 +1,7 @@
 ﻿using LiteDB.Engine;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -13,9 +14,9 @@ namespace LiteDB
         private readonly Dictionary<string, string> _values;
 
         /// <summary>
-        /// "type": Return how engine will be open (default: Direct)
+        /// "connection": Return how engine will be open (default: Direct)
         /// </summary>
-        public ConnectionMode Mode { get; set; } = ConnectionMode.Embedded;
+        public ConnectionType Connection { get; set; } = ConnectionType.Direct;
 
         /// <summary>
         /// "filename": Full path or relative path from DLL directory
@@ -23,29 +24,14 @@ namespace LiteDB
         public string Filename { get; set; } = "";
 
         /// <summary>
-        /// "timeout": Timeout for waiting unlock operations (default: 1 minute)
-        /// </summary>
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
-
-        /// <summary>
         /// "password": Database password used to encrypt/decypted data pages
         /// </summary>
         public string Password { get; set; } = null;
 
         /// <summary>
-        /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: 0 bytes)
+        /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: 0)
         /// </summary>
         public long InitialSize { get; set; } = 0;
-
-        /// <summary>
-        /// "limit size": Max limit of datafile - support KB, MB, GB (default: long.MaxValue - no limit)
-        /// </summary>
-        public long LimitSize { get; set; } = long.MaxValue;
-
-        /// <summary>
-        /// "utc": Returns date in UTC timezone from BSON deserialization (default: false - LocalTime)
-        /// </summary>
-        public bool UtcDate { get; set; } = false;
 
         /// <summary>
         /// "readonly": Open datafile in readonly mode (default: false)
@@ -84,15 +70,13 @@ namespace LiteDB
             }
 
             // setting values to properties
-            this.Mode = _values.GetValue("mode", this.Mode);
+            this.Connection = _values.GetValue("connection", this.Connection);
             this.Filename = _values.GetValue("filename", this.Filename).Trim();
 
             this.Password = _values.GetValue("password", this.Password);
-            this.Timeout = _values.GetValue("timeout", this.Timeout);
             this.InitialSize = _values.GetFileSize(@"initial size", this.InitialSize);
-            this.LimitSize = _values.GetFileSize(@"limit size", this.LimitSize);
-            this.UtcDate = _values.GetValue("utc", this.UtcDate);
             this.ReadOnly = _values.GetValue("readonly", this.ReadOnly);
+
             this.Upgrade = _values.GetValue("upgrade", this.Upgrade);
         }
 
@@ -111,18 +95,15 @@ namespace LiteDB
                 Filename = this.Filename,
                 Password = this.Password,
                 InitialSize = this.InitialSize,
-                LimitSize = this.LimitSize,
-                UtcDate = this.UtcDate,
-                Timeout = this.Timeout,
                 ReadOnly = this.ReadOnly
             };
 
             // create engine implementation as Connection Type
-            if (this.Mode == ConnectionMode.Embedded)
+            if (this.Connection == ConnectionType.Direct)
             {
                 return new LiteEngine(settings);
             }
-            else if (this.Mode == ConnectionMode.Shared)
+            else if (this.Connection == ConnectionType.Shared)
             {
                 return new SharedEngine(settings);
             }

@@ -26,9 +26,7 @@ namespace LiteDB.Internals
                 toBlock?.Wait();
             }
 
-            ;
-
-            var disk = new DiskService(new EngineSettings {DataStream = new MemoryStream(), MemorySegmentSize = 10});
+            var disk = new DiskService(new EngineSettings { DataStream = new MemoryStream() }, 10);
 
             var ta = new Task(() =>
             {

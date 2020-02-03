@@ -19,7 +19,7 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var col = snapshot.CollectionPage;
-                var indexer = new IndexService(snapshot);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
                 var data = new DataService(snapshot);
                 var count = 0;
 
@@ -67,11 +67,11 @@ namespace LiteDB.Engine
                             var doc = reader.Current.AsDocument;
 
                             var id = doc["_id"];
-                            var value = transform.ExecuteScalar(doc);
+                            var value = transform.ExecuteScalar(doc, _header.Pragmas.Collation);
 
                             if (!value.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(transform));
 
-                            var result = value.AsDocument;
+                            var result = BsonExpressionMethods.EXTEND(doc, value.AsDocument).AsDocument;
 
                             // be sure result document will contain same _id as current doc
                             if (result.TryGetValue("_id", out var newId))
@@ -124,7 +124,7 @@ namespace LiteDB.Engine
             foreach (var index in col.GetCollectionIndexes().Where(x => x.Name != "_id"))
             {
                 // getting all keys from expression over document
-                var keys = index.BsonExpr.Execute(doc);
+                var keys = index.BsonExpr.Execute(doc, _header.Pragmas.Collation);
 
                 foreach (var key in keys)
                 {
@@ -155,7 +155,7 @@ namespace LiteDB.Engine
             {
                 var index = col.GetCollectionIndex(elem.Item3);
 
-                last = indexer.AddNode(index, elem.Item2, pkNode.DataBlock, last, _flipCoin);
+                last = indexer.AddNode(index, elem.Item2, pkNode.DataBlock, last);
             }
 
             return true;

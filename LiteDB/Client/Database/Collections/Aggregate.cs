@@ -46,7 +46,7 @@ namespace LiteDB
         /// <summary>
         /// Count documents matching a query. This method does not deserialize any documents. Needs indexes on query expression
         /// </summary>
-        public int Count(Query query) => new LiteQueryable<T>(_engine.Value, _mapper, _collection, query).Count();
+        public int Count(Query query) => new LiteQueryable<T>(_engine, _mapper, _collection, query).Count();
 
         #endregion
 
@@ -88,7 +88,7 @@ namespace LiteDB
         /// <summary>
         /// Count documents matching a query. This method does not deserialize any documents. Needs indexes on query expression
         /// </summary>
-        public long LongCount(Query query) => new LiteQueryable<T>(_engine.Value, _mapper, _collection, query).Count();
+        public long LongCount(Query query) => new LiteQueryable<T>(_engine, _mapper, _collection, query).Count();
 
         #endregion
 
@@ -122,7 +122,7 @@ namespace LiteDB
         /// <summary>
         /// Returns true if query returns any document. This method does not deserialize any document. Needs indexes on query expression
         /// </summary>
-        public bool Exists(Query query) => new LiteQueryable<T>(_engine.Value, _mapper, _collection, query).Exists();
+        public bool Exists(Query query) => new LiteQueryable<T>(_engine, _mapper, _collection, query).Exists();
 
         #endregion
 

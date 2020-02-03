@@ -28,7 +28,7 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
                 var col = snapshot.CollectionPage;
-                var indexer = new IndexService(snapshot);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
                 var data = new DataService(snapshot);
 
                 // check if index already exists
@@ -61,7 +61,7 @@ namespace LiteDB.Engine
                         IndexNode first = null;
 
                         // get values from expression in document
-                        var keys = expression.Execute(doc);
+                        var keys = expression.Execute(doc, _header.Pragmas.Collation);
 
                         // adding index node for each value
                         foreach (var key in keys)
@@ -75,7 +75,7 @@ namespace LiteDB.Engine
                                 foreach(var itemKey in arr)
                                 {
                                     // insert new index node
-                                    var node = indexer.AddNode(index, itemKey, pkNode.DataBlock, last, _flipCoin);
+                                    var node = indexer.AddNode(index, itemKey, pkNode.DataBlock, last);
 
                                     if (first == null) first = node;
 
@@ -87,7 +87,7 @@ namespace LiteDB.Engine
                             else
                             {
                                 // insert new index node
-                                var node = indexer.AddNode(index, key, pkNode.DataBlock, last, _flipCoin);
+                                var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
 
                                 if (first == null) first = node;
 
@@ -108,8 +108,6 @@ namespace LiteDB.Engine
                     transaction.Safepoint();
                 }
 
-                index.KeyCount = count;
-
                 return true;
             });
         }
@@ -128,7 +126,7 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var col = snapshot.CollectionPage;
-                var indexer = new IndexService(snapshot);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
             
                 // no collection, no index
                 if (col == null) return false;

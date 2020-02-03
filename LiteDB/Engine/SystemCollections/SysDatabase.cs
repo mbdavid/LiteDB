@@ -10,50 +10,47 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysDatabase()
         {
-            var doc = new BsonDocument();
-
-            doc["name"] = _disk.GetName(FileOrigin.Data);    
-            doc["limitSize"] = (int)_settings.LimitSize;
-            doc["timeout"] = _settings.Timeout.TotalSeconds;
-            doc["utcDate"] = _settings.UtcDate;
-            doc["readOnly"] = _settings.ReadOnly;
-
-            doc["lastPageID"] = (int)_header.LastPageID;
-            doc["freeEmptyPageID"] = (int)_header.FreeEmptyPageID;
-
-            doc["creationTime"] = _header.CreationTime;
-
-            doc["dataFileSize"] = (int)_disk.GetLength(FileOrigin.Data);
-            doc["logFileSize"] = (int)_disk.GetLength(FileOrigin.Log);
-            doc["asyncQueueLength"] = _disk.Queue.Length;
-
-            doc["currentReadVersion"] = _walIndex.CurrentReadVersion;
-            doc["lastTransactionID"] = _walIndex.LastTransactionID;
-
-            doc["userVersion"] = _header.UserVersion;
-
-            doc["cache"] = new BsonDocument
+            yield return new BsonDocument
             {
-                ["extendSegments"] = _disk.Cache.ExtendSegments,
-                ["memoryUsage"] = 
-                    (_disk.Cache.ExtendSegments * _settings.MemorySegmentSize * PAGE_SIZE) +
-                    (40 * (_disk.Cache.ExtendSegments * _settings.MemorySegmentSize)),
-                ["freePages"] = _disk.Cache.FreePages,
-                ["readablePages"] = _disk.Cache.GetPages().Count,
-                ["writablePages"] = _disk.Cache.WritablePages,
-                ["pagesInUse"] = _disk.Cache.PagesInUse,
-            };
+                ["name"] = _disk.GetName(FileOrigin.Data),
+                ["encrypted"] = _settings.Password != null,
+                ["readOnly"] = _settings.ReadOnly,
 
-            doc["transactions"] = new BsonDocument
-            {
-                ["open"] = _monitor.Transactions.Count,
-                ["maxOpenTransactions"] = MAX_OPEN_TRANSACTIONS,
-                ["initialTransactionSize"] = _monitor.InitialSize,
-                ["availableSize"] = _monitor.FreePages,
-                ["maxTransactionSize"] = _settings.MaxTransactionSize
-            };
+                ["lastPageID"] = (int)_header.LastPageID,
+                ["freeEmptyPageID"] = (int)_header.FreeEmptyPageList,
 
-            yield return doc;
+                ["creationTime"] = _header.CreationTime,
+
+                ["dataFileSize"] = (int)_disk.GetLength(FileOrigin.Data),
+                ["logFileSize"] = (int)_disk.GetLength(FileOrigin.Log),
+                ["asyncQueueLength"] = _disk.Queue.Length,
+
+                ["currentReadVersion"] = _walIndex.CurrentReadVersion,
+                ["lastTransactionID"] = _walIndex.LastTransactionID,
+
+                ["pragmas"] = new BsonDocument(_header.Pragmas.Pragmas.ToDictionary(x => x.Name, x => x.Get())),
+
+                ["cache"] = new BsonDocument
+                {
+                    ["extendSegments"] = _disk.Cache.ExtendSegments,
+                    ["memoryUsage"] =
+                    (_disk.Cache.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE) +
+                    (40 * (_disk.Cache.ExtendSegments * MEMORY_SEGMENT_SIZE)),
+                    ["freePages"] = _disk.Cache.FreePages,
+                    ["readablePages"] = _disk.Cache.GetPages().Count,
+                    ["writablePages"] = _disk.Cache.WritablePages,
+                    ["pagesInUse"] = _disk.Cache.PagesInUse,
+                },
+
+                ["transactions"] = new BsonDocument
+                {
+                    ["open"] = _monitor.Transactions.Count,
+                    ["maxOpenTransactions"] = MAX_OPEN_TRANSACTIONS,
+                    ["initialTransactionSize"] = _monitor.InitialSize,
+                    ["availableSize"] = _monitor.FreePages
+                }
+
+            };
         }
     }
 }

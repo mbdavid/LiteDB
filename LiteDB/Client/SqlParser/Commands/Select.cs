@@ -45,7 +45,8 @@ namespace LiteDB
             if (from.Type == TokenType.EOF || from.Type == TokenType.SemiColon)
             {
                 // select with no FROM - just run expression (avoid DUAL table, Mr. Oracle)
-                var result = query.Select.Execute();
+                //TODO: i think will be better add all sql into engine
+                var result = query.Select.Execute(_collation.Value);
 
                 var defaultName = "expr";
 
@@ -201,7 +202,14 @@ namespace LiteDB
                 {
                     tokenizer.ReadToken(); // read (
 
-                    options = new JsonReader(tokenizer).Deserialize();
+                    if (tokenizer.LookAhead().Type == TokenType.CloseParenthesis)
+                    {
+                        options = null;
+                    }
+                    else
+                    {
+                        options = new JsonReader(tokenizer).Deserialize();
+                    }
 
                     tokenizer.ReadToken().Expect(TokenType.CloseParenthesis); // read )
                 }

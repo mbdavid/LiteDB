@@ -16,22 +16,14 @@ namespace LiteDB.Engine
         private readonly string _filename;
         private readonly string _password;
         private readonly bool _readonly;
+        private readonly bool _hidden;
 
-        public FileStreamFactory(string filename, string password, bool readOnly)
+        public FileStreamFactory(string filename, string password, bool readOnly, bool hidden)
         {
-
-#if HAVE_DRIVE_INFO
-            var drive = new DriveInfo(new FileInfo(filename).Directory.Root.FullName);
-
-            if (drive.DriveType != DriveType.Fixed)
-            {
-                throw new NotSupportedException("LiteDB works only with local drive. Do not share database files across network.");
-            }
-#endif
-
             _filename = filename;
             _password = password;
             _readonly = readOnly;
+            _hidden = hidden;
         }
 
         /// <summary>
@@ -46,12 +38,19 @@ namespace LiteDB.Engine
         {
             var write = canWrite && (_readonly == false);
 
+            var isNewFile = write && this.Exists() == false;
+
             var stream = new FileStream(_filename,
                 _readonly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
                 write ? FileAccess.ReadWrite : FileAccess.Read,
                 write ? FileShare.Read : FileShare.ReadWrite,
                 PAGE_SIZE,
                 sequencial ? FileOptions.SequentialScan : FileOptions.RandomAccess);
+
+            if (isNewFile && _hidden)
+            {
+                File.SetAttributes(_filename, FileAttributes.Hidden);
+            }
 
             return _password == null ? (Stream)stream : new AesStream(_password, stream);
         }

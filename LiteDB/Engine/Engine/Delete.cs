@@ -20,7 +20,7 @@ namespace LiteDB.Engine
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var collectionPage = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
-                var indexer = new IndexService(snapshot);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
 
                 if (collectionPage == null) return 0;
 
@@ -37,13 +37,14 @@ namespace LiteDB.Engine
                     // remove object data
                     data.Delete(pkNode.DataBlock);
 
-                    // delete all nodes (start in pk node)
-                    indexer.DeleteAll(pkNode.Position);
-
                     if (pkNode.NextNode.IsEmpty)
                     {
                         ;
                     }
+
+
+                    // delete all nodes (start in pk node)
+                    indexer.DeleteAll(pkNode.Position);
 
                     transaction.Safepoint();
 
@@ -70,7 +71,7 @@ namespace LiteDB.Engine
                     predicate.Left.Source == "$._id" && 
                     predicate.Right.IsValue)
                 {
-                    var id = predicate.Right.Execute().First();
+                    var id = predicate.Right.Execute(_header.Pragmas.Collation).First();
 
                     return this.Delete(collection, new BsonValue[] { id });
                 }
@@ -89,7 +90,12 @@ namespace LiteDB.Engine
                         {
                             while (reader.Read())
                             {
-                                yield return reader.Current["i"];
+                                var value = reader.Current["i"];
+
+                                if (value != BsonValue.Null)
+                                {
+                                    yield return value;
+                                }
                             }
                         }
                     }

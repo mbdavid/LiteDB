@@ -21,19 +21,17 @@ namespace LiteDB.Engine
         private readonly ConcurrentBag<long> _freePositions = new ConcurrentBag<long>();
         private long _lastContainerPosition = 0;
         private readonly int _containerSize;
-        private readonly bool _utcDate;
+        private readonly EnginePragmas _pragmas;
 
         public int ContainerSize => _containerSize;
 
-        public bool UtcDate => _utcDate;
-
-        public SortDisk(IStreamFactory factory, int containerSize, bool utcDate)
+        public SortDisk(IStreamFactory factory, int containerSize, EnginePragmas pragmas)
         {
             ENSURE(containerSize % PAGE_SIZE == 0, "size must be PAGE_SIZE multiple");
 
             _factory = factory;
             _containerSize = containerSize;
-            _utcDate = utcDate;
+            _pragmas = pragmas;
 
             _lastContainerPosition = -containerSize;
 

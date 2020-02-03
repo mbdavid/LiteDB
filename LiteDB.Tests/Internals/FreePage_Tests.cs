@@ -36,7 +36,7 @@ namespace LiteDB.Internals
                 dataPage.FreeBytes.Should().Be(7928);
 
                 // page should be in Slot #0 (7344 - 8160 free bytes)
-                colPage.FreeDataPageID.Should().Equal(dataPage.PageID, uint.MaxValue, uint.MaxValue, uint.MaxValue, uint.MaxValue);
+                colPage.FreeDataPageList.Should().Equal(dataPage.PageID, uint.MaxValue, uint.MaxValue, uint.MaxValue, uint.MaxValue);
 
                 // adding 1 more document into same page
                 e.Insert("col1", new BsonDocument[] {new BsonDocument {["n"] = new byte[600]}}, BsonAutoId.Int32);
@@ -44,7 +44,7 @@ namespace LiteDB.Internals
                 dataPage.FreeBytes.Should().Be(7296);
 
                 // page should me moved into Slot #1 (6120 - 7343 free bytes)
-                colPage.FreeDataPageID.Should().Equal(uint.MaxValue, dataPage.PageID, uint.MaxValue, uint.MaxValue, uint.MaxValue);
+                colPage.FreeDataPageList.Should().Equal(uint.MaxValue, dataPage.PageID, uint.MaxValue, uint.MaxValue, uint.MaxValue);
 
                 // adding 1 big document to move this page into last page
                 e.Insert("col1", new BsonDocument[] {new BsonDocument {["n"] = new byte[6000]}}, BsonAutoId.Int32);
@@ -52,7 +52,7 @@ namespace LiteDB.Internals
                 dataPage.FreeBytes.Should().Be(1264);
 
                 // now this page should me moved into last Slot (#4) - next document will use another data page (even a very small document)
-                colPage.FreeDataPageID.Should().Equal(uint.MaxValue, uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage.PageID);
+                colPage.FreeDataPageList.Should().Equal(uint.MaxValue, uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage.PageID);
 
                 // adding a very small document to test adding new page
                 e.Insert("col1", new BsonDocument[] {new BsonDocument {["n"] = new byte[10]}}, BsonAutoId.Int32);
@@ -65,13 +65,13 @@ namespace LiteDB.Internals
                 dataPage2.FreeBytes.Should().Be(8118);
 
                 // test slots (#0 for dataPage2 and #4 for dataPage1)
-                colPage.FreeDataPageID.Should().Equal(dataPage2.PageID, uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage.PageID);
+                colPage.FreeDataPageList.Should().Equal(dataPage2.PageID, uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage.PageID);
 
                 // add another big document into dataPage2 do put both pages in same free Slot (#4)
                 e.Insert("col1", new BsonDocument[] {new BsonDocument {["n"] = new byte[7000]}}, BsonAutoId.Int32);
 
                 // now, both pages are linked in same slot #4 (starts with new dataPage2)
-                colPage.FreeDataPageID.Should().Equal(uint.MaxValue, uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage2.PageID);
+                colPage.FreeDataPageList.Should().Equal(uint.MaxValue, uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage2.PageID);
 
                 // dataPage2 link into dataPage1
                 dataPage2.NextPageID.Should().Be(dataPage.PageID);
@@ -119,7 +119,7 @@ namespace LiteDB.Internals
                 dataPage1.FreeBytes.Should().Be(2064);
                 dataPage2.FreeBytes.Should().Be(2064);
 
-                colPage.FreeDataPageID.Should().Equal(uint.MaxValue, uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage2.PageID);
+                colPage.FreeDataPageList.Should().Equal(uint.MaxValue, uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage2.PageID);
 
                 // delete some data
                 e.Delete("col1", new BsonValue[] {2});
@@ -127,7 +127,7 @@ namespace LiteDB.Internals
                 // test again dataPage
                 dataPage1.FreeBytes.Should().Be(4092);
 
-                colPage.FreeDataPageID.Should().Equal(uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage1.PageID, dataPage2.PageID);
+                colPage.FreeDataPageList.Should().Equal(uint.MaxValue, uint.MaxValue, uint.MaxValue, dataPage1.PageID, dataPage2.PageID);
 
                 // clear first page
                 e.Delete("col1", new BsonValue[] {1, 3});

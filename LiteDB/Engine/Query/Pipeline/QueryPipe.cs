@@ -10,8 +10,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class QueryPipe : BasePipe
     {
-        public QueryPipe(TransactionService transaction, IDocumentLookup loader, SortDisk tempDisk, bool utcDate)
-            : base(transaction, loader, tempDisk, utcDate)
+        public QueryPipe(TransactionService transaction, IDocumentLookup loader, SortDisk tempDisk, EnginePragmas pragmas)
+            : base(transaction, loader, tempDisk, pragmas)
         {
         }
 
@@ -84,7 +84,7 @@ namespace LiteDB.Engine
 
             foreach (var doc in source)
             {
-                var value = select.ExecuteScalar(doc);
+                var value = select.ExecuteScalar(doc, _pragmas.Collation);
 
                 if (value.IsDocument)
                 {
@@ -102,11 +102,10 @@ namespace LiteDB.Engine
         /// </summary>
         private IEnumerable<BsonDocument> SelectAll(IEnumerable<BsonDocument> source, BsonExpression select)
         {
-            var defaultName = select.DefaultFieldName();
-            var result = select.Execute(source);
+            var cached = new DocumentCacheEnumerable(source, _lookup);
 
-            //TODO: pode ter algum tipo de CACHE caso a expressão contenha mais de 1 "UseSource"... 
-            // evita executar todo pipe -- pior dos casos dá um ToArray() (ou usa um DocumentGroup)
+            var defaultName = select.DefaultFieldName();
+            var result = select.Execute(cached, _pragmas.Collation);
 
             foreach (var value in result)
             {

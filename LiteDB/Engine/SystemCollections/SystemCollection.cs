@@ -33,14 +33,9 @@ namespace LiteDB.Engine
         public string Name => _name;
 
         /// <summary>
-        /// Indicate this system collection as a function collection (has parameters to be called)
-        /// </summary>
-        public virtual bool IsFunction => false;
-
-        /// <summary>
         /// Get input data source factory
         /// </summary>
-        public virtual IEnumerable<BsonDocument> Input(LiteEngine engine, BsonValue options) => _input();
+        public virtual IEnumerable<BsonDocument> Input(BsonValue options) => _input();
 
         /// <summary>
         /// Get output data source factory (must implement in inherit class)
@@ -50,13 +45,17 @@ namespace LiteDB.Engine
         /// <summary>
         /// Static helper to read options arg as plain value or as document fields
         /// </summary>
+        protected static BsonValue GetOption(BsonValue options, string key)
+        {
+            return GetOption(options, key, null);
+        }
+
+        /// <summary>
+        /// Static helper to read options arg as plain value or as document fields
+        /// </summary>
         protected static BsonValue GetOption(BsonValue options, string key, BsonValue defaultValue)
         {
-            if (options.IsString)
-            {
-                return defaultValue == null ? options : defaultValue;
-            }
-            else if (options.IsDocument)
+            if (options != null && options.IsDocument)
             {
                 if (options.AsDocument.TryGetValue(key, out var value))
                 {
@@ -74,8 +73,10 @@ namespace LiteDB.Engine
                     return defaultValue;
                 }
             }
-
-            throw new LiteException(0, $"System collection requires a option parameter as string or document");
+            else
+            {
+                return defaultValue == null ? options : defaultValue;
+            }
         }
     }
 }

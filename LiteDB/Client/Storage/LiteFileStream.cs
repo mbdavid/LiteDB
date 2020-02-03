@@ -12,8 +12,8 @@ namespace LiteDB
         /// </summary>
         public const int MAX_CHUNK_SIZE = 255 * 1024; // 255kb like GridFS
 
-        private readonly LiteCollection<LiteFileInfo<TFileId>> _files;
-        private readonly LiteCollection<BsonDocument> _chunks;
+        private readonly ILiteCollection<LiteFileInfo<TFileId>> _files;
+        private readonly ILiteCollection<BsonDocument> _chunks;
         private readonly LiteFileInfo<TFileId> _file;
         private readonly BsonValue _fileId;
         private readonly FileAccess _mode;
@@ -24,7 +24,7 @@ namespace LiteDB
         private int _positionInChunk = 0;
         private MemoryStream _buffer;
 
-        internal LiteFileStream(LiteCollection<LiteFileInfo<TFileId>> files, LiteCollection<BsonDocument> chunks, LiteFileInfo<TFileId> file, BsonValue fileId, FileAccess mode)
+        internal LiteFileStream(ILiteCollection<LiteFileInfo<TFileId>> files, ILiteCollection<BsonDocument> chunks, LiteFileInfo<TFileId> file, BsonValue fileId, FileAccess mode)
         {
             _files = files;
             _chunks = chunks;

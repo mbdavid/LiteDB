@@ -28,11 +28,7 @@ namespace LiteDB.Engine
 
         public override uint GetCost(CollectionIndex index)
         {
-            // no analyzed index
-            if (index.KeyCount == 0) return uint.MaxValue;
-
-            // need some statistics here (histogram)... assuming read 20% of total
-            return (uint)(index.KeyCount * (0.2));
+            return 20;
         }
 
         public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
@@ -69,7 +65,7 @@ namespace LiteDB.Engine
             // returns (or not) equals start value
             while (node != null)
             {
-                var diff = node.Key.CompareTo(start);
+                var diff = node.Key.CompareTo(start, indexer.Collation);
 
                 // if current value are not equals start, go out this loop
                 if (diff != 0) break;
@@ -85,7 +81,7 @@ namespace LiteDB.Engine
             // navigate using next[0] do next node - if less or equals returns
             while (node != null)
             {
-                var diff = node.Key.CompareTo(end);
+                var diff = node.Key.CompareTo(end, indexer.Collation);
 
                 if (endEquals && diff == 0 && !(node.Key.IsMinValue || node.Key.IsMaxValue))
                 {
