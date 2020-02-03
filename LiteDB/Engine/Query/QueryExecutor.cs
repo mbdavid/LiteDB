@@ -68,7 +68,7 @@ namespace LiteDB.Engine
                 transaction.Rollback();
 
                 // remove cursor
-                 transaction.OpenCursors.Remove(_cursor);
+                transaction.OpenCursors.Remove(_cursor);
 
                 throw;
             }
@@ -122,30 +122,34 @@ namespace LiteDB.Engine
                 // get current query pipe: normal or groupby pipe
                 var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas);
 
-                // start cursor elapsed timer
-                _cursor.Elapsed.Start();
-
-                // call safepoint just before return each document
-                foreach (var doc in pipe.Pipe(nodes, queryPlan))
+                try
                 {
-                    _cursor.Fetched++;
+                    // start cursor elapsed timer
+                    _cursor.Elapsed.Start();
+
+                    // call safepoint just before return each document
+                    foreach (var doc in pipe.Pipe(nodes, queryPlan))
+                    {
+                        _cursor.Fetched++;
+                        _cursor.Elapsed.Stop();
+
+                        yield return doc;
+
+                        _cursor.Elapsed.Start();
+                    }
+                }
+                finally
+                {
+                    // stop cursor elapsed
                     _cursor.Elapsed.Stop();
 
-                    yield return doc;
+                    transaction.OpenCursors.Remove(_cursor);
 
-                    _cursor.Elapsed.Start();
+                    if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
+                    {
+                        transaction.Commit();
+                    }
                 }
-
-                // stop cursor elapsed
-                _cursor.Elapsed.Stop();
-
-                transaction.OpenCursors.Remove(_cursor);
-
-                if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
-                {
-                    transaction.Commit();
-                }
-
             };
         }
 
@@ -158,7 +162,7 @@ namespace LiteDB.Engine
             {
                 using (var reader = this.ExecuteQuery(false))
                 {
-                    while(reader.Read())
+                    while (reader.Read())
                     {
                         yield return reader.Current.AsDocument;
                     }
@@ -171,9 +175,9 @@ namespace LiteDB.Engine
             if (into.StartsWith("$"))
             {
                 SqlParser.ParseCollection(new Tokenizer(into), out var name, out var options);
-            
+
                 var sys = _engine.GetSystemCollection(name);
-            
+
                 result = sys.Output(GetResultset(), options);
             }
             // otherwise insert as normal collection
