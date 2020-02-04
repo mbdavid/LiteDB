@@ -17,7 +17,8 @@ namespace LiteDB.Engine
         private readonly DiskService _disk;
         private readonly LockService _locker;
 
-        private readonly ConcurrentDictionary<uint, List<KeyValuePair<int, long>>> _index = new ConcurrentDictionary<uint, List<KeyValuePair<int, long>>>();
+        private readonly Dictionary<uint, List<KeyValuePair<int, long>>> _index = new Dictionary<uint, List<KeyValuePair<int, long>>>();
+        private readonly ReaderWriterLockSlim _indexLock = new ReaderWriterLockSlim();
 
         private readonly HashSet<uint> _confirmTransactions = new HashSet<uint>();
 
@@ -49,18 +50,27 @@ namespace LiteDB.Engine
         /// </summary>
         public void Clear()
         {
-            // reset 
-            _confirmTransactions.Clear();
-            _index.Clear();
+            _indexLock.TryEnterWriteLock(-1);
 
-            _lastTransactionID = 0;
-            _currentReadVersion = 0;
+            try
+            {
+                // reset 
+                _confirmTransactions.Clear();
+                _index.Clear();
 
-            // clear cache
-            _disk.Cache.Clear();
+                _lastTransactionID = 0;
+                _currentReadVersion = 0;
 
-            // clear log file (sync)
-            _disk.SetLength(0, FileOrigin.Log);
+                // clear cache
+                _disk.Cache.Clear();
+
+                // clear log file (sync)
+                _disk.SetLength(0, FileOrigin.Log);
+            }
+            finally
+            {
+                _indexLock.ExitWriteLock();
+            }
         }
 
         /// <summary>
@@ -83,38 +93,48 @@ namespace LiteDB.Engine
                 return long.MaxValue;
             }
 
-            // get page slot in cache
-            if (_index.TryGetValue(pageID, out var list))
+            // to get page position, enter _index in read mode
+            _indexLock.TryEnterReadLock(-1);
+
+            try
             {
-                // list are sorted by version number
-                var idx = list.Count;
-                var position = long.MaxValue;
-
-                walVersion = version;
-
-                // get all page versions in wal-index
-                // and then filter only equals-or-less then selected version
-                while (idx > 0)
+                // get page slot in cache
+                if (_index.TryGetValue(pageID, out var list))
                 {
-                    idx--;
+                    // list are sorted by version number
+                    var idx = list.Count;
+                    var position = long.MaxValue;
 
-                    var v = list[idx];
+                    walVersion = version;
 
-                    if (v.Key <= version)
+                    // get all page versions in wal-index
+                    // and then filter only equals-or-less then selected version
+                    while (idx > 0)
                     {
-                        walVersion = v.Key;
+                        idx--;
 
-                        position = v.Value;
-                        break;
+                        var v = list[idx];
+
+                        if (v.Key <= version)
+                        {
+                            walVersion = v.Key;
+
+                            position = v.Value;
+                            break;
+                        }
                     }
+
+                    return position;
                 }
 
-                return position;
+                walVersion = int.MaxValue;
+
+                return long.MaxValue;
             }
-
-            walVersion = int.MaxValue;
-
-            return long.MaxValue;
+            finally
+            {
+                _indexLock.ExitReadLock();
+            }
         }
 
         /// <summary>
@@ -123,7 +143,9 @@ namespace LiteDB.Engine
         public void ConfirmTransaction(uint transactionID, ICollection<PagePosition> pagePositions)
         {
             // must lock commit operation to update WAL-Index (memory only operation)
-            lock (_index)
+            _indexLock.TryEnterWriteLock(-1);
+
+            try
             {
                 // increment current version
                 _currentReadVersion++;
@@ -131,8 +153,12 @@ namespace LiteDB.Engine
                 // update wal-index
                 foreach (var pos in pagePositions)
                 {
-                    // get page slot in _index (by pageID) (or create if not exists)
-                    var slot = _index.GetOrAdd(pos.PageID, new List<KeyValuePair<int, long>>());
+                    if (_index.TryGetValue(pos.PageID, out var slot) == false)
+                    {
+                        slot = new List<KeyValuePair<int, long>>();
+
+                        _index.Add(pos.PageID, slot);
+                    }
 
                     // add version/position into pageID slot
                     slot.Add(new KeyValuePair<int, long>(_currentReadVersion, pos.Position));
@@ -140,6 +166,10 @@ namespace LiteDB.Engine
 
                 // add transaction as confirmed
                 _confirmTransactions.Add(transactionID);
+            }
+            finally
+            {
+                _indexLock.ExitWriteLock();
             }
         }
 

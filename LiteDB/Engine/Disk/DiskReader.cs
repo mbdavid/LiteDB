@@ -62,6 +62,8 @@ namespace LiteDB.Engine
             stream.Position = position;
 
             stream.Read(buffer.Array, buffer.Offset, buffer.Count);
+
+            ENSURE(buffer.All(0) == false, "check if are not reading out of file length");
         }
 
         /// <summary>
