@@ -13,7 +13,7 @@ namespace LiteDB
         /// </summary>
         private BsonDataReader ParseCheckpoint()
         {
-            _tokenizer.ReadToken().Expect("CHECKPOINT");
+            _tokenizer.ReadToken().Expect(Pragmas.CHECKPOINT);
 
             // read <eol> or ;
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);

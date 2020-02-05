@@ -79,7 +79,7 @@ namespace LiteDB.Tests.Engine
 
             using (var e = new LiteEngine())
             {
-                var d = e.Pragma("COLLATION");
+                var d = e.Pragma(Pragmas.COLLATION);
 
                 d.AsString.Should().Be("fi/IgnoreCase");
             }

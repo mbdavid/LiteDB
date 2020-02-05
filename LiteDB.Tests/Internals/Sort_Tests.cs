@@ -21,7 +21,7 @@ namespace LiteDB.Internals
                 .ToArray();
 
             var pragmas = new EnginePragmas(null);
-            pragmas.Set("COLLATION", Collation.Binary.ToString(), false);
+            pragmas.Set(Pragmas.COLLATION, Collation.Binary.ToString(), false);
 
             using (var tempDisk = new SortDisk(_factory, 10 * 8192, pragmas))
             using (var s = new SortService(tempDisk, Query.Ascending, pragmas))
@@ -49,7 +49,7 @@ namespace LiteDB.Internals
                 .ToArray();
 
             var pragmas = new EnginePragmas(null);
-            pragmas.Set("COLLATION", Collation.Binary.ToString(), false);
+            pragmas.Set(Pragmas.COLLATION, Collation.Binary.ToString(), false);
 
             using (var tempDisk = new SortDisk(_factory, 10 * 8192, pragmas))
             using (var s = new SortService(tempDisk, Query.Descending, pragmas))

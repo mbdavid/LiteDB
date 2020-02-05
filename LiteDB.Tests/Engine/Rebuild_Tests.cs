@@ -112,7 +112,7 @@ namespace LiteDB.Tests.Engine
                 }).Should().Throw<LiteException>();
 
                 // test if current pragma still with collation none
-                db.Pragma("COLLATION").AsString.Should().Be("en-US/None");
+                db.Pragma(Pragmas.COLLATION).AsString.Should().Be("en-US/None");
             }
         }
     }
