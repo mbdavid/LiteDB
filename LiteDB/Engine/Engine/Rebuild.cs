@@ -39,7 +39,7 @@ namespace LiteDB.Engine
                 // override collation pragma
                 if (options?.Collation != null)
                 {
-                    _header.Pragmas.Set("COLLATION", options.Collation.ToString(), false);
+                    _header.Pragmas.Set(Pragmas.COLLATION, options.Collation.ToString(), false);
                 }
 
                 // rebuild entrie database using FileReader
