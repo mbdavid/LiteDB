@@ -108,7 +108,7 @@ namespace LiteDB.Engine
 
                         if (dataPage["pageType"].AsInt32 != 4) continue;
 
-                        var block = dataPage["blocks"].AsArray.FirstOrDefault(x => x["index"] == dataBlock["index"]).AsDocument;
+                        var block = dataPage["blocks"].AsArray.FirstOrDefault(x => x["index"] == dataBlock["index"])?.AsDocument;
 
                         if (block == null) continue;
 
