@@ -7,14 +7,14 @@ assignees: ''
 
 ---
 
-**Version (REQUIRED)**
-Which LiteDB version/OS/.NET framework version are you using.
+**Version**
+Which LiteDB version/OS/.NET framework version are you using. **(REQUIRED)**
 
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**Code to Reproduce (REQUIRED)**
-Write a small snippet to isolate your bug and could be possible to our team test.
+**Code to Reproduce**
+Write a small snippet to isolate your bug and could be possible to our team test. **(REQUIRED)**
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
