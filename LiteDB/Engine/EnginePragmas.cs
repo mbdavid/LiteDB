@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,12 +26,12 @@ namespace LiteDB.Engine
         private const int P_CHECKPOINT = 97; // 97-100 (4 bytes)
 
         /// <summary>
-        /// Interla user version control to detect database changes
+        /// Internal user version control to detect database changes
         /// </summary>
         public int UserVersion { get; private set; } = 0;
 
         /// <summary>
-        /// Define collation for this database. Value will persisted in disk at first write database. After this, there is no change of collation
+        /// Define collation for this database. Value will be persisted on disk at first write database. After this, there is no change of collation
         /// </summary>
         public Collation Collation { get; private set; } = Collation.Default;
 
@@ -51,8 +51,8 @@ namespace LiteDB.Engine
         public bool UtcDate { get; private set; } = false;
 
         /// <summary>
-        /// When LOG file get are bigger than checkpoint size (in pages), do a soft checkpoint (and also do a checkpoint at shutdown)
-        /// Checkpoint = 0 means no auto-checkpoint and no shutdown checkpoint
+        /// When LOG file gets larger than checkpoint size (in pages), do a soft checkpoint (and also do a checkpoint at shutdown)
+        /// Checkpoint = 0 means there's no auto-checkpoint nor shutdown checkpoint
         /// </summary>
         public int Checkpoint { get; private set; } = 1000;
 
