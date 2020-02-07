@@ -27,12 +27,12 @@ namespace LiteDB.Engine
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
-                var col = snapshot.CollectionPage;
+                var collectionPage = snapshot.CollectionPage;
                 var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
                 var data = new DataService(snapshot);
 
                 // check if index already exists
-                var current = col.GetCollectionIndex(name);
+                var current = collectionPage.GetCollectionIndex(name);
 
                 // if already exists, just exit
                 if (current != null)
@@ -50,7 +50,7 @@ namespace LiteDB.Engine
                 var count = 0u;
 
                 // read all objects (read from PK index)
-                foreach (var pkNode in new IndexAll("_id", LiteDB.Query.Ascending).Run(col, indexer))
+                foreach (var pkNode in new IndexAll("_id", LiteDB.Query.Ascending).Run(collectionPage, indexer))
                 {
                     using (var reader = new BufferReader(data.Read(pkNode.DataBlock)))
                     {

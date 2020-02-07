@@ -83,5 +83,17 @@ namespace LiteDB.Tests.Engine
                 page5["pageType"].AsString.Should().Be("Empty");
             }
         }
+
+        [Fact]
+        public void Update_Empty_Collection()
+        {
+            using(var e = new LiteEngine())
+            {
+                var d = new BsonDocument { ["_id"] = 1, ["a"] = "demo" };
+                var r = e.Update("col1", new BsonDocument[] { d });
+
+                r.Should().Be(0);
+            }
+        }
     }
 }

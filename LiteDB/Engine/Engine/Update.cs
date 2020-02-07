@@ -18,10 +18,12 @@ namespace LiteDB.Engine
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
-                var col = snapshot.CollectionPage;
+                var collectionPage = snapshot.CollectionPage;
                 var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
                 var data = new DataService(snapshot);
                 var count = 0;
+
+                if (collectionPage == null) return 0;
 
                 LOG($"update `{collection}`", "COMMAND");
 
@@ -29,7 +31,7 @@ namespace LiteDB.Engine
                 {
                     transaction.Safepoint();
 
-                    if (this.UpdateDocument(snapshot, col, doc, indexer, data))
+                    if (this.UpdateDocument(snapshot, collectionPage, doc, indexer, data))
                     {
                         count++;
                     }

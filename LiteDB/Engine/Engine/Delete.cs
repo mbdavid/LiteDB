@@ -24,6 +24,8 @@ namespace LiteDB.Engine
 
                 if (collectionPage == null) return 0;
 
+                LOG($"delete `{collection}`", "COMMAND");
+
                 var count = 0;
                 var pk = collectionPage.PK;
 
@@ -36,12 +38,6 @@ namespace LiteDB.Engine
 
                     // remove object data
                     data.Delete(pkNode.DataBlock);
-
-                    if (pkNode.NextNode.IsEmpty)
-                    {
-                        ;
-                    }
-
 
                     // delete all nodes (start in pk node)
                     indexer.DeleteAll(pkNode.Position);

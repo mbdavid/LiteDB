@@ -19,17 +19,19 @@ namespace LiteDB.Engine
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
-                var col = snapshot.CollectionPage;
+                var collectionPage = snapshot.CollectionPage;
                 var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
                 var data = new DataService(snapshot);
                 var count = 0;
-                
+
+                LOG($"upsert `{collection}`", "COMMAND");
+
                 foreach (var doc in docs)
                 {
                     transaction.Safepoint();
 
                     // first try update document (if exists _id), if not found, do insert
-                    if (doc["_id"] == BsonValue.Null || this.UpdateDocument(snapshot, col, doc, indexer, data) == false)
+                    if (doc["_id"] == BsonValue.Null || this.UpdateDocument(snapshot, collectionPage, doc, indexer, data) == false)
                     {
                         this.InsertDocument(snapshot, doc, autoId, indexer, data);
                         count++;
