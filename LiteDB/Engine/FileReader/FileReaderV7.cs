@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using static LiteDB.Constants;
@@ -74,7 +75,7 @@ namespace LiteDB.Engine
                 yield return new IndexInfo
                 {
                     Collection = collection,
-                    Name = index["name"].AsString,
+                    Name = Regex.Replace(index["name"].AsString, @"[^a-z0-9]", "", RegexOptions.IgnoreCase | RegexOptions.Compiled),
                     Expression = index["expression"].AsString,
                     Unique = index["unique"].AsBoolean
                 };
