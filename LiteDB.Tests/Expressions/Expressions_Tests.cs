@@ -13,8 +13,6 @@ namespace LiteDB.Tests.Expressions
                 return BsonExpression.Create(s).ExecuteScalar();
             }
 
-            ;
-
             K(@"123").ExpectValue(123);
             K(@"null").ExpectValue(BsonValue.Null);
             K(@"15.9").ExpectValue(15.9);
@@ -35,8 +33,6 @@ namespace LiteDB.Tests.Expressions
             {
                 return BsonExpression.Create(s).Fields;
             }
-
-            ;
 
             // simple case
             F("$.Name").ExpectValues("Name");
@@ -92,8 +88,6 @@ namespace LiteDB.Tests.Expressions
                 return BsonExpression.Create(s).IsImmutable;
             }
 
-            ;
-
             // some immutable expression
             I("_id").ExpectValue(true);
             I("{ a: 1, n: UPPER(name) }").ExpectValue(true);
@@ -113,8 +107,6 @@ namespace LiteDB.Tests.Expressions
             {
                 return BsonExpression.Create(s).Type;
             }
-
-            ;
 
             T("1").ExpectValue(BsonExpressionType.Int);
             T("-1").ExpectValue(BsonExpressionType.Int);
@@ -173,8 +165,6 @@ namespace LiteDB.Tests.Expressions
                 return BsonExpression.Create(s).Source;
             }
 
-            ;
-
             F("_id").ExpectValue("$._id");
 
             // Expression format
@@ -223,6 +213,22 @@ namespace LiteDB.Tests.Expressions
             F("5.00 % 3").ExpectValue("5.0%3");
             F("5.001 % 3").ExpectValue("5.001%3");
 
+        }
+
+        [Fact]
+        public void Expression_AndAlso_OrElse()
+        {
+            var ex1 = BsonExpression.Create("LENGTH($.x) >= 5 AND SUBSTRING($.x, 0, 5) = \"12345\"");
+            var doc1 = new BsonDocument();
+
+            // OK (true)
+            doc1["x"] = "12345";
+            var r1 = ex1.ExecuteScalar(doc1);
+
+            // KO (expected: false, actual: exception)
+            doc1["x"] = "123";
+            var r2 = ex1.ExecuteScalar(doc1);
+            
         }
     }
 }

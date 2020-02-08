@@ -173,7 +173,7 @@ namespace LiteDB
             if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
 
-            return BsonExpressionParser.CreateBinaryExpression("AND", left, right);
+            return BsonExpressionParser.CreateLogicExpression(BsonExpressionType.And, left, right);
         }
 
         /// <summary>
@@ -201,7 +201,7 @@ namespace LiteDB
             if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
 
-            return BsonExpressionParser.CreateBinaryExpression("OR", left, right);
+            return BsonExpressionParser.CreateLogicExpression(BsonExpressionType.Or, left, right);
         }
 
         /// <summary>

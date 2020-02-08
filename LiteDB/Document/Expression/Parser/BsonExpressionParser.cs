@@ -72,9 +72,9 @@ namespace LiteDB
             ["ALL !="] = Tuple.Create(" ALL!=", M("NEQ_ALL"), BsonExpressionType.NotEqual),
             ["ALL ="] = Tuple.Create(" ALL=", M("EQ_ALL"), BsonExpressionType.Equal),
 
-            // logic
-            ["AND"] = Tuple.Create(" AND ", M("AND"), BsonExpressionType.And),
-            ["OR"] = Tuple.Create(" OR ", M("OR"), BsonExpressionType.Or)
+            // logic (will use Expression.AndAlso|OrElse)
+            ["AND"] = Tuple.Create(" AND ", (MethodInfo)null, BsonExpressionType.And),
+            ["OR"] = Tuple.Create(" OR ", (MethodInfo)null, BsonExpressionType.Or)
         };
 
         private static readonly MethodInfo _parameterPathMethod = M("PARAMETER_PATH");
@@ -146,14 +146,6 @@ namespace LiteDB
                     var method = op.Value.Item2;
                     var type = op.Value.Item3;
 
-
-                    // when operation is AND/OR, test if both sides are predicates (or and/or)
-                    if (type == BsonExpressionType.And || type == BsonExpressionType.Or)
-                    {
-                        if (!(left.IsPredicate || left.Type == BsonExpressionType.And || left.Type == BsonExpressionType.Or)) throw LiteException.InvalidExpressionTypePredicate(left);
-                        if (!(right.IsPredicate || right.Type == BsonExpressionType.And || right.Type == BsonExpressionType.Or)) throw LiteException.InvalidExpressionTypePredicate(right);
-                    }
-
                     // test left/right scalar
                     var isLeftEnum = op.Key.StartsWith("ALL") || op.Key.StartsWith("ANY");
 
@@ -163,30 +155,41 @@ namespace LiteDB
                     if (!isLeftEnum && !right.IsScalar) throw new LiteException(0, $"Left expression `{right.Source}` must return a single value");
                     if (right.IsScalar == false) throw new LiteException(0, $"Right expression `{right.Source}` must return a single value");
 
-                    // method call parameters
-                    var args = new List<Expression>();
 
-                    if (method.GetParameters().FirstOrDefault()?.ParameterType == typeof(Collation))
+                    BsonExpression result;
+
+                    // when operation is AND/OR, use AndAlso|OrElse
+                    if (type == BsonExpressionType.And || type == BsonExpressionType.Or)
                     {
-                        args.Add(context.Collation);
+                        result = CreateLogicExpression(type, left, right);
                     }
-
-                    args.Add(left.Expression);
-                    args.Add(right.Expression);
-
-                    // process result in a single value
-                    var result = new BsonExpression
+                    else
                     {
-                        Type = type,
-                        IsImmutable = left.IsImmutable && right.IsImmutable,
-                        UseSource = left.UseSource || right.UseSource,
-                        IsScalar = true,
-                        Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
-                        Expression = Expression.Call(method, args.ToArray()),
-                        Left = left,
-                        Right = right,
-                        Source = left.Source + src + right.Source
-                    };
+                        // method call parameters
+                        var args = new List<Expression>();
+
+                        if (method?.GetParameters().FirstOrDefault()?.ParameterType == typeof(Collation))
+                        {
+                            args.Add(context.Collation);
+                        }
+
+                        args.Add(left.Expression);
+                        args.Add(right.Expression);
+
+                        // process result in a single value
+                        result = new BsonExpression
+                        {
+                            Type = type,
+                            IsImmutable = left.IsImmutable && right.IsImmutable,
+                            UseSource = left.UseSource || right.UseSource,
+                            IsScalar = true,
+                            Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
+                            Expression = Expression.Call(method, args.ToArray()),
+                            Left = left,
+                            Right = right,
+                            Source = left.Source + src + right.Source
+                        };
+                    }
 
                     // remove left+right and insert result
                     values.Insert(n, result);
@@ -1260,37 +1263,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Create new binary expression based in 2 sides expression
-        /// </summary>
-        internal static BsonExpression CreateBinaryExpression(string op, BsonExpression left, BsonExpression right)
-        {
-            var item = _operators[op];
-            var src = item.Item1;
-            var method = item.Item2;
-            var type = item.Item3;
-
-            // create new binary expression based in 2 other expressions
-            var result = new BsonExpression
-            {
-                Type = type,
-                IsImmutable = left.IsImmutable && right.IsImmutable,
-                UseSource = left.UseSource || right.UseSource,
-                IsScalar = left.IsScalar && right.IsScalar,
-                Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
-                Expression = Expression.Call(method, left.Expression, right.Expression),
-                Left = left,
-                Right = right,
-                Source = left.Source + src + right.Source
-            };
-
-            // copy their parameters into result
-            left.Parameters.CopyTo(result.Parameters);
-            right.Parameters.CopyTo(result.Parameters);
-
-            return result;
-        }
-
-        /// <summary>
         /// Get field from simple \w regex or ['comp-lex'] - also, add into source. Can read empty field (root)
         /// </summary>
         private static string ReadField(Tokenizer tokenizer, StringBuilder source)
@@ -1421,6 +1393,45 @@ namespace LiteDB
                 Expression = Expression.Call(_arrayMethod, expr.Expression),
                 Source = expr.Source
             };
+        }
+
+        /// <summary>
+        /// Create new logic (AND/OR) expression based in 2 expressions
+        /// </summary>
+        internal static BsonExpression CreateLogicExpression(BsonExpressionType type, BsonExpression left, BsonExpression right)
+        {
+            // convert BsonValue into Boolean
+            var boolLeft = Expression.Property(left.Expression, typeof(BsonValue), "AsBoolean");
+            var boolRight = Expression.Property(right.Expression, typeof(BsonValue), "AsBoolean");
+
+            var expr = type == BsonExpressionType.And ?
+                Expression.AndAlso(boolLeft, boolRight) :
+                Expression.OrElse(boolLeft, boolRight);
+
+            // and convert back Boolean to BsonValue
+            var ctor = typeof(BsonValue)
+                .GetConstructors()
+                .First(x => x.GetParameters().FirstOrDefault()?.ParameterType == typeof(bool));
+
+            // create new binary expression based in 2 other expressions
+            var result = new BsonExpression
+            {
+                Type = type,
+                IsImmutable = left.IsImmutable && right.IsImmutable,
+                UseSource = left.UseSource || right.UseSource,
+                IsScalar = left.IsScalar && right.IsScalar,
+                Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
+                Expression = Expression.New(ctor, expr),
+                Left = left,
+                Right = right,
+                Source = left.Source + " " + (type.ToString().ToUpper()) +  " " + right.Source
+            };
+
+            // copy their parameters into result
+            left.Parameters.CopyTo(result.Parameters);
+            right.Parameters.CopyTo(result.Parameters);
+
+            return result;
         }
     }
 }

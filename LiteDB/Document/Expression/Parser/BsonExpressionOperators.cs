@@ -212,26 +212,6 @@ namespace LiteDB
 
         #endregion
 
-        #region Logic
-
-        /// <summary>
-        /// Test left AND right value. Returns true or false
-        /// </summary>
-        public static BsonValue AND(BsonValue left, BsonValue right)
-        {
-            return left && right;
-        }
-
-        /// <summary>
-        /// Test left OR right value. Returns true or false
-        /// </summary>
-        public static BsonValue OR(BsonValue left, BsonValue right)
-        {
-            return left || right;
-        }
-
-        #endregion
-
         #region Path Navigation
 
         /// <summary>
