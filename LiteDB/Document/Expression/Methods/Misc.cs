@@ -119,14 +119,11 @@ namespace LiteDB
         /// <summary>
         /// Conditional IF statment. If condition are true, returns TRUE value, otherwise, FALSE value
         /// </summary>
-        public static BsonValue IIF(BsonValue condition, BsonValue ifTrue, BsonValue ifFalse)
+        public static BsonValue IIF(BsonValue test, BsonValue ifTrue, BsonValue ifFalse)
         {
-            if (condition.IsBoolean)
-            {
-                return condition.AsBoolean ? ifTrue : ifFalse;
-            }
-
-            return BsonValue.Null;
+            // this method are not implemented because will use "Expression.Conditional"
+            // will execute "ifTrue" only if test = true and will execute "ifFalse" if test = false
+            throw new NotImplementedException();
         }
 
         /// <summary>

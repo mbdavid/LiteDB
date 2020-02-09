@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using FluentAssertions;
+using System.Collections.Generic;
 using Xunit;
 
 namespace LiteDB.Tests.Expressions
@@ -228,7 +229,25 @@ namespace LiteDB.Tests.Expressions
             // KO (expected: false, actual: exception)
             doc1["x"] = "123";
             var r2 = ex1.ExecuteScalar(doc1);
-            
+        }
+
+        [Fact]
+        public void Expression_Conditional_IIF()
+        {
+            var ex1 = BsonExpression.Create("IIF(LENGTH($.x) >= 5, SUBSTRING($.x, 0, 5), \"too-short\")");
+            var doc1 = new BsonDocument();
+
+            // OK ("12345")
+            doc1["x"] = "123456789";
+            var r1 = ex1.ExecuteScalar(doc1);
+
+            r1.AsString.Should().Be("12345");
+
+            // KO (expected: "too-short", actual: System.ArgumentOutOfRangeException: Index and length must refer to a location within the string.)
+            doc1["x"] = "123";
+            var r2 = ex1.ExecuteScalar(doc1);
+
+            r2.AsString.Should().Be("too-short");
         }
     }
 }

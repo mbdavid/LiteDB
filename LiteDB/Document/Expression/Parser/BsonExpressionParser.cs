@@ -931,6 +931,9 @@ namespace LiteDB
                 }
             }
 
+            // special IIF case
+            if (method.Name == "IIF" && pars.Count == 3) return CreateConditionalExpression(pars[0], pars[1], pars[2]);
+
             return new BsonExpression
             {
                 Type = BsonExpressionType.Call,
@@ -1430,6 +1433,31 @@ namespace LiteDB
             // copy their parameters into result
             left.Parameters.CopyTo(result.Parameters);
             right.Parameters.CopyTo(result.Parameters);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Create new conditional (IIF) expression. Execute expression only if True or False value
+        /// </summary>
+        internal static BsonExpression CreateConditionalExpression(BsonExpression test, BsonExpression ifTrue, BsonExpression ifFalse)
+        {
+            // convert BsonValue into Boolean
+            var boolTest = Expression.Property(test.Expression, typeof(BsonValue), "AsBoolean");
+
+            var expr = Expression.Condition(boolTest, ifTrue.Expression, ifFalse.Expression);
+
+            // create new binary expression based in 2 other expressions
+            var result = new BsonExpression
+            {
+                Type = BsonExpressionType.Call, // there is not specific Conditional
+                IsImmutable = test.IsImmutable && ifTrue.IsImmutable || ifFalse.IsImmutable,
+                UseSource = test.UseSource || ifTrue.UseSource || ifFalse.UseSource,
+                IsScalar = test.IsScalar && ifTrue.IsScalar && ifFalse.IsScalar,
+                Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(test.Fields).AddRange(ifTrue.Fields).AddRange(ifFalse.Fields),
+                Expression = expr,
+                Source = "IIF(" + test.Source + "," + ifTrue.Source + "," + ifFalse.Source + ")"
+            };
 
             return result;
         }
