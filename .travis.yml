@@ -1,6 +1,5 @@
 language: csharp
 mono: none
-sudo: required
 dotnet: 3.1
 
 matrix:
