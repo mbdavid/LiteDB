@@ -1,16 +1,15 @@
 language: csharp
 mono: none
-dotnet: 3.1
 os:
   - linux
   - osx
+dotnet: 3.1.101
 
 jobs:
   include:
     - os: linux
       dist: bionic
     - os: osx
-      dotnet: 3.1.100
 
 env:
   global:
