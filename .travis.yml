@@ -1,14 +1,15 @@
 language: csharp
 mono: none
-sudo: required
-dotnet: 3.1
+os:
+  - linux
+  - osx
+dotnet: 3.1.101
 
-matrix:
+jobs:
   include:
     - os: linux
       dist: bionic
     - os: osx
-      dotnet: 3.1.100
 
 env:
   global:
