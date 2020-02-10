@@ -52,8 +52,8 @@
 
   <!-- Begin References -->
   <ItemGroup>
-    <None Include="..\LICENSE" Pack="true" PackagePath="\"/>
-    <None Include="..\icon_64x64.png" Pack="true" PackagePath="\"/>
+    <None Include="..\LICENSE" Pack="true" PackagePath="" />
+    <None Include="..\icon_64x64.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
