@@ -135,12 +135,6 @@ namespace LiteDB
                 return custom(value);
             }
 
-            // if type is anonymous use special handler
-            else if(type.IsAnonymousType() && value.IsDocument)
-            {
-                return this.DeserializeAnonymousType(type, value.AsDocument);
-            }
-
             // if value is array, deserialize as array
             else if (value.IsArray)
             {
@@ -162,6 +156,12 @@ namespace LiteDB
             // if value is document, deserialize as document
             else if (value.IsDocument)
             {
+                // if type is anonymous use special handler
+                if (type.IsAnonymousType())
+                {
+                    return this.DeserializeAnonymousType(type, value.AsDocument);
+                }
+
                 var doc = value.AsDocument;
 
                 // test if value is object and has _type
