@@ -34,7 +34,7 @@ namespace LiteDB
         /// </summary>
         public static Query All(int order = Ascending)
         {
-            return new Query { Order = order };
+            return new Query { OrderBy = "_id", Order = order };
         }
 
         /// <summary>
