@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using FluentAssertions;
+using System.Linq;
 using Xunit;
 
 namespace LiteDB.Tests.QueryTest
@@ -66,6 +67,26 @@ namespace LiteDB.Tests.QueryTest
 
             AssertEx.ArrayEqual(r0, r1, true);
             AssertEx.ArrayEqual(r1, r2, true);
+        }
+
+        [Fact]
+        public void Query_GT_LT()
+        {
+            var r0 = collection.Find(Query.And(Query.Contains("Name", "Ca"), Query.LTE("Age", 25))).ToArray();
+
+            var r1 = collection.Find(Query.And(Query.Contains("Name", "Ca"), Query.GTE("Age", 25))).ToArray();
+
+            foreach (var item in r0)
+            {
+                item.Name.ToLower().Should().Contain("ca");
+                item.Age.Should().BeLessOrEqualTo(25);
+            }
+
+            foreach (var item in r1)
+            {
+                item.Name.ToLower().Should().Contain("ca");
+                item.Age.Should().BeGreaterOrEqualTo(25);
+            }
         }
     }
 }
