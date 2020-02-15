@@ -189,12 +189,19 @@ namespace LiteDB
 
                 var o = _typeInstantiator(type) ?? entity.CreateInstance(doc);
 
-                if (o is IDictionary && typeInfo.IsGenericType)
+                if (o is IDictionary)
                 {
-                    var k = type.GetGenericArguments()[0];
-                    var t = type.GetGenericArguments()[1];
+                    if (o.GetType().GetTypeInfo().IsGenericType)
+                    {
+                        var k = type.GetGenericArguments()[0];
+                        var t = type.GetGenericArguments()[1];
 
-                    this.DeserializeDictionary(k, t, (IDictionary)o, value.AsDocument);
+                        this.DeserializeDictionary(k, t, (IDictionary)o, value.AsDocument);
+                    }
+                    else
+                    {
+                        this.DeserializeDictionary(typeof(object), typeof(object), (IDictionary)o, value.AsDocument);
+                    }
                 }
                 else
                 {
