@@ -264,5 +264,16 @@ namespace LiteDB.Tests.Database
                 four["_id"].AsInt32.Should().Be(4);
             }
         }
+
+        [Fact]
+        public void AutoId_Zero_Int()
+        {
+            using (var db = new LiteDatabase(":memory:"))
+            {
+                var test = db.GetCollection("Test", BsonAutoId.Int32);
+                var doc = new BsonDocument() { ["_id"] = 0, ["p1"] = 1 };
+                test.Insert(doc); // -> NullReferenceException
+            }
+        }
     }
 }

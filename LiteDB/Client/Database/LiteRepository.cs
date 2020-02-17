@@ -19,7 +19,7 @@ namespace LiteDB
         /// <summary>
         /// Get database instance
         /// </summary>
-        public ILiteDatabase Database { get { return _db; } }
+        public ILiteDatabase Database => _db;
 
         #endregion
 
@@ -28,7 +28,7 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database an existing Database instance
         /// </summary>
-        public LiteRepository(LiteDatabase database)
+        public LiteRepository(ILiteDatabase database)
         {
             _db = database;
         }
