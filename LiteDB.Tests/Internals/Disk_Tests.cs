@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using FluentAssertions;
 using LiteDB.Engine;
 using Xunit;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace LiteDB.Internals
 {
@@ -57,5 +59,10 @@ namespace LiteDB.Internals
             // wait all async threads
             disk.Dispose();
         }
+
+        [Fact]
+        public Task Disk_ExclusiveScheduler_Write() => Task.Factory.StartNew(Disk_Read_Write,
+            CancellationToken.None, TaskCreationOptions.DenyChildAttach,
+            new ConcurrentExclusiveSchedulerPair().ExclusiveScheduler);
     }
 }
