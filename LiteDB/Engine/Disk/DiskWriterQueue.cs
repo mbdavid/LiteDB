@@ -38,7 +38,7 @@ namespace LiteDB.Engine
             _waiter = new ManualResetEventSlim(false);
             _writing = new ManualResetEventSlim(false);
 
-            _task = Task.Factory.StartNew(this.CreateThread, TaskCreationOptions.LongRunning);
+            _task = Task.Factory.StartNew(this.CreateThread, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         /// <summary>
