@@ -578,6 +578,9 @@ namespace LiteDB.Engine
             // getting all indexes pages from all indexes
             foreach(var index in _collectionPage.GetCollectionIndexes())
             {
+                // add head/tail (same page) to be deleted
+                indexPages.Add(index.Head.PageID);
+
                 foreach (var node in indexer.FindAll(index, Query.Ascending))
                 {
                     indexPages.Add(node.Page.PageID);
