@@ -15,7 +15,7 @@ namespace LiteDB
     /// <summary>
     /// Compile and execute string expressions using BsonDocuments. Used in all document manipulation (transform, filter, indexes, updates). See https://github.com/mbdavid/LiteDB/wiki/Expressions
     /// </summary>
-    public class BsonExpression
+    public sealed class BsonExpression
     {
         /// <summary>
         /// Get formatted expression
