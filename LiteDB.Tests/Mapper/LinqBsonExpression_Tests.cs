@@ -436,6 +436,18 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => new {x.DomainName}, "{ DomainName: $.USER_DOMAIN_NAME }");
         }
 
+        [Fact]
+        public void Linq_Array_Contains()
+        {
+            var ids = new int[] { 1, 2, 3 };
+            //var ids = new List<int> { 1, 2, 3 }; // works too
+
+            // the result are correct, but can be optimize (in QueryOptimzier) to `$._id IN @p0` (index will be used)
+            TestExpr<User>(x => ids.Contains(x.Id), "@p0 ANY = $._id", new BsonArray { 1, 2, 3 });
+
+            TestExpr<User>(x => ids.Where(q => q == x.Id).Count() > 0, "(COUNT(FILTER(@p0 => (@=$._id))) > @p1)", new BsonArray { 1, 2, 3 }, 0);
+        }
+
         #region Test helper
 
         /// <summary>
