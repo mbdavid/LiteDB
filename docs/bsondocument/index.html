@@ -196,13 +196,16 @@
 <span class="n">customer</span><span class="na">[&#34;Phones&#34;]</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonArray</span> <span class="p">{</span> <span class="s">&#34;8000-0000&#34;</span><span class="p">,</span> <span class="s">&#34;9000-000&#34;</span> <span class="p">};</span>
 <span class="n">customer</span><span class="na">[&#34;IsActive&#34;]</span> <span class="p">=</span> <span class="k">true</span><span class="p">;</span>
 <span class="n">customer</span><span class="na">[&#34;IsAdmin&#34;]</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonValue</span><span class="p">(</span><span class="k">true</span><span class="p">);</span>
-<span class="n">customer</span><span class="p">.</span><span class="n">Set</span><span class="p">(</span><span class="s">&#34;Address.Street&#34;</span><span class="p">,</span> <span class="s">&#34;Av. Protasio Alves, 1331&#34;</span><span class="p">);</span>
+<span class="n">customer</span><span class="na">[&#34;Address&#34;]</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonDocument</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [&#34;Street&#34;]</span> <span class="p">=</span> <span class="s">&#34;Av. Protasio Alves&#34;</span>
+<span class="p">};</span>
+<span class="n">customer</span><span class="na">[&#34;Address&#34;][&#34;Number&#34;]</span> <span class="p">=</span> <span class="s">&#34;1331&#34;</span><span class="p">;</span>
 </code></pre></div>
 <p>About document field <strong>keys</strong>:</p>
 
 <ul>
-<li>Keys must contains only letters, numbers or <code>_</code> and <code>-</code></li>
-<li>Keys are case-sensitive</li>
+<li>Keys are case-insensitive</li>
 <li>Duplicate keys are not allowed</li>
 <li>LiteDB keeps the original key order, including mapped classes. The only exception is for <code>_id</code> field that will always be the first field.</li>
 </ul>
@@ -210,9 +213,8 @@
 <p>About document field <strong>values</strong>:</p>
 
 <ul>
-<li>Values can be any BSON value data type: Null, Int32, Int64, Double, String, Embedded Document, Array, Binary, ObjectId, Guid, Boolean, DateTime, MinValue, MaxValue</li>
+<li>Values can be any BSON value data type: Null, Int32, Int64, Decimal, Double, String, Embedded Document, Array, Binary, ObjectId, Guid, Boolean, DateTime, MinValue, MaxValue</li>
 <li>When a field is indexed, the value must be less than 512 bytes after BSON serialization.</li>
-<li>Non-indexed values themselves have no size limit, but the whole document is limited to 1Mb after BSON serialization. This size includes all extra bytes that are used by BSON.</li>
 <li><code>_id</code> field cannot be: <code>Null</code>, <code>MinValue</code> or <code>MaxValue</code></li>
 <li><code>_id</code> is unique indexed field, so value must be less than 512 bytes</li>
 </ul>
@@ -225,7 +227,7 @@
 <ul>
 <li>This class can hold any BSON data type, including null, array or document.</li>
 <li>Has implicit constructor to all supported .NET data types</li>
-<li>Value never changes</li>
+<li>Value never changes (immutable)</li>
 <li><code>RawValue</code> property that returns internal .NET object instance</li>
 </ul></li>
 <li><code>BsonArray</code>
@@ -238,7 +240,6 @@
 
 <ul>
 <li>Missing fields always return <code>BsonValue.Null</code> value</li>
-<li><code>Set</code> and <code>Get</code> methods can be used with dotted notation to access/create inner documents</li>
 </ul></li>
 </ul>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Testing BSON value data type

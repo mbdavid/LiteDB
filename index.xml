@@ -58,8 +58,8 @@ How to install LiteDB is a serverless database, so there is no installation. Jus
       
       <guid>/docs/bsondocument/</guid>
       <description>The BsonDocument class is LiteDB&amp;rsquo;s implementation of documents. Internally, a BsonDocument stores key-value pairs in a Dictionary&amp;lt;string, BsonValue&amp;gt;.
-var customer = new BsonDocument(); customer[&amp;#34;_id&amp;#34;] = ObjectId.NewObjectId(); customer[&amp;#34;Name&amp;#34;] = &amp;#34;John Doe&amp;#34;; customer[&amp;#34;CreateDate&amp;#34;] = DateTime.Now; customer[&amp;#34;Phones&amp;#34;] = new BsonArray { &amp;#34;8000-0000&amp;#34;, &amp;#34;9000-000&amp;#34; }; customer[&amp;#34;IsActive&amp;#34;] = true; customer[&amp;#34;IsAdmin&amp;#34;] = new BsonValue(true); customer.Set(&amp;#34;Address.Street&amp;#34;, &amp;#34;Av. Protasio Alves, 1331&amp;#34;);  About document field keys:
- Keys must contains only letters, numbers or _ and - Keys are case-sensitive Duplicate keys are not allowed LiteDB keeps the original key order, including mapped classes.</description>
+var customer = new BsonDocument(); customer[&amp;#34;_id&amp;#34;] = ObjectId.NewObjectId(); customer[&amp;#34;Name&amp;#34;] = &amp;#34;John Doe&amp;#34;; customer[&amp;#34;CreateDate&amp;#34;] = DateTime.Now; customer[&amp;#34;Phones&amp;#34;] = new BsonArray { &amp;#34;8000-0000&amp;#34;, &amp;#34;9000-000&amp;#34; }; customer[&amp;#34;IsActive&amp;#34;] = true; customer[&amp;#34;IsAdmin&amp;#34;] = new BsonValue(true); customer[&amp;#34;Address&amp;#34;] = new BsonDocument {[&amp;#34;Street&amp;#34;] = &amp;#34;Av. Protasio Alves&amp;#34; }; customer[&amp;#34;Address&amp;#34;][&amp;#34;Number&amp;#34;] = &amp;#34;1331&amp;#34;;  About document field keys:
+ Keys are case-insensitive Duplicate keys are not allowed LiteDB keeps the original key order, including mapped classes.</description>
     </item>
     
     <item>
