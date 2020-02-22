@@ -190,7 +190,7 @@
 <div class="content">
   
 
-<p>LiteDatabase can be initialized using a string connection, with <code>key1=value1; key2=value2; ...</code> syntax. If there is no <code>=</code> in your connection string, LiteDB assume that your connection string contains only the <code>Filename</code>. Keys are case insensitive.</p>
+<p>LiteDatabase can be initialized using a string connection, with <code>key1=value1; key2=value2; ...</code> syntax. If there is no <code>=</code> in your connection string, LiteDB assume that your connection string contains only the <code>Filename</code>. Keys are case insensitive. Values can be quoted (<code>&quot;</code> or <code>'</code>) if contains special chars (like <code>;</code> or <code>=</code>).</p>
 
 <h3 id="options">Options</h3>
 
@@ -208,7 +208,7 @@
 <tr>
 <td>Filename</td>
 <td>string</td>
-<td>Full or relative path to the datafile</td>
+<td>Full or relative path to the datafile. Supports <code>:memory:</code> for memory database or <code>:temp:</code> for in disk temporary database (file will deleted when database was closed) <strong>[required]</strong></td>
 <td>-</td>
 </tr>
 
@@ -249,14 +249,23 @@
 </tbody>
 </table>
 
+<h4 id="connection-type">Connection Type</h4>
+
+<p>LiteDB offers 2 types of connections: <code>Direct</code> and <code>Shared</code>. This affect how engine will open data file.</p>
+
+<ul>
+<li><code>Direct</code>: Engine will open files in exclusive mode and will keep files open until <code>Dispose()</code>. There will is no second instance of this database. This is the recommended mode because it&rsquo;s faster and cachable.</li>
+<li><code>Shared</code>: In this case, files will be open/close on each operation. Locks are made using <code>Mutex</code>. This is more expansive but you can open same file from many different processes.</li>
+</ul>
+
 <h3 id="example">Example</h3>
 
 <p><em>App.config</em></p>
-<div class="highlight"><pre class="chroma"><code class="language-XML" data-lang="XML">    <span class="nt">&lt;connectionStrings&gt;</span>
-        <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&#34;LiteDB&#34;</span> <span class="na">connectionString=</span><span class="s">&#34;Filename=C:\database.db;Password=&#39;1234&#39;&#34;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;/connectionStrings&gt;</span></code></pre></div>
+<div class="highlight"><pre class="chroma"><code class="language-XML" data-lang="XML"><span class="nt">&lt;connectionStrings&gt;</span>
+    <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&#34;LiteDB&#34;</span> <span class="na">connectionString=</span><span class="s">&#34;Filename=C:\database.db;Password=1234&#34;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/connectionStrings&gt;</span></code></pre></div>
 <p><em>C#</em></p>
-<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#">    <span class="n">System</span><span class="p">.</span><span class="n">Configuration</span><span class="p">.</span><span class="n">ConfigurationManager</span><span class="p">.</span><span class="n">ConnectionStrings</span><span class="na">[&#34;LiteDB&#34;]</span><span class="p">.</span><span class="n">ConnectionString</span>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="n">System</span><span class="p">.</span><span class="n">Configuration</span><span class="p">.</span><span class="n">ConfigurationManager</span><span class="p">.</span><span class="n">ConnectionStrings</span><span class="na">[&#34;LiteDB&#34;]</span><span class="p">.</span><span class="n">ConnectionString</span>
 </code></pre></div>
 </div>
 </div>

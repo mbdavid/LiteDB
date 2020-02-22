@@ -4,14 +4,14 @@ draft: false
 weight: 5
 ---
 
-Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path (http://goessner.net/articles/JsonPath/), LiteDB supports a similar syntax to navigate inside a document. A path expression always returns a `IEnumerable<BsonValue>`.
+Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path (http://goessner.net/articles/JsonPath/), LiteDB supports a similar syntax to navigate inside a document.
 
 `BsonExpression` is the class that parses a path expression and compiles it into a Linq Expression to be evaluated by LiteDB.
 
-- Path starts with `$`: `$.Address.Street`, where `$` represents the root document
+- Path starts with `$`: `$.Address.Street`, where `$` represents the root document. The `$` symbol are optional and default in document navigation (`Address.Street` works too)
 - Int values are defined by `[0-9]*`: `123`
 - Double values are defined by `[0-9].[0-9]`: `123.45`
-- Strings are represented with a single quote `'`: `'Hello World'`
+- Strings are represented with a single/double quote: `'Hello World'`
 - Null is represented by `null`
 - Bool is represented using `true` or `false` keywords.
 - Document starts with `{ key1: <value|expression>, key2: ... }`
@@ -32,16 +32,16 @@ var total = expr.Execute(doc, true).First().AsDecimal;
 Expressions can be used in many ways:
 
 - Creating an index based on an expression:
-    - `collection.EnsureIndex("Name", true, "LOWER($.Name)")`
-    - `collection.EnsureIndex(x => x.Name, true, "LOWER($.Name)")`
+    - `collection.EnsureIndex("idx_name", "LOWER($.Name)", false)`
+    - `collection.EnsureIndex(x => x.Name.ToLower())`
 - Querying documents inside a collection based on expression (full scan search)
-    - `collection.Find("SUBSTRING($.Name, 0, 1) = T")`
+    - `collection.Find("SUBSTRING($.Name, 0, 1) = 'T'")`
 - Update using SQL syntax
-    - `update Customers set Name = LOWER($.Name) where _id = 1`
+    - `UPDATE customers SET Name = LOWER($.Name) WHERE _id = 1`
 - Creating new document result in SELECT shell command
-    - `select { upper_titles: ARRAY(UPPER($.Books[*].Title)) } where $.Name like "John%"`	
+    - `SELECT { upper_titles: ARRAY(UPPER($.Books[*].Title)) } WHERE $.Name LIKE "John%"`	
 - Querying documents using the SQL syntax
-	- `select $.Name, $.Phones[@.Type = "Mobile"] from customers`
+	- `SELECT $.Name, $.Phones[@.Type = "Mobile"] FROM customers`
 
 # Path 
 
@@ -63,6 +63,17 @@ Path also supports expressions to filter child nodes
 Inside an array, `@` acts as a sub-iterator, pointing to the current sub-document. It's possible use functions inside expressions too:
 
 - `$.Books[SUBSTRING(LOWER(@.Title), 0, 1) = 't']` - Returns all books whose `Title` starts with `'T'` or `'t'`.
+
+#### Difference between `$` and `*`
+
+In SQL query (at `SELECT` segment) is possible use both `$` and `*`. But they represent different things. 
+
+- `$` represent current document root. When use `$` (or ommited, because this symbol are optional and are default) you are referencing about root current document.
+
+- `*` represent all grouped documents. It's not more about a single document but all documents in group (or in query result). Used when `GROUP BY` are present or when you want return a single value in query (like `SELECT COUNT(*) FROM customers`). 
+
+If you use `SELECT $ FROM customers` you will get `IEnumerable<BsonDocument>` result (`N` documents).
+If you use `SELECT * FROM customers` you will get a single value, a `BsonArray` with all documents result inside. Be carful because if your resultset are big you are creating a very large single array in memory. 
 
 # Functions
 
@@ -104,7 +115,7 @@ DataType functions provide explicit data type conversion.
 
 #### High-Order Functions
 
-High-Order functions take an array and a lambda expression that is applied to every document in the array
+High-Order functions take an array and a lambda expression that is applied to every document in the array. Use `@` symbol to represent inner looped value.
 
 - `MAP(arr => expr)` returns a new array with the map expression applied to each element
 	- `MAP([1,2,3] => @*2)` returns `[2,4,6]`

@@ -190,15 +190,15 @@
 <div class="content">
   
 
-<p>Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path (<a href="http://goessner.net/articles/JsonPath/">http://goessner.net/articles/JsonPath/</a>), LiteDB supports a similar syntax to navigate inside a document. A path expression always returns a <code>IEnumerable&lt;BsonValue&gt;</code>.</p>
+<p>Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path (<a href="http://goessner.net/articles/JsonPath/">http://goessner.net/articles/JsonPath/</a>), LiteDB supports a similar syntax to navigate inside a document.</p>
 
 <p><code>BsonExpression</code> is the class that parses a path expression and compiles it into a Linq Expression to be evaluated by LiteDB.</p>
 
 <ul>
-<li>Path starts with <code>$</code>: <code>$.Address.Street</code>, where <code>$</code> represents the root document</li>
+<li>Path starts with <code>$</code>: <code>$.Address.Street</code>, where <code>$</code> represents the root document. The <code>$</code> symbol are optional and default in document navigation (<code>Address.Street</code> works too)</li>
 <li>Int values are defined by <code>[0-9]*</code>: <code>123</code></li>
 <li>Double values are defined by <code>[0-9].[0-9]</code>: <code>123.45</code></li>
-<li>Strings are represented with a single quote <code>'</code>: <code>'Hello World'</code></li>
+<li>Strings are represented with a single/double quote: <code>'Hello World'</code></li>
 <li>Null is represented by <code>null</code></li>
 <li>Bool is represented using <code>true</code> or <code>false</code> keywords.</li>
 <li>Document starts with <code>{ key1: &lt;value|expression&gt;, key2: ... }</code></li>
@@ -222,28 +222,28 @@
 <li>Creating an index based on an expression:
 
 <ul>
-<li><code>collection.EnsureIndex(&quot;Name&quot;, true, &quot;LOWER($.Name)&quot;)</code></li>
-<li><code>collection.EnsureIndex(x =&gt; x.Name, true, &quot;LOWER($.Name)&quot;)</code></li>
+<li><code>collection.EnsureIndex(&quot;idx_name&quot;, &quot;LOWER($.Name)&quot;, false)</code></li>
+<li><code>collection.EnsureIndex(x =&gt; x.Name.ToLower())</code></li>
 </ul></li>
 <li>Querying documents inside a collection based on expression (full scan search)
 
 <ul>
-<li><code>collection.Find(&quot;SUBSTRING($.Name, 0, 1) = T&quot;)</code></li>
+<li><code>collection.Find(&quot;SUBSTRING($.Name, 0, 1) = 'T'&quot;)</code></li>
 </ul></li>
 <li>Update using SQL syntax
 
 <ul>
-<li><code>update Customers set Name = LOWER($.Name) where _id = 1</code></li>
+<li><code>UPDATE customers SET Name = LOWER($.Name) WHERE _id = 1</code></li>
 </ul></li>
 <li>Creating new document result in SELECT shell command
 
 <ul>
-<li><code>select { upper_titles: ARRAY(UPPER($.Books[*].Title)) } where $.Name like &quot;John%&quot;</code><br /></li>
+<li><code>SELECT { upper_titles: ARRAY(UPPER($.Books[*].Title)) } WHERE $.Name LIKE &quot;John%&quot;</code><br /></li>
 </ul></li>
 <li>Querying documents using the SQL syntax
 
 <ul>
-<li><code>select $.Name, $.Phones[@.Type = &quot;Mobile&quot;] from customers</code></li>
+<li><code>SELECT $.Name, $.Phones[@.Type = &quot;Mobile&quot;] FROM customers</code></li>
 </ul></li>
 </ul>
 
@@ -273,6 +273,19 @@
 <ul>
 <li><code>$.Books[SUBSTRING(LOWER(@.Title), 0, 1) = 't']</code> - Returns all books whose <code>Title</code> starts with <code>'T'</code> or <code>'t'</code>.</li>
 </ul>
+
+<h4 id="difference-between-and">Difference between <code>$</code> and <code>*</code></h4>
+
+<p>In SQL query (at <code>SELECT</code> segment) is possible use both <code>$</code> and <code>*</code>. But they represent different things.</p>
+
+<ul>
+<li><p><code>$</code> represent current document root. When use <code>$</code> (or ommited, because this symbol are optional and are default) you are referencing about root current document.</p></li>
+
+<li><p><code>*</code> represent all grouped documents. It&rsquo;s not more about a single document but all documents in group (or in query result). Used when <code>GROUP BY</code> are present or when you want return a single value in query (like <code>SELECT COUNT(*) FROM customers</code>).</p></li>
+</ul>
+
+<p>If you use <code>SELECT $ FROM customers</code> you will get <code>IEnumerable&lt;BsonDocument&gt;</code> result (<code>N</code> documents).
+If you use <code>SELECT * FROM customers</code> you will get a single value, a <code>BsonArray</code> with all documents result inside. Be carful because if your resultset are big you are creating a very large single array in memory.</p>
 
 <h1 id="functions">Functions</h1>
 
@@ -324,7 +337,7 @@
 
 <h4 id="high-order-functions">High-Order Functions</h4>
 
-<p>High-Order functions take an array and a lambda expression that is applied to every document in the array</p>
+<p>High-Order functions take an array and a lambda expression that is applied to every document in the array. Use <code>@</code> symbol to represent inner looped value.</p>
 
 <ul>
 <li><p><code>MAP(arr =&gt; expr)</code> returns a new array with the map expression applied to each element</p>

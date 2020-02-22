@@ -68,9 +68,9 @@ var customer = new BsonDocument(); customer[&amp;#34;_id&amp;#34;] = ObjectId.Ne
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/docs/expressions/</guid>
-      <description>Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path (http://goessner.net/articles/JsonPath/), LiteDB supports a similar syntax to navigate inside a document. A path expression always returns a IEnumerable&amp;lt;BsonValue&amp;gt;.
+      <description>Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path (http://goessner.net/articles/JsonPath/), LiteDB supports a similar syntax to navigate inside a document.
 BsonExpression is the class that parses a path expression and compiles it into a Linq Expression to be evaluated by LiteDB.
- Path starts with $: $.Address.Street, where $ represents the root document Int values are defined by [0-9]*: 123 Double values are defined by [0-9].</description>
+ Path starts with $: $.Address.Street, where $ represents the root document. The $ symbol are optional and default in document navigation (Address.</description>
     </item>
     
     <item>
@@ -89,8 +89,8 @@ Mapping a reference on database initialization public class Customer { public in
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/docs/connection-string/</guid>
-      <description>LiteDatabase can be initialized using a string connection, with key1=value1; key2=value2; ... syntax. If there is no = in your connection string, LiteDB assume that your connection string contains only the Filename. Keys are case insensitive.
-Options    Key Type Description Default value     Filename string Full or relative path to the datafile -   Connection string Connection type (&amp;ldquo;direct&amp;rdquo; or &amp;ldquo;shared&amp;rdquo;) &amp;ldquo;direct&amp;rdquo;   Password string Encrypt (using AES) your datafile with a password null (no encryption)   InitialSize string or long Initial size for the datafile (string suppoorts &amp;ldquo;KB&amp;rdquo;, &amp;ldquo;MB&amp;rdquo; and &amp;ldquo;GB&amp;rdquo;) 0   ReadOnly bool Open datafile in read-only mode false   Upgrade bool Check if datafile is of an older version and upgrade it before opening false    Example App.</description>
+      <description>LiteDatabase can be initialized using a string connection, with key1=value1; key2=value2; ... syntax. If there is no = in your connection string, LiteDB assume that your connection string contains only the Filename. Keys are case insensitive. Values can be quoted (&amp;quot; or &#39;) if contains special chars (like ; or =).
+Options    Key Type Description Default value     Filename string Full or relative path to the datafile.</description>
     </item>
     
     <item>
