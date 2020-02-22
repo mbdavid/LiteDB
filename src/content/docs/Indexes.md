@@ -99,4 +99,4 @@ See [Expressions](Expressions) for more details about expressions.
 
 - Even if multiple indexed expressions are used on a query, only one of the indexes is used, with the remaining expressions being filtered using a full scan.
 - Index values must have less than 512 bytes (after BSON serialization)
-- Max of 16 indexes per collections - including the `_id` primary key
+- Up to 255 indexes per collections, including the `_id` primary key, but limited to 8096 bytes for store index definition. Each index use: `41` bytes + `LEN(name)` + `LEN(expression)`

@@ -211,12 +211,12 @@
 
 <ul>
 <li>Properties can be read-only or read/write</li>
-<li>The class should have an <code>Id</code> property, <code>&lt;ClassName&gt;Id</code> property, a property with <code>[BsonId]</code> attribute or mapped by the fluent API.</li>
+<li>The class should have an <code>Id</code> property, <code>&lt;ClassName&gt;Id</code> property, a property with <code>[BsonId]</code> attribute or mapped by the fluent API. This property must be read/write.</li>
 <li>A property can be decorated with <code>[BsonIgnore]</code> in order not to be mapped to a document field</li>
 <li>A property can be decorated with <code>[BsonField(&quot;fieldName&quot;)]</code> to customize the name of the document field</li>
 <li>No circular references are allowed</li>
 <li>Max depth of 20 inner classes</li>
-<li>Class fields are not converted to document</li>
+<li>Class fields are not converted to document (by default - use</li>
 <li>You can use <code>BsonMapper</code> global instance (<code>BsonMapper.Global</code>) or a custom instance and pass to <code>LiteDatabase</code> in its constructor. Keep this instance in a single place to avoid re-creating the mappings each time you use a database.</li>
 </ul>
 
@@ -318,7 +318,7 @@
 <ul>
 <li>First, it searches for a constructor with <code>BsonCtorAttribute</code></li>
 <li>Then, it searches for a parameterless constructor</li>
-<li>Finally, it searches for a constructor whose parameters&rsquo; names match with the names of the fields in the document</li>
+<li>Finally, it searches for a constructor whose parameters names match with the names of the fields in the document</li>
 </ul>
 
 <h4 id="register-a-custom-type">Register a custom type</h4>
@@ -373,6 +373,30 @@
 <td>(s) =&gt; s</td>
 <td>A function to map property name to document field name</td>
 </tr>
+
+<tr>
+<td><code>EnumAsInteger</code></td>
+<td>false</td>
+<td>Map enum to <code>string</code> (default) or to <code>int</code></td>
+</tr>
+
+<tr>
+<td><code>IncludeFields</code></td>
+<td>false</td>
+<td>If mapper should include all class fields</td>
+</tr>
+
+<tr>
+<td><code>IncludeNonPublic</code></td>
+<td>false</td>
+<td>If mapper should include all private/protected fields/properties</td>
+</tr>
+
+<tr>
+<td><code>ResolveCollectionName</code></td>
+<td>typeof(T).Name</td>
+<td>When collection name are omitted, use this collection name resolver function</td>
+</tr>
 </tbody>
 </table>
 
@@ -397,13 +421,12 @@
 </code></pre></div>
 <h3 id="autoid">AutoId</h3>
 
-<p>In v4, AutoId is moved to engine level (BsonDocument). There are 4 built-in auto-id functions implemented:</p>
+<p>There are 4 built-in auto-id functions implemented:</p>
 
 <ul>
 <li><code>ObjectId</code>: <code>ObjectId.NewObjectId()</code></li>
 <li><code>Guid</code>: <code>Guid.NewGuid()</code> method</li>
 <li><code>Int32/Int64</code>: New collection sequence</li>
-<li><code>DateTime</code>: <code>DateTime.Now</code></li>
 </ul>
 
 <p>AutoId is only used when there is no <code>_id</code> field in the document upon insertion. In strongly-typed documents, <code>BsonMapper</code> removes the <code>_id</code> field for empty values (like <code>0</code> for <code>Int</code> or <code>Guid.Empty</code> for <code>Guid</code>).

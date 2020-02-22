@@ -27,12 +27,12 @@ var schemelessCollection = db.GetCollection("customer"); // <T> is BsonDocument
 `BsonMapper.ToDocument()` auto converts each property of a class to a document field following these conventions:
 
 - Properties can be read-only or read/write
-- The class should have an `Id` property, `<ClassName>Id` property, a property with `[BsonId]` attribute or mapped by the fluent API.
+- The class should have an `Id` property, `<ClassName>Id` property, a property with `[BsonId]` attribute or mapped by the fluent API. This property must be read/write.
 - A property can be decorated with `[BsonIgnore]` in order not to be mapped to a document field
 - A property can be decorated with `[BsonField("fieldName")]` to customize the name of the document field
 - No circular references are allowed
 - Max depth of 20 inner classes
-- Class fields are not converted to document
+- Class fields are not converted to document (by default - use 
 - You can use `BsonMapper` global instance (`BsonMapper.Global`) or a custom instance and pass to `LiteDatabase` in its constructor. Keep this instance in a single place to avoid re-creating the mappings each time you use a database.
 
 In addition to basic BSON types, `BsonMapper` maps others .NET types to BSON data type:
@@ -88,7 +88,7 @@ When `GetCollection<T>` is called, it tries to create instances of `T` by search
 
 * First, it searches for a constructor with `BsonCtorAttribute`
 * Then, it searches for a parameterless constructor
-* Finally, it searches for a constructor whose parameters' names match with the names of the fields in the document
+* Finally, it searches for a constructor whose parameters names match with the names of the fields in the document
 
 #### Register a custom type
 
@@ -116,6 +116,10 @@ BsonMapper.Global.RegisterType<Uri>
 |`TrimWhitespace`       |true    |Trim strings properties before mapping to document         |
 |`EmptyStringToNull`    |true    |Empty strings convert to `null`                            |
 |`ResolvePropertyName`  |(s) => s|A function to map property name to document field name     |
+|`EnumAsInteger`        |false   |Map enum to `string` (default) or to `int`                 |
+|`IncludeFields`        |false   |If mapper should include all class fields                  |
+|`IncludeNonPublic`     |false   |If mapper should include all private/protected fields/properties|
+|`ResolveCollectionName`|typeof(T).Name|When collection name are omitted, use this collection name resolver function|
 
 `BsonMapper` offers 2 predefined functions to resolve property names: `UseCamelCase()` and `UseLowerCaseDelimiter('_')`.
 
@@ -141,12 +145,11 @@ var doe = doc["customerLastName"].AsString;
 
 ### AutoId
 
-In v4, AutoId is moved to engine level (BsonDocument). There are 4 built-in auto-id functions implemented:
+There are 4 built-in auto-id functions implemented:
 
 - `ObjectId`: `ObjectId.NewObjectId()`
 - `Guid`: `Guid.NewGuid()` method
 - `Int32/Int64`: New collection sequence
-- `DateTime`: `DateTime.Now`
 
 AutoId is only used when there is no `_id` field in the document upon insertion. In strongly-typed documents, `BsonMapper` removes the `_id` field for empty values (like `0` for `Int` or `Guid.Empty` for `Guid`).
 Please note that AutoId requires the id field to have a public setter.

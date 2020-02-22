@@ -8,9 +8,10 @@ Documents are stored and organized in collections. `LiteCollection` is a generic
 
 - Contains only letters, numbers and `_`
 - Collection names are **case insensitive**
-- Collection names starting with `_` are reserved for internal use
+- Collection names starting with `_` are reserved for internal storage use
+- Collection names starting with `$` are reserved for internal system/virtual collections
 
-The total size of all the collections names in a database is limited to 3000 bytes. If you plan to have many collections in your database, make sure to use short names for your collections. For example, if collection names are about 10 bytes in length, you can have ~300 collection in the database.
+The total size of all the collections names in a database is limited to 8000 bytes. If you plan to have many collections in your database, make sure to use short names for your collections. For example, if collection names are about 10 bytes in length, you can have ~800 collection in the database.
 
 Collections are auto created on first `Insert` or `EnsureIndex` operation. Running a query, delete or update on a document in a non existing collection does not create one.
 
@@ -58,19 +59,20 @@ System collections are special collections that provide information about the da
 
 |Collection|Description|
 |----|----|
-|$cols()|Lists all collections in the datafile, including the system collections.|
-|$database()|Shows general info about the datafile.|
-|$indexes()|Lists all indexes in the datafile.|
-|$sequences()|Lists all the sequences in the datafile.|
-|$transactions()|Lists all the open transactions in the datafile.|
-|$snapshots()|Lists all existing snapshots.|
-|$open_cursors()|Lists all the open cursors in the datafile.|
+|$cols|Lists all collections in the datafile, including the system collections.|
+|$database|Shows general info about the datafile.|
+|$indexes|Lists all indexes in the datafile.|
+|$sequences|Lists all the sequences in the datafile.|
+|$transactions|Lists all the open transactions in the datafile.|
+|$snapshots|Lists all existing snapshots.|
+|$open_cursors|Lists all the open cursors in the datafile.|
 |$dump(pageID)|Lists advanced info about the desired page. If no pageID is provided, lists all the pages.|
 |$page_list(pageID)|Lists basic info about the desired page. If no pageID is provided, lists all the pages.|
 |$query(subquery)|Takes a query as string and returns the result of the query. Can be used for simulating subqueries. **Experimental**.|
 |$file(path)|See below.|
 
 #### $file
+
 The `$file` system collection can be used to read and write to external files.
 
 - `SELECT $ INTO $FILE('customers.json') FROM Customers` dumps the entire content from the collection `Customers` into a JSON file.
@@ -81,3 +83,23 @@ There is also limited support for CSV files. Only basic data types are supported
 - `SELECT $ INTO $FILE('customers.csv') FROM Customers` dumps the entire content from the collection `Customers` into a CSV file.
 - `SELECT $ FROM $FILE('customers.csv')` reads the entire content from the CSV file.
 
+The single parameter can be:
+
+- `$file("filename.json|csv")`: Support filename only with file extension as format
+- `$file({ options })`: Support all options
+
+```JS
+{
+    filename: "string",
+    format: "json|csv",
+    enconding: "utf-8",
+    overwritten: false,
+    // JSON only
+    ident: 4,
+    pretty: false
+    // CSV only
+    delimiter: ",",
+    header: true, // write CSV header columns
+    header: [] // define header columns names when read
+}
+```

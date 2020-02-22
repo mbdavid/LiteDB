@@ -195,10 +195,11 @@
 <ul>
 <li>Contains only letters, numbers and <code>_</code></li>
 <li>Collection names are <strong>case insensitive</strong></li>
-<li>Collection names starting with <code>_</code> are reserved for internal use</li>
+<li>Collection names starting with <code>_</code> are reserved for internal storage use</li>
+<li>Collection names starting with <code>$</code> are reserved for internal system/virtual collections</li>
 </ul>
 
-<p>The total size of all the collections names in a database is limited to 3000 bytes. If you plan to have many collections in your database, make sure to use short names for your collections. For example, if collection names are about 10 bytes in length, you can have ~300 collection in the database.</p>
+<p>The total size of all the collections names in a database is limited to 8000 bytes. If you plan to have many collections in your database, make sure to use short names for your collections. For example, if collection names are about 10 bytes in length, you can have ~800 collection in the database.</p>
 
 <p>Collections are auto created on first <code>Insert</code> or <code>EnsureIndex</code> operation. Running a query, delete or update on a document in a non existing collection does not create one.</p>
 
@@ -251,37 +252,37 @@
 
 <tbody>
 <tr>
-<td>$cols()</td>
+<td>$cols</td>
 <td>Lists all collections in the datafile, including the system collections.</td>
 </tr>
 
 <tr>
-<td>$database()</td>
+<td>$database</td>
 <td>Shows general info about the datafile.</td>
 </tr>
 
 <tr>
-<td>$indexes()</td>
+<td>$indexes</td>
 <td>Lists all indexes in the datafile.</td>
 </tr>
 
 <tr>
-<td>$sequences()</td>
+<td>$sequences</td>
 <td>Lists all the sequences in the datafile.</td>
 </tr>
 
 <tr>
-<td>$transactions()</td>
+<td>$transactions</td>
 <td>Lists all the open transactions in the datafile.</td>
 </tr>
 
 <tr>
-<td>$snapshots()</td>
+<td>$snapshots</td>
 <td>Lists all existing snapshots.</td>
 </tr>
 
 <tr>
-<td>$open_cursors()</td>
+<td>$open_cursors</td>
 <td>Lists all the open cursors in the datafile.</td>
 </tr>
 
@@ -323,6 +324,26 @@
 <li><code>SELECT $ FROM $FILE('customers.csv')</code> reads the entire content from the CSV file.</li>
 </ul>
 
+<p>The single parameter can be:</p>
+
+<ul>
+<li><code>$file(&quot;filename.json|csv&quot;)</code>: Support filename only with file extension as format</li>
+<li><code>$file({ options })</code>: Support all options</li>
+</ul>
+<div class="highlight"><pre class="chroma"><code class="language-JS" data-lang="JS"><span class="p">{</span>
+    <span class="nx">filename</span><span class="o">:</span> <span class="s2">&#34;string&#34;</span><span class="p">,</span>
+    <span class="nx">format</span><span class="o">:</span> <span class="s2">&#34;json|csv&#34;</span><span class="p">,</span>
+    <span class="nx">enconding</span><span class="o">:</span> <span class="s2">&#34;utf-8&#34;</span><span class="p">,</span>
+    <span class="nx">overwritten</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="c1">// JSON only
+</span><span class="c1"></span>    <span class="nx">ident</span><span class="o">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="nx">pretty</span><span class="o">:</span> <span class="kc">false</span>
+    <span class="c1">// CSV only
+</span><span class="c1"></span>    <span class="nx">delimiter</span><span class="o">:</span> <span class="s2">&#34;,&#34;</span><span class="p">,</span>
+    <span class="nx">header</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="c1">// write CSV header columns
+</span><span class="c1"></span>    <span class="nx">header</span><span class="o">:</span> <span class="p">[]</span> <span class="c1">// define header columns names when read
+</span><span class="c1"></span><span class="p">}</span>
+</code></pre></div>
 </div>
 </div>
 
