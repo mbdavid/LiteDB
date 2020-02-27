@@ -100,9 +100,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get a collection using a generic BsonDocument. If collection does not exits, create a new one.
+        /// Get a collection using a generic BsonDocument. If collection does not exists, create a new one.
         /// </summary>
-        /// <param name="name">Collection name (case insensitive)</param>
+        /// <param name="name">Collection name (case-insensitive)</param>
         /// <param name="autoId">Define autoId data type (when document contains no _id field)</param>
         public ILiteCollection<BsonDocument> GetCollection(string name, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
@@ -258,7 +258,7 @@ namespace LiteDB
         #region Analyze/Checkpoint/Shrink/UserVersion
 
         /// <summary>
-        /// Do database checkpoint. Copy all commited transaction from log file into datafile.
+        /// Do database checkpoint. Copy all committed transaction from log file into datafile.
         /// </summary>
         public void Checkpoint()
         {
