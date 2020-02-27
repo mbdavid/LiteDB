@@ -101,15 +101,25 @@ namespace LiteDB.Engine
                     // get all documents from current collection
                     var docs = reader.GetDocuments(collection);
 
-                    // and insert into 
-                    this.Insert(collection, docs, BsonAutoId.ObjectId);
+                    // get snapshot, indexer and data services
+                    var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
+                    var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
+                    var data = new DataService(snapshot);
+
+                    // insert one-by-one
+                    foreach (var doc in docs)
+                    {
+                        transaction.Safepoint();
+
+                        this.InsertDocument(snapshot, doc, BsonAutoId.ObjectId, indexer, data);
+                    }
                 }
 
-                this.Commit();
+                transaction.Commit();
             }
             catch (Exception)
             {
-                this.Rollback();
+                transaction.Abort();
 
                 _walIndex.Clear();
 

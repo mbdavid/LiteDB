@@ -201,7 +201,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Change password from all data stream
+        /// Clear data file, close any data stream pool, change password and re-create data factory
         /// </summary>
         public void ChangePassword(string password, EngineSettings settings)
         {
