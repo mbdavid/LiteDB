@@ -20,6 +20,14 @@ namespace LiteDB.Tests.Expressions
 
             ;
 
+            // cover the fix of "copy/paste" errors
+            doc = new BsonDocument();
+            S("[1, 6] ALL > 5").ExpectValue(false);
+            S("[1, 6] ALL >= 5").ExpectValue(false);
+            S("[1, 6] ALL < 5").ExpectValue(false);
+            S("[1, 6] ALL <= 5").ExpectValue(false);
+            S("[1, 5] ALL != 5").ExpectValue(false);
+
             // direct path navigation
             doc = J("{ a: 1, b: null, c: true, d:[1,2], e:{d:4} }");
 
