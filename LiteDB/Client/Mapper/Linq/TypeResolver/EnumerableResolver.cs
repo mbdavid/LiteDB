@@ -66,6 +66,7 @@ namespace LiteDB
                 // any/all special cases
                 case "Any(Func<T,TResult>)": return "@0 ANY %";
                 case "All(Func<T,TResult>)": return "@0 ALL %";
+                case "Any()": return "COUNT(@0) > 0";
             }
 
             // special Contains method
