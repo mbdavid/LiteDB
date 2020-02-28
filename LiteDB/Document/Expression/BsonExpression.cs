@@ -264,7 +264,11 @@ namespace LiteDB
 
             if (!_cache.TryGetValue(expression, out var expr))
             {
-                expr = Parse(new Tokenizer(expression), BsonExpressionParserMode.Full, true);
+                var tokenizer = new Tokenizer(expression);
+
+                expr = Parse(tokenizer, BsonExpressionParserMode.Full, true);
+
+                tokenizer.LookAhead().Expect(TokenType.EOF);
 
                 // if passed string expression are different from formatted expression, try add in cache "unformatted" expression too
                 if (expression != expr.Source)

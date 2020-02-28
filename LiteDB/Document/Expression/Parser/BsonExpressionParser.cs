@@ -1134,7 +1134,7 @@ namespace LiteDB
         /// </summary>
         private static BsonExpression TryParseFunction(Tokenizer tokenizer, ExpressionContext context, bool isRoot)
         {
-            var token = tokenizer.Current.Value.ToUpper();
+            var token = tokenizer.Current.Value?.ToUpper() ?? "";
 
             switch(token)
             {

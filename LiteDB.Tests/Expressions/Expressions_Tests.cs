@@ -217,6 +217,26 @@ namespace LiteDB.Tests.Expressions
         }
 
         [Fact]
+        public void Invalid_Expressions()
+        {
+            void Err(string s)
+            {
+                Assert.Throws<LiteException>(() =>
+                {
+                    var expr = BsonExpression.Create(s);
+                });
+            }
+
+            Err("5 FOO < 1");
+            Err("8 ++ 9");
+            Err("10 + 5)");
+            Err("10 + 5 -");
+            Err("MAP(A => +)");
+            Err("(25 + 15");
+            Err("10 + 5 -.");
+        }
+
+        [Fact]
         public void Expression_AndAlso_OrElse()
         {
             var ex1 = BsonExpression.Create("LENGTH($.x) >= 5 AND SUBSTRING($.x, 0, 5) = \"12345\"");
