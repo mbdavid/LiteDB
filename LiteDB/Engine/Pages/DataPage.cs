@@ -70,7 +70,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get all block positions inside this page that are not extend blocks (initial data block)
         /// </summary>
-        public IEnumerable<PageAddress> GetBlocks(bool onlyDataBlock)
+        public IEnumerable<PageAddress> GetBlocks()
         {
             foreach(var index in base.GetUsedIndexs())
             {
@@ -79,7 +79,7 @@ namespace LiteDB.Engine
 
                 var extend = _buffer.ReadBool(position + DataBlock.P_EXTEND);
 
-                if (onlyDataBlock == false || extend == false)
+                if (extend == false)
                 {
                     yield return new PageAddress(this.PageID, index);
                 }

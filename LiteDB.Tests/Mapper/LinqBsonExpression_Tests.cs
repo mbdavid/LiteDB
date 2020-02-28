@@ -448,6 +448,12 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => ids.Where(q => q == x.Id).Count() > 0, "(COUNT(FILTER(@p0 => (@=$._id))) > @p1)", new BsonArray { 1, 2, 3 }, 0);
         }
 
+        [Fact]
+        public void Linq_Array_Any()
+        {
+            TestExpr<User>(x => x.Phones.Any(), "COUNT($.Phones) > 0");
+        }
+
         #region Test helper
 
         /// <summary>
