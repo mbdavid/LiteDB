@@ -30,11 +30,12 @@ namespace LiteDB.Benchmarks.Benchmarks.Queries
             return _fileMetaCollection.FindAll().ToList();
         }
 
-        [Benchmark]
+        // TODO: Fix benchmark
+        /*[Benchmark]
         public List<FileMetaBase> FindAllWithExpression()
         {
             return _fileMetaCollection.Find(_ => true).ToList();
-        }
+        }*/
 
         [Benchmark]
         public List<FileMetaBase> FindAllWithQuery()
