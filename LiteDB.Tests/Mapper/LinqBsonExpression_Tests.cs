@@ -389,8 +389,8 @@ namespace LiteDB.Tests.Mapper
             TestExpr<Order>(x => x.Customer.CustomerId == 123, "(Customer.$id = @p0)", 123);
             TestExpr<Order>(x => x.Customer.Name == "John", "(Customer.Name = @p0)", "John");
 
-            TestExpr<Order>(x => x.Users.Select(u => u.Id).Any(id => id == 9), "MAP(Users => @.$id) ANY = @p0)", 9);
-            TestExpr<Order>(x => x.Users.Select(u => u.Name).Any(n => n == "U1"), "MAP(Users => @.Name) ANY = @p0)", "U1");
+            TestExpr<Order>(x => x.Users.Select(u => u.Id).Any(id => id == 9), "MAP(Users => @.$id) ANY = @p0", 9);
+            TestExpr<Order>(x => x.Users.Select(u => u.Name).Any(n => n == "U1"), "MAP(Users => @.Name) ANY = @p0  ", "U1");
         }
 
         [Fact]
