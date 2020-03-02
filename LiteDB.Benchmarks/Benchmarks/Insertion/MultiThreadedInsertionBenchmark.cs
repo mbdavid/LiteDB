@@ -9,33 +9,21 @@ using LiteDB.Benchmarks.Models.Generators;
 namespace LiteDB.Benchmarks.Benchmarks.Insertion
 {
 	[BenchmarkCategory(Constants.Categories.INSERTION)]
-	public class MultiThreadedInsertionBenchmark
-	{
-		// Insertion data size
-		[Params(10, 50, 100, 500, 1000, 5000, 10000)]
-		public int DatasetSize;
-
-		[Params(null, "SecurePassword")]
-		public string Password;
-
+	public class MultiThreadedInsertionBenchmark : BenchmarkBase
+	{ 
 		[Params(1, 2, 5, 10, 20)]
 		public int AmountOfThreads;
 
 		private List<FileMetaBase> _data;
 
-		private string DatabasePath => Constants.DATABASE_NAME;
-		private LiteDatabase DatabaseInstance { get; set; }
+		private Action[] _insertionTasksArray;
 
 		[GlobalSetup]
 		public void GlobalSetup()
 		{
 			File.Delete(DatabasePath);
 
-			DatabaseInstance = new LiteDatabase(new ConnectionString(DatabasePath)
-			{
-				Connection = ConnectionType.Direct,
-				Password = Password
-			});
+			DatabaseInstance = new LiteDatabase(ConnectionString());
 
 			// Attempt to initialize the engine before benchmarks start running
 			DatabaseInstance.GetCollectionNames();
@@ -43,15 +31,13 @@ namespace LiteDB.Benchmarks.Benchmarks.Insertion
 			_data = FileMetaGenerator<FileMetaBase>.GenerateList(DatasetSize); // executed once for each benchmark run
 		}
 
-		private Action[] _insertionTasksArray;
-
 		[IterationSetup]
 		public void IterationSetupGeneric()
 		{
 			_insertionTasksArray = new Action[AmountOfThreads];
 			for (var i = 0; i < AmountOfThreads; i++)
 			{
-				var collectionName = ((char) (65 + i)).ToString();
+				var collectionName = ((char) (65 + i)).ToString(); // CollectionName starting with A, will go up to the "AmountOfThreads"-th character of the alphabet.
 				_insertionTasksArray[i] = () => DatabaseInstance.GetCollection<FileMetaBase>(collectionName).Insert(_data);
 			}
 		}
