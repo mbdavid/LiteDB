@@ -54,5 +54,13 @@ namespace LiteDB.Tests.QueryTest
                 Query.EQ("Date", null)
             ));
         }
+
+        [Fact]
+        public void Query_Find_All_Predicate()
+        {
+            var r = collection.Find(x => true).ToArray();
+
+            r.Should().HaveCount(1000);
+        }
     }
 }
