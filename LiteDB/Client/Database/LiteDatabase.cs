@@ -70,6 +70,15 @@ namespace LiteDB
             _mapper = mapper ?? BsonMapper.Global;
         }
 
+        /// <summary>
+        /// Starts LiteDB database using a custom ILiteEngine implementation.
+        /// </summary>
+        public LiteDatabase(ILiteEngine engine, BsonMapper mapper = null)
+        {
+            _engine = engine ?? throw new ArgumentNullException(nameof(engine));
+            _mapper = mapper ?? BsonMapper.Global;
+        }
+
         #endregion
 
         #region Collections
