@@ -52,7 +52,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} = {value}");
+            return BsonExpression.Create($"{field} = {value ?? BsonValue.Null}");
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} < {value}");
+            return BsonExpression.Create($"{field} < {value ?? BsonValue.Null}");
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} <= {value}");
+            return BsonExpression.Create($"{field} <= {value ?? BsonValue.Null}");
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} > {value}");
+            return BsonExpression.Create($"{field} > {value ?? BsonValue.Null}");
 
         }
 
@@ -93,7 +93,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} >= {value}");
+            return BsonExpression.Create($"{field} >= {value ?? BsonValue.Null}");
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} BETWEEN {start} AND {end}");
+            return BsonExpression.Create($"{field} BETWEEN {start ?? BsonValue.Null} AND {end ?? BsonValue.Null}");
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} != {value}");
+            return BsonExpression.Create($"{field} != {value ?? BsonValue.Null}");
         }
 
         /// <summary>
