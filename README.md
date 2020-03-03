@@ -151,6 +151,8 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 - Lucene.NET directory: https://github.com/sheryever/LiteDBDirectory
 - LINQPad support: https://github.com/adospace/litedbpad
 - F# Support: https://github.com/Zaid-Ajaj/LiteDB.FSharp
+- UltraLiteDB (for Unity or IOT): https://github.com/rejemy/UltraLiteDB
+
 
 ## Changelog
 
