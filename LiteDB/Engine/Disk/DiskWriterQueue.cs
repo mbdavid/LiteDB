@@ -56,7 +56,8 @@ namespace LiteDB.Engine
             {
                 if (_queue.Count > 0 && (_task == null || _task.IsCompleted))
                 {
-                    _task = Task.Factory.StartNew(this.ExecuteQueue, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
+                    // https://blog.stephencleary.com/2013/08/startnew-is-dangerous.html
+                    _task = Task.Run(this.ExecuteQueue);
                 }
             }
         }
