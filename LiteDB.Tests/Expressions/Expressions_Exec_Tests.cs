@@ -18,8 +18,6 @@ namespace LiteDB.Tests.Expressions
                 return BsonExpression.Create(s).ExecuteScalar(doc);
             }
 
-            ;
-
             // cover the fix of "copy/paste" errors
             doc = new BsonDocument();
             S("[1, 6] ALL > 5").ExpectValue(false);
@@ -104,8 +102,6 @@ namespace LiteDB.Tests.Expressions
             {
                 return BsonExpression.Create(s, args).ExecuteScalar(doc);
             }
-
-            ;
 
             // Operators order
             doc = J("{ a: 1, b: 2, c: 3 }");
@@ -249,8 +245,6 @@ namespace LiteDB.Tests.Expressions
                 return BsonExpression.Create(s, args).ExecuteScalar(doc);
             }
 
-            ;
-
             doc = J("{ arr: [1, 2, 3, 4, 5 ] }");
 
             P("@0", 10).ExpectValue(10);
@@ -331,6 +325,34 @@ namespace LiteDB.Tests.Expressions
             A("EXCEPT([1,2,3],1)").ExpectValues(2, 3);
             A("EXCEPT([1,2,3],[1,3])").ExpectValues(2);
             A("EXCEPT([1,2,3],[4,5])").ExpectValues(1, 2, 3);
+        }
+
+        [Fact]
+        public void Multiple_And_Tests()
+        {
+            BsonValue B(params BsonExpression[] args)
+            {
+                return Query.And(args).ExecuteScalar();
+            };
+
+            B("5 > 3", "10 != 'a'", "1 = 1").ExpectValue(true);
+            B("5 < 3", "10 != 'a'", "1 = 1").ExpectValue(false);
+            B("5 > 3", "10 = 'a'", "1 = 1").ExpectValue(false);
+            B("5 > 3", "10 != 'a'", "1 != 1").ExpectValue(false);
+        }
+
+        [Fact]
+        public void Multiple_Or_Tests()
+        {
+            BsonValue B(params BsonExpression[] args)
+            {
+                return Query.Or(args).ExecuteScalar();
+            };
+
+            B("5 > 3", "10 != 'a'", "1 = 1").ExpectValue(true);
+            B("5 < 3", "10 != 'a'", "1 = 1").ExpectValue(true);
+            B("5 > 3", "10 = 'a'", "1 = 1").ExpectValue(true);
+            B("5 < 3", "10 = 'a'", "1 != 1").ExpectValue(false);
         }
     }
 }
