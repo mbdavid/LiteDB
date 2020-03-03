@@ -374,7 +374,7 @@ namespace LiteDB
             return cached;
         }
 
-        private static void Compile(BsonExpression expr, ExpressionContext context)
+        internal static void Compile(BsonExpression expr, ExpressionContext context)
         {
             // compile linq expression according with return type (scalar or not)
             if (expr.IsScalar)
