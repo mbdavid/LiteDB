@@ -7,91 +7,91 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Insertion
 {
-    [BenchmarkCategory(Constants.Categories.INSERTION)]
-    public class InsertionIgnoreExpressionPropertyBenchmark : BenchmarkBase
-    {
-        private List<FileMetaBase> baseData;
-        private List<FileMetaWithExclusion> baseDataWithBsonIgnore;
+	[BenchmarkCategory(Constants.Categories.INSERTION)]
+	public class InsertionIgnoreExpressionPropertyBenchmark : BenchmarkBase
+	{
+		private List<FileMetaBase> _baseData;
+		private List<FileMetaWithExclusion> _baseDataWithBsonIgnore;
 
-        private ILiteCollection<FileMetaBase> _fileMetaCollection { get; set; }
-        private ILiteCollection<FileMetaWithExclusion> _fileMetaExclusionCollection { get; set; }
+		private ILiteCollection<FileMetaBase> _fileMetaCollection;
+		private ILiteCollection<FileMetaWithExclusion> _fileMetaExclusionCollection;
 
-        [GlobalSetup(Target = nameof(Insertion))]
-        public void GlobalBsonIgnoreSetup()
-        {
-            File.Delete(DatabasePath);
+		[GlobalSetup(Target = nameof(Insertion))]
+		public void GlobalBsonIgnoreSetup()
+		{
+			File.Delete(DatabasePath);
 
-            DatabaseInstance = new LiteDatabase(ConnectionString());
-            _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
-            _fileMetaCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
+			DatabaseInstance = new LiteDatabase(ConnectionString());
+			_fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
+			_fileMetaCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
 
-            baseData = FileMetaGenerator<FileMetaBase>.GenerateList(DatasetSize); // executed once per each N value
-        }
+			_baseData = FileMetaGenerator<FileMetaBase>.GenerateList(DatasetSize); // executed once per each N value
+		}
 
-        [GlobalSetup(Target = nameof(InsertionWithBsonIgnore))]
-        public void GlobalIgnorePropertySetup()
-        {
-            File.Delete(DatabasePath);
+		[GlobalSetup(Target = nameof(InsertionWithBsonIgnore))]
+		public void GlobalIgnorePropertySetup()
+		{
+			File.Delete(DatabasePath);
 
-            DatabaseInstance = new LiteDatabase(ConnectionString());
-            _fileMetaExclusionCollection = DatabaseInstance.GetCollection<FileMetaWithExclusion>();
-            _fileMetaExclusionCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
+			DatabaseInstance = new LiteDatabase(ConnectionString());
+			_fileMetaExclusionCollection = DatabaseInstance.GetCollection<FileMetaWithExclusion>();
+			_fileMetaExclusionCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
 
-            baseDataWithBsonIgnore = FileMetaGenerator<FileMetaWithExclusion>.GenerateList(DatasetSize); // executed once per each N value
-        }
+			_baseDataWithBsonIgnore = FileMetaGenerator<FileMetaWithExclusion>.GenerateList(DatasetSize); // executed once per each N value
+		}
 
-        [Benchmark(Baseline = true)]
-        public int Insertion()
-        {
-            var count = _fileMetaCollection.Insert(baseData);
-            DatabaseInstance.Checkpoint();
-            return count;
-        }
+		[Benchmark(Baseline = true)]
+		public int Insertion()
+		{
+			var count = _fileMetaCollection.Insert(_baseData);
+			DatabaseInstance.Checkpoint();
+			return count;
+		}
 
-        [Benchmark]
-        public int InsertionWithBsonIgnore()
-        {
-            var count = _fileMetaExclusionCollection.Insert(baseDataWithBsonIgnore);
-            DatabaseInstance.Checkpoint();
-            return count;
-        }
+		[Benchmark]
+		public int InsertionWithBsonIgnore()
+		{
+			var count = _fileMetaExclusionCollection.Insert(_baseDataWithBsonIgnore);
+			DatabaseInstance.Checkpoint();
+			return count;
+		}
 
-        [IterationCleanup]
-        public void IterationCleanup()
-        {
-            var indexesCollection = DatabaseInstance.GetCollection("$indexes");
-            var droppedCollectionIndexes = indexesCollection.Query().Where(x => x["name"] != "_id").ToDocuments().ToList();
+		[IterationCleanup]
+		public void IterationCleanup()
+		{
+			var indexesCollection = DatabaseInstance.GetCollection("$indexes");
+			var droppedCollectionIndexes = indexesCollection.Query().Where(x => x["name"] != "_id").ToDocuments().ToList();
 
-            var collectionNames = DatabaseInstance.GetCollectionNames();
-            foreach (var name in collectionNames)
-            {
-                DatabaseInstance.DropCollection(name);
-            }
+			var collectionNames = DatabaseInstance.GetCollectionNames();
+			foreach (var name in collectionNames)
+			{
+				DatabaseInstance.DropCollection(name);
+			}
 
-            foreach (var indexInfo in droppedCollectionIndexes)
-            {
-                DatabaseInstance.GetCollection(indexInfo["collection"]).EnsureIndex(indexInfo["name"], BsonExpression.Create(indexInfo["expression"]), indexInfo["unique"]);
-            }
-            
-            DatabaseInstance.Checkpoint();
-            DatabaseInstance.Rebuild();
-        }
+			foreach (var indexInfo in droppedCollectionIndexes)
+			{
+				DatabaseInstance.GetCollection(indexInfo["collection"])
+					.EnsureIndex(indexInfo["name"], BsonExpression.Create(indexInfo["expression"]), indexInfo["unique"]);
+			}
 
-        [GlobalCleanup]
-        public void GlobalCleanup()
-        {
-            baseData?.Clear();
-            baseData = null;
+			DatabaseInstance.Checkpoint();
+			DatabaseInstance.Rebuild();
+		}
 
-            baseDataWithBsonIgnore?.Clear();
-            baseDataWithBsonIgnore = null;
+		[GlobalCleanup]
+		public void GlobalCleanup()
+		{
+			_baseData?.Clear();
+			_baseData = null;
 
-            DatabaseInstance.DropCollection(nameof(FileMetaBase));
-            DatabaseInstance.DropCollection(nameof(FileMetaWithExclusion));
-            DatabaseInstance.Checkpoint();
-            DatabaseInstance.Dispose();
+			_baseDataWithBsonIgnore?.Clear();
+			_baseDataWithBsonIgnore = null;
 
-            File.Delete(DatabasePath);
-        }
-    }
+			DatabaseInstance?.Checkpoint();
+			DatabaseInstance?.Dispose();
+			DatabaseInstance = null;
+
+			File.Delete(DatabasePath);
+		}
+	}
 }

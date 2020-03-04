@@ -7,51 +7,50 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Queries
 {
-    [BenchmarkCategory(Constants.Categories.QUERIES)]
-    public class QueryAllBenchmark : BenchmarkBase
-    {
-        private ILiteCollection<FileMetaBase> _fileMetaCollection { get; set; }
+	[BenchmarkCategory(Constants.Categories.QUERIES)]
+	public class QueryAllBenchmark : BenchmarkBase
+	{
+		private ILiteCollection<FileMetaBase> _fileMetaCollection;
 
-        [GlobalSetup]
-        public void GlobalSetup()
-        {
-            File.Delete(DatabasePath);
+		[GlobalSetup]
+		public void GlobalSetup()
+		{
+			File.Delete(DatabasePath);
 
-            DatabaseInstance = new LiteDatabase(ConnectionString());
-            _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
+			DatabaseInstance = new LiteDatabase(ConnectionString());
+			_fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
 
-            _fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(DatasetSize)); // executed once per each N value
-            DatabaseInstance.Checkpoint();
-        }
+			_fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(DatasetSize)); // executed once per each N value
+			DatabaseInstance.Checkpoint();
+		}
 
-        [Benchmark(Baseline = true)]
-        public List<FileMetaBase> FindAll()
-        {
-            return _fileMetaCollection.FindAll().ToList();
-        }
+		[Benchmark(Baseline = true)]
+		public List<FileMetaBase> FindAll()
+		{
+			return _fileMetaCollection.FindAll().ToList();
+		}
 
-        // TODO: Fix benchmark
-        /*[Benchmark]
-        public List<FileMetaBase> FindAllWithExpression()
-        {
-            return _fileMetaCollection.Find(_ => true).ToList();
-        }*/
+		[Benchmark]
+		public List<FileMetaBase> FindAllWithExpression()
+		{
+			return _fileMetaCollection.Find(_ => true).ToList();
+		}
 
-        [Benchmark]
-        public List<FileMetaBase> FindAllWithQuery()
-        {
-            return _fileMetaCollection.Find(Query.All()).ToList();
-        }
+		[Benchmark]
+		public List<FileMetaBase> FindAllWithQuery()
+		{
+			return _fileMetaCollection.Find(Query.All()).ToList();
+		}
 
-        [GlobalCleanup]
-        public void GlobalCleanup()
-        {
-            // Disposing logic
-            DatabaseInstance.DropCollection(nameof(FileMetaBase));
-            DatabaseInstance.Checkpoint();
-            DatabaseInstance.Dispose();
+		[GlobalCleanup]
+		public void GlobalCleanup()
+		{
+			// Disposing logic
+			DatabaseInstance?.Checkpoint();
+			DatabaseInstance?.Dispose();
+			DatabaseInstance = null;
 
-            File.Delete(DatabasePath);
-        }
-    }
+			File.Delete(DatabasePath);
+		}
+	}
 }

@@ -7,69 +7,69 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Queries
 {
-    [BenchmarkCategory(Constants.Categories.QUERIES)]
-    public class QuerySimpleIndexBenchmarks : BenchmarkBase
-    {
-        private ILiteCollection<FileMetaBase> _fileMetaCollection { get; set; }
+	[BenchmarkCategory(Constants.Categories.QUERIES)]
+	public class QuerySimpleIndexBenchmarks : BenchmarkBase
+	{
+		private ILiteCollection<FileMetaBase> _fileMetaCollection;
 
-        [GlobalSetup(Targets = new[] {nameof(FindWithExpression), nameof(FindWithQuery)})]
-        public void GlobalSetup()
-        {
-            File.Delete(DatabasePath);
+		[GlobalSetup(Targets = new[] {nameof(FindWithExpression), nameof(FindWithQuery)})]
+		public void GlobalSetup()
+		{
+			File.Delete(DatabasePath);
 
-            DatabaseInstance = new LiteDatabase(ConnectionString());
-            _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
+			DatabaseInstance = new LiteDatabase(ConnectionString());
+			_fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
 
-            _fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(DatasetSize)); // executed once per each N value
-        }
+			_fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(DatasetSize)); // executed once per each N value
+		}
 
-        [GlobalSetup(Targets = new[] {nameof(FindWithIndexExpression), nameof(FindWithIndexQuery)})]
-        public void GlobalIndexSetup()
-        {
-            File.Delete(DatabasePath);
+		[GlobalSetup(Targets = new[] {nameof(FindWithIndexExpression), nameof(FindWithIndexQuery)})]
+		public void GlobalIndexSetup()
+		{
+			File.Delete(DatabasePath);
 
-            DatabaseInstance = new LiteDatabase(ConnectionString());
-            _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
-            _fileMetaCollection.EnsureIndex(fileMeta => fileMeta.IsFavorite);
+			DatabaseInstance = new LiteDatabase(ConnectionString());
+			_fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
+			_fileMetaCollection.EnsureIndex(fileMeta => fileMeta.IsFavorite);
 
-            _fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(DatasetSize)); // executed once per each N value
-            
-            DatabaseInstance.Checkpoint();
-        }
+			_fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(DatasetSize)); // executed once per each N value
 
-        [Benchmark(Baseline = true)]
-        public List<FileMetaBase> FindWithExpression()
-        {
-            return _fileMetaCollection.Find(fileMeta => fileMeta.IsFavorite).ToList();
-        }
+			DatabaseInstance.Checkpoint();
+		}
 
-        [Benchmark]
-        public List<FileMetaBase> FindWithQuery()
-        {
-            return _fileMetaCollection.Find(Query.EQ(nameof(FileMetaBase.IsFavorite), true)).ToList();
-        }
+		[Benchmark(Baseline = true)]
+		public List<FileMetaBase> FindWithExpression()
+		{
+			return _fileMetaCollection.Find(fileMeta => fileMeta.IsFavorite).ToList();
+		}
 
-        [Benchmark]
-        public List<FileMetaBase> FindWithIndexExpression()
-        {
-            return _fileMetaCollection.Find(fileMeta => fileMeta.IsFavorite).ToList();
-        }
+		[Benchmark]
+		public List<FileMetaBase> FindWithQuery()
+		{
+			return _fileMetaCollection.Find(Query.EQ(nameof(FileMetaBase.IsFavorite), true)).ToList();
+		}
 
-        [Benchmark]
-        public List<FileMetaBase> FindWithIndexQuery()
-        {
-            return _fileMetaCollection.Find(Query.EQ(nameof(FileMetaBase.IsFavorite), true)).ToList();
-        }
+		[Benchmark]
+		public List<FileMetaBase> FindWithIndexExpression()
+		{
+			return _fileMetaCollection.Find(fileMeta => fileMeta.IsFavorite).ToList();
+		}
 
-        [GlobalCleanup]
-        public void GlobalCleanup()
-        {
-            // Disposing logic
-            DatabaseInstance.DropCollection(nameof(FileMetaBase));
-            DatabaseInstance.Checkpoint();
-            DatabaseInstance.Dispose();
+		[Benchmark]
+		public List<FileMetaBase> FindWithIndexQuery()
+		{
+			return _fileMetaCollection.Find(Query.EQ(nameof(FileMetaBase.IsFavorite), true)).ToList();
+		}
 
-            File.Delete(DatabasePath);
-        }
-    }
+		[GlobalCleanup]
+		public void GlobalCleanup()
+		{
+			// Disposing logic
+			DatabaseInstance?.Checkpoint();
+			DatabaseInstance?.Dispose();
+			DatabaseInstance = null;
+
+			File.Delete(DatabasePath);
+		}
+	}
 }

@@ -7,66 +7,67 @@ using LiteDB.Benchmarks.Models.Generators;
 
 namespace LiteDB.Benchmarks.Benchmarks.Queries
 {
-    [BenchmarkCategory(Constants.Categories.QUERIES)]
-    public class QueryIgnoreExpressionPropertiesBenchmark : BenchmarkBase
-    {
-        private ILiteCollection<FileMetaBase> _fileMetaCollection { get; set; }
-        private ILiteCollection<FileMetaWithExclusion> _fileMetaExclusionCollection { get; set; }
+	[BenchmarkCategory(Constants.Categories.QUERIES)]
+	public class QueryIgnoreExpressionPropertiesBenchmark : BenchmarkBase
+	{
+		private ILiteCollection<FileMetaBase> _fileMetaCollection;
+		private ILiteCollection<FileMetaWithExclusion> _fileMetaExclusionCollection;
 
-        [GlobalSetup(Target = nameof(DeserializeBaseline))]
-        public void GlobalSetup()
-        {
-            File.Delete(DatabasePath);
+		[GlobalSetup(Target = nameof(DeserializeBaseline))]
+		public void GlobalSetup()
+		{
+			File.Delete(DatabasePath);
 
-            DatabaseInstance = new LiteDatabase(ConnectionString());
-            _fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
-            _fileMetaCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
+			DatabaseInstance = new LiteDatabase(ConnectionString());
+			_fileMetaCollection = DatabaseInstance.GetCollection<FileMetaBase>();
+			_fileMetaCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
 
-            _fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(DatasetSize)); // executed once per each N value
-            
-            DatabaseInstance.Checkpoint();
-        }
+			_fileMetaCollection.Insert(FileMetaGenerator<FileMetaBase>.GenerateList(DatasetSize)); // executed once per each N value
 
-        [GlobalSetup(Target = nameof(DeserializeWithIgnore))]
-        public void GlobalIndexSetup()
-        {
-            File.Delete(DatabasePath);
+			DatabaseInstance.Checkpoint();
+		}
 
-            DatabaseInstance = new LiteDatabase(ConnectionString());
-            _fileMetaExclusionCollection = DatabaseInstance.GetCollection<FileMetaWithExclusion>();
-            _fileMetaExclusionCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
+		[GlobalSetup(Target = nameof(DeserializeWithIgnore))]
+		public void GlobalIndexSetup()
+		{
+			File.Delete(DatabasePath);
 
-            _fileMetaExclusionCollection.Insert(FileMetaGenerator<FileMetaWithExclusion>.GenerateList(DatasetSize)); // executed once per each N value
-            
-            DatabaseInstance.Checkpoint();
-        }
+			DatabaseInstance = new LiteDatabase(ConnectionString());
+			_fileMetaExclusionCollection = DatabaseInstance.GetCollection<FileMetaWithExclusion>();
+			_fileMetaExclusionCollection.EnsureIndex(fileMeta => fileMeta.ShouldBeShown);
 
-        [Benchmark(Baseline = true)]
-        public List<FileMetaBase> DeserializeBaseline()
-        {
-            return _fileMetaCollection.Find(fileMeta => fileMeta.ShouldBeShown).ToList();
-        }
+			_fileMetaExclusionCollection.Insert(FileMetaGenerator<FileMetaWithExclusion>.GenerateList(DatasetSize)); // executed once per each N value
 
-        [Benchmark]
-        public List<FileMetaWithExclusion> DeserializeWithIgnore()
-        {
-            return _fileMetaExclusionCollection.Find(fileMeta => fileMeta.ShouldBeShown).ToList();
-        }
+			DatabaseInstance.Checkpoint();
+		}
 
-        [GlobalCleanup]
-        public void GlobalCleanup()
-        {
-            // Disposing logic
-            DatabaseInstance.DropCollection(nameof(FileMetaBase));
-            _fileMetaCollection = null;
+		[Benchmark(Baseline = true)]
+		public List<FileMetaBase> DeserializeBaseline()
+		{
+			return _fileMetaCollection.Find(fileMeta => fileMeta.ShouldBeShown).ToList();
+		}
 
-            DatabaseInstance.DropCollection(nameof(FileMetaWithExclusion));
-            _fileMetaExclusionCollection = null;
-            
-            DatabaseInstance.Checkpoint();
-            DatabaseInstance.Dispose();
+		[Benchmark]
+		public List<FileMetaWithExclusion> DeserializeWithIgnore()
+		{
+			return _fileMetaExclusionCollection.Find(fileMeta => fileMeta.ShouldBeShown).ToList();
+		}
 
-            File.Delete(DatabasePath);
-        }
-    }
+		[GlobalCleanup]
+		public void GlobalCleanup()
+		{
+			// Disposing logic
+			DatabaseInstance.DropCollection(nameof(FileMetaBase));
+			_fileMetaCollection = null;
+
+			DatabaseInstance.DropCollection(nameof(FileMetaWithExclusion));
+			_fileMetaExclusionCollection = null;
+
+			DatabaseInstance?.Checkpoint();
+			DatabaseInstance?.Dispose();
+			DatabaseInstance = null;
+
+			File.Delete(DatabasePath);
+		}
+	}
 }
