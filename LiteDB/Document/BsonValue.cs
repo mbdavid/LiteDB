@@ -463,7 +463,8 @@ namespace LiteDB
                 // if not, order by sort type order
                 else
                 {
-                    return this.Type.CompareTo(other.Type);
+                    var result = this.Type.CompareTo(other.Type);
+                    return result < 0 ? -1 : result > 0 ? +1 : 0;
                 }
             }
 
