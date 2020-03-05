@@ -233,32 +233,64 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Do checkpoint operation to copy log pages into data file. Return how many transactions was commited inside data file
-        /// If soft = true, just try enter in exclusive mode - if not possible, just exit
+        /// Checkpoint requires exclusive lock database
         /// </summary>
-        public void Checkpoint(bool soft)
+        public int Checkpoint()
         {
-            // get original log length
-            var logLength = _disk.GetLength(FileOrigin.Log);
-
             // no log file or no confirmed transaction, just exit
-            if (logLength == 0 || _confirmTransactions.Count == 0) return;
+            if (_disk.GetLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
 
-            // for safe, lock all database (read/write) before run checkpoint operation
-            // future versions can be smarter and avoid lock (be more like SQLite checkpoint)
-            if (soft)
-            {
-                // shutdown mode only try enter in exclusive mode... if not possible, exit without checkpoint
-                if (_locker.TryEnterExclusive() == false) return;
-            }
-            else
-            {
-                _locker.EnterReserved(true);
-            }
+            var mustExit = _locker.EnterExclusive();
 
+            try
+            {
+                return this.CheckpointInternal();
+            }
+            finally
+            {
+                if (mustExit)
+                {
+                    _locker.ExitExclusive();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Run checkpoint only if there is no open transactions
+        /// </summary>
+        public int TryCheckpoint()
+        {
+            // no log file or no confirmed transaction, just exit
+            if (_disk.GetLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
+
+            if (_locker.TryEnterExclusive(out var mustExit) == false) return 0;
+
+            try
+            {
+                return this.CheckpointInternal();
+            }
+            finally
+            {
+                if (mustExit)
+                {
+                    _locker.ExitExclusive();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Do checkpoint operation to copy log pages into data file. Return how many transactions was commited inside data file
+        /// Checkpoint requires exclusive lock database
+        /// If soft = true, just try enter in exclusive mode - if not possible, just exit (don't execute checkpoint)
+        /// </summary>
+        private int CheckpointInternal()
+        {
             LOG($"checkpoint", "WAL");
 
             // wait all pages write on disk
             _disk.Queue.Wait();
+
+            var counter = 0;
 
             ENSURE(_disk.Queue.Length == 0, "no pages on queue when checkpoint");
 
@@ -281,6 +313,8 @@ namespace LiteDB.Engine
 
                         buffer.Position = BasePage.GetPagePosition(pageID);
 
+                        counter++;
+
                         yield return buffer;
                     }
                 }
@@ -292,8 +326,7 @@ namespace LiteDB.Engine
             // clear log file, clear wal index, memory cache,
             this.Clear();
 
-            // remove exclusive lock
-            _locker.ExitReserved(true);
+            return counter;
         }
     }
 }

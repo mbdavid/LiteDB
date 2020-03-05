@@ -78,7 +78,7 @@ namespace LiteDB.Engine
                 _header = new HeaderPage(buffer);
 
                 // initialize locker service
-                _locker = new LockService(_header.Pragmas, settings.ReadOnly);
+                _locker = new LockService(_header.Pragmas);
 
                 // initialize wal-index service
                 _walIndex = new WalIndexService(_disk, _locker);
@@ -120,7 +120,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Run checkpoint command to copy log file into data file
         /// </summary>
-        public void Checkpoint() => _walIndex.Checkpoint(false);
+        public int Checkpoint() => _walIndex.Checkpoint();
 
         public void Dispose()
         {
@@ -153,7 +153,7 @@ namespace LiteDB.Engine
                 _monitor?.Dispose();
 
                 // do a soft checkpoint (only if exclusive lock is possible)
-                if (_header?.Pragmas.Checkpoint > 0) _walIndex?.Checkpoint(true);
+                if (_header?.Pragmas.Checkpoint > 0) _walIndex?.TryCheckpoint();
 
                 // close all disk streams (and delete log if empty)
                 _disk?.Dispose();

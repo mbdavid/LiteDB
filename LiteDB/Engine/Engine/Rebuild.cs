@@ -12,22 +12,28 @@ namespace LiteDB.Engine
         /// </summary>
         public long Rebuild(RebuildOptions options)
         {
-            _walIndex.Checkpoint(false);
+            // enter database in exclusive mode
+            var mustExit = _locker.EnterExclusive();
 
-            if (_disk.GetLength(FileOrigin.Log) > 0) throw new LiteException(0, "Rebuild operation requires no log file - run Checkpoint before continue");
-
-            _locker.EnterReserved(true);
-
-            var originalLength = _disk.GetLength(FileOrigin.Data);
-
-            // create a savepoint in header page - restore if any error occurs
-            var savepoint = _header.Savepoint();
-
-            // must clear all cache pages because all of them will change
-            _disk.Cache.Clear();
+            // get a header backup/savepoint before change
+            PageBuffer savepoint = null;
 
             try
             {
+                // do a checkpoint before starts
+                _walIndex.Checkpoint();
+
+                var originalLength = _disk.GetLength(FileOrigin.Data);
+
+                // create a savepoint in header page - restore if any error occurs
+                savepoint = _header.Savepoint();
+
+                // must clear all cache pages because all of them will change
+                _disk.Cache.Clear();
+
+                // must check if there is no data log
+                if (_disk.GetLength(FileOrigin.Log) > 0) throw new LiteException(0, "Rebuild operation requires no log file - run Checkpoint before continue");
+
                 // initialize V8 file reader
                 var reader = new FileReaderV8(_header, _disk);
 
@@ -52,10 +58,10 @@ namespace LiteDB.Engine
                 }
 
                 // exit reserved before checkpoint
-                _locker.ExitReserved(true);
+                _locker.ExitExclusive();
 
                 // do checkpoint
-                _walIndex.Checkpoint(false);
+                _walIndex.Checkpoint();
 
                 // set new fileLength
                 _disk.SetLength((_header.LastPageID + 1) * PAGE_SIZE, FileOrigin.Data);
@@ -67,11 +73,19 @@ namespace LiteDB.Engine
             }
             catch
             {
-                _header.Restore(savepoint);
-
-                _locker.ExitReserved(true);
+                if (savepoint != null)
+                {
+                    _header.Restore(savepoint);
+                }
 
                 throw;
+            }
+            finally
+            {
+                if (mustExit)
+                {
+                    _locker.ExitExclusive();
+                }
             }
         }
 

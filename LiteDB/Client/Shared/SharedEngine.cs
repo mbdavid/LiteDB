@@ -166,13 +166,13 @@ namespace LiteDB
 
         #region Write Operations
 
-        public void Checkpoint()
+        public int Checkpoint()
         {
             this.OpenDatabase();
 
             try
             {
-                _engine.Checkpoint();
+                return _engine.Checkpoint();
             }
             finally
             {
