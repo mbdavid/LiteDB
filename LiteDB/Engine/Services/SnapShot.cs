@@ -51,13 +51,9 @@ namespace LiteDB.Engine
             _reader = reader;
 
             // enter in lock mode according initial mode
-            if (mode == LockMode.Read)
+            if (mode == LockMode.Write)
             {
-                _locker.EnterRead(_collectionName);
-            }
-            else
-            {
-                _locker.EnterReserved(_collectionName);
+                _locker.EnterLock(_collectionName);
             }
 
             // get lastest read version from wal-index
@@ -129,13 +125,9 @@ namespace LiteDB.Engine
                 _collectionPage.Buffer.Release();
             }
 
-            if (_mode == LockMode.Read)
+            if(_mode == LockMode.Write)
             {
-                _locker.ExitRead(_collectionName);
-            }
-            else if(_mode == LockMode.Write)
-            {
-                _locker.ExitReserved(_collectionName);
+                _locker.ExitLock(_collectionName);
             }
         }
 

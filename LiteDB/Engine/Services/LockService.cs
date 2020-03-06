@@ -18,7 +18,7 @@ namespace LiteDB.Engine
         private readonly EnginePragmas _pragmas;
 
         private readonly ReaderWriterLockSlim _transaction = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-        private readonly ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, object> _collections = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
         internal LockService(EnginePragmas pragmas)
         {
@@ -58,51 +58,26 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Enter collection in read lock
-        /// </summary>
-        public void EnterRead(string collectionName)
-        {
-            ENSURE(_transaction.IsReadLockHeld || _transaction.IsWriteLockHeld, "Use EnterTransaction() before EnterRead(name)");
-
-            // get collection locker from dictionary (or create new if doesnt exists)
-            var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
-
-            // try enter in read lock in collection
-            if (collection.TryEnterReadLock(_pragmas.Timeout) == false) throw LiteException.LockTimeout("read", collectionName, _pragmas.Timeout);
-        }
-
-        /// <summary>
-        /// Exit collection read lock
-        /// </summary>
-        public void ExitRead(string collectionName)
-        {
-            if (_collections.TryGetValue(collectionName, out var collection) == false) throw LiteException.CollectionLockerNotFound(collectionName);
-
-            collection.ExitReadLock();
-        }
-
-        /// <summary>
         /// Enter collection write lock mode (only 1 collection per time can have this lock)
         /// </summary>
-        public void EnterReserved(string collectionName)
+        public void EnterLock(string collectionName)
         {
-            ENSURE(_transaction.IsReadLockHeld || _transaction.IsWriteLockHeld, "Use EnterTransaction() before EnterWrite(name)");
+            ENSURE(_transaction.IsReadLockHeld || _transaction.IsWriteLockHeld, "Use EnterTransaction() before EnterLock(name)");
 
-            // get collection locker from dictionary (or create new if doesnt exists)
-            var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
+            // get collection object lock from dictionary (or create new if doesnt exists)
+            var collection = _collections.GetOrAdd(collectionName, (s) => new object());
 
-            // try enter in reserved lock in collection
-            if (collection.TryEnterUpgradeableReadLock(_pragmas.Timeout) == false) throw LiteException.LockTimeout("write", collectionName, _pragmas.Timeout);
+            if (Monitor.TryEnter(collection, _pragmas.Timeout) == false) throw LiteException.LockTimeout("write", collectionName, _pragmas.Timeout);
         }
 
         /// <summary>
         /// Exit collection in reserved lock
         /// </summary>
-        public void ExitReserved(string collectionName)
+        public void ExitLock(string collectionName)
         {
             if (_collections.TryGetValue(collectionName, out var collection) == false) throw LiteException.CollectionLockerNotFound(collectionName);
 
-            collection.ExitUpgradeableReadLock();
+            Monitor.Exit(collection);
         }
 
         /// <summary>
@@ -119,7 +94,7 @@ namespace LiteDB.Engine
 
             ENSURE(_transaction.RecursiveReadCount == 0, "must have no other transaction here");
 
-            return false;
+            return true;
         }
 
 
@@ -167,22 +142,9 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            this.SafeDispose(_transaction);
-
-            foreach(var collections in _collections.Values)
-            {
-                this.SafeDispose(collections);
-            }
-        }
-
-        /// <summary>
-        /// Dispose class testing for lock synchronization
-        /// </summary>
-        private void SafeDispose(IDisposable obj)
-        {
             try
             {
-                obj.Dispose();
+                _transaction.Dispose();
             }
             catch (SynchronizationLockException)
             {

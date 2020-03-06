@@ -61,7 +61,7 @@ namespace LiteDB.Engine
                     {
                         _slot.Value = null;
 
-                        _transactions.TryRemove(id, out var t);
+                        var removed = _transactions.TryRemove(id, out var t);
 
                         _freePages += t.MaxTransactionSize;
                     }

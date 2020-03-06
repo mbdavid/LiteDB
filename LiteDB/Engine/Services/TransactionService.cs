@@ -67,13 +67,13 @@ namespace LiteDB.Engine
 
             this.MaxTransactionSize = maxTransactionSize;
 
+            // enter transaction locker to avoid 2 transactions in same thread
+            _locker.EnterTransaction();
+
             // create new transactionID
             _transactionID = walIndex.NextTransactionID();
             _startTime = DateTime.UtcNow;
             _reader = _disk.GetReader();
-
-            // enter transaction locker to avoid 2 transactions in same thread
-            _locker.EnterTransaction();
         }
 
         /// <summary>
