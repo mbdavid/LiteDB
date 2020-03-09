@@ -344,9 +344,14 @@ namespace LiteDB
         /// </summary>
         public int Count()
         {
-            this.Select($"{{ count: COUNT(*) }}");
+            var oldSelect = _query.Select;
 
-            return this.ToDocuments().Single()["count"].AsInt32;
+            this.Select($"{{ count: COUNT(*) }}");
+            var ret = this.ToDocuments().Single()["count"].AsInt32;
+
+            _query.Select = oldSelect;
+
+            return ret;
         }
 
         /// <summary>
@@ -354,9 +359,14 @@ namespace LiteDB
         /// </summary>
         public long LongCount()
         {
-            this.Select($"{{ count: COUNT(*) }}");
+            var oldSelect = _query.Select;
 
-            return this.ToDocuments().Single()["count"].AsInt64;
+            this.Select($"{{ count: COUNT(*) }}");
+            var ret = this.ToDocuments().Single()["count"].AsInt64;
+
+            _query.Select = oldSelect;
+
+            return ret;
         }
 
         /// <summary>
@@ -364,9 +374,13 @@ namespace LiteDB
         /// </summary>
         public bool Exists()
         {
-            this.Select($"{{ exists: ANY(*) }}");
+            var oldSelect = _query.Select;
 
-            return this.ToDocuments().Single()["exists"].AsBoolean;
+            this.Select($"{{ exists: ANY(*) }}");
+            var ret = this.ToDocuments().Single()["exists"].AsBoolean;
+
+            _query.Select = oldSelect;
+            return ret;
         }
 
         #endregion
