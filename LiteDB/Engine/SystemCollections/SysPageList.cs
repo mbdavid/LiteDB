@@ -24,7 +24,8 @@ namespace LiteDB.Engine
         {
             var pageID = GetOption(options, "pageID");
 
-            var transaction = _monitor.GetTransaction(true, out var isNew);
+            // get any transaction from current thread ID
+            var transaction = _monitor.Transactions.First(x => x.ThreadID == Environment.CurrentManagedThreadId);
             var snapshot = transaction.CreateSnapshot(LockMode.Read, "$", false);
 
             _collections = _header.GetCollections().ToDictionary(x => x.Value, x => x.Key);

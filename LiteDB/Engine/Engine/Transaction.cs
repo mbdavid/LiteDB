@@ -14,7 +14,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool BeginTrans()
         {
-            var transacion = _monitor.GetTransaction(true, out var isNew);
+            var transacion = _monitor.GetTransaction(true, false, out var isNew);
 
             transacion.ExplicitTransaction = true;
 
@@ -30,19 +30,24 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Commit()
         {
-            var transaction = _monitor.GetTransaction(false, out var isNew);
+            var transaction = _monitor.GetTransaction(false, false, out _);
 
             if (transaction != null)
             {
                 // do not accept explicit commit transaction when contains open cursors running
-                if (transaction.OpenCursors.Count > 0) throw new LiteException(0, "This thread contains an open query/cursor. Close cursors before run Commit()");
+                if (transaction.OpenCursors.Count > 0) throw new LiteException(0, "Current transaction contains open cursors. Close cursors before run Commit()");
 
-                return transaction.Commit();
+                if (transaction.State == TransactionState.Active)
+                {
+                    transaction.Commit();
+
+                    _monitor.ReleaseTransaction(transaction);
+
+                    return true;
+                }
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         /// <summary>
@@ -50,16 +55,18 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Rollback()
         {
-            var transaction = _monitor.GetTransaction(false, out var isNew);
+            var transaction = _monitor.GetTransaction(false, false, out _);
 
-            if (transaction != null)
+            if (transaction != null && transaction.State == TransactionState.Active)
             {
-                return transaction.Rollback();
+                transaction.Rollback();
+
+                _monitor.ReleaseTransaction(transaction);
+
+                return true;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         /// <summary>
@@ -67,16 +74,18 @@ namespace LiteDB.Engine
         /// </summary>
         private T AutoTransaction<T>(Func<TransactionService, T> fn)
         {
-            var transaction = _monitor.GetTransaction(true, out var isNew);
+            var transaction = _monitor.GetTransaction(true, false, out var isNew);
 
             try
             {
                 var result = fn(transaction);
 
                 // if this transaction was auto-created for this operation, commit & dispose now
-                if (isNew && transaction.OpenCursors.Count == 0)
+                if (isNew/* && transaction.OpenCursors.Count == 0*/)
                 {
                     transaction.Commit();
+
+                    _monitor.ReleaseTransaction(transaction);
                 }
 
                 return result;
@@ -86,6 +95,8 @@ namespace LiteDB.Engine
                 LOG(ex.Message, "ERROR");
 
                 transaction.Rollback();
+
+                _monitor.ReleaseTransaction(transaction);
 
                 throw;
             }

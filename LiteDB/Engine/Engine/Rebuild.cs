@@ -57,9 +57,6 @@ namespace LiteDB.Engine
                     _disk.ChangePassword(options.Password, _settings);
                 }
 
-                // exit reserved before checkpoint
-                _locker.ExitExclusive();
-
                 // do checkpoint
                 _walIndex.Checkpoint();
 
@@ -95,12 +92,10 @@ namespace LiteDB.Engine
         internal void RebuildContent(IFileReader reader)
         {
             // begin transaction and get TransactionID
-            var transaction = _monitor.GetTransaction(true, out var isNew);
+            var transaction = _monitor.GetTransaction(true, false, out _);
 
             try
             {
-                var transactionID = transaction.TransactionID;
-
                 foreach (var collection in reader.GetCollections())
                 {
                     // first create all user indexes (exclude _id index)
@@ -133,11 +128,13 @@ namespace LiteDB.Engine
             }
             catch (Exception)
             {
-                transaction.Abort();
-
                 _walIndex.Clear();
 
                 throw;
+            }
+            finally
+            {
+                _monitor.ReleaseTransaction(transaction);
             }
         }
     }

@@ -10,7 +10,7 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Do all WAL index services based on LOG file - has only single instance per engine
-    /// [ThreadSafe]
+    /// [Singleton - ThreadSafe]
     /// </summary>
     internal class WalIndexService
     {

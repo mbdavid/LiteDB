@@ -30,47 +30,41 @@ namespace LiteDB.Engine
         {
             var collections = _header.GetCollections().ToDictionary(x => x.Value, x => x.Key);
 
-            var transaction = _monitor.GetTransaction(true, out var isNew);
+            // get any transaction from current thread ID
+            var transaction = _monitor.Transactions.First(x => x.ThreadID == Environment.CurrentManagedThreadId);
 
-            try
+            var snapshot = transaction.CreateSnapshot(LockMode.Read, "$", false);
+
+            var start = pageID.HasValue ? pageID.Value : 0;
+            var end = pageID.HasValue ? pageID.Value : _header.LastPageID;
+
+            for (uint i = start; i <= Math.Min(end, _header.LastPageID); i++)
             {
-                var snapshot = transaction.CreateSnapshot(LockMode.Read, "$", false);
+                var page = snapshot.GetPage<BasePage>(i, out var origin, out var position, out var walVersion);
 
-                var start = pageID.HasValue ? pageID.Value : 0;
-                var end = pageID.HasValue ? pageID.Value : _header.LastPageID;
-
-                for (uint i = start; i <= Math.Min(end, _header.LastPageID); i++)
+                var doc = new BsonDocument
                 {
-                    var page = snapshot.GetPage<BasePage>(i, out var origin, out var position, out var walVersion);
+                    ["pageID"] = (int)page.PageID,
+                    ["pageType"] = page.PageType.ToString(),
+                    ["_position"] = position,
+                    ["_origin"] = origin.ToString(),
+                    ["_version"] = walVersion,
+                    ["nextPageID"] = (int)page.NextPageID,
+                    ["prevPageID"] = (int)page.PrevPageID,
+                    ["collection"] = collections.GetOrDefault(page.ColID, "-"),
+                    ["itemsCount"] = (int)page.ItemsCount,
+                    ["freeBytes"] = page.FreeBytes,
+                    ["usedBytes"] = (int)page.UsedBytes,
+                    ["fragmentedBytes"] = (int)page.FragmentedBytes,
+                    ["nextFreePosition"] = (int)page.NextFreePosition,
+                    ["highestIndex"] = (int)page.HighestIndex
+                };
 
-                    var doc = new BsonDocument
-                    {
-                        ["pageID"] = (int)page.PageID,
-                        ["pageType"] = page.PageType.ToString(),
-                        ["_position"] = position,
-                        ["_origin"] = origin.ToString(),
-                        ["_version"] = walVersion,
-                        ["nextPageID"] = (int)page.NextPageID,
-                        ["prevPageID"] = (int)page.PrevPageID,
-                        ["collection"] = collections.GetOrDefault(page.ColID, "-"),
-                        ["itemsCount"] = (int)page.ItemsCount,
-                        ["freeBytes"] = page.FreeBytes,
-                        ["usedBytes"] = (int)page.UsedBytes,
-                        ["fragmentedBytes"] = (int)page.FragmentedBytes,
-                        ["nextFreePosition"] = (int)page.NextFreePosition,
-                        ["highestIndex"] = (int)page.HighestIndex
-                    };
+                if (pageID.HasValue) doc["buffer"] = page.Buffer.ToArray();
 
-                    if (pageID.HasValue) doc["buffer"] = page.Buffer.ToArray();
+                yield return doc;
 
-                    yield return doc;
-
-                    transaction.Safepoint();
-                }
-            }
-            finally
-            {
-                transaction.Commit();
+                transaction.Safepoint();
             }
         }
     }
