@@ -11,7 +11,7 @@ namespace LiteDB.Engine
         private IEnumerable<BsonDocument> SysIndexes()
         {
             // get any transaction from current thread ID
-            var transaction = _monitor.Transactions.First(x => x.ThreadID == Environment.CurrentManagedThreadId);
+            var transaction = _monitor.GetThreadTransaction();
 
             foreach (var collection in _header.GetCollections())
             {

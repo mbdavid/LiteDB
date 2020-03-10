@@ -219,7 +219,9 @@ namespace LiteDB.Engine
             };
 
             // lock header before persist pages only if header will be changed (and in commit operation)
-            if (commit && _transPages.HeaderChanged) Monitor.Enter(_header);
+            var lockTaken = false;
+            
+            if (commit && _transPages.HeaderChanged) Monitor.Enter(_header, ref lockTaken);
 
             try
             {
@@ -229,16 +231,16 @@ namespace LiteDB.Engine
 
                 // now, discard all clean pages (because those pages are writable and must be readable)
                 // from write snapshots
-                _disk.DiscardPages(_snapshots.Values
+                _disk.DiscardCleanPages(_snapshots.Values
                         .Where(x => x.Mode == LockMode.Write)
                         .SelectMany(x => x.GetWritablePages(false, commit))
-                        .Select(x => x.Buffer), false);
+                        .Select(x => x.Buffer));
 
                 return count;
             }
             finally
             {
-                if (commit && _transPages.HeaderChanged) Monitor.Exit(_header);
+                if (lockTaken) Monitor.Exit(_header);
             }
         }
 
@@ -296,10 +298,10 @@ namespace LiteDB.Engine
                 if (snapshot.Mode == LockMode.Write)
                 {
                     // discard all dirty pages
-                    _disk.DiscardPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer), true);
+                    _disk.DiscardDirtyPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer));
 
                     // discard all clean pages
-                    _disk.DiscardPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer), false);
+                    _disk.DiscardCleanPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer));
                 }
 
                 // now, release pages
@@ -394,10 +396,10 @@ namespace LiteDB.Engine
                 foreach (var snapshot in _snapshots.Values.Where(x => x.Mode == LockMode.Write))
                 {
                     // discard all dirty pages
-                    _disk.DiscardPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer), true);
+                    _disk.DiscardDirtyPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer));
 
                     // discard all clean pages
-                    _disk.DiscardPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer), false);
+                    _disk.DiscardCleanPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer));
                 }
 
                 // release buffers in read-only snaphosts
@@ -412,9 +414,9 @@ namespace LiteDB.Engine
                 }
             }
 
-            _state = TransactionState.Disposed;
-
             _reader.Dispose();
+
+            _state = TransactionState.Disposed;
         }
     }
 }

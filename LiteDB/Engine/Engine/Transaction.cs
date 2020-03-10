@@ -81,7 +81,7 @@ namespace LiteDB.Engine
                 var result = fn(transaction);
 
                 // if this transaction was auto-created for this operation, commit & dispose now
-                if (isNew/* && transaction.OpenCursors.Count == 0*/)
+                if (isNew)
                 {
                     transaction.Commit();
 
@@ -102,11 +102,14 @@ namespace LiteDB.Engine
             }
             finally
             {
+                //TODO: acho que não é este o lugar para fazer o teste - devo capturar o ReleaseTransaction para isso 
+                // (ou seja, faz no final da transacao)
+
                 // do auto-checkpoint if enabled (default: 1000 pages)
-                if (_header.Pragmas.Checkpoint > 0 && _disk.GetLength(FileOrigin.Log) > (_header.Pragmas.Checkpoint * PAGE_SIZE))
-                {
-                    _walIndex.TryCheckpoint();
-                }
+                //** if (_header.Pragmas.Checkpoint > 0 && _disk.GetLength(FileOrigin.Log) > (_header.Pragmas.Checkpoint * PAGE_SIZE))
+                //** {
+                //**     _walIndex.TryCheckpoint();
+                //** }
             }
         }
     }

@@ -46,41 +46,44 @@ namespace LiteDB.Engine
 
         public TransactionService GetTransaction(bool create, bool queryOnly, out bool isNew)
         {
-            var transaction = _slot.Value;
-
-            if (create && transaction == null)
+            lock (_transactions)
             {
-                if (_transactions.Count >= MAX_OPEN_TRANSACTIONS) throw new LiteException(0, "Maximum number of transactions reached");
+                var transaction = _slot.Value;
 
-                isNew = true;
-
-                var initialSize = this.GetInitialSize();
-                
-                // check if current thread contains any transaction
-                var alreadyLock = _transactions.Values.Any(x => x.ThreadID == Environment.CurrentManagedThreadId);
-
-                if (alreadyLock == false)
+                if (create && transaction == null)
                 {
-                    _locker.EnterTransaction();
+                    if (_transactions.Count >= MAX_OPEN_TRANSACTIONS) throw new LiteException(0, "Maximum number of transactions reached");
+
+                    isNew = true;
+
+                    var initialSize = this.GetInitialSize();
+
+                    // check if current thread contains any transaction
+                    var alreadyLock = _transactions.Values.Any(x => x.ThreadID == Environment.CurrentManagedThreadId);
+
+                    if (alreadyLock == false)
+                    {
+                        _locker.EnterTransaction();
+                    }
+
+                    transaction = new TransactionService(_header, _locker, _disk, _walIndex, initialSize, this, queryOnly);
+
+                    // add transaction to execution transaction dict
+                    _transactions[transaction.TransactionID] = transaction;
+
+                    // do not store in thread query-only transaction
+                    if (queryOnly == false)
+                    {
+                        _slot.Value = transaction;
+                    }
+                }
+                else
+                {
+                    isNew = false;
                 }
 
-                transaction = new TransactionService(_header, _locker, _disk, _walIndex, initialSize, this, queryOnly);
-
-                // add transaction to execution transaction dict
-                _transactions[transaction.TransactionID] = transaction;
-
-                // do not store in thread query-only transaction
-                if (queryOnly == false)
-                {
-                    _slot.Value = transaction;
-                }
+                return transaction;
             }
-            else
-            {
-                isNew = false;
-            }
-
-            return transaction;
         }
 
         /// <summary>
@@ -88,7 +91,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void ReleaseTransaction(TransactionService transaction)
         {
-            lock(_transactions)
+            lock (_transactions)
             {
                 // dispose current transaction
                 transaction.Dispose();
@@ -120,6 +123,20 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Get transaction from current thread (from thread slot or from queryOnly) - do not created new transaction
+        /// Used only in SystemCollections to get running query transaction
+        /// </summary>
+        public TransactionService GetThreadTransaction()
+        {
+            lock (_transactions)
+            {
+                return 
+                    _slot.Value ??
+                    _transactions.Values.FirstOrDefault(x => x.ThreadID == Environment.CurrentManagedThreadId);
+            }
+        }
+
+        /// <summary>
         /// Get initial transaction size - get from free pages or reducing from all open transactions
         /// </summary>
         private int GetInitialSize()
@@ -137,6 +154,7 @@ namespace LiteDB.Engine
                 // if there is no avaiable pages, reduce all open transactions
                 foreach (var trans in _transactions.Values)
                 {
+                    //TODO: revisar estas contas, o reduce tem que fechar 1000
                     var reduce = (trans.MaxTransactionSize / _initialSize);
 
                     trans.MaxTransactionSize -= reduce;
