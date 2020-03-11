@@ -46,44 +46,48 @@ namespace LiteDB.Engine
 
         public TransactionService GetTransaction(bool create, bool queryOnly, out bool isNew)
         {
-            lock (_transactions)
-            {
-                var transaction = _slot.Value;
+            var transaction = _slot.Value;
 
-                if (create && transaction == null)
+            if (create && transaction == null)
+            {
+                isNew = true;
+
+                bool alreadyLock;
+
+                // must lock _transaction before work with _transactions (GetInitialSize use _transactions)
+                lock (_transactions)
                 {
                     if (_transactions.Count >= MAX_OPEN_TRANSACTIONS) throw new LiteException(0, "Maximum number of transactions reached");
-
-                    isNew = true;
 
                     var initialSize = this.GetInitialSize();
 
                     // check if current thread contains any transaction
-                    var alreadyLock = _transactions.Values.Any(x => x.ThreadID == Environment.CurrentManagedThreadId);
-
-                    if (alreadyLock == false)
-                    {
-                        _locker.EnterTransaction();
-                    }
+                    alreadyLock = _transactions.Values.Any(x => x.ThreadID == Environment.CurrentManagedThreadId);
 
                     transaction = new TransactionService(_header, _locker, _disk, _walIndex, initialSize, this, queryOnly);
 
                     // add transaction to execution transaction dict
                     _transactions[transaction.TransactionID] = transaction;
-
-                    // do not store in thread query-only transaction
-                    if (queryOnly == false)
-                    {
-                        _slot.Value = transaction;
-                    }
                 }
-                else
+
+                // enter in lock transaction after release _transaction lock
+                if (alreadyLock == false)
                 {
-                    isNew = false;
+                    _locker.EnterTransaction();
                 }
 
-                return transaction;
+                // do not store in thread query-only transaction
+                if (queryOnly == false)
+                {
+                    _slot.Value = transaction;
+                }
             }
+            else
+            {
+                isNew = false;
+            }
+
+            return transaction;
         }
 
         /// <summary>
@@ -91,11 +95,13 @@ namespace LiteDB.Engine
         /// </summary>
         public void ReleaseTransaction(TransactionService transaction)
         {
+            // dispose current transaction
+            transaction.Dispose();
+
+            bool keepLocked;
+
             lock (_transactions)
             {
-                // dispose current transaction
-                transaction.Dispose();
-
                 // remove from "open transaction" list
                 _transactions.Remove(transaction.TransactionID);
 
@@ -103,22 +109,22 @@ namespace LiteDB.Engine
                 _freePages += transaction.MaxTransactionSize;
 
                 // check if current thread contains more query transactions
-                var keepLocked = _transactions.Values.Any(x => x.ThreadID == Environment.CurrentManagedThreadId);
+                keepLocked = _transactions.Values.Any(x => x.ThreadID == Environment.CurrentManagedThreadId);
+            }
 
-                // unlock thread-transaction only if there is no more transactions
-                if (keepLocked == false)
-                {
-                    _locker.ExitTransaction();
-                }
+            // unlock thread-transaction only if there is no more transactions
+            if (keepLocked == false)
+            {
+                _locker.ExitTransaction();
+            }
 
-                // remove transaction from thread if are no queryOnly transaction
-                if (transaction.QueryOnly == false)
-                {
-                    ENSURE(_slot.Value == transaction, "current thread must contains transaction parameter");
+            // remove transaction from thread if are no queryOnly transaction
+            if (transaction.QueryOnly == false)
+            {
+                ENSURE(_slot.Value == transaction, "current thread must contains transaction parameter");
 
-                    // clear thread slot for new transaction
-                    _slot.Value = null;
-                }
+                // clear thread slot for new transaction
+                _slot.Value = null;
             }
         }
 
