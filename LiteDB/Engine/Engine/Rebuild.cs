@@ -60,6 +60,9 @@ namespace LiteDB.Engine
                 // exit reserved before checkpoint
                 _locker.ExitExclusive();
 
+                // since we have already released the lock, do not attempt to release again in the finally.
+                mustExit = false;
+
                 // do checkpoint
                 _walIndex.Checkpoint();
 
