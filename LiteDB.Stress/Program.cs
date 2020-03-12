@@ -20,6 +20,7 @@ namespace LiteDB.Stress
         private static ConcurrentDictionary<int, ThreadInfo> _threads = new ConcurrentDictionary<int, ThreadInfo>();
         private static LiteEngine _engine;
         private static Stopwatch _timer = Stopwatch.StartNew();
+        private static bool _running = true;
 
         static void Main()
         {
@@ -50,7 +51,7 @@ namespace LiteDB.Stress
             CreateThread("INSERT_2", INSERT_SLEEP, () => InsertThread("col2"));
             CreateThread("INSERT_2", INSERT_SLEEP, () => InsertThread("col2"));
 
-            while (true)
+            while (_running)
             {
                 var key = Console.ReadKey(true).Key;
 
@@ -69,6 +70,9 @@ namespace LiteDB.Stress
                     break;
                 }
             }
+
+            Console.WriteLine("End;");
+            Console.ReadKey();
         }
 
         static void ClearFiles()
@@ -92,14 +96,28 @@ namespace LiteDB.Stress
         {
             var thread = new Thread(() =>
             {
-                while (true)
+                while (_running)
                 {
                     var info = _threads[Thread.CurrentThread.ManagedThreadId];
                     info.CancellationTokenSource.Token.WaitHandle.WaitOne(sleep);
                     if (info.CancellationTokenSource.Token.IsCancellationRequested) break;
                     info.Elapsed.Restart();
                     info.Running = true;
-                    info.Result = fn();
+                    try
+                    {
+                        info.Result = fn();
+                    }
+                    catch (Exception ex)
+                    {
+                        info.Exception = ex;
+
+                        foreach(var t in _threads)
+                        {
+                            t.Value.CancellationTokenSource.Cancel();
+                            t.Value.Thread.Join();
+                        }
+                        break;
+                    }
                     info.Running = false;
                     info.Elapsed.Stop();
                     info.Counter++;
@@ -149,8 +167,11 @@ namespace LiteDB.Stress
                 var running = thread.Value.Elapsed.Elapsed.TotalSeconds > 1 ?
                     $"<LAST RUN {(int)thread.Value.Elapsed.Elapsed.TotalSeconds}s> " :
                     "";
+                var ex = thread.Value.Exception != null ?
+                    " ERROR: " + thread.Value.Exception.Message :
+                    "";
 
-                Console.WriteLine($"{id}. {name} :: {counter} >> {timer} {running}{result}" );
+                Console.WriteLine($"{id}. {name} :: {counter} >> {timer} {running}{result}{ex}" );
             }
         }
     }
@@ -163,6 +184,7 @@ namespace LiteDB.Stress
         public Stopwatch Elapsed { get; } = new Stopwatch();
         public DateTime LastRun { get; set; } = DateTime.Now;
         public BsonValue Result { get; set; }
+        public Exception Exception { get; set; }
         public Thread Thread { get; set; }
         public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
     }
