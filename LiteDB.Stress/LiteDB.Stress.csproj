@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\Git\LiteDB\LiteDB\LiteDB.csproj" />
+    <ProjectReference Include="..\LiteDB\LiteDB.csproj" />
   </ItemGroup>
 
 </Project>
