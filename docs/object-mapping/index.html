@@ -321,6 +321,8 @@
 <li>Finally, it searches for a constructor whose parameters names match with the names of the fields in the document</li>
 </ul>
 
+<p>Please note that all the parameters in the constructor annotated with <code>BsonCtorAttribute</code> must be of a simple type, <code>BsonDocument</code> or <code>BsonArray</code>.</p>
+
 <h4 id="register-a-custom-type">Register a custom type</h4>
 
 <p>You can register your own map function, using the <code>RegisterType&lt;T&gt;</code> instance method. To register, you need to provide both serialize and deserialize functions.</p>
@@ -399,6 +401,8 @@
 </tr>
 </tbody>
 </table>
+
+<p>Please note that Linq expressions in typed collections will only work over Enum fields if <code>EnumAsInteger = true</code>.</p>
 
 <p><code>BsonMapper</code> offers 2 predefined functions to resolve property names: <code>UseCamelCase()</code> and <code>UseLowerCaseDelimiter('_')</code>.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="n">BsonMapper</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">UseLowerCaseDelimiter</span><span class="p">(</span><span class="sc">&#39;_&#39;</span><span class="p">);</span>

@@ -90,6 +90,8 @@ When `GetCollection<T>` is called, it tries to create instances of `T` by search
 * Then, it searches for a parameterless constructor
 * Finally, it searches for a constructor whose parameters names match with the names of the fields in the document
 
+Please note that all the parameters in the constructor annotated with `BsonCtorAttribute` must be of a simple type, `BsonDocument` or `BsonArray`.
+
 #### Register a custom type
 
 You can register your own map function, using the `RegisterType<T>` instance method. To register, you need to provide both serialize and deserialize functions.
@@ -120,6 +122,8 @@ BsonMapper.Global.RegisterType<Uri>
 |`IncludeFields`        |false   |If mapper should include all class fields                  |
 |`IncludeNonPublic`     |false   |If mapper should include all private/protected fields/properties|
 |`ResolveCollectionName`|typeof(T).Name|When collection name are omitted, use this collection name resolver function|
+
+Please note that Linq expressions in typed collections will only work over Enum fields if `EnumAsInteger = true`.
 
 `BsonMapper` offers 2 predefined functions to resolve property names: `UseCamelCase()` and `UseLowerCaseDelimiter('_')`.
 
