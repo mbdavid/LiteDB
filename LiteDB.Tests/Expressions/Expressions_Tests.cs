@@ -244,11 +244,11 @@ namespace LiteDB.Tests.Expressions
 
             // OK (true)
             doc1["x"] = "12345";
-            var r1 = ex1.ExecuteScalar(doc1);
+            ex1.ExecuteScalar(doc1);
 
             // KO (expected: false, actual: exception)
             doc1["x"] = "123";
-            var r2 = ex1.ExecuteScalar(doc1);
+            ex1.ExecuteScalar(doc1);
         }
 
         [Fact]

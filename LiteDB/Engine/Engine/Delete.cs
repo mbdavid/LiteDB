@@ -59,48 +59,45 @@ namespace LiteDB.Engine
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return this.AutoTransaction(transaction =>
+            // do optimization for when using "_id = value" key
+            if (predicate.Type == BsonExpressionType.Equal && 
+                predicate.Left.Type == BsonExpressionType.Path && 
+                predicate.Left.Source == "$._id" && 
+                predicate.Right.IsValue)
             {
-                // do optimization for when using "_id = value" key
-                if (predicate.Type == BsonExpressionType.Equal && 
-                    predicate.Left.Type == BsonExpressionType.Path && 
-                    predicate.Left.Source == "$._id" && 
-                    predicate.Right.IsValue)
-                {
-                    predicate.Parameters.CopyTo(predicate.Right.Parameters);
+                predicate.Parameters.CopyTo(predicate.Right.Parameters);
 
-                    var id = predicate.Right.Execute(_header.Pragmas.Collation).First();
+                var id = predicate.Right.Execute(_header.Pragmas.Collation).First();
 
-                    return this.Delete(collection, new BsonValue[] { id });
-                }
-                else
+                return this.Delete(collection, new BsonValue[] { id });
+            }
+            else
+            {
+                IEnumerable<BsonValue> getIds()
                 {
-                    IEnumerable<BsonValue> getIds()
+                    // this is intresting: if _id returns an document (like in FileStorage) you can't run direct _id
+                    // field because "reader.Current" will return _id document - but not - { _id: [document] }
+                    // create inner document to ensure _id will be a document
+                    var query = new Query { Select = "{ i: _id }", ForUpdate = true };
+
+                    query.Where.Add(predicate);
+
+                    using (var reader = this.Query(collection, query))
                     {
-                        // this is intresting: if _id returns an document (like in FileStorage) you can't run direct _id
-                        // field because "reader.Current" will return _id document - but not - { _id: [document] }
-                        // create inner document to ensure _id will be a document
-                        var query = new Query { Select = "{ i: _id }", ForUpdate = true };
-
-                        query.Where.Add(predicate);
-
-                        using (var reader = this.Query(collection, query))
+                        while (reader.Read())
                         {
-                            while (reader.Read())
-                            {
-                                var value = reader.Current["i"];
+                            var value = reader.Current["i"];
 
-                                if (value != BsonValue.Null)
-                                {
-                                    yield return value;
-                                }
+                            if (value != BsonValue.Null)
+                            {
+                                yield return value;
                             }
                         }
                     }
-
-                    return this.Delete(collection, getIds());
                 }
-            });
+
+                return this.Delete(collection, getIds());
+            }
         }
     }
 }

@@ -120,26 +120,27 @@ namespace LiteDB.Engine
         /// <summary>
         /// When a page are requested as Writable but not saved in disk, must be discard before release
         /// </summary>
-        public void DiscardPages(IEnumerable<PageBuffer> pages, bool isDirty)
+        public void DiscardDirtyPages(IEnumerable<PageBuffer> pages)
         {
-            if (isDirty == false)
+            // only for ROLLBACK action
+            foreach (var page in pages)
             {
-                foreach (var page in pages)
-                {
-                    // if page was not modified, try move to readable list
-                    if (_cache.TryMoveToReadable(page) == false)
-                    {
-                        // if already in readable list, just discard
-                        _cache.DiscardPage(page);
-                    }
-                }
+                // complete discard page and content
+                _cache.DiscardPage(page);
             }
-            else
+        }
+
+        /// <summary>
+        /// Discard pages that contains valid data and was not modified
+        /// </summary>
+        public void DiscardCleanPages(IEnumerable<PageBuffer> pages)
+        {
+            foreach (var page in pages)
             {
-                // only for ROLLBACK action
-                foreach (var page in pages)
+                // if page was not modified, try move to readable list
+                if (_cache.TryMoveToReadable(page) == false)
                 {
-                    // complete discard page and content
+                    // if already in readable list, just discard
                     _cache.DiscardPage(page);
                 }
             }

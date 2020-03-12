@@ -81,7 +81,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Enter all database in exclusive lock. Wait for all reader/writers. In exclusive mode no one can read/write any another
+        /// Enter all database in exclusive lock. Wait for all transactions finish. In exclusive mode no one can enter in new transaction (for read/write)
         /// If current thread already in exclusive mode, returns false
         /// </summary>
         public bool EnterExclusive()
@@ -92,15 +92,12 @@ namespace LiteDB.Engine
             // wait finish all transactions before enter in reserved mode
             if (_transaction.TryEnterWriteLock(_pragmas.Timeout) == false) throw LiteException.LockTimeout("exclusive", _pragmas.Timeout);
 
-            ENSURE(_transaction.RecursiveReadCount == 0, "must have no other transaction here");
-
             return true;
         }
 
-
         /// <summary>
-        /// Try enter in exclusive mode (same as ReservedMode) - if not possible, just exit with false (do not wait and no exceptions)
-        /// Use ExitReserved(true) to exit
+        /// Try enter in exclusive mode - if not possible, just exit with false (do not wait and no exceptions)
+        /// If mustExit returns true, must call ExitExclusive after use
         /// </summary>
         public bool TryEnterExclusive(out bool mustExit)
         {
@@ -133,7 +130,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Exit reserved/exclusive lock
+        /// Exit exclusive lock
         /// </summary>
         public void ExitExclusive()
         {
