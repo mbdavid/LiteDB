@@ -41,7 +41,7 @@ namespace LiteDB
         /// <summary>
         /// "upgrade": Check if data file is an old version and convert before open (default: false)
         /// </summary>
-        public bool Upgrade { get; set; } = false;
+        public UpgradeOption Upgrade { get; set; } = UpgradeOption.False;
 
         /// <summary>
         /// Initialize empty connection string

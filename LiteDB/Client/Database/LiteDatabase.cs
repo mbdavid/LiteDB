@@ -43,10 +43,10 @@ namespace LiteDB
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-            if (connectionString.Upgrade)
+            if (connectionString.Upgrade != UpgradeOption.False)
             {
                 // try upgrade if need
-                LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
+                LiteEngine.Upgrade(connectionString.Filename, connectionString.Password, connectionString.Upgrade);
             }
 
             _engine = connectionString.CreateEngine();
