@@ -13,7 +13,7 @@ namespace LiteDB.Engine
         /// Upgrade old version of LiteDB into new LiteDB file structure. Returns true if database was completed converted
         /// If database already in current version just return false
         /// </summary>
-        public static bool Upgrade(string filename, string password = null)
+        public static bool Upgrade(string filename, string password = null, UpgradeOption upgrade = UpgradeOption.True)
         {
             if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(filename));
             if (!File.Exists(filename)) return false;
@@ -60,7 +60,7 @@ namespace LiteDB.Engine
                     // copy all database to new Log file with NO checkpoint during all rebuild
                     engine.Pragma(Pragmas.CHECKPOINT, 0);
 
-                    engine.RebuildContent(reader);
+                    engine.RebuildContent(reader, upgrade);
 
                     // after rebuild, copy log bytes into data file
                     engine.Checkpoint();
