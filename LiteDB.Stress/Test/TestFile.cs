@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Xml;
 
@@ -9,6 +10,7 @@ namespace LiteDB.Stress
     {
         public TimeSpan Timeout { get; }
         public string Filename { get; }
+        public string Output { get; }
         public bool Delete { get; }
         public List<ITestItem> Tasks { get; }
 
@@ -18,11 +20,12 @@ namespace LiteDB.Stress
             doc.Load(filename);
 
             var root = doc.DocumentElement;
-            var children = doc.SelectNodes("*");
+            var children = root.SelectNodes("*");
 
-            this.Timeout = TimeSpanEx.Parse(root["timeout"].Value);
-            this.Filename = root["filename"].Value;
-            this.Delete = bool.Parse(root["delete"].Value);
+            this.Timeout = TimeSpanEx.Parse(root.GetAttribute("timeout"));
+            this.Filename = root.GetAttribute("filename");
+            this.Delete = bool.Parse(root.GetAttribute("delete"));
+            this.Output = Path.Combine(Path.GetDirectoryName(this.Filename), Path.GetFileNameWithoutExtension(this.Filename) + ".log");
 
             this.Tasks = new List<ITestItem>();
 

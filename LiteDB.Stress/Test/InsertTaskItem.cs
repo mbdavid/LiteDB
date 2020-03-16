@@ -23,13 +23,13 @@ namespace LiteDB.Stress
 
         public InsertTaskItem(XmlElement el)
         {
-            this.Name = el["name"].Value;
-            this.Sleep = TimeSpanEx.Parse(el["sleep"].Value);
-            this.AutoId = (BsonAutoId)Enum.Parse(typeof(BsonAutoId), el["autoId"].Value);
-            this.Collection = el["collation"].Value;
-            this.TaskCount = int.Parse(el["tasks"].Value);
-            this.MinRange = int.Parse(el["docs"].Value.Split('~').First());
-            this.MaxRange = int.Parse(el["docs"].Value.Split('~').Last());
+            this.Name = string.IsNullOrEmpty(el.GetAttribute("name")) ? "INSERT_" + el.GetAttribute("collection").ToUpper() : el.GetAttribute("name");
+            this.Sleep = string.IsNullOrEmpty(el.GetAttribute("sleep")) ? TimeSpan.FromSeconds(1) : TimeSpanEx.Parse(el.GetAttribute("sleep"));
+            this.AutoId = string.IsNullOrEmpty(el.GetAttribute("autoId")) ? BsonAutoId.ObjectId : (BsonAutoId)Enum.Parse(typeof(BsonAutoId), el.GetAttribute("autoId"), true);
+            this.Collection = el.GetAttribute("collection");
+            this.TaskCount = string.IsNullOrEmpty(el.GetAttribute("tasks")) ? 1 : int.Parse(el.GetAttribute("tasks"));
+            this.MinRange = string.IsNullOrEmpty(el.GetAttribute("docs")) ? 1 : int.Parse(el.GetAttribute("docs").Split('~').First());
+            this.MaxRange = string.IsNullOrEmpty(el.GetAttribute("docs")) ? 1 : int.Parse(el.GetAttribute("docs").Split('~').Last());
 
             this.Fields = new List<InsertField>();
 
@@ -58,7 +58,7 @@ namespace LiteDB.Stress
                 }
             }
 
-            _collection = _collection ?? db.GetCollection<BsonDocument>();
+            _collection ??= db.GetCollection(this.Collection, this.AutoId);
 
             return _collection.Insert(source());
         }
