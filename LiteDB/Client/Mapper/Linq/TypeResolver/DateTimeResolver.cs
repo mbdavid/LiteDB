@@ -30,6 +30,7 @@ namespace LiteDB
 
                 // static methods
                 case "Parse": return "DATETIME(@0)";
+                case "Equals": return "# = @0";
             };
 
             return null;

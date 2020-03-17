@@ -31,6 +31,7 @@ namespace LiteDB
 
                 // static methods
                 case "Parse": return $"{_parseMethod}(@0)";
+                case "Equals": return "# = @0";
             };
 
             return null;
