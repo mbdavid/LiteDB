@@ -275,5 +275,20 @@ namespace LiteDB.Tests.Database
                 test.Insert(doc); // -> NullReferenceException
             }
         }
+
+        [Fact]
+        public void AutoId_property()
+        {
+            using (var db = new LiteDatabase(new MemoryStream()))
+            {
+                // default auto id
+                var col1 = db.GetCollection("Col1");
+                col1.AutoId.Should().Be(BsonAutoId.ObjectId);
+
+                // specified auto id
+                var col2 = db.GetCollection("Col2", BsonAutoId.Int32);
+                col2.AutoId.Should().Be(BsonAutoId.Int32);
+            }
+        }
     }
 }

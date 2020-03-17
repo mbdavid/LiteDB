@@ -84,7 +84,24 @@ namespace LiteDB.Tests.Mapper
             public List<User> Users { get; set; }
         }
 
-        private static Address StaticProp { get; set; } = new Address {Number = 99};
+        public class Account
+        {
+            [BsonId]
+            public Guid Id { get; set; }
+
+            [BsonRef("customers")]
+            public Customer Customer { get; set; }
+        }
+
+        public class Product
+        {
+            [BsonId]
+            public ObjectId Id { get; set; }
+
+            public string Name { get; set; }
+        }
+
+        private static Address StaticProp { get; set; } = new Address { Number = 99 };
         private const int CONST_INT = 100;
         private string MyMethod() => "ok";
         private int MyIndex() => 5;
@@ -109,7 +126,7 @@ namespace LiteDB.Tests.Mapper
             // only constants
             var today = DateTime.Today;
             var john = "JOHN";
-            var a = new {b = new {c = "JOHN"}};
+            var a = new { b = new { c = "JOHN" } };
 
             // only constants
             TestExpr(x => 0, "@p0", 0);
@@ -181,7 +198,7 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.Phones.ElementAt(1), "$.Phones[@p0]", 1);
 
             // call external method/props/const inside parameter expression
-            var a = new {b = new {c = 123}};
+            var a = new { b = new { c = 123 } };
 
             // Items(int) generate eval value index
             TestExpr<User>(x => x.Phones[a.b.c].Number, "$.Phones[123].Number");
@@ -262,9 +279,9 @@ namespace LiteDB.Tests.Mapper
             // cast only fromType Double/Decimal to Int32/64
 
             // int cast/convert/parse
-            TestExpr<User>(x => (int) x.Salary, "INT32(Salary)");
-            TestExpr<User>(x => (int) x.Salary, "INT32(Salary)");
-            TestExpr<User>(x => (double) x.Id, "_id");
+            TestExpr<User>(x => (int)x.Salary, "INT32(Salary)");
+            TestExpr<User>(x => (int)x.Salary, "INT32(Salary)");
+            TestExpr<User>(x => (double)x.Id, "_id");
             TestExpr(x => Convert.ToInt32("123"), "INT32(@p0)", "123");
             TestExpr(x => Int32.Parse("123"), "INT32(@p0)", "123");
         }
@@ -287,6 +304,13 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.Name.Contains("Bezerra"), "Name LIKE ('%' + @p0 + '%')", "Bezerra");
             TestExpr<User>(x => x.Name.EndsWith("David"), "Name LIKE ('%' + @p0)", "David");
             TestExpr<User>(x => x.Name.StartsWith(x.Address.Street), "Name LIKE (Address.Street + '%')");
+
+            // Equals
+            TestExpr<User>(x => x.Name.Equals("John"), "Name = @p0", "John");
+            TestExpr<User>(x => x.CreatedOn.Equals(new DateTime(2019, 1, 1)), "CreatedOn = DATETIME(@p0, @p1, @p2)", 2019, 1, 1);
+            TestExpr<Account>(x => x.Id.Equals(Guid.Empty), $"_id = GUID(\"{Guid.Empty.ToString()}\")");
+            TestExpr<Product>(x => x.Id.Equals(ObjectId.Empty), $"_id = OBJECTID(\"{ObjectId.Empty.ToString()}\")");
+            TestExpr<User>(x => x.Salary.Equals(2000.0D), "Salary = @p0", 2000.0D);
 
             // string members
             TestExpr<User>(x => x.Address.Street.Length, "LENGTH(Address.Street)");
@@ -345,11 +369,11 @@ namespace LiteDB.Tests.Mapper
         public void Linq_New_Instance()
         {
             // new class
-            TestExpr<User>(x => new {x.Name, x.Address}, "{ Name, Address }");
-            TestExpr<User>(x => new {N = x.Name, A = x.Address}, "{ N: $.Name, A: $.Address }");
+            TestExpr<User>(x => new { x.Name, x.Address }, "{ Name, Address }");
+            TestExpr<User>(x => new { N = x.Name, A = x.Address }, "{ N: $.Name, A: $.Address }");
 
             // new array
-            TestExpr<User>(x => new int[] {x.Id, 6, 7}, "[_id, @p0, @p1]", 6, 7);
+            TestExpr<User>(x => new int[] { x.Id, 6, 7 }, "[_id, @p0, @p1]", 6, 7);
 
             // new fixed types
             TestExpr(x => new DateTime(2018, 5, 28), "DATETIME(@p0, @p1, @p2)", 2018, 5, 28);
@@ -357,20 +381,20 @@ namespace LiteDB.Tests.Mapper
             TestExpr(x => new Guid("1A3B944E-3632-467B-A53A-206305310BAC"), "GUID(@p0)", "1A3B944E-3632-467B-A53A-206305310BAC");
 
             // new instances with initializers
-            TestExpr<User>(x => new User {Id = 1, Active = false}, "{ _id: @p0, Active: @p1 }", 1, false);
+            TestExpr<User>(x => new User { Id = 1, Active = false }, "{ _id: @p0, Active: @p1 }", 1, false);
 
             // used in UpdateMany extend document
-            TestExpr<User>(x => new User {Name = x.Name.ToUpper(), Salary = x.Salary * 2}, "{ Name: UPPER($.Name), Salary: ($.Salary * @p0) }", 2);
+            TestExpr<User>(x => new User { Name = x.Name.ToUpper(), Salary = x.Salary * 2 }, "{ Name: UPPER($.Name), Salary: ($.Salary * @p0) }", 2);
         }
 
         [Fact]
         public void Linq_Composite_Key()
         {
             // using composite key new class initializer
-            TestExpr<User>(x => x.Address == new Address {Number = 555}, "(Address = { Number: @p0 })", 555);
+            TestExpr<User>(x => x.Address == new Address { Number = 555 }, "(Address = { Number: @p0 })", 555);
 
             // using 2 levels
-            TestExpr<User>(x => x.Address == new Address {Number = 1, City = new City {Country = "BR", CityName = "POA"}},
+            TestExpr<User>(x => x.Address == new Address { Number = 1, City = new City { Country = "BR", CityName = "POA" } },
                 "(Address = { Number: @p0, City: { Country: @p1, CityName: @p2 } })", 1, "BR", "POA");
         }
 
@@ -397,18 +421,18 @@ namespace LiteDB.Tests.Mapper
         public void Linq_Complex_Expressions()
         {
             TestExpr<User>(x => new
-                {
-                    CityName = x.Address.City.CityName,
-                    Count = x.Phones.Where(p => p.Type == PhoneType.Landline).Count(),
-                    List = x.Phones.Where(p => p.Number > x.Salary).Select(p => p.Number).ToArray()
-                },
+            {
+                CityName = x.Address.City.CityName,
+                Count = x.Phones.Where(p => p.Type == PhoneType.Landline).Count(),
+                List = x.Phones.Where(p => p.Number > x.Salary).Select(p => p.Number).ToArray()
+            },
                 @"
             {
                 CityName: $.Address.City.CityName,
                 Count: COUNT(FILTER($.Phones=>(@.Type=@p0))),
                 List: ARRAY(MAP(FILTER($.Phones=>(@.Number>$.Salary))=>@.Number))
             }",
-                (int) PhoneType.Landline);
+                (int)PhoneType.Landline);
         }
 
         [Fact]
@@ -433,7 +457,7 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.DomainName, "$.USER_DOMAIN_NAME");
 
             // in creation new class
-            TestExpr<User>(x => new {x.DomainName}, "{ DomainName: $.USER_DOMAIN_NAME }");
+            TestExpr<User>(x => new { x.DomainName }, "{ DomainName: $.USER_DOMAIN_NAME }");
         }
 
         [Fact]
