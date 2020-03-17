@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml;
@@ -17,6 +18,7 @@ namespace LiteDB.Stress
         private readonly TestFile _file;
         private LiteDatabase _db;
         private bool _running = true;
+        private int[] _cgCount = new int[3];
         private readonly ConcurrentDictionary<int, ThreadInfo> _threads = new ConcurrentDictionary<int, ThreadInfo>();
 
         public TestExecution(string filename, TimeSpan duration)
@@ -34,6 +36,12 @@ namespace LiteDB.Stress
             }
 
             _db = new LiteDatabase(_file.Filename);
+            _db.Pragma("TIMEOUT", (int)_file.Timeout.TotalSeconds);
+
+            foreach(var setup in _file.Setup)
+            {
+                _db.Execute(setup);
+            }
 
             // create all threads
             this.CreateThreads();
@@ -84,6 +92,11 @@ namespace LiteDB.Stress
                             }
                             info.Running = false;
                             info.Elapsed.Stop();
+
+                            info.TotalRun += info.Elapsed.Elapsed;
+
+                            if (info.Result.IsInt32) info.ResultSum += (long)info.Result.AsInt32;
+
                             info.Counter++;
                             info.LastRun = DateTime.Now;
                         }
@@ -113,7 +126,11 @@ namespace LiteDB.Stress
 
                 output.Clear();
 
+                for (var i = 0; i < 3; i++)
+                    _cgCount[i] = GC.CollectionCount(i);
+
                 output.AppendLine($"LiteDB Multithreaded: {_threads.Count}, running for {this.Timer.Elapsed}");
+                output.AppendLine($"Garbage Collector: gen0: {_cgCount[0]}, gen1: {_cgCount[1]}, gen2: {_cgCount[2]}");
                 output.AppendLine();
 
                 foreach (var thread in _threads)
@@ -145,7 +162,34 @@ namespace LiteDB.Stress
 
             _db.Dispose();
 
+            this.ReportSummary(output);
+
+            Console.Clear();
+            Console.WriteLine(output.ToString());
+
             File.AppendAllText(_file.Output, output.ToString());
+        }
+
+        private void ReportSummary(StringBuilder output)
+        {
+            output.AppendLine("\n=====\n");
+            output.AppendLine("Summary Report");
+            output.AppendLine();
+
+            foreach(var task in _file.Tasks)
+            {
+                var name = task.Name.PadRight(15, ' ');
+                var count = _threads.Values.Where(x => x.Task == task).Sum(x => (long)x.Counter).ToString().PadLeft(5, ' ');
+                var sum = _threads.Values.Where(x => x.Task == task).Sum(x => x.ResultSum);
+                var ssum = sum == 0 ? "" : $"[{sum.ToString("n0")}] - ";
+                var totalRun = _threads.Values.Where(x => x.Task == task).Sum(x => x.TotalRun.TotalSeconds);
+                var reqSec = _threads.Values
+                    .Where(x => x.Task == task)
+                    .Select(x => (x.ResultSum == 0 ? x.Counter : x.ResultSum)  / x.TotalRun.TotalSeconds)
+                    .Sum();
+
+                output.AppendLine($"{name} :: {count} executions >> {ssum}Req/Sec: {reqSec.ToString("n3")}");
+            }
         }
 
         private void StopRunning()

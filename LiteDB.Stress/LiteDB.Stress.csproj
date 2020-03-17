@@ -9,4 +9,12 @@
     <ProjectReference Include="..\LiteDB\LiteDB.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Examples\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.7.0" />
+  </ItemGroup>
+
 </Project>

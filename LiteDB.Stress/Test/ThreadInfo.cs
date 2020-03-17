@@ -15,6 +15,8 @@ namespace LiteDB.Stress
         public Stopwatch Elapsed { get; } = new Stopwatch();
         public DateTime LastRun { get; set; } = DateTime.Now;
         public BsonValue Result { get; set; } = null;
+        public long ResultSum { get; set; }
+        public TimeSpan TotalRun { get; set; } = TimeSpan.Zero;
         public Exception Exception { get; set; }
         public Thread Thread { get; set; }
         public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();

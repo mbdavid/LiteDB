@@ -12,6 +12,7 @@ namespace LiteDB.Stress
         public string Filename { get; }
         public string Output { get; }
         public bool Delete { get; }
+        public List<string> Setup { get; }
         public List<ITestItem> Tasks { get; }
 
         public TestFile(string filename)
@@ -27,15 +28,23 @@ namespace LiteDB.Stress
             this.Delete = bool.Parse(root.GetAttribute("delete"));
             this.Output = Path.Combine(Path.GetDirectoryName(this.Filename), Path.GetFileNameWithoutExtension(this.Filename) + ".log");
 
+            this.Setup = new List<string>();
             this.Tasks = new List<ITestItem>();
 
             foreach(XmlElement el in children)
             {
-                var item = el.Name == "insert" ?
-                    (ITestItem)new InsertTaskItem(el) :
-                    (ITestItem)new SqlTaskItem(el);
+                if (el.Name == "setup")
+                {
+                    this.Setup.Add(el.InnerText);
+                }
+                else
+                {
+                    var item = el.Name == "insert" ?
+                        (ITestItem)new InsertTaskItem(el) :
+                        (ITestItem)new SqlTaskItem(el);
 
-                this.Tasks.Add(item);
+                    this.Tasks.Add(item);
+                }
             }
         }
     }
