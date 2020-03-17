@@ -421,7 +421,18 @@ namespace LiteDB
 
             _builder.Append(op);
 
-            this.VisitAsPredicate(node.Right, andOr);
+            if(!_mapper.EnumAsInteger &&
+                node.Left.NodeType == ExpressionType.Convert && 
+                node.Left is UnaryExpression unex && 
+                unex.Operand.Type.GetTypeInfo().IsEnum && 
+                unex.Type == typeof(Int32))
+            {
+                this.VisitAsPredicate(Expression.Constant(Enum.GetName(unex.Operand.Type, (node.Right as ConstantExpression).Value)), andOr);
+            }
+            else
+            {
+                this.VisitAsPredicate(node.Right, andOr);
+            }            
 
             _builder.Append(")");
 

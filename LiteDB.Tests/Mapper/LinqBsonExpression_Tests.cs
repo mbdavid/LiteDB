@@ -420,6 +420,7 @@ namespace LiteDB.Tests.Mapper
         [Fact]
         public void Linq_Complex_Expressions()
         {
+            _mapper.EnumAsInteger = true;
             TestExpr<User>(x => new
             {
                 CityName = x.Address.City.CityName,
@@ -433,6 +434,16 @@ namespace LiteDB.Tests.Mapper
                 List: ARRAY(MAP(FILTER($.Phones=>(@.Number>$.Salary))=>@.Number))
             }",
                 (int)PhoneType.Landline);
+        }
+
+        [Fact]
+        public void Linq_Enum_Expressions()
+        {
+            _mapper.EnumAsInteger = false;
+            TestExpr<Phone>(p => p.Type == PhoneType.Landline, "($.Type=@p0)", PhoneType.Landline.ToString());
+
+            _mapper.EnumAsInteger = true;
+            TestExpr<Phone>(p => p.Type == PhoneType.Landline, "($.Type=@p0)", (int)PhoneType.Landline);
         }
 
         [Fact]
