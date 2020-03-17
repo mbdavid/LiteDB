@@ -220,7 +220,7 @@ namespace LiteDB
                                 break;
                             default:
                                 _writer.Write("\\u");
-                                _writer.Write(((short)c).ToString("x04"));
+                                _writer.Write(((int)c).ToString("x04"));
                                 break;
                         }
                         break;
