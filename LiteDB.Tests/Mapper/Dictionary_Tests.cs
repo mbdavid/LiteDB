@@ -57,5 +57,17 @@ namespace LiteDB.Tests.Mapper
             Assert.Single(dic);
             Assert.Equal(1, dic["x"]);
         }
+
+        [Fact]
+        public void Serialize_Hashtable()
+        {
+            var data = new Hashtable() { ["x"] = 1 };
+
+            //! used to fail
+            var result = _mapper.Serialize(data).AsDocument;
+
+            Assert.Single(result);
+            Assert.Equal(1, result["x"].AsInt32);
+        }
     }
 }

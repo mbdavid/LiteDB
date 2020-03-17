@@ -120,7 +120,7 @@ namespace LiteDB
                 return custom(obj);
             }
             // for dictionary
-            else if (obj is IDictionary)
+            else if (obj is IDictionary dict)
             {
                 // when you are converting Dictionary<string, object>
                 if (type == typeof(object))
@@ -128,9 +128,9 @@ namespace LiteDB
                     type = obj.GetType();
                 }
 
-                var itemType = type.GetGenericArguments()[1];
+                var itemType = type.GetTypeInfo().IsGenericType ? type.GetGenericArguments()[1] : typeof(object);
 
-                return this.SerializeDictionary(itemType, obj as IDictionary, depth);
+                return this.SerializeDictionary(itemType, dict, depth);
             }
             // check if is a list or array
             else if (obj is IEnumerable)
