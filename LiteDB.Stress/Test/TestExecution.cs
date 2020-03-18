@@ -18,7 +18,7 @@ namespace LiteDB.Stress
         private readonly TestFile _file;
         private LiteDatabase _db;
         private bool _running = true;
-        private int[] _cgCount = new int[3];
+        private long _maxRam = 0;
         private readonly ConcurrentDictionary<int, ThreadInfo> _threads = new ConcurrentDictionary<int, ThreadInfo>();
 
         public TestExecution(string filename, TimeSpan duration)
@@ -124,35 +124,7 @@ namespace LiteDB.Stress
             {
                 Thread.Sleep(Math.Min(1000, (int)this.Duration.Subtract(this.Timer.Elapsed).TotalMilliseconds));
 
-                output.Clear();
-
-                for (var i = 0; i < 3; i++)
-                    _cgCount[i] = GC.CollectionCount(i);
-
-                output.AppendLine($"LiteDB Multithreaded: {_threads.Count}, running for {this.Timer.Elapsed}");
-                output.AppendLine($"Garbage Collector: gen0: {_cgCount[0]}, gen1: {_cgCount[1]}, gen2: {_cgCount[2]}");
-                output.AppendLine();
-
-                foreach (var thread in _threads)
-                {
-                    var howLong = DateTime.Now - thread.Value.LastRun;
-
-                    var id = thread.Key.ToString("00");
-                    var name = (thread.Value.Task.Name + (thread.Value.Running ? "*" : "")).PadRight(15, ' ');
-                    var counter = thread.Value.Counter.ToString().PadRight(5, ' ');
-                    var timer = howLong.TotalSeconds > 60 ?
-                        ((int)howLong.TotalMinutes).ToString().PadLeft(2, ' ') + " minutes" :
-                        ((int)howLong.TotalSeconds).ToString().PadLeft(2, ' ') + " seconds";
-                    var result = thread.Value.Result != null ? $"[{thread.Value.Result.ToString()}]" : "";
-                    var running = thread.Value.Elapsed.Elapsed.TotalSeconds > 1 ?
-                        $"<LAST RUN {(int)thread.Value.Elapsed.Elapsed.TotalSeconds}s> " :
-                        "";
-                    var ex = thread.Value.Exception != null ?
-                        " ERROR: " + thread.Value.Exception.Message :
-                        "";
-
-                    output.AppendLine($"{id}. {name} :: {counter} >> {timer} {running}{result}{ex}");
-                }
+                this.ReportPrint(output);
 
                 Console.Clear();
                 Console.WriteLine(output.ToString());
@@ -160,14 +132,54 @@ namespace LiteDB.Stress
 
             this.StopRunning();
 
+            this.Timer.Stop();
+
             _db.Dispose();
 
+            this.ReportPrint(output);
             this.ReportSummary(output);
 
             Console.Clear();
             Console.WriteLine(output.ToString());
 
             File.AppendAllText(_file.Output, output.ToString());
+        }
+
+        private void ReportPrint(StringBuilder output)
+        {
+            output.Clear();
+
+            var process = Process.GetCurrentProcess();
+
+            var ram = process.WorkingSet64 / 1024 / 1024;
+
+            _maxRam = Math.Max(_maxRam, ram);
+
+            output.AppendLine($"LiteDB Multithreaded: {_threads.Count}, running for {this.Timer.Elapsed}");
+            output.AppendLine($"Garbage Collector: gen0: {GC.CollectionCount(0)}, gen1: {GC.CollectionCount(1)}, gen2: {GC.CollectionCount(2)}");
+            output.AppendLine($"Memory usage: {ram.ToString("n0")} Mb (max: {_maxRam.ToString("n0")} Mb)");
+            output.AppendLine();
+
+            foreach (var thread in _threads)
+            {
+                var howLong = DateTime.Now - thread.Value.LastRun;
+
+                var id = thread.Key.ToString("00");
+                var name = (thread.Value.Task.Name + (thread.Value.Running ? "*" : "")).PadRight(15, ' ');
+                var counter = thread.Value.Counter.ToString().PadRight(5, ' ');
+                var timer = howLong.TotalSeconds > 60 ?
+                    ((int)howLong.TotalMinutes).ToString().PadLeft(2, ' ') + " minutes" :
+                    ((int)howLong.TotalSeconds).ToString().PadLeft(2, ' ') + " seconds";
+                var result = thread.Value.Result != null ? $"[{thread.Value.Result.ToString()}]" : "";
+                var running = thread.Value.Elapsed.Elapsed.TotalSeconds > 1 ?
+                    $"<LAST RUN {(int)thread.Value.Elapsed.Elapsed.TotalSeconds}s> " :
+                    "";
+                var ex = thread.Value.Exception != null ?
+                    " ERROR: " + thread.Value.Exception.Message :
+                    "";
+
+                output.AppendLine($"{id}. {name} :: {counter} >> {timer} {running}{result}{ex}");
+            }
         }
 
         private void ReportSummary(StringBuilder output)
@@ -182,13 +194,12 @@ namespace LiteDB.Stress
                 var count = _threads.Values.Where(x => x.Task == task).Sum(x => (long)x.Counter).ToString().PadLeft(5, ' ');
                 var sum = _threads.Values.Where(x => x.Task == task).Sum(x => x.ResultSum);
                 var ssum = sum == 0 ? "" : $"[{sum.ToString("n0")}] - ";
-                var totalRun = _threads.Values.Where(x => x.Task == task).Sum(x => x.TotalRun.TotalSeconds);
-                var reqSec = _threads.Values
+                var meanRuntime = TimeSpan.FromMilliseconds(_threads.Values
                     .Where(x => x.Task == task)
-                    .Select(x => (x.ResultSum == 0 ? x.Counter : x.ResultSum)  / x.TotalRun.TotalSeconds)
-                    .Sum();
+                    .Select(x => x.TotalRun.TotalMilliseconds)
+                    .Average());
 
-                output.AppendLine($"{name} :: {count} executions >> {ssum}Req/Sec: {reqSec.ToString("n3")}");
+                output.AppendLine($"{name} :: {count} executions >> {ssum}Runtime: {meanRuntime}");
             }
         }
 
