@@ -157,10 +157,10 @@
 <h1 class="title">UPDATE</h1>
 <div class="content">
   <p>The following structure defines the SQL update syntax in LiteDB. Keyworks and function names are case-insensitive.</p>
-<div class="highlight"><pre class="chroma">  UPDATE &lt;collection&gt;
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">  UPDATE &lt;collection&gt;
   SET &lt;key0&gt; = &lt;exprValue0&gt; [,&lt;keyN&gt; = &lt;exprValueN&gt;] | &lt;newDoc&gt;
-[ WHERE &lt;filterExpr&gt; ]</pre></div>
-<ul>
+[ WHERE &lt;filterExpr&gt; ]
+</code></pre></div><ul>
 <li><code>collection</code> is the name of the collection where the documents will be inserted.</li>
 <li>Every <code>key</code> is the attribute name in the document and the corresponding <code>exprValue</code> is an expression that returns the desired value. For more info, see <a href="../../docs/expressions">Expressions</a>.</li>
 <li><code>newDoc</code> is a valid JSON object.</li>

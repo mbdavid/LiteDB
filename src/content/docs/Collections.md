@@ -73,7 +73,7 @@ System collections are special collections that provide information about the da
 
 #### $file
 
-The `$file` system collection can be used to read and write to external files.
+The `$file` system collection can be used to read from and write to external files.
 
 - `SELECT $ INTO $FILE('customers.json') FROM Customers` dumps the entire content from the collection `Customers` into a JSON file.
 - `SELECT $ FROM $FILE('customers.json')` reads the entire content from the JSON file.

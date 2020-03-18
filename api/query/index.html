@@ -156,10 +156,8 @@
           
 <h1 class="title">SELECT</h1>
 <div class="content">
-  
-
-<p>The following structure defines the SQL query syntax in LiteDB. Keyworks and function names are case-insensitive.</p>
-<div class="highlight"><pre class="chroma">[ EXPLAIN ]
+  <p>The following structure defines the SQL query syntax in LiteDB. Keyworks and function names are case-insensitive.</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">[ EXPLAIN ]
   SELECT   &lt;selectExpr0&gt;  [, &lt;selectExprN&gt;]
 [ INTO     &lt;collection&gt;|&lt;$file(param)&gt; [ : &lt;autoIdType&gt; ] ]
 [ FROM     &lt;collection&gt;|&lt;$systemCollection&gt; ]
@@ -170,93 +168,53 @@
 [ ORDER BY &lt;orderByExpr&gt; [ ASC | DESC ] ]
 [ LIMIT    &lt;number&gt; ]
 [ OFFSET   &lt;number&gt; ]
-[ FOR UPDATE ]</pre></div>
-<h5 id="explain">Explain</h5>
-
+[ FOR UPDATE ]
+</code></pre></div><h5 id="explain">Explain</h5>
 <p>If the keywork <code>EXPLAIN</code> is present before a query, the result is a document that explains how the engine plans to run the query.</p>
-
 <h5 id="select">Select</h5>
-
 <p>The <code>SELECT</code> clause defines the projections that are applied to the results. A select expression can be:</p>
-
 <ul>
 <li>A literal of any BSON type that LiteDB supports;</li>
 <li>A valid JSON path;</li>
 <li>A function over literals or JSON paths.</li>
 </ul>
-
 <p>The <code>GROUP BY</code> clause restricts the possible values in this clause. For more info, chech the <code>GROUP BY</code> documentation below.</p>
-
 <h5 id="into">Into</h5>
-
 <p>If this clause is present, the result of the query is inserted into <code>collection</code> and the query returns the number of documents inserted.</p>
-
 <p>If the result does not containt a <code>$_id</code> field, <code>autoIdType</code> is used to generate one of the specified type (<code>GUID</code>, <code>INT</code>, <code>LONG</code> or <code>OBJECTID</code>). If no <code>autoIdType</code> is present, the default is <code>OBJECTID</code>.</p>
-
 <p>If <code>collection</code> is the system collection <code>$file</code>, the result will be written to a file. For more information, check the System Collections documentation.</p>
-
 <h5 id="from">From</h5>
-
 <p>This clause is used to indicate the source collection for the query.</p>
-
 <p>If <code>collection</code> starts with <code>$</code>, it is a system collection. For more information, check the System Collections documentation.</p>
-
 <h5 id="include">Include</h5>
-
 <p>If this clause is presents, references are resolved by the query engine before returning the results.</p>
-
 <p>Every path expression must be a valid JSON path that points to an embedded document or array of embedded documents with the following structure:</p>
 <div class="highlight"><pre class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
-    <span class="nt">&#34;$id&#34;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="nt">&#34;$ref&#34;</span> <span class="p">:</span> <span class="s2">&#34;Customers&#34;</span>
-<span class="p">}</span></code></pre></div>
-<p>The field <code>$ref</code> indicates which collection is being referenced and the field <code>$id</code> corresponds to the <code>$_id</code> field in the document being referenced.</p>
-
-<p><span id="where"></p>
-
-<h5 id="where">Where</h5>
-
-<p>If this clause is present, the results are filtered by a filter expression.</p>
-
+	<span class="nt">&#34;$id&#34;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+	<span class="nt">&#34;$ref&#34;</span> <span class="p">:</span> <span class="s2">&#34;Customers&#34;</span>
+<span class="p">}</span>
+</code></pre></div><p>The field <code>$ref</code> indicates which collection is being referenced and the field <code>$id</code> corresponds to the <code>$_id</code> field in the document being referenced.</p>
+<!-- raw HTML omitted -->
 <p>A filter expression is a series of expressions joined by the logical operators <code>AND</code> or <code>OR</code>. Every expression must resolve to a boolean value. For more information, check the <a href="../../docs/expressions">Expressions documentation</a>.
-</span></p>
-
+<!-- raw HTML omitted --></p>
 <h5 id="group-by">Group By</h5>
-
 <p>If this clause is present, the results are grouped by an expression and the query returns a document for each group.</p>
-
 <p>A group-by expression can be any valid expression. For more information, check the Expressions documentation.</p>
-
 <p>Please note that only one grouping expression is allowed. However, grouping by multiple fields can be achieved by using a document or array containing the desired fields as the grouping expression.</p>
-
 <p>If this clause is present, only the special parameter <code>@key</code> (which returns the value in the grouping expression) or aggregate functions can be used in the <code>SELECT</code> clause.</p>
-
 <h5 id="having">Having</h5>
-
 <p>If this clause is present, the groups are filtered by a filter expression (similarly to how a <code>WHERE</code> clause filters individual documents).</p>
-
 <p>A filter expression is a series of expressions joined by the logical operators <code>AND</code> or <code>OR</code>. Every expression must resolve to a boolean value. For more information, check the Expressions documentation.</p>
-
 <p>In the <code>HAVING</code> clause, only the special parameter <code>@key</code> (which returns the value in the grouping expression) or aggregate functions can be used.</p>
-
 <h5 id="order-by">Order By</h5>
-
 <p>If this clause is present, the resulting documents are ordered by the provided sort expression.</p>
-
 <p>A sort expression can be any valid expression. For more information, check the Expressions documentation.</p>
-
 <p>This clause cannot be used with a <code>GROUP BY</code> clause.</p>
-
 <h5 id="limit">Limit</h5>
-
 <p>Limits the amount of documents return to a maximum of <code>number</code>.</p>
-
 <h5 id="offset">Offset</h5>
-
 <p>Returns only the documents starting from the position <code>number</code>. Please note that the offset value is zero-based.</p>
-
 <h5 id="for-update">For Update</h5>
-
 <p>If this clause is present, the collections used in the query are opened with full write lock.</p>
 
 </div>

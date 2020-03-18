@@ -77,12 +77,12 @@ public class Customer
 
 var customers = db.GetCollection<Customer>("customers");
 
-customers.Insert(new Customer { Name = "John", Phones = new string[] { "1", "2", "5" });
-customers.Insert(new Customer { Name = "Doe", Phones = new string[] { "1", "8" });
+customers.Insert(new Customer { Name = "John", Phones = new string[] { "1", "2", "5" } });
+customers.Insert(new Customer { Name = "Doe", Phones = new string[] { "1", "8" } });
 
 customers.EnsureIndex(x => x.Phones);
 
-var result = customers.Query(x => x.Phones.Contains("1")); // returns both documents
+var result = customers.Find(x => x.Phones.Contains("1")); // returns both documents
 ```
 
 ### Expressions

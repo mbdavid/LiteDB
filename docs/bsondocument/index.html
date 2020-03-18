@@ -172,11 +172,11 @@
     </li>
     
     <li class="">
-      <a href="/docs/collation/">Collation</a>
+      <a href="/docs/pragmas/">Pragmas</a>
     </li>
     
     <li class="">
-      <a href="/docs/pragmas/">Pragmas</a>
+      <a href="/docs/collation/">Collation</a>
     </li>
     
   </ul>
@@ -190,65 +190,58 @@
 <div class="content">
   <p>The <code>BsonDocument</code> class is LiteDB&rsquo;s implementation of documents. Internally, a <code>BsonDocument</code> stores key-value pairs in a <code>Dictionary&lt;string, BsonValue&gt;</code>.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="kt">var</span> <span class="n">customer</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonDocument</span><span class="p">();</span>
-<span class="n">customer</span><span class="na">[&#34;_id&#34;]</span> <span class="p">=</span> <span class="n">ObjectId</span><span class="p">.</span><span class="n">NewObjectId</span><span class="p">();</span>
-<span class="n">customer</span><span class="na">[&#34;Name&#34;]</span> <span class="p">=</span> <span class="s">&#34;John Doe&#34;</span><span class="p">;</span>
-<span class="n">customer</span><span class="na">[&#34;CreateDate&#34;]</span> <span class="p">=</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
-<span class="n">customer</span><span class="na">[&#34;Phones&#34;]</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonArray</span> <span class="p">{</span> <span class="s">&#34;8000-0000&#34;</span><span class="p">,</span> <span class="s">&#34;9000-000&#34;</span> <span class="p">};</span>
-<span class="n">customer</span><span class="na">[&#34;IsActive&#34;]</span> <span class="p">=</span> <span class="k">true</span><span class="p">;</span>
-<span class="n">customer</span><span class="na">[&#34;IsAdmin&#34;]</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonValue</span><span class="p">(</span><span class="k">true</span><span class="p">);</span>
-<span class="n">customer</span><span class="na">[&#34;Address&#34;]</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonDocument</span>
-<span class="p">{</span><span class="na">
-</span><span class="na">    [&#34;Street&#34;]</span> <span class="p">=</span> <span class="s">&#34;Av. Protasio Alves&#34;</span>
+<span class="n">customer</span><span class="p">[</span><span class="s">&#34;_id&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="n">ObjectId</span><span class="p">.</span><span class="n">NewObjectId</span><span class="p">();</span>
+<span class="n">customer</span><span class="p">[</span><span class="s">&#34;Name&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="s">&#34;John Doe&#34;</span><span class="p">;</span>
+<span class="n">customer</span><span class="p">[</span><span class="s">&#34;CreateDate&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
+<span class="n">customer</span><span class="p">[</span><span class="s">&#34;Phones&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonArray</span> <span class="p">{</span> <span class="s">&#34;8000-0000&#34;</span><span class="p">,</span> <span class="s">&#34;9000-000&#34;</span> <span class="p">};</span>
+<span class="n">customer</span><span class="p">[</span><span class="s">&#34;IsActive&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="k">true</span><span class="p">;</span>
+<span class="n">customer</span><span class="p">[</span><span class="s">&#34;IsAdmin&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonValue</span><span class="p">(</span><span class="k">true</span><span class="p">);</span>
+<span class="n">customer</span><span class="p">[</span><span class="s">&#34;Address&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonDocument</span>
+<span class="p">{</span>
+<span class="na">    [&#34;Street&#34;]</span> <span class="p">=</span> <span class="s">&#34;Av. Protasio Alves&#34;</span>
 <span class="p">};</span>
-<span class="n">customer</span><span class="na">[&#34;Address&#34;][&#34;Number&#34;]</span> <span class="p">=</span> <span class="s">&#34;1331&#34;</span><span class="p">;</span>
-</code></pre></div>
-<p>About document field <strong>keys</strong>:</p>
-
+<span class="n">customer</span><span class="p">[</span><span class="s">&#34;Address&#34;</span><span class="p">][</span><span class="s">&#34;Number&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="s">&#34;1331&#34;</span><span class="p">;</span>
+</code></pre></div><p>About document field <strong>keys</strong>:</p>
 <ul>
 <li>Keys are case-insensitive</li>
 <li>Duplicate keys are not allowed</li>
 <li>LiteDB keeps the original key order, including mapped classes. The only exception is for <code>_id</code> field that will always be the first field.</li>
 </ul>
-
 <p>About document field <strong>values</strong>:</p>
-
 <ul>
 <li>Values can be any BSON value data type: Null, Int32, Int64, Decimal, Double, String, Embedded Document, Array, Binary, ObjectId, Guid, Boolean, DateTime, MinValue, MaxValue</li>
 <li>When a field is indexed, the value must be less than 512 bytes after BSON serialization.</li>
 <li><code>_id</code> field cannot be: <code>Null</code>, <code>MinValue</code> or <code>MaxValue</code></li>
 <li><code>_id</code> is unique indexed field, so value must be less than 512 bytes</li>
 </ul>
-
 <p>About .NET classes</p>
-
 <ul>
 <li><code>BsonValue</code>
-
 <ul>
 <li>This class can hold any BSON data type, including null, array or document.</li>
 <li>Has implicit constructor to all supported .NET data types</li>
 <li>Value never changes (immutable)</li>
 <li><code>RawValue</code> property that returns internal .NET object instance</li>
-</ul></li>
+</ul>
+</li>
 <li><code>BsonArray</code>
-
 <ul>
 <li>Supports <code>IEnumerable&lt;BsonValue&gt;</code></li>
 <li>Each array item can have different BSON type objects</li>
-</ul></li>
+</ul>
+</li>
 <li><code>BsonDocument</code>
-
 <ul>
 <li>Missing fields always return <code>BsonValue.Null</code> value</li>
-</ul></li>
+</ul>
+</li>
 </ul>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Testing BSON value data type
-</span><span class="c1"></span><span class="k">if</span><span class="p">(</span><span class="n">customer</span><span class="na">[&#34;Name&#34;]</span><span class="p">.</span><span class="n">IsString</span><span class="p">)</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+</span><span class="c1"></span><span class="k">if</span><span class="p">(</span><span class="n">customer</span><span class="p">[</span><span class="s">&#34;Name&#34;</span><span class="p">].</span><span class="n">IsString</span><span class="p">)</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
 
 <span class="c1">// Helper to get .NET type
-</span><span class="c1"></span><span class="kt">string</span> <span class="n">str</span> <span class="p">=</span> <span class="n">customer</span><span class="na">[&#34;Name&#34;]</span><span class="p">.</span><span class="n">AsString</span><span class="p">;</span>
-</code></pre></div>
-<p>To use other .NET data types you need a custom <code>BsonMapper</code> class.</p>
+</span><span class="c1"></span><span class="kt">string</span> <span class="n">str</span> <span class="p">=</span> <span class="n">customer</span><span class="p">[</span><span class="s">&#34;Name&#34;</span><span class="p">].</span><span class="n">AsString</span><span class="p">;</span>
+</code></pre></div><p>To use other .NET data types you need a custom <code>BsonMapper</code> class.</p>
 
 </div>
 </div>

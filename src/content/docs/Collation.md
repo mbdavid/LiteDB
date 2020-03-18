@@ -1,7 +1,7 @@
 ---
 title: 'Collation'
 draft: false
-weight: 12
+weight: 13
 ---
 
 A collation is a special pragma (for more info, see [Pragmas](../pragmas)) that allows users to specify a culture and string compare options for a datafile.

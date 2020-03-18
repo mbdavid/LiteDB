@@ -4,11 +4,9 @@ draft: false
 weight: 8
 ---
 
-To keep its memory profile slim, limits the size of a documents to 1MB. For most documents, this is plenty. However, 1MB is too small for a useful file storage. For this reason, LiteDB implements `FileStorage`, a custom collection to store files and streams.
+To keep its memory profile slim, LiteDB limits the size of a documents to 1MB. For most documents, this is plenty. However, 1MB is too small for a useful file storage. For this reason, LiteDB implements `FileStorage`, a custom collection to store files and streams.
 
 `FileStorage` uses two special collections:
-
-LiteDB uses two special collections to split file content in chunks:
 
 - The first collection stores file references and metadata only (by default it is called `_files`)
 

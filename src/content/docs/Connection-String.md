@@ -10,7 +10,7 @@ LiteDatabase can be initialized using a string connection, with `key1=value1; ke
 
 |Key|Type|Description|Default value|
 |--------|----|-----------------|-------------|
-|Filename|string|Full or relative path to the datafile. Supports `:memory:` for memory database or `:temp:` for in disk temporary database (file will deleted when database was closed) **[required]**|- |
+|Filename|string|Full or relative path to the datafile. Supports `:memory:` for memory database or `:temp:` for in disk temporary database (file will deleted when database is closed) **[required]**|- |
 |Connection|string|Connection type ("direct" or "shared")|"direct"|
 |Password|string|Encrypt (using AES) your datafile with a password|null (no encryption)|
 |InitialSize|string or long|Initial size for the datafile (string suppoorts "KB", "MB" and "GB")|0|

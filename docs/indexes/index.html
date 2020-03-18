@@ -172,11 +172,11 @@
     </li>
     
     <li class="">
-      <a href="/docs/collation/">Collation</a>
+      <a href="/docs/pragmas/">Pragmas</a>
     </li>
     
     <li class="">
-      <a href="/docs/pragmas/">Pragmas</a>
+      <a href="/docs/collation/">Collation</a>
     </li>
     
   </ul>
@@ -188,18 +188,11 @@
           
 <h1 class="title">Indexes</h1>
 <div class="content">
-  
-
-<p>LiteDB improves search performance by using indexes on document fields or expressions. Each index storess the value of a specific expression ordered by the value (and type). Without an index, LiteDB must execute a query using a full document scan. Full document scans are inefficient because LiteDB must deserialize every document in the collection.</p>
-
+  <p>LiteDB improves search performance by using indexes on document fields or expressions. Each index storess the value of a specific expression ordered by the value (and type). Without an index, LiteDB must execute a query using a full document scan. Full document scans are inefficient because LiteDB must deserialize every document in the collection.</p>
 <h3 id="index-implementation">Index Implementation</h3>
-
 <p>Indexes in LiteDB are implemented using <strong>Skip lists</strong>. Skip lists are double linked sorted list with up to 32 levels. Skip lists are very easy to implement (only 15 lines of code) and statistically balanced.</p>
-
 <p>Insert and search operations have an average complexity of <em>O</em>(log n). This means that in a collection with 1 million documents, a search operation over an indexed expression will take about 13 steps to find the desired document. If you want to know more about skip lists, <a href="https://www.youtube.com/watch?v=kBwUoWpeH_Q">check this great video</a>.</p>
-
 <p>Given that collections are schema-less, it is possible for an expression to return different data types when applied over different documents. In such cases, the documents will be ordered by the type returned by the indexing expression, according to the table below:</p>
-
 <table>
 <thead>
 <tr>
@@ -207,86 +200,72 @@
 <th>Order</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td>MinValue</td>
 <td>1</td>
 </tr>
-
 <tr>
 <td>Null</td>
 <td>2</td>
 </tr>
-
 <tr>
 <td>Int32, Int64, Double, Decimal</td>
 <td>3</td>
 </tr>
-
 <tr>
 <td>String</td>
 <td>4</td>
 </tr>
-
 <tr>
 <td>Document</td>
 <td>5</td>
 </tr>
-
 <tr>
 <td>Array</td>
 <td>6</td>
 </tr>
-
 <tr>
 <td>Binary</td>
 <td>7</td>
 </tr>
-
 <tr>
 <td>ObjectId</td>
 <td>8</td>
 </tr>
-
 <tr>
 <td>Guid</td>
 <td>9</td>
 </tr>
-
 <tr>
 <td>Boolean</td>
 <td>10</td>
 </tr>
-
 <tr>
 <td>DateTime</td>
 <td>11</td>
 </tr>
-
 <tr>
 <td>MaxValue</td>
 <td>12</td>
 </tr>
 </tbody>
 </table>
-
 <ul>
-<li><p>When comparing documents, the values in the key-value pairs are compared in the order that they appear until a tie is broken.</p></li>
-
-<li><p>When comparing arrays, every position in the arrays is compeared until a tie is broken.</p></li>
-
-<li><p>All numeric values are converted to <code>Decimal</code> before comparison.</p></li>
+<li>
+<p>When comparing documents, the values in the key-value pairs are compared in the order that they appear until a tie is broken.</p>
+</li>
+<li>
+<p>When comparing arrays, every position in the arrays is compeared until a tie is broken.</p>
+</li>
+<li>
+<p>All numeric values are converted to <code>Decimal</code> before comparison.</p>
+</li>
 </ul>
-
-<h3 id="primary-key-auto-id">Primary key (= auto id)</h3>
-
+<h3 id="primary-key--auto-id">Primary key (= auto id)</h3>
 <p>By default, an index over <code>_id</code> is created upon the first insertion.</p>
-
 <h3 id="ensureindex">EnsureIndex()</h3>
-
 <p>Indexes are created via <code>EnsureIndex</code>. This method create the index if it does not exist and does nothing if already exists.</p>
-
 <p>An index can be created over any valid <code>BsonExpression.</code></p>
 <div class="highlight"><pre class="chroma"><code class="language-JS" data-lang="JS"><span class="p">{</span>
     <span class="nx">_id</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
@@ -297,48 +276,39 @@
         <span class="nx">Country</span><span class="o">:</span> <span class="s2">&#34;Brazil&#34;</span>
     <span class="p">}</span>
 <span class="p">}</span>
-</code></pre></div>
-<ul>
+</code></pre></div><ul>
 <li>You can use <code>EnsureIndex(&quot;Address&quot;)</code> to create an index to all <code>Address</code> embedded document</li>
 <li>Or <code>EnsureIndex(&quot;Address.Street&quot;)</code> to create an index on <code>Street</code> using dotted notation</li>
 <li>Indexes are executed as <code>BsonDocument</code> fields. If you are using a custom <code>ResolvePropertyName</code> or <code>[BsonField]</code> attribute, you must use your document field name and not the property name. See <a href="Object-Mapping">Object Mapping</a>.</li>
 <li>You can use a lambda expression to define an index field in a strongly typed collection: <code>EnsureIndex(x =&gt; x.Name)</code></li>
 <li>Indexes are identified by an unique name</li>
 </ul>
-
 <h3 id="multikey-index">MultiKey Index</h3>
-
 <p>When you create an index in a array type field, all values are included on index keys and you can search for any value.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="k">public</span> <span class="k">class</span> <span class="nc">Customer</span>
 <span class="p">{</span>
     <span class="k">public</span> <span class="kt">int</span> <span class="n">Id</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
     <span class="k">public</span> <span class="kt">string</span> <span class="n">Name</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-    <span class="k">public</span> <span class="kt">string</span><span class="na">[]</span> <span class="n">Phones</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">string</span><span class="p">[]</span> <span class="n">Phones</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="kt">var</span> <span class="n">customers</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">&lt;</span><span class="n">Customer</span><span class="p">&gt;(</span><span class="s">&#34;customers&#34;</span><span class="p">);</span>
 
-<span class="n">customers</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="k">new</span> <span class="n">Customer</span> <span class="p">{</span> <span class="n">Name</span> <span class="p">=</span> <span class="s">&#34;John&#34;</span><span class="p">,</span> <span class="n">Phones</span> <span class="p">=</span> <span class="k">new</span> <span class="kt">string</span><span class="na">[]</span> <span class="p">{</span> <span class="s">&#34;1&#34;</span><span class="p">,</span> <span class="s">&#34;2&#34;</span><span class="p">,</span> <span class="s">&#34;5&#34;</span> <span class="p">});</span>
-<span class="n">customers</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="k">new</span> <span class="n">Customer</span> <span class="p">{</span> <span class="n">Name</span> <span class="p">=</span> <span class="s">&#34;Doe&#34;</span><span class="p">,</span> <span class="n">Phones</span> <span class="p">=</span> <span class="k">new</span> <span class="kt">string</span><span class="na">[]</span> <span class="p">{</span> <span class="s">&#34;1&#34;</span><span class="p">,</span> <span class="s">&#34;8&#34;</span> <span class="p">});</span>
+<span class="n">customers</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="k">new</span> <span class="n">Customer</span> <span class="p">{</span> <span class="n">Name</span> <span class="p">=</span> <span class="s">&#34;John&#34;</span><span class="p">,</span> <span class="n">Phones</span> <span class="p">=</span> <span class="k">new</span> <span class="kt">string</span><span class="p">[]</span> <span class="p">{</span> <span class="s">&#34;1&#34;</span><span class="p">,</span> <span class="s">&#34;2&#34;</span><span class="p">,</span> <span class="s">&#34;5&#34;</span> <span class="p">}</span> <span class="p">});</span>
+<span class="n">customers</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="k">new</span> <span class="n">Customer</span> <span class="p">{</span> <span class="n">Name</span> <span class="p">=</span> <span class="s">&#34;Doe&#34;</span><span class="p">,</span> <span class="n">Phones</span> <span class="p">=</span> <span class="k">new</span> <span class="kt">string</span><span class="p">[]</span> <span class="p">{</span> <span class="s">&#34;1&#34;</span><span class="p">,</span> <span class="s">&#34;8&#34;</span> <span class="p">}</span> <span class="p">});</span>
 
 <span class="n">customers</span><span class="p">.</span><span class="n">EnsureIndex</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Phones</span><span class="p">);</span>
 
-<span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">customers</span><span class="p">.</span><span class="n">Query</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Phones</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&#34;1&#34;</span><span class="p">));</span> <span class="c1">// returns both documents
-</span></code></pre></div>
-<h3 id="expressions">Expressions</h3>
-
+<span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">customers</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Phones</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&#34;1&#34;</span><span class="p">));</span> <span class="c1">// returns both documents
+</span></code></pre></div><h3 id="expressions">Expressions</h3>
 <p>It is now possible to create an index based on a expression execution with multikey values support. With this, you can index any kind of information that is not directly the value of a field.</p>
-
 <ul>
 <li><code>collection.EnsureIndex(&quot;Name&quot;, &quot;LOWER($.Name)&quot;)</code></li>
 <li><code>collection.EnsureIndex(&quot;Total&quot;, &quot;SUM($.Items[*].Price)&quot;)</code></li>
 <li><code>collection.EnsureIndex(&quot;CheapBooks&quot;, &quot;LOWER($.Books[@.Price &lt; 20].Title)&quot;)</code></li>
 </ul>
-
 <p>See <a href="Expressions">Expressions</a> for more details about expressions.</p>
-
 <h3 id="limitations">Limitations</h3>
-
 <ul>
 <li>Even if multiple indexed expressions are used on a query, only one of the indexes is used, with the remaining expressions being filtered using a full scan.</li>
 <li>Index values must have at most 255 bytes (after BSON serialization)</li>

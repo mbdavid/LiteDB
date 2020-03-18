@@ -172,11 +172,11 @@
     </li>
     
     <li class="">
-      <a href="/docs/collation/">Collation</a>
+      <a href="/docs/pragmas/">Pragmas</a>
     </li>
     
     <li class="">
-      <a href="/docs/pragmas/">Pragmas</a>
+      <a href="/docs/collation/">Collation</a>
     </li>
     
   </ul>
@@ -188,23 +188,17 @@
           
 <h1 class="title">Getting Started</h1>
 <div class="content">
-  
-
-<p>LiteDB is a simple, fast and lightweight embedded .NET document database. LiteDB was inspired by the MongoDB database and its API is very similar to the official MongoDB .NET API.</p>
-
+  <p>LiteDB is a simple, fast and lightweight embedded .NET document database. LiteDB was inspired by the MongoDB database and its API is very similar to the official MongoDB .NET API.</p>
 <h3 id="how-to-install">How to install</h3>
-
 <p>LiteDB is a serverless database, so there is no installation. Just copy <a href="https://github.com/mbdavid/LiteDB/releases">LiteDB.dll</a> into your Bin folder and add it as Reference. Or, if you prefer, you can install via NuGet: <code>Install-Package LiteDB</code>. If you are running in a web environment, make sure that your IIS user has write permission to the data folder.</p>
-
 <h3 id="first-example">First example</h3>
-
 <p>A quick example to store and search for documents:</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Create your POCO class entity
 </span><span class="c1"></span><span class="k">public</span> <span class="k">class</span> <span class="nc">Customer</span>
 <span class="p">{</span>
     <span class="k">public</span> <span class="kt">int</span> <span class="n">Id</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
     <span class="k">public</span> <span class="kt">string</span> <span class="n">Name</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
-    <span class="k">public</span> <span class="kt">string</span><span class="na">[]</span> <span class="n">Phones</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">string</span><span class="p">[]</span> <span class="n">Phones</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
     <span class="k">public</span> <span class="kt">bool</span> <span class="n">IsActive</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
 <span class="p">}</span>
 
@@ -218,21 +212,21 @@
 </span><span class="c1"></span>    <span class="kt">var</span> <span class="n">customer</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Customer</span>
     <span class="p">{</span> 
         <span class="n">Name</span> <span class="p">=</span> <span class="s">&#34;John Doe&#34;</span><span class="p">,</span> 
-        <span class="n">Phones</span> <span class="p">=</span> <span class="k">new</span> <span class="kt">string</span><span class="na">[]</span> <span class="p">{</span> <span class="s">&#34;8000-0000&#34;</span><span class="p">,</span> <span class="s">&#34;9000-0000&#34;</span> <span class="p">},</span> 
+        <span class="n">Phones</span> <span class="p">=</span> <span class="k">new</span> <span class="kt">string</span><span class="p">[]</span> <span class="p">{</span> <span class="s">&#34;8000-0000&#34;</span><span class="p">,</span> <span class="s">&#34;9000-0000&#34;</span> <span class="p">},</span> 
         <span class="n">IsActive</span> <span class="p">=</span> <span class="k">true</span>
     <span class="p">};</span>
-    
+	
     <span class="c1">// Insert new customer document (Id will be auto-incremented)
 </span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="n">customer</span><span class="p">);</span>
-    
+	
     <span class="c1">// Update a document inside a collection
 </span><span class="c1"></span>    <span class="n">customer</span><span class="p">.</span><span class="n">Name</span> <span class="p">=</span> <span class="s">&#34;Jane Doe&#34;</span><span class="p">;</span>
-    
+	
     <span class="n">col</span><span class="p">.</span><span class="n">Update</span><span class="p">(</span><span class="n">customer</span><span class="p">);</span>
-    
+	
     <span class="c1">// Index document using document Name property
 </span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">EnsureIndex</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Name</span><span class="p">);</span>
-    
+	
     <span class="c1">// Use LINQ to query documents (filter, sort, transform)
 </span><span class="c1"></span>    <span class="kt">var</span> <span class="n">results</span> <span class="p">=</span> <span class="n">col</span><span class="p">.</span><span class="n">Query</span><span class="p">()</span>
         <span class="p">.</span><span class="n">Where</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Name</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">&#34;J&#34;</span><span class="p">))</span>
@@ -247,9 +241,7 @@
     <span class="c1">// and now we can query phones
 </span><span class="c1"></span>    <span class="kt">var</span> <span class="n">r</span> <span class="p">=</span> <span class="n">col</span><span class="p">.</span><span class="n">FindOne</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Phones</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&#34;8888-5555&#34;</span><span class="p">));</span>
 <span class="p">}</span>
-</code></pre></div>
-<h3 id="working-with-files">Working with files</h3>
-
+</code></pre></div><h3 id="working-with-files">Working with files</h3>
 <p>Need to store files? No problem: use FileStorage.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Get file storage with Int Id
 </span><span class="c1"></span><span class="kt">var</span> <span class="n">storage</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetStorage</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;();</span>

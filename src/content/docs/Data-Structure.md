@@ -96,7 +96,6 @@ In LiteDB, documents are stored in a collection that requires a unique `_id` fie
 Unlike the Guid data type, ObjectIds are sequential, so it's a better solution for indexing. ObjectIds use hexadecimal numbers represented as strings.
 
 ```C#
-
 var id = ObjectId.NewObjectId();
 
 // You can get creation datetime from an ObjectId

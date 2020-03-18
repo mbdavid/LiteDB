@@ -172,11 +172,11 @@
     </li>
     
     <li class="">
-      <a href="/docs/collation/">Collation</a>
+      <a href="/docs/pragmas/">Pragmas</a>
     </li>
     
     <li class="">
-      <a href="/docs/pragmas/">Pragmas</a>
+      <a href="/docs/collation/">Collation</a>
     </li>
     
   </ul>
@@ -188,23 +188,16 @@
           
 <h1 class="title">Collections</h1>
 <div class="content">
-  
-
-<p>Documents are stored and organized in collections. <code>LiteCollection</code> is a generic class that is used to manage collections in LiteDB. Each collection must have a unique name:</p>
-
+  <p>Documents are stored and organized in collections. <code>LiteCollection</code> is a generic class that is used to manage collections in LiteDB. Each collection must have a unique name:</p>
 <ul>
 <li>Contains only letters, numbers and <code>_</code></li>
 <li>Collection names are <strong>case insensitive</strong></li>
 <li>Collection names starting with <code>_</code> are reserved for internal storage use</li>
 <li>Collection names starting with <code>$</code> are reserved for internal system/virtual collections</li>
 </ul>
-
 <p>The total size of all the collections names in a database is limited to 8000 bytes. If you plan to have many collections in your database, make sure to use short names for your collections. For example, if collection names are about 10 bytes in length, you can have ~800 collection in the database.</p>
-
 <p>Collections are auto created on first <code>Insert</code> or <code>EnsureIndex</code> operation. Running a query, delete or update on a document in a non existing collection does not create one.</p>
-
 <p><code>LiteCollection&lt;T&gt;</code> is a generic class that can be used with <code>&lt;T&gt;</code> as <code>BsonDocument</code> for schema-less documents.  Internally LiteDB converts <code>T</code> to <code>BsonDocument</code> and all operations use the this generic document.</p>
-
 <p>In this example, both code snippets produce the same results.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Typed collection
 </span><span class="c1"></span><span class="n">using</span><span class="p">(</span><span class="kt">var</span> <span class="n">db</span> <span class="p">=</span> <span class="k">new</span> <span class="n">LiteDatabase</span><span class="p">(</span><span class="s">&#34;mydb.db&#34;</span><span class="p">))</span>
@@ -229,7 +222,7 @@
 </span><span class="c1"></span>    <span class="kt">var</span> <span class="n">col</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">(</span><span class="s">&#34;customer&#34;</span><span class="p">);</span>
     
     <span class="c1">// Insert document to collection - if collection does not exist, it is created
-</span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="k">new</span> <span class="n">BsonDocument</span><span class="p">{</span><span class="na"> [&#34;_id&#34;]</span> <span class="p">=</span> <span class="m">1</span><span class="p">,</span><span class="na"> [&#34;Name&#34;]</span> <span class="p">=</span> <span class="s">&#34;John Doe&#34;</span> <span class="p">});</span>
+</span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="k">new</span> <span class="n">BsonDocument</span><span class="p">{</span> <span class="p">[</span><span class="s">&#34;_id&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="m">1</span><span class="p">,</span> <span class="p">[</span><span class="s">&#34;Name&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="s">&#34;John Doe&#34;</span> <span class="p">});</span>
     
     <span class="c1">// Create an index over the Field name (if it doesn&#39;t exist)
 </span><span class="c1"></span>    <span class="n">col</span><span class="p">.</span><span class="n">EnsureIndex</span><span class="p">(</span><span class="s">&#34;Name&#34;</span><span class="p">);</span>
@@ -237,11 +230,8 @@
     <span class="c1">// Now, search for your document
 </span><span class="c1"></span>    <span class="kt">var</span> <span class="n">customer</span> <span class="p">=</span> <span class="n">col</span><span class="p">.</span><span class="n">FindOne</span><span class="p">(</span><span class="s">&#34;$.Name = &#39;john doe&#39;&#34;</span><span class="p">);</span>
 <span class="p">}</span>
-</code></pre></div>
-<h2 id="system-collections">System Collections</h2>
-
+</code></pre></div><h2 id="system-collections">System Collections</h2>
 <p>System collections are special collections that provide information about the datafile. All system collections start with <code>$</code>. All system collections, with the exception of <code>$file</code>, are read-only.</p>
-
 <table>
 <thead>
 <tr>
@@ -249,83 +239,65 @@
 <th>Description</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td>$cols</td>
 <td>Lists all collections in the datafile, including the system collections.</td>
 </tr>
-
 <tr>
 <td>$database</td>
 <td>Shows general info about the datafile.</td>
 </tr>
-
 <tr>
 <td>$indexes</td>
 <td>Lists all indexes in the datafile.</td>
 </tr>
-
 <tr>
 <td>$sequences</td>
 <td>Lists all the sequences in the datafile.</td>
 </tr>
-
 <tr>
 <td>$transactions</td>
 <td>Lists all the open transactions in the datafile.</td>
 </tr>
-
 <tr>
 <td>$snapshots</td>
 <td>Lists all existing snapshots.</td>
 </tr>
-
 <tr>
 <td>$open_cursors</td>
 <td>Lists all the open cursors in the datafile.</td>
 </tr>
-
 <tr>
 <td>$dump(pageID)</td>
 <td>Lists advanced info about the desired page. If no pageID is provided, lists all the pages.</td>
 </tr>
-
 <tr>
 <td>$page_list(pageID)</td>
 <td>Lists basic info about the desired page. If no pageID is provided, lists all the pages.</td>
 </tr>
-
 <tr>
 <td>$query(subquery)</td>
 <td>Takes a query as string and returns the result of the query. Can be used for simulating subqueries. <strong>Experimental</strong>.</td>
 </tr>
-
 <tr>
 <td>$file(path)</td>
 <td>See below.</td>
 </tr>
 </tbody>
 </table>
-
 <h4 id="file">$file</h4>
-
-<p>The <code>$file</code> system collection can be used to read and write to external files.</p>
-
+<p>The <code>$file</code> system collection can be used to read from and write to external files.</p>
 <ul>
 <li><code>SELECT $ INTO $FILE('customers.json') FROM Customers</code> dumps the entire content from the collection <code>Customers</code> into a JSON file.</li>
 <li><code>SELECT $ FROM $FILE('customers.json')</code> reads the entire content from the JSON file.</li>
 </ul>
-
 <p>There is also limited support for CSV files. Only basic data types are supported and, on writing, the schema of the first document returned by the query will define the schema of the entire CSV file, with additional fields being ignored.</p>
-
 <ul>
 <li><code>SELECT $ INTO $FILE('customers.csv') FROM Customers</code> dumps the entire content from the collection <code>Customers</code> into a CSV file.</li>
 <li><code>SELECT $ FROM $FILE('customers.csv')</code> reads the entire content from the CSV file.</li>
 </ul>
-
 <p>The single parameter can be:</p>
-
 <ul>
 <li><code>$file(&quot;filename.json|csv&quot;)</code>: Support filename only with file extension as format</li>
 <li><code>$file({ options })</code>: Support all options</li>

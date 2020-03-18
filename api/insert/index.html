@@ -157,9 +157,9 @@
 <h1 class="title">INSERT</h1>
 <div class="content">
   <p>The following structure defines the SQL insert syntax in LiteDB. Keyworks are case-insensitive.</p>
-<div class="highlight"><pre class="chroma">INSERT INTO {collection}[: {autoIdType}]
-VALUES {doc0} [, {docN}]</pre></div>
-<ul>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">INSERT INTO {collection}[: {autoIdType}]
+VALUES {doc0} [, {docN}]
+</code></pre></div><ul>
 <li><code>collection</code> is the name of the collection where the documents will be inserted</li>
 <li><code>autoIdType</code> is one of the supported auto id types supported (<code>GUID</code>, <code>INT</code>, <code>LONG</code>, <code>OBJECTID</code>). If this construct is not present, the default value is <code>OBJECTID</code>.</li>
 <li>Every document after keyword <code>VALUES</code> must be a valid JSON object. Documents must be comma-separated.</li>

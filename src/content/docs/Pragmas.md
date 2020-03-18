@@ -1,7 +1,7 @@
 ---
 title: 'Pragmas'
 draft: false
-weight: 13
+weight: 12
 ---
 
 In LiteDB v5, pragmas are variables that can alter the behavior of a datafile. They are stored in the header of the datafile.
@@ -15,7 +15,7 @@ In LiteDB v5, pragmas are variables that can alter the behavior of a datafile. T
 |UTC_DATE|no|bool|If `false`, dates are converted to local time on retrieval. Storage format is not affected (always in UTC).|false|
 |CHECKPOINT|no|int|Maximum number of pages to be stored in the log before a soft checkpoint. If set to `0`, auto-checkpoint and shutdown checkpoint are disabled.|1000|
 
-## Examples
+#### Examples
 
 - `select pragmas from $database;` returns the pragmas in the current datafile
 
@@ -23,7 +23,8 @@ In LiteDB v5, pragmas are variables that can alter the behavior of a datafile. T
 
 - `pragma UTC_DATE = true;` sets UTC_DATE to true
 
-<span id="rebuildOptions">
+
+<span id="rebuildOptions"></span>
 ## Rebuild Options
 
 Rebuild options are used to configure a rebuild.
@@ -39,6 +40,5 @@ Rebuilds are also useful to defragment a datafile, making it smaller and faster 
 
 - `rebuild;` rebuilds the database with the default collation and no password
 - `rebuild {"collation": "en-GB/IgnoreCase"};` rebuilds the datafile with the `en-GB` culture and case-insensitive string comparison
-- `rebuild {"collation": "en-GB/IgnoreCase", "password" : "1234"};` rebuilds the datafile with the `en-GB` culture, case-insensitive string comparison and sets the password to "1234"
+- `rebuild {"collation": "pt-BR/None", "password" : "1234"};` rebuilds the datafile with the `pt-BR` culture, case-sensitive string comparison and sets the password to "1234"
 
-</rebuildOptions>

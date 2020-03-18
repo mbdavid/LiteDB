@@ -172,11 +172,11 @@
     </li>
     
     <li class="">
-      <a href="/docs/collation/">Collation</a>
+      <a href="/docs/pragmas/">Pragmas</a>
     </li>
     
     <li class="">
-      <a href="/docs/pragmas/">Pragmas</a>
+      <a href="/docs/collation/">Collation</a>
     </li>
     
   </ul>
@@ -188,9 +188,7 @@
           
 <h1 class="title">Object Mapping</h1>
 <div class="content">
-  
-
-<p>LiteDB supports POCO classes to strongly type documents. When you get a <code>LiteCollection</code> instance from <code>LiteDatabase.GetCollection&lt;T&gt;</code>, <code>T</code> will be your document type. If <code>T</code> is not a <code>BsonDocument</code>, LiteDB internally maps your class to <code>BsonDocument</code>. To do this, LiteDB uses the <code>BsonMapper</code> class:</p>
+  <p>LiteDB mapper converts POCO classes to strongly type documents. When you get a <code>LiteCollection</code> instance from <code>LiteDatabase.GetCollection&lt;T&gt;</code>, <code>T</code> will be your document type. If <code>T</code> is not a <code>BsonDocument</code>, LiteDB internally maps your class to <code>BsonDocument</code>. To do this, LiteDB uses the <code>BsonMapper</code> class:</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Simple strongly-typed document
 </span><span class="c1"></span><span class="k">public</span> <span class="k">class</span> <span class="nc">Customer</span>
 <span class="p">{</span>
@@ -204,24 +202,18 @@
 <span class="kt">var</span> <span class="n">typedCustomerCollection</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">&lt;</span><span class="n">Customer</span><span class="p">&gt;(</span><span class="s">&#34;customer&#34;</span><span class="p">);</span>
 
 <span class="kt">var</span> <span class="n">schemelessCollection</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">(</span><span class="s">&#34;customer&#34;</span><span class="p">);</span> <span class="c1">// &lt;T&gt; is BsonDocument
-</span></code></pre></div>
-<h3 id="mapper-conventions">Mapper conventions</h3>
-
+</span></code></pre></div><h3 id="mapper-conventions">Mapper conventions</h3>
 <p><code>BsonMapper.ToDocument()</code> auto converts each property of a class to a document field following these conventions:</p>
-
 <ul>
 <li>Properties can be read-only or read/write</li>
-<li>The class should have an <code>Id</code> property, <code>&lt;ClassName&gt;Id</code> property, a property with <code>[BsonId]</code> attribute or mapped by the fluent API. This property must be read/write.</li>
+<li>The class should have an <code>Id</code> property, <code>&lt;ClassName&gt;Id</code> property, a property with <code>[BsonId]</code> attribute or mapped by the fluent API.</li>
 <li>A property can be decorated with <code>[BsonIgnore]</code> in order not to be mapped to a document field</li>
 <li>A property can be decorated with <code>[BsonField(&quot;fieldName&quot;)]</code> to customize the name of the document field</li>
 <li>No circular references are allowed</li>
 <li>Max depth of 20 inner classes</li>
-<li>Class fields are not converted to document (by default - use</li>
 <li>You can use <code>BsonMapper</code> global instance (<code>BsonMapper.Global</code>) or a custom instance and pass to <code>LiteDatabase</code> in its constructor. Keep this instance in a single place to avoid re-creating the mappings each time you use a database.</li>
 </ul>
-
 <p>In addition to basic BSON types, <code>BsonMapper</code> maps others .NET types to BSON data type:</p>
-
 <table>
 <thead>
 <tr>
@@ -229,62 +221,50 @@
 <th>BSON type</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td><code>Int16</code>, <code>UInt16</code>, <code>Byte</code>, <code>SByte</code></td>
 <td>Int32</td>
 </tr>
-
 <tr>
 <td><code>UInt32</code> , <code>UInt64</code></td>
 <td>Int64</td>
 </tr>
-
 <tr>
 <td><code>Single</code></td>
 <td>Double</td>
 </tr>
-
 <tr>
 <td><code>Char</code>, <code>Enum</code></td>
 <td>String</td>
 </tr>
-
 <tr>
 <td><code>IList&lt;T&gt;</code></td>
 <td>Array</td>
 </tr>
-
 <tr>
 <td><code>T[]</code></td>
 <td>Array</td>
 </tr>
-
 <tr>
 <td><code>NameValueCollection</code></td>
 <td>Document</td>
 </tr>
-
 <tr>
 <td><code>IDictionary&lt;K,T&gt;</code></td>
 <td>Document</td>
 </tr>
-
 <tr>
 <td>Any other .NET type</td>
 <td>Document</td>
 </tr>
 </tbody>
 </table>
-
 <ul>
 <li><code>Nullable&lt;T&gt;</code> are accepted. If value is <code>null</code> the BSON type is Null, otherwise the mapper will use <code>T?</code>.</li>
 <li>For <code>IDictionary&lt;K, T&gt;</code>, <code>K</code> key must be <code>String</code> or a simple type (convertible using <code>Convert.ToString(..)</code>).</li>
 </ul>
-
 <h4 id="constructors">Constructors</h4>
-
 <p>Starting with version 5 of LiteDB you can use <code>BsonCtorAttribute</code> to indicate which constructor the mapper must use. Fields no longer need to have a public setter and can be initialized by the constructor.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="k">public</span> <span class="k">class</span> <span class="nc">Customer</span>
 <span class="p">{</span>
@@ -299,9 +279,9 @@
         <span class="n">Name</span> <span class="p">=</span> <span class="n">name</span><span class="p">;</span>
         <span class="n">CreationDate</span> <span class="p">=</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
         <span class="n">IsActive</span> <span class="p">=</span> <span class="k">true</span><span class="p">;</span>
-    <span class="p">}</span><span class="na">
-</span><span class="na">
-</span><span class="na">    [BsonCtorAttribute]</span>
+    <span class="p">}</span>
+<span class="na">
+</span><span class="na">    [BsonCtor]</span>
     <span class="k">public</span> <span class="n">Customer</span><span class="p">(</span><span class="n">ObjectId</span> <span class="n">_id</span><span class="p">,</span> <span class="kt">string</span> <span class="n">name</span><span class="p">,</span> <span class="n">DateTime</span> <span class="n">creationDate</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">isActive</span><span class="p">)</span>
     <span class="p">{</span>
         <span class="n">CustomerId</span> <span class="p">=</span> <span class="n">_id</span><span class="p">;</span>
@@ -312,36 +292,27 @@
 <span class="p">}</span>
 
 <span class="kt">var</span> <span class="n">typedCustomerCollection</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">&lt;</span><span class="n">Customer</span><span class="p">&gt;(</span><span class="s">&#34;customer&#34;</span><span class="p">);</span>
-</code></pre></div>
-<p>When <code>GetCollection&lt;T&gt;</code> is called, it tries to create instances of <code>T</code> by searching for a constructor in the following order:</p>
-
+</code></pre></div><p>When <code>GetCollection&lt;T&gt;</code> is called, it tries to create instances of <code>T</code> by searching for a constructor in the following order:</p>
 <ul>
 <li>First, it searches for a constructor with <code>BsonCtorAttribute</code></li>
 <li>Then, it searches for a parameterless constructor</li>
 <li>Finally, it searches for a constructor whose parameters names match with the names of the fields in the document</li>
 </ul>
-
 <p>Please note that all the parameters in the constructor annotated with <code>BsonCtorAttribute</code> must be of a simple type, <code>BsonDocument</code> or <code>BsonArray</code>.</p>
-
 <h4 id="register-a-custom-type">Register a custom type</h4>
-
 <p>You can register your own map function, using the <code>RegisterType&lt;T&gt;</code> instance method. To register, you need to provide both serialize and deserialize functions.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="n">BsonMapper</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">Uri</span><span class="p">&gt;</span>
 <span class="p">(</span>
     <span class="n">serialize</span><span class="p">:</span> <span class="p">(</span><span class="n">uri</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">uri</span><span class="p">.</span><span class="n">AbsoluteUri</span><span class="p">,</span>
     <span class="n">deserialize</span><span class="p">:</span> <span class="p">(</span><span class="n">bson</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">Uri</span><span class="p">(</span><span class="n">bson</span><span class="p">.</span><span class="n">AsString</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div>
-<ul>
+</code></pre></div><ul>
 <li><code>serialize</code> function receives an instance of <code>T</code> and returns an instance of <code>BsonValue</code></li>
 <li><code>deserialize</code> function receives an instance of <code>BsonValue</code> and returns an instance of <code>T</code></li>
 <li><code>RegisterType</code> supports complex objects via <code>BsonDocument</code> or <code>BsonArray</code></li>
 </ul>
-
 <h4 id="mapping-options">Mapping options</h4>
-
 <p><code>BsonMapper</code> class settings:</p>
-
 <table>
 <thead>
 <tr>
@@ -350,50 +321,42 @@
 <th>Description</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td><code>SerializeNullValues</code></td>
 <td>false</td>
 <td>Serialize field if value is <code>null</code></td>
 </tr>
-
 <tr>
 <td><code>TrimWhitespace</code></td>
 <td>true</td>
 <td>Trim strings properties before mapping to document</td>
 </tr>
-
 <tr>
 <td><code>EmptyStringToNull</code></td>
 <td>true</td>
 <td>Empty strings convert to <code>null</code></td>
 </tr>
-
 <tr>
 <td><code>ResolvePropertyName</code></td>
 <td>(s) =&gt; s</td>
 <td>A function to map property name to document field name</td>
 </tr>
-
 <tr>
 <td><code>EnumAsInteger</code></td>
 <td>false</td>
 <td>Map enum to <code>string</code> (default) or to <code>int</code></td>
 </tr>
-
 <tr>
 <td><code>IncludeFields</code></td>
 <td>false</td>
 <td>If mapper should include all class fields</td>
 </tr>
-
 <tr>
 <td><code>IncludeNonPublic</code></td>
 <td>false</td>
 <td>If mapper should include all private/protected fields/properties</td>
 </tr>
-
 <tr>
 <td><code>ResolveCollectionName</code></td>
 <td>typeof(T).Name</td>
@@ -401,9 +364,7 @@
 </tr>
 </tbody>
 </table>
-
 <p>Please note that Linq expressions in typed collections will only work over Enum fields if <code>EnumAsInteger = true</code>.</p>
-
 <p><code>BsonMapper</code> offers 2 predefined functions to resolve property names: <code>UseCamelCase()</code> and <code>UseLowerCaseDelimiter('_')</code>.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="n">BsonMapper</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">UseLowerCaseDelimiter</span><span class="p">(</span><span class="sc">&#39;_&#39;</span><span class="p">);</span>
 
@@ -411,35 +372,28 @@
 <span class="p">{</span>
     <span class="k">public</span> <span class="kt">int</span> <span class="n">CustomerId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
 
-    <span class="k">public</span> <span class="kt">string</span> <span class="n">FirstName</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span><span class="na">
-</span><span class="na">
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">FirstName</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="na">
 </span><span class="na">    [BsonField(&#34;customerLastName&#34;)]</span>
     <span class="k">public</span> <span class="kt">string</span> <span class="n">LastName</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="kt">var</span> <span class="n">doc</span> <span class="p">=</span> <span class="n">BsonMapper</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">ToDocument</span><span class="p">(</span><span class="k">new</span> <span class="n">Customer</span> <span class="p">{</span> <span class="n">FirstName</span> <span class="p">=</span> <span class="s">&#34;John&#34;</span><span class="p">,</span> <span class="n">LastName</span> <span class="p">=</span> <span class="s">&#34;Doe&#34;</span> <span class="p">});</span>
 
-<span class="kt">var</span> <span class="n">id</span> <span class="p">=</span> <span class="n">doc</span><span class="na">[&#34;_id&#34;]</span><span class="p">.</span><span class="n">AsInt</span><span class="p">;</span>
-<span class="kt">var</span> <span class="n">john</span> <span class="p">=</span> <span class="n">doc</span><span class="na">[&#34;first_name&#34;]</span><span class="p">.</span><span class="n">AsString</span><span class="p">;</span>
-<span class="kt">var</span> <span class="n">doe</span> <span class="p">=</span> <span class="n">doc</span><span class="na">[&#34;customerLastName&#34;]</span><span class="p">.</span><span class="n">AsString</span><span class="p">;</span>
-</code></pre></div>
-<h3 id="autoid">AutoId</h3>
-
+<span class="kt">var</span> <span class="n">id</span> <span class="p">=</span> <span class="n">doc</span><span class="p">[</span><span class="s">&#34;_id&#34;</span><span class="p">].</span><span class="n">AsInt</span><span class="p">;</span>
+<span class="kt">var</span> <span class="n">john</span> <span class="p">=</span> <span class="n">doc</span><span class="p">[</span><span class="s">&#34;first_name&#34;</span><span class="p">].</span><span class="n">AsString</span><span class="p">;</span>
+<span class="kt">var</span> <span class="n">doe</span> <span class="p">=</span> <span class="n">doc</span><span class="p">[</span><span class="s">&#34;customerLastName&#34;</span><span class="p">].</span><span class="n">AsString</span><span class="p">;</span>
+</code></pre></div><h3 id="autoid">AutoId</h3>
 <p>There are 4 built-in auto-id functions implemented:</p>
-
 <ul>
 <li><code>ObjectId</code>: <code>ObjectId.NewObjectId()</code></li>
 <li><code>Guid</code>: <code>Guid.NewGuid()</code> method</li>
 <li><code>Int32/Int64</code>: New collection sequence</li>
 </ul>
-
 <p>AutoId is only used when there is no <code>_id</code> field in the document upon insertion. In strongly-typed documents, <code>BsonMapper</code> removes the <code>_id</code> field for empty values (like <code>0</code> for <code>Int</code> or <code>Guid.Empty</code> for <code>Guid</code>).
 Please note that AutoId requires the id field to have a public setter.</p>
-
 <h3 id="fluent-mapping">Fluent Mapping</h3>
-
 <p>LiteDB offers a complete fluent API to create custom mappings without using attributes, keeping you domain classes without external references.</p>
-
 <p>Fluent API uses <code>EntityBuilder</code> to add custom mappings to your classes.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="kt">var</span> <span class="n">mapper</span> <span class="p">=</span> <span class="n">BsonMapper</span><span class="p">.</span><span class="n">Global</span><span class="p">;</span>
 

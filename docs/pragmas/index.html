@@ -171,12 +171,12 @@
       <a href="/docs/encryption/">Encryption</a>
     </li>
     
-    <li class="">
-      <a href="/docs/collation/">Collation</a>
-    </li>
-    
     <li class="active ">
       <a href="/docs/pragmas/">Pragmas</a>
+    </li>
+    
+    <li class="">
+      <a href="/docs/collation/">Collation</a>
     </li>
     
   </ul>
@@ -188,10 +188,7 @@
           
 <h1 class="title">Pragmas</h1>
 <div class="content">
-  
-
-<p>In LiteDB v5, pragmas are variables that can alter the behavior of a datafile. They are stored in the header of the datafile.</p>
-
+  <p>In LiteDB v5, pragmas are variables that can alter the behavior of a datafile. They are stored in the header of the datafile.</p>
 <table>
 <thead>
 <tr>
@@ -202,7 +199,6 @@
 <th>Default value</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td>USER_VERSION</td>
@@ -211,7 +207,6 @@
 <td>Reserved for version control by the user. Does not affect the behavior of the datafile.</td>
 <td>0</td>
 </tr>
-
 <tr>
 <td>COLLATION</td>
 <td>yes (can be changed with a rebuild)</td>
@@ -219,7 +214,6 @@
 <td>Check <a href="../collation">Collation</a>.</td>
 <td><code>CurrentCulture</code> and <code>IgnoreCase</code></td>
 </tr>
-
 <tr>
 <td>TIMEOUT</td>
 <td>no</td>
@@ -227,7 +221,6 @@
 <td>Maximum amount of time (in seconds) that the engine waits for a shared resouce to be unlocked.</td>
 <td>60</td>
 </tr>
-
 <tr>
 <td>LIMIT_SIZE</td>
 <td>no</td>
@@ -235,7 +228,6 @@
 <td>Maximum size (in bytes) that the datafile can grow to. Cannot be smaller than the current datafile size. Cannot be smaller than 4 pages (32768 bytes).</td>
 <td>long.MaxValue</td>
 </tr>
-
 <tr>
 <td>UTC_DATE</td>
 <td>no</td>
@@ -243,7 +235,6 @@
 <td>If <code>false</code>, dates are converted to local time on retrieval. Storage format is not affected (always in UTC).</td>
 <td>false</td>
 </tr>
-
 <tr>
 <td>CHECKPOINT</td>
 <td>no</td>
@@ -253,23 +244,21 @@
 </tr>
 </tbody>
 </table>
-
-<h2 id="examples">Examples</h2>
-
+<h4 id="examples">Examples</h4>
 <ul>
-<li><p><code>select pragmas from $database;</code> returns the pragmas in the current datafile</p></li>
-
-<li><p><code>pragma USER_VERSION = 1;</code> sets USER_VERSION to 1</p></li>
-
-<li><p><code>pragma UTC_DATE = true;</code> sets UTC_DATE to true</p></li>
+<li>
+<p><code>select pragmas from $database;</code> returns the pragmas in the current datafile</p>
+</li>
+<li>
+<p><code>pragma USER_VERSION = 1;</code> sets USER_VERSION to 1</p>
+</li>
+<li>
+<p><code>pragma UTC_DATE = true;</code> sets UTC_DATE to true</p>
+</li>
 </ul>
-
-<p><span id="rebuildOptions"></p>
-
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
 <h2 id="rebuild-options">Rebuild Options</h2>
-
 <p>Rebuild options are used to configure a rebuild.</p>
-
 <table>
 <thead>
 <tr>
@@ -279,7 +268,6 @@
 <th>Default value</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td>collation</td>
@@ -287,7 +275,6 @@
 <td>Check <a href="../collation">Collation</a>.</td>
 <td>null (will use <code>CurrentCulture</code> and <code>IgnoreCase</code> if null)</td>
 </tr>
-
 <tr>
 <td>password</td>
 <td>string</td>
@@ -296,18 +283,13 @@
 </tr>
 </tbody>
 </table>
-
 <p>If the <code>rebuild</code> command is issued without options, both are assumed to be null.</p>
-
 <p>Rebuilds are also useful to defragment a datafile, making it smaller and faster to access.</p>
-
 <ul>
 <li><code>rebuild;</code> rebuilds the database with the default collation and no password</li>
 <li><code>rebuild {&quot;collation&quot;: &quot;en-GB/IgnoreCase&quot;};</code> rebuilds the datafile with the <code>en-GB</code> culture and case-insensitive string comparison</li>
-<li><code>rebuild {&quot;collation&quot;: &quot;en-GB/IgnoreCase&quot;, &quot;password&quot; : &quot;1234&quot;};</code> rebuilds the datafile with the <code>en-GB</code> culture, case-insensitive string comparison and sets the password to &ldquo;1234&rdquo;</li>
+<li><code>rebuild {&quot;collation&quot;: &quot;pt-BR/None&quot;, &quot;password&quot; : &quot;1234&quot;};</code> rebuilds the datafile with the <code>pt-BR</code> culture, case-sensitive string comparison and sets the password to &ldquo;1234&rdquo;</li>
 </ul>
-
-<p></rebuildOptions></p>
 
 </div>
 </div>

@@ -156,36 +156,31 @@
           
 <h1 class="title">Misc</h1>
 <div class="content">
-  
-
-<h3 id="collection-renaming">Collection Renaming</h3>
-<div class="highlight"><pre class="chroma">RENAME COLLECTION &lt;collection&gt; TO &lt;newName&gt;</pre></div>
-<ul>
+  <h3 id="collection-renaming">Collection Renaming</h3>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">RENAME COLLECTION &lt;collection&gt; TO &lt;newName&gt;
+</code></pre></div><ul>
 <li><code>collection</code> is the current name of the collection.</li>
 <li><code>newName</code> is the new name of the collection.</li>
 </ul>
-
 <h3 id="drop">Drop</h3>
-<div class="highlight"><pre class="chroma">DROP INDEX &lt;collection&gt;.&lt;indexName&gt;
-DROP COLLECTION &lt;collection&gt;</pre></div>
-<ul>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">DROP INDEX &lt;collection&gt;.&lt;indexName&gt;
+DROP COLLECTION &lt;collection&gt;
+</code></pre></div><ul>
 <li><code>collection</code> is the name of the collection.</li>
 <li><code>indexName</code> is the name of the index to be dropped.</li>
 </ul>
-
 <h3 id="create">Create</h3>
-<div class="highlight"><pre class="chroma">CREATE [ UNQIUE ] INDEX {indexName} ON {collection} ({indexExpr})</pre></div>
-<ul>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">CREATE [ UNQIUE ] INDEX {indexName} ON {collection} ({indexExpr})
+</code></pre></div><ul>
 <li><code>indexName</code> is the name of the index being created.</li>
 <li><code>collection</code> is the name of the collection.</li>
 <li><code>indexExpr</code> is the expression being indexed. For more info, see <a href="../../docs/indexes">Indexes</a>.</li>
 </ul>
-
 <h3 id="begin">Begin</h3>
-<div class="highlight"><pre class="chroma">BEGIN [ TRANS | TRANSACTION ]</pre></div>
-<h3 id="rebuild">Rebuild</h3>
-<div class="highlight"><pre class="chroma">REBUILD &lt;rebuildOptions&gt;</pre></div>
-<ul>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">BEGIN [ TRANS | TRANSACTION ]
+</code></pre></div><h3 id="rebuild">Rebuild</h3>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">REBUILD &lt;rebuildOptions&gt;
+</code></pre></div><ul>
 <li>For more info, see <a href="../../docs/pragmas#rebuildOptions">Rebuild Options</a>.</li>
 </ul>
 

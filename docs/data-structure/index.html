@@ -172,11 +172,11 @@
     </li>
     
     <li class="">
-      <a href="/docs/collation/">Collation</a>
+      <a href="/docs/pragmas/">Pragmas</a>
     </li>
     
     <li class="">
-      <a href="/docs/pragmas/">Pragmas</a>
+      <a href="/docs/collation/">Collation</a>
     </li>
     
   </ul>
@@ -188,9 +188,7 @@
           
 <h1 class="title">Data Structure</h1>
 <div class="content">
-  
-
-<p>LiteDB stores data as documents, which are JSON-like objects containing key-value pairs. Documents are a schema-less data structure. Each document stores both its data and its structure.</p>
+  <p>LiteDB stores data as documents, which are JSON-like objects containing key-value pairs. Documents are a schema-less data structure. Each document stores both its data and its structure.</p>
 <div class="highlight"><pre class="chroma"><code class="language-JS" data-lang="JS"><span class="p">{</span>
     <span class="nx">_id</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
     <span class="nx">name</span><span class="o">:</span> <span class="p">{</span> <span class="nx">first</span><span class="o">:</span> <span class="s2">&#34;John&#34;</span><span class="p">,</span> <span class="nx">last</span><span class="o">:</span> <span class="s2">&#34;Doe&#34;</span> <span class="p">},</span>
@@ -199,8 +197,7 @@
     <span class="nx">createdDate</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$date</span><span class="o">:</span> <span class="s2">&#34;2014-10-30T00:00:00.00Z&#34;</span> <span class="p">},</span>
     <span class="nx">phones</span><span class="o">:</span> <span class="p">[</span><span class="s2">&#34;8000-0000&#34;</span><span class="p">,</span> <span class="s2">&#34;9000-0000&#34;</span><span class="p">]</span>
 <span class="p">}</span>
-</code></pre></div>
-<ul>
+</code></pre></div><ul>
 <li><code>_id</code> contains document primary key - a unique value in collection</li>
 <li><code>name</code> contains an embedded document with <code>first</code> and <code>last</code> fields</li>
 <li><code>age</code> contains a <code>Int32</code> value</li>
@@ -208,15 +205,10 @@
 <li><code>createDate</code> contains a <code>DateTime</code> value</li>
 <li><code>phones</code> contains an array of <code>String</code></li>
 </ul>
-
 <p>LiteDB stores documents in collections. A collection is a group of related documents that have a set of shared indices. Collections are analogous to tables in relational databases.</p>
-
 <h3 id="bson">BSON</h3>
-
 <p>LiteDB stores documents using BSON (Binary JSON). BSON is a binary representation of JSON with additional type information. In the documents, the value of a field can be any of the BSON data types, including other documents, arrays, and arrays of documents. BSON is a fast and simple way to serialize documents in binary format.</p>
-
 <p>LiteDB uses only a subset of <a href="http://bsonspec.org/spec.html">BSON data types</a>. See all supported LiteDB BSON data types and .NET equivalents.</p>
-
 <table>
 <thead>
 <tr>
@@ -224,94 +216,75 @@
 <th>.NET type</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td>MinValue</td>
 <td>-</td>
 </tr>
-
 <tr>
 <td>Null</td>
 <td>Any .NET object with <code>null</code> value</td>
 </tr>
-
 <tr>
 <td>Int32</td>
 <td><code>System.Int32</code></td>
 </tr>
-
 <tr>
 <td>Int64</td>
 <td><code>System.Int64</code></td>
 </tr>
-
 <tr>
 <td>Double</td>
 <td><code>System.Double</code></td>
 </tr>
-
 <tr>
 <td>Decimal</td>
 <td><code>System.Decimal</code></td>
 </tr>
-
 <tr>
 <td>String</td>
 <td><code>System.String</code></td>
 </tr>
-
 <tr>
 <td>Document</td>
 <td><code>System.Collection.Generic.Dictionary&lt;string, BsonValue&gt;</code></td>
 </tr>
-
 <tr>
 <td>Array</td>
 <td><code>System.Collection.Generic.List&lt;BsonValue&gt;</code></td>
 </tr>
-
 <tr>
 <td>Binary</td>
 <td><code>System.Byte[]</code></td>
 </tr>
-
 <tr>
 <td>ObjectId</td>
 <td><code>LiteDB.ObjectId</code></td>
 </tr>
-
 <tr>
 <td>Guid</td>
 <td><code>System.Guid</code></td>
 </tr>
-
 <tr>
 <td>Boolean</td>
 <td><code>System.Boolean</code></td>
 </tr>
-
 <tr>
 <td>DateTime</td>
 <td><code>System.DateTime</code></td>
 </tr>
-
 <tr>
 <td>MaxValue</td>
 <td>-</td>
 </tr>
 </tbody>
 </table>
-
 <blockquote>
 <p>Following the BSON specification, <code>DateTime</code> values are stored only up to the miliseconds.
 All <code>DateTime</code> values are converted to UTC on storage and converted back to local time on retrieval.</p>
 </blockquote>
-
 <h3 id="extended-json">Extended JSON</h3>
-
 <p>To serialize a BSON document to JSON, LiteDB uses an extended version of JSON so as not to lose any BSON type information. Extended data types are represented as embedded documents, using a key starting with <code>$</code> and string value.</p>
-
 <table>
 <thead>
 <tr>
@@ -320,50 +293,42 @@ All <code>DateTime</code> values are converted to UTC on storage and converted b
 <th>Description</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td>ObjectId</td>
 <td><code>{ &quot;$oid&quot;: &quot;507f1f55bcf96cd799438110&quot; }</code></td>
 <td>12 bytes in hex format</td>
 </tr>
-
 <tr>
 <td>Date</td>
 <td><code>{ &quot;$date&quot;: &quot;2015-01-01T00:00:00Z&quot; }</code></td>
 <td>UTC and ISO-8601 format</td>
 </tr>
-
 <tr>
 <td>Guid</td>
 <td><code>{ &quot;$guid&quot;: &quot;ebe8f677-9f27-4303-8699-5081651beb11&quot; }</code></td>
 <td></td>
 </tr>
-
 <tr>
 <td>Binary</td>
 <td><code>{ &quot;$binary&quot;: &quot;VHlwZSgaFc3sdcGFzUpcmUuLi4=&quot; }</code></td>
 <td>Byte array in base64 string format</td>
 </tr>
-
 <tr>
 <td>Int64</td>
 <td><code>{ &quot;$numberLong&quot;: &quot;12200000&quot; }</code></td>
 <td></td>
 </tr>
-
 <tr>
 <td>Decimal</td>
 <td><code>{ &quot;$numberDecimal&quot;: &quot;122.9991&quot; }</code></td>
 <td></td>
 </tr>
-
 <tr>
 <td>MinValue</td>
 <td><code>{ &quot;$minValue&quot;: &quot;1&quot; }</code></td>
 <td></td>
 </tr>
-
 <tr>
 <td>MaxValue</td>
 <td><code>{ &quot;$maxValue&quot;: &quot;1&quot; }</code></td>
@@ -371,31 +336,23 @@ All <code>DateTime</code> values are converted to UTC on storage and converted b
 </tr>
 </tbody>
 </table>
-
 <p>LiteDB implements JSON in its <code>JsonSerializer</code> static class.</p>
-
 <p>If you want to convert your object type to a BsonValue, you must use a <code>BsonMapper</code>.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="kt">var</span> <span class="n">customer</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Customer</span> <span class="p">{</span> <span class="n">Id</span> <span class="p">=</span> <span class="m">1</span><span class="p">,</span> <span class="n">Name</span> <span class="p">=</span> <span class="s">&#34;John Doe&#34;</span> <span class="p">};</span>
 
 <span class="kt">var</span> <span class="n">doc</span> <span class="p">=</span> <span class="n">BsonMapper</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">ToDocument</span><span class="p">(</span><span class="n">customer</span><span class="p">);</span>
 
 <span class="kt">var</span> <span class="n">jsonString</span> <span class="p">=</span> <span class="n">JsonSerialize</span><span class="p">.</span><span class="n">Serialize</span><span class="p">(</span><span class="n">doc</span><span class="p">);</span>
-</code></pre></div>
-<p><code>JsonSerialize</code> also supports <code>TextReader</code> and <code>TextWriter</code> to read/write directly from a file or <code>Stream</code>.</p>
-
+</code></pre></div><p><code>JsonSerialize</code> also supports <code>TextReader</code> and <code>TextWriter</code> to read/write directly from a file or <code>Stream</code>.</p>
 <h3 id="objectid">ObjectId</h3>
-
 <p><code>ObjectId</code> is a 12 bytes BSON type:</p>
-
 <ul>
 <li><code>Timestamp</code>: Value representing the seconds since the Unix epoch (4 bytes)</li>
-<li><code>Machine</code>: Machine identifier (3 bytes)<br /></li>
+<li><code>Machine</code>: Machine identifier (3 bytes)</li>
 <li><code>Pid</code>: Process id (2 bytes)</li>
 <li><code>Increment</code>: A counter, starting with a random value (3 bytes)</li>
 </ul>
-
 <p>In LiteDB, documents are stored in a collection that requires a unique <code>_id</code> field that acts as a primary key. Because <code>ObjectIds</code> are small, most likely unique, and fast to generate, LiteDB uses <code>ObjectIds</code> as the default value for the <code>_id</code> field if the <code>_id</code> field is not specified.</p>
-
 <p>Unlike the Guid data type, ObjectIds are sequential, so it&rsquo;s a better solution for indexing. ObjectIds use hexadecimal numbers represented as strings.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="kt">var</span> <span class="n">id</span> <span class="p">=</span> <span class="n">ObjectId</span><span class="p">.</span><span class="n">NewObjectId</span><span class="p">();</span>
 

@@ -172,11 +172,11 @@
     </li>
     
     <li class="">
-      <a href="/docs/collation/">Collation</a>
+      <a href="/docs/pragmas/">Pragmas</a>
     </li>
     
     <li class="">
-      <a href="/docs/pragmas/">Pragmas</a>
+      <a href="/docs/collation/">Collation</a>
     </li>
     
   </ul>
@@ -188,12 +188,8 @@
           
 <h1 class="title">FileStorage</h1>
 <div class="content">
-  <p>To keep its memory profile slim, limits the size of a documents to 1MB. For most documents, this is plenty. However, 1MB is too small for a useful file storage. For this reason, LiteDB implements <code>FileStorage</code>, a custom collection to store files and streams.</p>
-
+  <p>To keep its memory profile slim, LiteDB limits the size of a documents to 1MB. For most documents, this is plenty. However, 1MB is too small for a useful file storage. For this reason, LiteDB implements <code>FileStorage</code>, a custom collection to store files and streams.</p>
 <p><code>FileStorage</code> uses two special collections:</p>
-
-<p>LiteDB uses two special collections to split file content in chunks:</p>
-
 <ul>
 <li>The first collection stores file references and metadata only (by default it is called <code>_files</code>)</li>
 </ul>
@@ -202,12 +198,11 @@
     <span class="nx">filename</span><span class="o">:</span> <span class="s2">&#34;my-photo.jpg&#34;</span><span class="p">,</span>
     <span class="nx">mimeType</span><span class="o">:</span> <span class="s2">&#34;image/jpg&#34;</span><span class="p">,</span>
     <span class="nx">length</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$numberLong</span><span class="o">:</span> <span class="s2">&#34;2340000&#34;</span> <span class="p">},</span>
-    <span class="nx">chunks</span><span class="o">:</span> <span class="mi">9</span><span class="p">,</span>
+	<span class="nx">chunks</span><span class="o">:</span> <span class="mi">9</span><span class="p">,</span>
     <span class="nx">uploadDate</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$date</span><span class="o">:</span> <span class="s2">&#34;2020-01-01T00:00:00Z&#34;</span> <span class="p">},</span>
     <span class="nx">metadata</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&#34;key1&#34;</span><span class="o">:</span> <span class="s2">&#34;value1&#34;</span><span class="p">,</span> <span class="s2">&#34;key2&#34;</span><span class="o">:</span> <span class="s2">&#34;value2&#34;</span> <span class="p">}</span>
 <span class="p">}</span>
-</code></pre></div>
-<ul>
+</code></pre></div><ul>
 <li>The second collection stores binary data in 255kB chunks (by default it is called <code>_chunks</code>)</li>
 </ul>
 <div class="highlight"><pre class="chroma"><code class="language-JS" data-lang="JS"><span class="p">{</span>
@@ -221,20 +216,14 @@
 <span class="p">{</span>
    <span class="p">...</span>
 <span class="p">}</span>
-</code></pre></div>
-<p>Files are identified by an <code>_id</code> string value, with following rules:</p>
-
+</code></pre></div><p>Files are identified by an <code>_id</code> string value, with following rules:</p>
 <ul>
 <li>Starts with a letter, number, <code>_</code>, <code>-</code>, <code>$</code>, <code>@</code>, <code>!</code>, <code>+</code>, <code>%</code>, <code>;</code> or <code>.</code></li>
 <li>If contains a <code>/</code>, must be sequence with chars above</li>
 </ul>
-
 <p>To better organize many files, you can use <code>_id</code> as a <code>directory/file_id</code>. This will be a great solution to quickly find all files in a directory using the <code>Find</code> method.</p>
-
 <p>Example: <code>$/photos/2014/picture-01.jpg</code></p>
-
 <p>The <code>FileStorage</code> collection contains simple methods like:</p>
-
 <ul>
 <li><strong><code>Upload</code></strong>: Send file or stream to database. Can be used with file or <code>Stream</code>. If file already exists, file content is overwritten.</li>
 <li><strong><code>Download</code></strong>: Get your file from database and copy to <code>Stream</code> parameter</li>
@@ -266,8 +255,7 @@
 
 <span class="c1">// Find all files references in a &#34;directory&#34;
 </span><span class="c1"></span><span class="kt">var</span> <span class="n">files</span> <span class="p">=</span> <span class="n">fs</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="s">&#34;$/photos/2014/&#34;</span><span class="p">);</span>
-</code></pre></div>
-<p><code>FileStorage</code> does not support transactions to avoid putting all of the file in memory before storing it on disk. Transactions <em>are</em> used per chunk. Each uploaded chunk is committed in a single transaction.</p>
+</code></pre></div><p><code>FileStorage</code> does not support transactions to avoid putting all of the file in memory before storing it on disk. Transactions <em>are</em> used per chunk. Each uploaded chunk is committed in a single transaction.</p>
 
 </div>
 </div>

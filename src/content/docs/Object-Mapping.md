@@ -4,7 +4,7 @@ draft: false
 weight: 3
 ---
 
-LiteDB supports POCO classes to strongly type documents. When you get a `LiteCollection` instance from `LiteDatabase.GetCollection<T>`, `T` will be your document type. If `T` is not a `BsonDocument`, LiteDB internally maps your class to `BsonDocument`. To do this, LiteDB uses the `BsonMapper` class:
+LiteDB mapper converts POCO classes to strongly type documents. When you get a `LiteCollection` instance from `LiteDatabase.GetCollection<T>`, `T` will be your document type. If `T` is not a `BsonDocument`, LiteDB internally maps your class to `BsonDocument`. To do this, LiteDB uses the `BsonMapper` class:
 
 ```C#
 // Simple strongly-typed document
@@ -27,12 +27,11 @@ var schemelessCollection = db.GetCollection("customer"); // <T> is BsonDocument
 `BsonMapper.ToDocument()` auto converts each property of a class to a document field following these conventions:
 
 - Properties can be read-only or read/write
-- The class should have an `Id` property, `<ClassName>Id` property, a property with `[BsonId]` attribute or mapped by the fluent API. This property must be read/write.
+- The class should have an `Id` property, `<ClassName>Id` property, a property with `[BsonId]` attribute or mapped by the fluent API.
 - A property can be decorated with `[BsonIgnore]` in order not to be mapped to a document field
 - A property can be decorated with `[BsonField("fieldName")]` to customize the name of the document field
 - No circular references are allowed
 - Max depth of 20 inner classes
-- Class fields are not converted to document (by default - use 
 - You can use `BsonMapper` global instance (`BsonMapper.Global`) or a custom instance and pass to `LiteDatabase` in its constructor. Keep this instance in a single place to avoid re-creating the mappings each time you use a database.
 
 In addition to basic BSON types, `BsonMapper` maps others .NET types to BSON data type:
@@ -71,7 +70,7 @@ public class Customer
         IsActive = true;
     }
 
-    [BsonCtorAttribute]
+    [BsonCtor]
     public Customer(ObjectId _id, string name, DateTime creationDate, bool isActive)
     {
         CustomerId = _id;

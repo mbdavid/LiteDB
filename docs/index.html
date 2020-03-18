@@ -172,11 +172,11 @@
     </li>
     
     <li class="">
-      <a href="/docs/collation/">Collation</a>
+      <a href="/docs/pragmas/">Pragmas</a>
     </li>
     
     <li class="">
-      <a href="/docs/pragmas/">Pragmas</a>
+      <a href="/docs/collation/">Collation</a>
     </li>
     
   </ul>
@@ -190,9 +190,7 @@
 <span class="overview">Overview</span>
 <h1 class="title">Overview</h1>
 <div class="content">
-  
-
-<h2 id="litedb-v5-a-net-nosql-document-store-in-a-single-data-file">LiteDB v5 - A .NET NoSQL Document Store in a single data file</h2>
+  <h2 id="litedb-v5---a-net-nosql-document-store-in-a-single-data-file">LiteDB v5 - A .NET NoSQL Document Store in a single data file</h2>
 
 </div>
 
@@ -200,28 +198,28 @@
 <div class="summary mb-2">
   
   <h2 class="title-summary"><a href="/docs/getting-started/">Getting Started</a></h2>
-  <p> LiteDB is a simple, fast and lightweight embedded .NET document database. LiteDB was inspired by the MongoDB database and its API is very …</p>
+  <p>LiteDB is a simple, fast and lightweight embedded .NET document database. LiteDB was inspired by the MongoDB database and its API is very …</p>
 </div>
 
 
 <div class="summary mb-2">
   
   <h2 class="title-summary"><a href="/docs/data-structure/">Data Structure</a></h2>
-  <p> LiteDB stores data as documents, which are JSON-like objects containing key-value pairs. Documents are a schema-less data structure. Each …</p>
+  <p>LiteDB stores data as documents, which are JSON-like objects containing key-value pairs. Documents are a schema-less data structure. Each …</p>
 </div>
 
 
 <div class="summary mb-2">
   
   <h2 class="title-summary"><a href="/docs/object-mapping/">Object Mapping</a></h2>
-  <p> LiteDB supports POCO classes to strongly type documents. When you get a LiteCollection instance from LiteDatabase.GetCollection, T will be …</p>
+  <p>LiteDB mapper converts POCO classes to strongly type documents. When you get a LiteCollection instance from LiteDatabase.GetCollection, T …</p>
 </div>
 
 
 <div class="summary mb-2">
   
   <h2 class="title-summary"><a href="/docs/collections/">Collections</a></h2>
-  <p> Documents are stored and organized in collections. LiteCollection is a generic class that is used to manage collections in LiteDB. Each …</p>
+  <p>Documents are stored and organized in collections. LiteCollection is a generic class that is used to manage collections in LiteDB. Each …</p>
 </div>
 
 
@@ -236,35 +234,35 @@ var …</p>
 <div class="summary mb-2">
   
   <h2 class="title-summary"><a href="/docs/expressions/">Expressions</a></h2>
-  <p> Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path …</p>
+  <p>Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path …</p>
 </div>
 
 
 <div class="summary mb-2">
   
   <h2 class="title-summary"><a href="/docs/dbref/">DbRef</a></h2>
-  <p> LiteDB is a document database, so there is no JOIN between collections. You can use embedded documents (sub-documents) or create a …</p>
+  <p>LiteDB is a document database, so there is no JOIN between collections. You can use embedded documents (sub-documents) or create a reference …</p>
 </div>
 
 
 <div class="summary mb-2">
   
   <h2 class="title-summary"><a href="/docs/connection-string/">Connection String</a></h2>
-  <p> LiteDatabase can be initialized using a string connection, with key1=value1; key2=value2; ... syntax. If there is no = in your connection …</p>
+  <p>LiteDatabase can be initialized using a string connection, with key1=value1; key2=value2; ... syntax. If there is no = in your connection …</p>
 </div>
 
 
 <div class="summary mb-2">
   
   <h2 class="title-summary"><a href="/docs/filestorage/">FileStorage</a></h2>
-  <p>To keep its memory profile slim, limits the size of a documents to 1MB. For most documents, this is plenty. However, 1MB is too small for a …</p>
+  <p>To keep its memory profile slim, LiteDB limits the size of a documents to 1MB. For most documents, this is plenty. However, 1MB is too small …</p>
 </div>
 
 
 <div class="summary mb-2">
   
   <h2 class="title-summary"><a href="/docs/indexes/">Indexes</a></h2>
-  <p> LiteDB improves search performance by using indexes on document fields or expressions. Each index storess the value of a specific …</p>
+  <p>LiteDB improves search performance by using indexes on document fields or expressions. Each index storess the value of a specific expression …</p>
 </div>
 
 
@@ -278,16 +276,16 @@ The Aes object used …</p>
 
 <div class="summary mb-2">
   
-  <h2 class="title-summary"><a href="/docs/collation/">Collation</a></h2>
-  <p> A collation is a special pragma (for more info, see Pragmas) that allows users to specify a culture and string compare options for a …</p>
+  <h2 class="title-summary"><a href="/docs/pragmas/">Pragmas</a></h2>
+  <p>In LiteDB v5, pragmas are variables that can alter the behavior of a datafile. They are stored in the header of the datafile.
+   Name …</p>
 </div>
 
 
 <div class="summary mb-2">
   
-  <h2 class="title-summary"><a href="/docs/pragmas/">Pragmas</a></h2>
-  <p> In LiteDB v5, pragmas are variables that can alter the behavior of a datafile. They are stored in the header of the datafile.
-   Name …</p>
+  <h2 class="title-summary"><a href="/docs/collation/">Collation</a></h2>
+  <p>A collation is a special pragma (for more info, see Pragmas) that allows users to specify a culture and string compare options for a …</p>
 </div>
 
 

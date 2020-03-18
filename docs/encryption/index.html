@@ -172,11 +172,11 @@
     </li>
     
     <li class="">
-      <a href="/docs/collation/">Collation</a>
+      <a href="/docs/pragmas/">Pragmas</a>
     </li>
     
     <li class="">
-      <a href="/docs/pragmas/">Pragmas</a>
+      <a href="/docs/collation/">Collation</a>
     </li>
     
   </ul>
@@ -189,9 +189,7 @@
 <h1 class="title">Encryption</h1>
 <div class="content">
   <p>LiteDB uses salted AES (as defined by <a href="https://tools.ietf.org/html/rfc2898">RFC 2898</a>) as its encryption. This is implemented by the <code>Rfc2898DeriveBytes</code> class.</p>
-
 <p>The <code>Aes</code> object used for cryptography is initialized with <code>PaddingMode.None</code> and <code>CipherMode.ECB</code>.</p>
-
 <p>The password for an encrypted datafile is defined in the connection string (for more info, check <a href="../connection-string">Connection String</a>). The password can only be changed or removed by rebuilding the datafile (for more info, check Rebuild Options in <a href="../pragmas#rebuildOptions">Pragmas</a>).</p>
 
 </div>
