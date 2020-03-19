@@ -330,7 +330,7 @@ namespace LiteDB
             }
             finally
             {
-                this.OpenDatabase();
+                this.CloseDatabase();
             }
         }
 
