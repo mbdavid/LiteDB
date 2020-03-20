@@ -18,7 +18,7 @@ namespace LiteDB
         public bool EnsureIndex(string name, BsonExpression expression, bool unique = false)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
-            if (string.IsNullOrEmpty(expression)) throw new ArgumentNullException(nameof(expression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
 
             return _engine.EnsureIndex(_collection, name, expression, unique);
         }
@@ -30,7 +30,7 @@ namespace LiteDB
         /// <param name="unique">If is a unique index</param>
         public bool EnsureIndex(BsonExpression expression, bool unique = false)
         {
-            if (string.IsNullOrEmpty(expression)) throw new ArgumentNullException(nameof(expression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
 
             var name = Regex.Replace(expression.Source, @"[^a-z0-9]", "", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 

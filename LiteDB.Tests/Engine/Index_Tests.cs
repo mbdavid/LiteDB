@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using FluentAssertions;
 using Xunit;
 
@@ -111,6 +112,31 @@ namespace LiteDB.Tests.Engine
                 var r6 = db.Execute("SELECT name FROM names WHERE name LIKE 'marc__o").ToArray();
 
                 r6.Length.Should().Be(1);
+            }
+        }
+
+        [Fact]
+        public void EnsureIndex_Invalid_Arguments()
+        {
+            using var db = new LiteDatabase("filename=:memory:");
+            var test = db.GetCollection("test");
+
+            // null name
+            {
+                var exn = Assert.Throws<ArgumentNullException>(() => test.EnsureIndex(null, "x", false));
+                Assert.Equal("name", exn.ParamName);
+            }
+
+            // null expression 1
+            {
+                var exn = Assert.Throws<ArgumentNullException>(() => test.EnsureIndex(null, false));
+                Assert.Equal("expression", exn.ParamName);
+            }
+
+            // null expression 2
+            {
+                var exn = Assert.Throws<ArgumentNullException>(() => test.EnsureIndex("x", null, false));
+                Assert.Equal("expression", exn.ParamName);
             }
         }
     }
