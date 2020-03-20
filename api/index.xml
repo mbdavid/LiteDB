@@ -53,6 +53,20 @@ UPDATE &amp;lt;collection&amp;gt;SET &amp;lt;key0&amp;gt; = &amp;lt;exprValue0&
     </item>
     
     <item>
+      <title>Functions</title>
+      <link>/api/functions/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/api/functions/</guid>
+      <description>Aggregate Functions   COUNT(array) - Returns the number of elements in array
+  MIN(array) - Returns the lowest value in array
+  MAX(array) - Returns the highest value in array
+  FIRST(array) - Returns the first element in array
+  LAST(array) - Returns the last element in array
+  AVG(array) - Returns the average value of the numerical values in array (ignores non-numerical values)</description>
+    </item>
+    
+    <item>
       <title>Misc</title>
       <link>/api/misc/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>

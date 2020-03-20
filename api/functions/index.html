@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Functions - LiteDB :: A .NET embedded NoSQL database</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  
+  
+  <link rel="stylesheet" href="/css/style.min.80c4975c2143419d29740f44dab842d29887572b68eea2718cf5c164c94f1b9f.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-single'>
+
+  <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+          <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+      </div>
+  </div>
+
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="/"><img alt="Logo" src="/images/logo_litedb.svg" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="/"><img alt="Logo" src="/images/logo_litedb.svg" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="/">
+        <span>HOME</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-docs">
+      <a href="/docs/">
+        <span>DOCS</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-api">
+      <a href="/api/">
+        <span>API</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-download">
+      <a href="https://www.nuget.org/packages/LiteDB/">
+        <span>DOWNLOAD</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+<div class="docs-menu">
+  <h4>Api</h4>
+  <ul>
+    
+    <li class="">
+      <a href="/api/query/">SELECT</a>
+    </li>
+    
+    <li class="">
+      <a href="/api/delete/">DELETE</a>
+    </li>
+    
+    <li class="">
+      <a href="/api/insert/">INSERT</a>
+    </li>
+    
+    <li class="">
+      <a href="/api/update/">UPDATE</a>
+    </li>
+    
+    <li class="active ">
+      <a href="/api/functions/">Functions</a>
+    </li>
+    
+    <li class="">
+      <a href="/api/misc/">Misc</a>
+    </li>
+    
+  </ul>
+</div>
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+<h1 class="title">Functions</h1>
+<div class="content">
+  <h3 id="aggregate-functions">Aggregate Functions</h3>
+<ul>
+<li>
+<p><code>COUNT(array)</code> - Returns the number of elements in <code>array</code></p>
+</li>
+<li>
+<p><code>MIN(array)</code> - Returns the lowest value in <code>array</code></p>
+</li>
+<li>
+<p><code>MAX(array)</code> - Returns the highest value in <code>array</code></p>
+</li>
+<li>
+<p><code>FIRST(array)</code> - Returns the first element in <code>array</code></p>
+</li>
+<li>
+<p><code>LAST(array)</code> - Returns the last element in <code>array</code></p>
+</li>
+<li>
+<p><code>AVG(array)</code> - Returns the average value of the numerical values in <code>array</code> (ignores non-numerical values)</p>
+</li>
+<li>
+<p><code>SUM(array)</code> - Returns the sum of the numerical values in <code>array</code> (ignores non-numerical values)</p>
+</li>
+<li>
+<p><code>ANY(array)</code> - Returns <code>true</code> if <code>array</code> has any elements</p>
+</li>
+</ul>
+<h3 id="datatype-functions">DataType Functions</h3>
+<ul>
+<li>
+<p><code>MINVALUE()</code> - Returns the singleton instance of <code>MinValue</code></p>
+</li>
+<li>
+<p><code>MAXVALUE()</code> - Returns the singleton instance of <code>MaxValue</code></p>
+</li>
+<li>
+<p><code>OBJECTID()</code> - Returns a new instance of <code>ObjectId</code></p>
+</li>
+<li>
+<p><code>GUID()</code> - Returns a new instance of <code>Guid</code></p>
+</li>
+<li>
+<p><code>NOW()</code> - Returns the current timestamp in local time</p>
+</li>
+<li>
+<p><code>NOW_UTC()</code> - Returns the current timestamp in UTC</p>
+</li>
+<li>
+<p><code>TODAY()</code> - Returns the current date at 00h00min00s</p>
+</li>
+<li>
+<p><code>INT32(value)</code> - Returns <code>value</code> converted to <code>Int32</code>, or <code>null</code> if not possible</p>
+</li>
+<li>
+<p><code>INT64(value)</code> - Returns <code>value</code> converted to <code>Int64</code>, or <code>null</code> if not possible</p>
+</li>
+<li>
+<p><code>DOUBLE(value, culture)</code> - Returns <code>value</code> converted to <code>Double</code> according to the specified culture, or <code>null</code> if not possible</p>
+</li>
+<li>
+<p><code>DECIMAL(value, culture)</code> - Returns <code>value</code> converted to <code>Decimal</code> according to the specified culture, or <code>null</code> if not possible</p>
+</li>
+<li>
+<p><code>STRING(value)</code> - Returns the string representation of <code>value</code></p>
+</li>
+<li>
+<p><code>BINARY(value)</code> - Returns <code>value</code> converted to <code>BsonBinary</code>, or <code>null</code> if not possible</p>
+</li>
+<li>
+<p><code>OBJECTID(value)</code> - Returns <code>value</code> converted to <code>ObjectId</code>, or <code>null</code> if not possible</p>
+</li>
+<li>
+<p><code>GUID(value)</code> - Returns <code>value</code> converted to <code>Guid</code>, or <code>null</code> if not possible</p>
+</li>
+<li>
+<p><code>BOOLEAN(value)</code> - Returns <code>value</code> converted to <code>Boolean</code>, or <code>null</code> if not possible</p>
+</li>
+<li>
+<p><code>DATETIME(value, culture)</code> - Returns <code>value</code> converted to <code>DateTime</code> in local time according to the specified culture, or <code>null</code> if not possible</p>
+</li>
+<li>
+<p><code>DATETIME_UTC(value, culture)</code> - Returns <code>value</code> converted to <code>DateTime</code> in UTC according to the specified culture, or <code>null</code> if not possible</p>
+</li>
+<li>
+<p><code>DATETIME(year, month, day)</code> - Returns a new <code>DateTime</code> at 00h00min00s in local time based on the provided <code>year</code>, <code>month</code> and <code>day</code></p>
+</li>
+<li>
+<p><code>DATETIME_UTC(year, month, day)</code> - Returns a new <code>DateTime</code> at 00h00min00s in UTC based on the provided <code>year</code>, <code>month</code> and <code>day</code></p>
+</li>
+<li>
+<p><code>IS_MINVALUE(value)</code> - Returns <code>true</code> if <code>value</code> is <code>MinValue</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_MAXVALUE(value)</code> - Returns <code>true</code> if <code>value</code> is <code>MaxValue</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_NULL(value)</code> - Returns <code>true</code> if <code>value</code> is <code>null</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_INT32(value)</code> - Returns <code>true</code> if <code>value</code> is <code>Int32</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_INT64(value)</code> - Returns <code>true</code> if <code>value</code> is <code>Int64</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_DOUBLE(value)</code> - Returns <code>true</code> if <code>value</code> is <code>Double</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_DECIMAL(value)</code> - Returns <code>true</code> if <code>value</code> is <code>Decimal</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_NUMBER(value)</code> - Returns <code>true</code> if <code>value</code> is of a numerical type, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_STRING(value)</code> - Returns <code>true</code> if <code>value</code> is <code>String</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_DOCUMENT(value)</code> - Returns <code>true</code> if <code>value</code> is <code>BsonDocument</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_arrayAY(value)</code> - Returns <code>true</code> if <code>value</code> is <code>Bsonarrayay</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_BINARY(value)</code> - Returns <code>true</code> if <code>value</code> is <code>BsonBinary</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_OBJECTID(value)</code> - Returns <code>true</code> if <code>value</code> is <code>ObjectId</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_GUID(value)</code> - Returns <code>true</code> if <code>value</code> is <code>Guid</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_BOOLEAN(value)</code> - Returns <code>true</code> if <code>value</code> is <code>Boolean</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>IS_DATETIME(value)</code> - Returns <code>true</code> if <code>value</code> is <code>DateTime</code>, <code>false</code> otherwise</p>
+</li>
+</ul>
+<h3 id="date-functions">Date Functions</h3>
+<ul>
+<li>
+<p><code>YEAR(value)</code> - Returns the year of <code>value</code>, or <code>null</code> if it is not a <code>DateTime</code></p>
+</li>
+<li>
+<p><code>MONTH(value)</code> - Returns the month of <code>value</code>, or <code>null</code> if it is not a <code>DateTime</code></p>
+</li>
+<li>
+<p><code>DAY(value)</code> - Returns the day of <code>value</code>, or <code>null</code> if it is not a <code>DateTime</code></p>
+</li>
+<li>
+<p><code>HOUR(value)</code> - Returns the hour of <code>value</code>, or <code>null</code> if it is not a <code>DateTime</code></p>
+</li>
+<li>
+<p><code>MINUTE(value)</code> - Returns the minutes of <code>value</code>, or <code>null</code> if it is not a <code>DateTime</code></p>
+</li>
+<li>
+<p><code>SECOND(value)</code> - Returns the seconds of <code>value</code>, or <code>null</code> if it is not a <code>DateTime</code></p>
+</li>
+<li>
+<p><code>DATEADD(dateInterval, amount, value)</code></p>
+<ul>
+<li><code>dateInterval</code> is one of the following: <code>y|year</code>, <code>M|month</code>, <code>d|day</code>, <code>h|hour</code>, <code>m|minute</code>, <code>s|second</code></li>
+<li><code>amount</code> is the amount of units defined by <code>dateInterval</code> to be added to <code>value</code></li>
+</ul>
+</li>
+<li>
+<p>DATEDIFF(dateInterval, start, end)</p>
+<ul>
+<li><code>dateInterval</code> is one of the following: <code>y|year</code>, <code>M|month</code>, <code>d|day</code>, <code>h|hour</code>, <code>m|minute</code>, <code>s|second</code></li>
+<li><code>start</code> and <code>end</code> are dates</li>
+<li>The function returns the difference between the dates in units defines by <code>dateInterval</code></li>
+</ul>
+</li>
+<li>
+<p>TO_LOCAL(date) - Returns <code>date</code> converted to local time, or <code>null</code> if is not a <code>DateTime</code></p>
+</li>
+<li>
+<p>TO_UTC(date) - Returns <code>date</code> converted to UTC, or <code>null</code> if is not a <code>DateTime</code></p>
+</li>
+</ul>
+<h3 id="math-functions">Math Functions</h3>
+<ul>
+<li>
+<p><code>ABS(value)</code> - Returns the absolute value of <code>value</code>, or <code>null</code> if it is not a numerical value</p>
+</li>
+<li>
+<p><code>ROUND(value, digits)</code> - Returns <code>value</code> rounded to <code>digits</code> of precision, or <code>null</code> if it is not a numerical value</p>
+</li>
+<li>
+<p><code>POW(x, y)</code> - Returns <code>x</code> to the power of <code>y</code> (always as a <code>Double</code>), or <code>null</code> if either of them is not a numerical value</p>
+</li>
+</ul>
+<h3 id="string-functions">String Functions</h3>
+<ul>
+<li>
+<p><code>LOWER(value)</code> - Returns <code>value</code> in lower case, or <code>null</code> if it is not a <code>String</code></p>
+</li>
+<li>
+<p><code>UPPER(value)</code> - Returns <code>value</code> in upper case, or <code>null</code> if it is not a <code>String</code></p>
+</li>
+<li>
+<p><code>LTRIM(value)</code> - Returns a new string with leading whitespaces removed, or <code>null</code> if it is not a <code>String</code></p>
+</li>
+<li>
+<p><code>RTRIM(value)</code> - Returns a new string with trailing whitespaces removed, or <code>null</code> if it is not a <code>String</code></p>
+</li>
+<li>
+<p><code>TRIM(value)</code> - Returns a new string with leading and trailing whitespaces removed, or <code>null</code> if it is not a <code>String</code></p>
+</li>
+<li>
+<p><code>INDEXOF(value, match)</code> - Returns the zero-based index of the first occurrence of <code>match</code> in <code>value</code></p>
+</li>
+<li>
+<p><code>INDEXOF(value, match, startIndex)</code>- Returns the zero-based index of the first occurrence of <code>match</code> in <code>value</code>. The search starts in <code>startIndex</code></p>
+</li>
+<li>
+<p><code>SUBSTRING(value, startIndex)</code> - Returns the substring of <code>value</code> from <code>startIndex</code> to the end</p>
+</li>
+<li>
+<p><code>SUBSTRING(value, startIndex, length)</code> - Returns the substring of <code>value</code> starting from <code>startIndex</code> and with length specified by <code>length</code></p>
+</li>
+<li>
+<p><code>SUBSTRING(value, oldValue, newValue)</code> - Returns a new string with occurrences of <code>oldValue</code> replaced by <code>newValue</code></p>
+</li>
+<li>
+<p><code>LPAD(value, totalWidth, paddingChar)</code> - Returns a new string left-padded to <code>totalWidth</code> length with <code>paddingChar</code></p>
+</li>
+<li>
+<p><code>RPAD(value, totalWidth, paddingChar)</code> - Returns a new string right-padded to <code>totalWidth</code> length with <code>paddingChar</code></p>
+</li>
+<li>
+<p><code>SPLIT(value, separator)</code> - Returns an arrayay containing the substrings of <code>value</code> split by <code>separator</code></p>
+</li>
+<li>
+<p><code>FORMAT(value, format)</code> - Returns the string representation of <code>value</code> with the provided format</p>
+</li>
+<li>
+<p><code>JOIN(array)</code> - Takes an array of string and returns those strings joined by <code>,</code></p>
+</li>
+<li>
+<p><code>JOIN(array, separator)</code> - Takes an array of string and returns those strings joined by <code>separator</code></p>
+</li>
+</ul>
+<h3 id="misc-functions">Misc Functions</h3>
+<ul>
+<li>
+<p><code>JSON(value)</code> - Takes a string representation of a JSON and returns a parsed <code>BsonValue</code></p>
+</li>
+<li>
+<p><code>EXTEND(source, extend)</code> - Merges two documents into one, copying their attributes.</p>
+</li>
+<li>
+<p><code>CONCAT(array1, array2)</code> - Returns a new array containt the concatenation of <code>array1</code> and <code>array2</code></p>
+</li>
+<li>
+<p><code>KEYS(document)</code> - Returns an array containing every key in <code>document</code></p>
+</li>
+<li>
+<p><code>OID_CREATIONTIME(objectId)</code> - Returns the creation time of <code>objectId</code></p>
+</li>
+<li>
+<p><code>IIF(predicate, ifTrue, ifFalse)</code> - Returns <code>ifTrue</code> if <code>predicate</code> evaluates to <code>true</code>, <code>false</code> otherwise</p>
+</li>
+<li>
+<p><code>COALESCE(left, right)</code> - Returns <code>left</code> if it is not <code>null</code>, <code>right</code> otherwise</p>
+</li>
+<li>
+<p><code>LENGTH(value)</code> - Returns the lenght of <code>value</code> (if value is <code>String</code>, <code>Binary</code>, <code>Array</code> or <code>Document</code>)</p>
+</li>
+<li>
+<p><code>TOP(values, num)</code> - Returns the first <code>num</code> elements from <code>values</code></p>
+</li>
+<li>
+<p><code>UNION(array1, array2)</code> - Returns the set union between <code>array1</code> and <code>array2</code></p>
+</li>
+<li>
+<p><code>EXCEPT(array1, array2)</code> - Returns the set difference between <code>array1</code> and <code>array2</code></p>
+</li>
+<li>
+<p><code>DISTINCT(array)</code> - Returns the distinct elements from <code>array</code></p>
+</li>
+<li>
+<p><code>RANDOM()</code> - Returns a random <code>Int32</code></p>
+</li>
+<li>
+<p><code>RANDOM(min, max)</code> - Returns a random <code>Int32</code> between <code>min</code> and <code>max</code></p>
+</li>
+</ul>
+
+</div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li>
+                Made with ♥ by LiteDB team - <a href="https://twitter.com/mbdavid" target="_blank">@mbdavid</a> - MIT License
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/scripts.min.bf1e1f7ae8e03db5f012356e825843facdff51c0a559cb0d27fe2bbe1db405c2.js"></script>
+  
+
+  
+  
+  
+    
+      
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-54329029-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-54329029-1');
+      </script>
+    
+  
+
+
+</body>
+
+</html>

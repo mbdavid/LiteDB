@@ -81,6 +81,10 @@
   </url>
   
   <url>
+    <loc>/api/functions/</loc>
+  </url>
+  
+  <url>
     <loc>/api/misc/</loc>
   </url>
   
