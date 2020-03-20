@@ -215,8 +215,8 @@ namespace LiteDB.Engine
             {
                 ENSURE(expr.Left != null && expr.Right != null, "predicate expression must has left/right expressions");
 
-                // checks if expression are not ANY/ALL (do not use to select index)
-                if (expr.Left.IsScalar == false && expr.Right.IsScalar == true) continue;
+                // checks if expression are not ALL (do not use to select index)
+                if (expr.Left.IsScalar == false && expr.Right.IsScalar == true && expr.IsALL) continue;
 
                 // get index that match with expression left/right side 
                 var index = indexes

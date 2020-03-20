@@ -98,6 +98,13 @@ namespace LiteDB
             this.Fields.Count == 0;
 
         /// <summary>
+        /// Indicate when predicate expression uses ALL keywork for filter array items
+        /// </summary>
+        internal bool IsALL =>
+            this.IsPredicate &&
+            this.Expression.ToString().Contains("_ALL");
+
+        /// <summary>
         /// Compiled Expression into a function to be executed: func(source[], root, current, parameters)[]
         /// </summary>
         private Func<IEnumerable<BsonDocument>, BsonDocument, BsonValue, Collation, BsonDocument, IEnumerable<BsonValue>> _func;
@@ -193,6 +200,31 @@ namespace LiteDB
                 foreach (var value in values)
                 {
                     yield return value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Execute expression over document to get all index keys. 
+        /// If expression results in array, return inner elements
+        /// Return distinct value (no duplicate key to same document)
+        /// </summary>
+        internal IEnumerable<BsonValue> GetIndexKeys(BsonDocument doc, Collation collation)
+        {
+            var keys = this.Execute(doc, collation);
+            
+            foreach(var key in keys.Distinct())
+            {
+                if (key.IsArray)
+                {
+                    foreach (var item in key.AsArray.Distinct())
+                    {
+                        yield return item;
+                    }
+                }
+                else
+                {
+                    yield return key;
                 }
             }
         }

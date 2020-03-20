@@ -61,40 +61,19 @@ namespace LiteDB.Engine
                         IndexNode first = null;
 
                         // get values from expression in document
-                        var keys = expression.Execute(doc, _header.Pragmas.Collation);
+                        var keys = expression.GetIndexKeys(doc, _header.Pragmas.Collation);
 
                         // adding index node for each value
                         foreach (var key in keys)
                         {
-                            // when index key is an array, get items inside array.
-                            // valid only for first level (if this items are another array, this arrays will be indexed as array)
-                            if (key.IsArray)
-                            {
-                                var arr = key.AsArray;
+                            // insert new index node
+                            var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
 
-                                foreach(var itemKey in arr)
-                                {
-                                    // insert new index node
-                                    var node = indexer.AddNode(index, itemKey, pkNode.DataBlock, last);
+                            if (first == null) first = node;
 
-                                    if (first == null) first = node;
+                            last = node;
 
-                                    last = node;
-
-                                    count++;
-                                }
-                            }
-                            else
-                            {
-                                // insert new index node
-                                var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
-
-                                if (first == null) first = node;
-
-                                last = node;
-
-                                count++;
-                            }
+                            count++;
                         }
 
                         // fix single linked-list in pkNode

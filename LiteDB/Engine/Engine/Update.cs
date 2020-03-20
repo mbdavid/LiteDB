@@ -123,7 +123,7 @@ namespace LiteDB.Engine
             foreach (var index in col.GetCollectionIndexes().Where(x => x.Name != "_id"))
             {
                 // getting all keys from expression over document
-                var keys = index.BsonExpr.Execute(doc, _header.Pragmas.Collation);
+                var keys = index.BsonExpr.GetIndexKeys(doc, _header.Pragmas.Collation);
 
                 foreach (var key in keys)
                 {
