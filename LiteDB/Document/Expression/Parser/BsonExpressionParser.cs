@@ -155,7 +155,6 @@ namespace LiteDB
                     if (!isLeftEnum && !right.IsScalar) throw new LiteException(0, $"Left expression `{right.Source}` must return a single value");
                     if (right.IsScalar == false) throw new LiteException(0, $"Right expression `{right.Source}` must return a single value");
 
-
                     BsonExpression result;
 
                     // when operation is AND/OR, use AndAlso|OrElse
@@ -705,6 +704,7 @@ namespace LiteDB
                     UseSource = true,
                     IsScalar = false,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(sourceExpr.Fields).AddRange(pathExpr.Fields),
+                    //Fields = pathExpr.Fields,
                     Expression = Expression.Call(BsonExpression.GetFunction("MAP"), context.Root, context.Collation, context.Parameters, sourceExpr.Expression, Expression.Constant(pathExpr)),
                     Source = "MAP(*=>" + pathExpr.Source + ")"
                 };
@@ -1367,10 +1367,16 @@ namespace LiteDB
 
         /// <summary>
         /// Convert scalar expression into enumerable expression using ITEMS(...) method
-        /// Do not change output SOURCE (keeps same input string)
+        /// Support path expression only
+        /// Append [*] to path
         /// </summary>
         private static BsonExpression ConvertToEnumerable(BsonExpression expr)
         {
+            if (expr.Type != BsonExpressionType.Path)
+            {
+                throw new LiteException(0, $"Current expression `{expr.Source}` don't support implicit enumerable convert");
+            }
+
             return new BsonExpression
             {
                 Type = expr.Type,
@@ -1379,13 +1385,12 @@ namespace LiteDB
                 IsScalar = false,
                 Fields = expr.Fields,
                 Expression = Expression.Call(_itemsMethod, expr.Expression),
-                Source = expr.Source
+                Source = expr.Source + "[*]"
             };
         }
 
         /// <summary>
         /// Convert enumerable expression into array using ARRAY(...) method
-        /// Do not change output SOURCE (keeps same input string)
         /// </summary>
         private static BsonExpression ConvertToArray(BsonExpression expr)
         {
@@ -1397,7 +1402,7 @@ namespace LiteDB
                 IsScalar = true,
                 Fields = expr.Fields,
                 Expression = Expression.Call(_arrayMethod, expr.Expression),
-                Source = expr.Source
+                Source = "ARRAY(" + expr.Source + ")"
             };
         }
 

@@ -206,27 +206,11 @@ namespace LiteDB
 
         /// <summary>
         /// Execute expression over document to get all index keys. 
-        /// If expression results in array, return inner elements
         /// Return distinct value (no duplicate key to same document)
         /// </summary>
         internal IEnumerable<BsonValue> GetIndexKeys(BsonDocument doc, Collation collation)
         {
-            var keys = this.Execute(doc, collation);
-            
-            foreach(var key in keys.Distinct())
-            {
-                if (key.IsArray)
-                {
-                    foreach (var item in key.AsArray.Distinct())
-                    {
-                        yield return item;
-                    }
-                }
-                else
-                {
-                    yield return key;
-                }
-            }
+            return this.Execute(doc, collation).Distinct();
         }
 
         #endregion
