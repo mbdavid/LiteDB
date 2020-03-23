@@ -59,13 +59,13 @@ namespace LiteDB.Tests.Database
                 col.EnsureIndex(x => x.Customers.Select(z => z.Name));
 
                 // Query.EQ("Keys", 2)
-                col.Count(Query.EQ("Keys", 2)).Should().Be(2);
+                col.Count(Query.EQ_ALL("Keys", 2)).Should().Be(2);
                 col.Count(x => x.Keys.Contains(2)).Should().Be(2);
 
-                col.Count(Query.StartsWith("Customers[*].Name ANY", "Ana")).Should().Be(2);
+                col.Count(Query.StartsWith_ANY("Customers[*].Name", "Ana")).Should().Be(2);
                 col.Count(x => x.Customers.Select(z => z.Name).Any(z => z.StartsWith("Ana"))).Should().Be(2);
 
-                col.Count(Query.StartsWith("Customers[*].Name ANY", "D")).Should().Be(1);
+                col.Count(Query.StartsWith_ANY("Customers[*].Name", "D")).Should().Be(1);
                 col.Count(x => x.Customers.Select(z => z.Name).Any(z => z.StartsWith("D"))).Should().Be(1);
             }
         }

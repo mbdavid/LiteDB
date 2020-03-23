@@ -21,7 +21,9 @@ namespace LiteDB
 
         public static bool IsEnumerable(this Type type)
         {
-            return typeof(IEnumerable).IsAssignableFrom(type);
+            return 
+                type != typeof(String) &&
+                typeof(IEnumerable).IsAssignableFrom(type);
         }
     }
 }

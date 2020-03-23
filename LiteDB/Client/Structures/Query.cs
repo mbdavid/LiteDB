@@ -118,7 +118,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all documents that contains value (CONTAINS)
+        /// Returns all documents that contains value (CONTAINS) - string Contains
         /// </summary>
         public static BsonExpression Contains(string field, string value)
         {
@@ -164,6 +164,11 @@ namespace LiteDB
         {
             return In(field, new BsonArray(values));
         }
+
+        /// <summary>
+        /// Get all operands to works with array or enumerable values
+        /// </summary>
+        public static QueryAny Any() => new QueryAny();
 
         /// <summary>
         /// Returns document that exists in BOTH queries results. If both queries has indexes, left query has index preference (other side will be run in full scan)

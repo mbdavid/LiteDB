@@ -215,17 +215,32 @@ namespace LiteDB.Engine
             {
                 ENSURE(expr.Left != null && expr.Right != null, "predicate expression must has left/right expressions");
 
-                // checks if expression are not ALL (do not use to select index)
-                if (expr.Left.IsScalar == false && expr.Right.IsScalar == true && expr.IsALL) continue;
+                Tuple<CollectionIndex, BsonExpression> index = null;
+
+                // check if expression is ANY
+                if (expr.Left.IsScalar == false && expr.Right.IsScalar == true)
+                {
+                    // ANY expression support only LEFT (Enum) -> RIGHT (Scalar)
+                    if (expr.IsANY)
+                    {
+                        index = indexes
+                            .Where(x => x.Expression == expr.Left.Source && expr.Right.IsValue)
+                            .Select(x => Tuple.Create(x, expr.Right))
+                            .FirstOrDefault();
+                    }
+                }
+                else
+                {
+                    index = indexes
+                        .Where(x => x.Expression == expr.Left.Source && expr.Right.IsValue)
+                        .Select(x => Tuple.Create(x, expr.Right))
+                        .Union(indexes
+                            .Where(x => x.Expression == expr.Right.Source && expr.Left.IsValue)
+                            .Select(x => Tuple.Create(x, expr.Left))
+                        ).FirstOrDefault();
+                }
 
                 // get index that match with expression left/right side 
-                var index = indexes
-                    .Where(x => x.Expression == expr.Left.Source && expr.Right.IsValue)
-                    .Select(x => Tuple.Create(x, expr.Right))
-                    .Union(indexes
-                        .Where(x => x.Expression == expr.Right.Source && expr.Left.IsValue)
-                        .Select(x => Tuple.Create(x, expr.Left))
-                    ).FirstOrDefault();
 
                 if (index == null) continue;
 

@@ -1033,7 +1033,7 @@ namespace LiteDB
                     IsScalar = false,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(pathExpr.Fields).AddRange(mapExpr.Fields),
                     Expression = Expression.Call(BsonExpression.GetFunction("MAP"), context.Root, context.Collation, context.Parameters, pathExpr.Expression, Expression.Constant(mapExpr)),
-                    Source = "(" + pathExpr.Source + "=>" + mapExpr.Source + ")"
+                    Source = "MAP(" + pathExpr.Source + "=>" + mapExpr.Source + ")"
                 };
             }
             else
@@ -1357,7 +1357,7 @@ namespace LiteDB
 
                 token = tokenizer.ReadToken();
 
-                if (token.IsOperand == false) throw LiteException.UnexpectedToken("Expected valid operant", token);
+                if (token.IsOperand == false) throw LiteException.UnexpectedToken("Expected valid operand", token);
 
                 return key + " " + token.Value;
             }

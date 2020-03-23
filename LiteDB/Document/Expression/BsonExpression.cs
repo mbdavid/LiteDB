@@ -98,11 +98,11 @@ namespace LiteDB
             this.Fields.Count == 0;
 
         /// <summary>
-        /// Indicate when predicate expression uses ALL keywork for filter array items
+        /// Indicate when predicate expression uses ANY keywork for filter array items
         /// </summary>
-        internal bool IsALL =>
+        internal bool IsANY =>
             this.IsPredicate &&
-            this.Expression.ToString().Contains("_ALL");
+            this.Expression.ToString().Contains("_ANY");
 
         /// <summary>
         /// Compiled Expression into a function to be executed: func(source[], root, current, parameters)[]
