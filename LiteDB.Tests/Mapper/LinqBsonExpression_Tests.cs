@@ -349,6 +349,8 @@ namespace LiteDB.Tests.Mapper
 
             TestExpr<User>(x => x.CreatedOn.Date, "DATETIME(YEAR(CreatedOn), MONTH(CreatedOn), DAY(CreatedOn))");
 
+            TestExpr<User>(x => x.CreatedOn.ToUniversalTime(), "TO_UTC(CreatedOn)");
+
             // static date
             TestExpr<User>(x => DateTime.Now, "NOW()");
             TestExpr<User>(x => DateTime.UtcNow, "NOW_UTC()");

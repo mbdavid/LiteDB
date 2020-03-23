@@ -28,6 +28,7 @@ namespace LiteDB
                     else if (pars.Length == 1 && pars[0].ParameterType == typeof(string)) return "FORMAT(#, @0)";
                     break;
 
+                case "ToUniversalTime": return "TO_UTC(#)";
                 // static methods
                 case "Parse": return "DATETIME(@0)";
                 case "Equals": return "# = @0";
