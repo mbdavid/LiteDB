@@ -1367,25 +1367,27 @@ namespace LiteDB
 
         /// <summary>
         /// Convert scalar expression into enumerable expression using ITEMS(...) method
-        /// Support path expression only
-        /// Append [*] to path
+        /// Append [*] to path or ITEMS(..) in all others
         /// </summary>
         private static BsonExpression ConvertToEnumerable(BsonExpression expr)
         {
-            if (expr.Type != BsonExpressionType.Path)
-            {
-                throw new LiteException(0, $"Current expression `{expr.Source}` don't support implicit enumerable convert");
-            }
+            var src = expr.Type == BsonExpressionType.Path ?
+                expr.Source + "[*]" :
+                "ITEMS(" + expr.Source + ")";
+
+            var exprType = expr.Type == BsonExpressionType.Path ?
+                BsonExpressionType.Path :
+                BsonExpressionType.Call;
 
             return new BsonExpression
             {
-                Type = expr.Type,
+                Type = exprType,
                 IsImmutable = expr.IsImmutable,
                 UseSource = expr.UseSource,
                 IsScalar = false,
                 Fields = expr.Fields,
                 Expression = Expression.Call(_itemsMethod, expr.Expression),
-                Source = expr.Source + "[*]"
+                Source = src
             };
         }
 
@@ -1396,7 +1398,7 @@ namespace LiteDB
         {
             return new BsonExpression
             {
-                Type = expr.Type,
+                Type = BsonExpressionType.Call,
                 IsImmutable = expr.IsImmutable,
                 UseSource = expr.UseSource,
                 IsScalar = true,

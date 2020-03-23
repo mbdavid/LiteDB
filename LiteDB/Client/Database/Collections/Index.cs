@@ -44,7 +44,7 @@ namespace LiteDB
         /// <param name="unique">Create a unique keys index?</param>
         public bool EnsureIndex<K>(Expression<Func<T, K>> keySelector, bool unique = false)
         {
-            var expression = _mapper.GetExpression(keySelector);
+            var expression = this.GetIndexExpression(keySelector);
 
             return this.EnsureIndex(expression, unique);
         }
@@ -57,9 +57,34 @@ namespace LiteDB
         /// <param name="unique">Create a unique keys index?</param>
         public bool EnsureIndex<K>(string name, Expression<Func<T, K>> keySelector, bool unique = false)
         {
-            var expression = _mapper.GetExpression(keySelector);
+            var expression = this.GetIndexExpression(keySelector);
 
             return this.EnsureIndex(name, expression, unique);
+        }
+
+        /// <summary>
+        /// Get index expression based on LINQ expression. Convert IEnumerable in MultiKey indexes
+        /// </summary>
+        private BsonExpression GetIndexExpression<K>(Expression<Func<T, K>> keySelector)
+        {
+            var expression = _mapper.GetExpression(keySelector);
+
+            if (typeof(K).IsEnumerable() && expression.IsScalar == true)
+            {
+                if (expression.Type == BsonExpressionType.Path)
+                {
+                    // convert LINQ expression that returns an IEnumerable but expression returns a single value
+                    // `x => x.Phones` --> `$.Phones[*]`
+                    // works only if exression is a simple path
+                    expression = expression.Source + "[*]";
+                }
+                else
+                {
+                    throw new LiteException(0, $"Expression `{expression.Source}` must return a enumerable expression");
+                }
+            }
+
+            return expression;
         }
 
         /// <summary>
