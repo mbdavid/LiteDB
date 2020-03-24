@@ -13,6 +13,16 @@ using static LiteDB.Constants;
 namespace LiteDB
 {
     /// <summary>
+    /// Delegate function to get compiled enumerable expression
+    /// </summary>
+    internal delegate IEnumerable<BsonValue> BsonExpressionEnumerableDelegate(IEnumerable<BsonDocument> source, BsonDocument root, BsonValue current, Collation collation, BsonDocument parameters);
+
+    /// <summary>
+    /// Delegate function to get compiled scalar expression
+    /// </summary>
+    internal delegate BsonValue BsonExpressionScalarDelegate(IEnumerable<BsonDocument> source, BsonDocument root, BsonValue current, Collation collation, BsonDocument parameters);
+
+    /// <summary>
     /// Compile and execute string expressions using BsonDocuments. Used in all document manipulation (transform, filter, indexes, updates). See https://github.com/mbdavid/LiteDB/wiki/Expressions
     /// </summary>
     public sealed class BsonExpression
@@ -107,12 +117,12 @@ namespace LiteDB
         /// <summary>
         /// Compiled Expression into a function to be executed: func(source[], root, current, parameters)[]
         /// </summary>
-        private Func<IEnumerable<BsonDocument>, BsonDocument, BsonValue, Collation, BsonDocument, IEnumerable<BsonValue>> _func;
+        private BsonExpressionEnumerableDelegate _func;
 
         /// <summary>
         /// Compiled Expression into a scalar function to be executed: func(source[], root, current, parameters)1
         /// </summary>
-        private Func<IEnumerable<BsonDocument>, BsonDocument, BsonValue, Collation, BsonDocument, BsonValue> _funcScalar;
+        private BsonExpressionScalarDelegate _funcScalar;
 
         /// <summary>
         /// Get default field name when need convert simple BsonValue into BsonDocument
@@ -276,6 +286,29 @@ namespace LiteDB
         /// </summary>
         public static BsonExpression Create(string expression)
         {
+            return Create(expression, new BsonDocument());
+        }
+
+        /// <summary>
+        /// Parse string and create new instance of BsonExpression - can be cached
+        /// </summary>
+        public static BsonExpression Create(string expression, params BsonValue[] args)
+        {
+            var parameters = new BsonDocument();
+
+            for(var i = 0; i < args.Length; i++)
+            {
+                parameters[i.ToString()] = args[i];
+            }
+
+            return Create(expression, parameters);
+        }
+
+        /// <summary>
+        /// Parse string and create new instance of BsonExpression - can be cached
+        /// </summary>
+        public static BsonExpression Create(string expression, BsonDocument parameters)
+        {
             if (string.IsNullOrWhiteSpace(expression)) throw new ArgumentNullException(nameof(expression));
 
             if (!_cache.TryGetValue(expression, out var expr))
@@ -300,6 +333,7 @@ namespace LiteDB
                 IsImmutable = expr.IsImmutable,
                 UseSource = expr.UseSource,
                 IsScalar = expr.IsScalar,
+                Parameters = parameters ?? new BsonDocument(),
                 Fields = expr.Fields,
                 Left = expr.Left,
                 Right = expr.Right,
@@ -308,33 +342,6 @@ namespace LiteDB
                 _func = expr._func,
                 _funcScalar = expr._funcScalar
             };
-        }
-
-        /// <summary>
-        /// Parse string and create new instance of BsonExpression - can be cached
-        /// </summary>
-        public static BsonExpression Create(string expression, params BsonValue[] args)
-        {
-            var expr = Create(expression);
-
-            for(var i = 0; i < args.Length; i++)
-            {
-                expr.Parameters[i.ToString()] = args[i];
-            }
-
-            return expr;
-        }
-
-        /// <summary>
-        /// Parse string and create new instance of BsonExpression - can be cached
-        /// </summary>
-        public static BsonExpression Create(string expression, BsonDocument parameters)
-        {
-            var expr = Create(expression);
-
-            expr.Parameters = parameters;
-
-            return expr;
         }
 
         /// <summary>
@@ -395,13 +402,13 @@ namespace LiteDB
             // compile linq expression according with return type (scalar or not)
             if (expr.IsScalar)
             {
-                var lambda = System.Linq.Expressions.Expression.Lambda<Func<IEnumerable<BsonDocument>, BsonDocument, BsonValue, Collation, BsonDocument, BsonValue>>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
+                var lambda = System.Linq.Expressions.Expression.Lambda<BsonExpressionScalarDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
 
                 expr._funcScalar = lambda.Compile();
             }
             else
             {
-                var lambda = System.Linq.Expressions.Expression.Lambda<Func<IEnumerable<BsonDocument>, BsonDocument, BsonValue, Collation, BsonDocument, IEnumerable<BsonValue>>>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
+                var lambda = System.Linq.Expressions.Expression.Lambda<BsonExpressionEnumerableDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
 
                 expr._func = lambda.Compile();
             }
