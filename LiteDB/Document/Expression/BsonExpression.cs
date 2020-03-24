@@ -45,7 +45,7 @@ namespace LiteDB
         /// <summary>
         /// Get/Set parameter values that will be used on expression execution
         /// </summary>
-        public BsonDocument Parameters { get; private set; } = new BsonDocument();
+        public BsonDocument Parameters { get; private set; }
 
         /// <summary>
         /// In predicate expressions, indicate Left side
@@ -311,20 +311,20 @@ namespace LiteDB
         {
             if (string.IsNullOrWhiteSpace(expression)) throw new ArgumentNullException(nameof(expression));
 
-            if (!_cache.TryGetValue(expression, out var expr))
-            {
+            //if (!_cache.TryGetValue(expression, out var expr))
+            //{
                 var tokenizer = new Tokenizer(expression);
 
-                expr = Parse(tokenizer, BsonExpressionParserMode.Full, true);
+                var expr = Parse(tokenizer, BsonExpressionParserMode.Full, true);
 
                 tokenizer.LookAhead().Expect(TokenType.EOF);
 
                 // if passed string expression are different from formatted expression, try add in cache "unformatted" expression too
-                if (expression != expr.Source)
-                {
-                    _cache.TryAdd(expression, expr);
-                }
-            }
+                //if (expression != expr.Source)
+                //{
+                //    _cache.TryAdd(expression, expr);
+                //}
+            //}
 
             // return a copy from cache WITHOUT parameters
             return new BsonExpression
@@ -394,7 +394,21 @@ namespace LiteDB
                 return expr;
             });
 
-            return cached;
+            return new BsonExpression
+            {
+                Expression = cached.Expression,
+                IsImmutable = cached.IsImmutable,
+                UseSource = cached.UseSource,
+                IsScalar = cached.IsScalar,
+                //Parameters = parameters ?? new BsonDocument(),
+                Fields = cached.Fields,
+                Left = cached.Left,
+                Right = cached.Right,
+                Source = cached.Source,
+                Type = cached.Type,
+                _func = cached._func,
+                _funcScalar = cached._funcScalar
+            };
         }
 
         internal static void Compile(BsonExpression expr, ExpressionContext context)
