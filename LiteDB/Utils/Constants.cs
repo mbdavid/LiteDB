@@ -99,9 +99,9 @@ namespace LiteDB
         [Conditional("DEBUG")]
         public static void LOG(string message, string category)
         {
-            var threadID = Environment.CurrentManagedThreadId;
-            
-            Debug.WriteLine(message, threadID + "|" + category);
+            //var threadID = Environment.CurrentManagedThreadId;
+            //
+            //Debug.WriteLine(message, threadID + "|" + category);
         }
 
         /// <summary>

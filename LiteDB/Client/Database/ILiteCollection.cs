@@ -191,6 +191,11 @@ namespace LiteDB
         bool Delete(BsonValue id);
 
         /// <summary>
+        /// Delete all documents inside collection. Returns how many documents was deleted. Run inside current transaction
+        /// </summary>
+        int DeleteAll();
+
+        /// <summary>
         /// Delete all documents based on predicate expression. Returns how many documents was deleted
         /// </summary>
         int DeleteMany(BsonExpression predicate);

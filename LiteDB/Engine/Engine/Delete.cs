@@ -57,10 +57,10 @@ namespace LiteDB.Engine
         public int DeleteMany(string collection, BsonExpression predicate)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             // do optimization for when using "_id = value" key
-            if (predicate.Type == BsonExpressionType.Equal && 
+            if (predicate != null &&
+                predicate.Type == BsonExpressionType.Equal && 
                 predicate.Left.Type == BsonExpressionType.Path && 
                 predicate.Left.Source == "$._id" && 
                 predicate.Right.IsValue)
@@ -80,7 +80,10 @@ namespace LiteDB.Engine
                     // create inner document to ensure _id will be a document
                     var query = new Query { Select = "{ i: _id }", ForUpdate = true };
 
-                    query.Where.Add(predicate);
+                    if(predicate != null)
+                    {
+                        query.Where.Add(predicate);
+                    }
 
                     using (var reader = this.Query(collection, query))
                     {
