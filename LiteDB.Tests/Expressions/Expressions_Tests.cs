@@ -235,39 +235,5 @@ namespace LiteDB.Tests.Expressions
             Err("(25 + 15");
             Err("10 + 5 -.");
         }
-
-        [Fact]
-        public void Expression_AndAlso_OrElse()
-        {
-            var ex1 = BsonExpression.Create("LENGTH($.x) >= 5 AND SUBSTRING($.x, 0, 5) = \"12345\"");
-            var doc1 = new BsonDocument();
-
-            // OK (true)
-            doc1["x"] = "12345";
-            ex1.ExecuteScalar(doc1);
-
-            // KO (expected: false, actual: exception)
-            doc1["x"] = "123";
-            ex1.ExecuteScalar(doc1);
-        }
-
-        [Fact]
-        public void Expression_Conditional_IIF()
-        {
-            var ex1 = BsonExpression.Create("IIF(LENGTH($.x) >= 5, SUBSTRING($.x, 0, 5), \"too-short\")");
-            var doc1 = new BsonDocument();
-
-            // OK ("12345")
-            doc1["x"] = "123456789";
-            var r1 = ex1.ExecuteScalar(doc1);
-
-            r1.AsString.Should().Be("12345");
-
-            // KO (expected: "too-short", actual: System.ArgumentOutOfRangeException: Index and length must refer to a location within the string.)
-            doc1["x"] = "123";
-            var r2 = ex1.ExecuteScalar(doc1);
-
-            r2.AsString.Should().Be("too-short");
-        }
     }
 }

@@ -61,9 +61,10 @@ namespace LiteDB
         public const int PAGE_FREE_LIST_SLOTS = 5;
 
         /// <summary>
-        /// Document limit size - must use max 250 pages [1 byte] => 250 * 8149 = ~2MiB
+        /// Document limit size - 2048 data pages limit (about 16Mb - same size as MongoDB)
+        /// Using 2047 because first/last page can contain less than 8150 bytes.
         /// </summary>
-        public const int MAX_DOCUMENT_SIZE = 250 * (DataService.MAX_DATA_BYTES_PER_PAGE);
+        public const int MAX_DOCUMENT_SIZE = 2047 * DataService.MAX_DATA_BYTES_PER_PAGE;
 
         /// <summary>
         /// Define how many transactions can be open simultaneously
