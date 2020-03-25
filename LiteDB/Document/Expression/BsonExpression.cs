@@ -45,7 +45,7 @@ namespace LiteDB
         /// <summary>
         /// Get/Set parameter values that will be used on expression execution
         /// </summary>
-        public BsonDocument Parameters { get; private set; }
+        public BsonDocument Parameters { get; internal set; }
 
         /// <summary>
         /// In predicate expressions, indicate Left side
@@ -117,7 +117,7 @@ namespace LiteDB
         /// <summary>
         /// Compiled Expression into a function to be executed: func(source[], root, current, parameters)[]
         /// </summary>
-        private BsonExpressionEnumerableDelegate _func;
+        private BsonExpressionEnumerableDelegate _funcEnumerable;
 
         /// <summary>
         /// Compiled Expression into a scalar function to be executed: func(source[], root, current, parameters)1
@@ -205,7 +205,7 @@ namespace LiteDB
             }
             else
             {
-                var values = _func(source, root, current, collation ?? Collation.Binary, this.Parameters);
+                var values = _funcEnumerable(source, root, current, collation ?? Collation.Binary, this.Parameters);
 
                 foreach (var value in values)
                 {
@@ -279,7 +279,8 @@ namespace LiteDB
 
         #region Static method
 
-        private static ConcurrentDictionary<string, BsonExpression> _cache = new ConcurrentDictionary<string, BsonExpression>();
+        private static ConcurrentDictionary<string, BsonExpressionEnumerableDelegate> _cacheEnumerable = new ConcurrentDictionary<string, BsonExpressionEnumerableDelegate>();
+        private static ConcurrentDictionary<string, BsonExpressionScalarDelegate> _cacheScalar = new ConcurrentDictionary<string, BsonExpressionScalarDelegate>();
 
         /// <summary>
         /// Parse string and create new instance of BsonExpression - can be cached
@@ -311,125 +312,87 @@ namespace LiteDB
         {
             if (string.IsNullOrWhiteSpace(expression)) throw new ArgumentNullException(nameof(expression));
 
-            //if (!_cache.TryGetValue(expression, out var expr))
-            //{
-                var tokenizer = new Tokenizer(expression);
+            var tokenizer = new Tokenizer(expression);
 
-                var expr = Parse(tokenizer, BsonExpressionParserMode.Full, true);
+            var expr = Create(tokenizer, BsonExpressionParserMode.Full, parameters);
 
-                tokenizer.LookAhead().Expect(TokenType.EOF);
+            tokenizer.LookAhead().Expect(TokenType.EOF);
 
-                // if passed string expression are different from formatted expression, try add in cache "unformatted" expression too
-                //if (expression != expr.Source)
-                //{
-                //    _cache.TryAdd(expression, expr);
-                //}
-            //}
-
-            // return a copy from cache WITHOUT parameters
-            return new BsonExpression
-            {
-                Expression = expr.Expression,
-                IsImmutable = expr.IsImmutable,
-                UseSource = expr.UseSource,
-                IsScalar = expr.IsScalar,
-                Parameters = parameters ?? new BsonDocument(),
-                Fields = expr.Fields,
-                Left = expr.Left,
-                Right = expr.Right,
-                Source = expr.Source,
-                Type = expr.Type,
-                _func = expr._func,
-                _funcScalar = expr._funcScalar
-            };
+            return expr;
         }
 
         /// <summary>
         /// Parse tokenizer and create new instance of BsonExpression - for now, do not use cache
         /// </summary>
-        internal static BsonExpression Create(Tokenizer tokenizer, BsonDocument parameters, BsonExpressionParserMode mode)
+        internal static BsonExpression Create(Tokenizer tokenizer, BsonExpressionParserMode mode, BsonDocument parameters)
         {
             if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
 
-            var expr = Parse(tokenizer, mode, true);
-
-            // return a copy from cache using new Parameters
-            return new BsonExpression
-            {
-                Expression = expr.Expression,
-                IsImmutable = expr.IsImmutable,
-                UseSource = expr.UseSource,
-                IsScalar = expr.IsScalar,
-                Parameters = parameters ?? new BsonDocument(),
-                Fields = expr.Fields,
-                Left = expr.Left,
-                Right = expr.Right,
-                Source = expr.Source,
-                Type = expr.Type,
-                _func = expr._func,
-                _funcScalar = expr._funcScalar
-            };
+            return ParseAndCompile(tokenizer, mode, parameters, true);
         }
 
         /// <summary>
         /// Parse and compile string expression and return BsonExpression
         /// </summary>
-        internal static BsonExpression Parse(Tokenizer tokenizer, BsonExpressionParserMode mode, bool isRoot)
+        internal static BsonExpression ParseAndCompile(Tokenizer tokenizer, BsonExpressionParserMode mode, BsonDocument parameters, bool isRoot)
         {
             if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
 
             var context = new ExpressionContext();
 
             var expr =
-                mode == BsonExpressionParserMode.Full ? BsonExpressionParser.ParseFullExpression(tokenizer, context, isRoot) :
-                mode == BsonExpressionParserMode.Single ? BsonExpressionParser.ParseSingleExpression(tokenizer, context, isRoot) :
-                mode == BsonExpressionParserMode.SelectDocument ? BsonExpressionParser.ParseSelectDocumentBuilder(tokenizer, context) :
-                BsonExpressionParser.ParseUpdateDocumentBuilder(tokenizer, context);
+                mode == BsonExpressionParserMode.Full ? BsonExpressionParser.ParseFullExpression(tokenizer, context, parameters, isRoot) :
+                mode == BsonExpressionParserMode.Single ? BsonExpressionParser.ParseSingleExpression(tokenizer, context, parameters, isRoot) :
+                mode == BsonExpressionParserMode.SelectDocument ? BsonExpressionParser.ParseSelectDocumentBuilder(tokenizer, context, parameters) :
+                BsonExpressionParser.ParseUpdateDocumentBuilder(tokenizer, context, parameters);
 
-            // before compile try find in cache if this source already has in cache (already compiled)
-            var cached = _cache.GetOrAdd(expr.Source, (s) =>
-            {
-                // compile linq expression (with left+right expressions)
-                Compile(expr, context);
-                return expr;
-            });
+            // compile linq expression (with left+right expressions)
+            Compile(expr, context);
 
-            return new BsonExpression
-            {
-                Expression = cached.Expression,
-                IsImmutable = cached.IsImmutable,
-                UseSource = cached.UseSource,
-                IsScalar = cached.IsScalar,
-                //Parameters = parameters ?? new BsonDocument(),
-                Fields = cached.Fields,
-                Left = cached.Left,
-                Right = cached.Right,
-                Source = cached.Source,
-                Type = cached.Type,
-                _func = cached._func,
-                _funcScalar = cached._funcScalar
-            };
+            return expr;
         }
 
         internal static void Compile(BsonExpression expr, ExpressionContext context)
         {
-            // compile linq expression according with return type (scalar or not)
+            // compile linq expression according with return type (scalar or enumerable)
+            // in both case, try use cached compiled version
             if (expr.IsScalar)
             {
-                var lambda = System.Linq.Expressions.Expression.Lambda<BsonExpressionScalarDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
+                var cached = _cacheScalar.GetOrAdd(expr.Source, s =>
+                {
+                    var lambda = System.Linq.Expressions.Expression.Lambda<BsonExpressionScalarDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
 
-                expr._funcScalar = lambda.Compile();
+                    return lambda.Compile();
+                });
+
+                expr._funcScalar = cached;
             }
             else
             {
-                var lambda = System.Linq.Expressions.Expression.Lambda<BsonExpressionEnumerableDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
+                var cached = _cacheEnumerable.GetOrAdd(expr.Source, s =>
+                {
+                    var lambda = System.Linq.Expressions.Expression.Lambda<BsonExpressionEnumerableDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
 
-                expr._func = lambda.Compile();
+                    return lambda.Compile();
+                });
+
+                expr._funcEnumerable = cached;
             }
 
             // compile child expressions (left/right)
             if (expr.Left != null) Compile(expr.Left, context);
             if (expr.Right != null) Compile(expr.Right, context);
+        }
+
+        /// <summary>
+        /// Set same parameter referente to all expression child (left, right)
+        /// </summary>
+        internal static void SetParameters(BsonExpression expr, BsonDocument parameters)
+        {
+            expr.Parameters = parameters;
+
+            if (expr.Left != null) SetParameters(expr.Left, parameters);
+            if (expr.Right != null) SetParameters(expr.Right, parameters);
         }
 
         /// <summary>

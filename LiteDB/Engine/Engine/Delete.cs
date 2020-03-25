@@ -65,8 +65,6 @@ namespace LiteDB.Engine
                 predicate.Left.Source == "$._id" && 
                 predicate.Right.IsValue)
             {
-                predicate.Parameters.CopyTo(predicate.Right.Parameters);
-
                 var id = predicate.Right.Execute(_header.Pragmas.Collation).First();
 
                 return this.Delete(collection, new BsonValue[] { id });
