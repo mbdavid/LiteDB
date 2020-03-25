@@ -21,7 +21,7 @@ namespace LiteDB
             this.AddRange(array);
         }
 
-        public BsonArray(BsonValue[] array)
+        public BsonArray(params BsonValue[] array)
             : this()
         {
             if (array == null) throw new ArgumentNullException(nameof(array));
