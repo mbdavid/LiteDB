@@ -7,21 +7,21 @@ using Xunit;
 
 namespace LiteDB.Issue1585
 {
-    public class Issue1585_Tests
+    public class PlayerDto
     {
-        public class PlayerDto
+        [BsonId]
+        public Guid Id { get; }
+        public string Name { get; }
+
+        public PlayerDto(Guid id, string name)
         {
-            [BsonId]
-            public Guid Id { get; }
-            public string Name { get; }
-
-            public PlayerDto(Guid id, string name)
-            {
-                Id = id;
-                Name = name;
-            }
+            Id = id;
+            Name = name;
         }
+    }
 
+    public class Issue1585a_Tests
+    {
         [Fact]
         public void Dto_Read()
         {
@@ -60,7 +60,10 @@ namespace LiteDB.Issue1585
                 Assert.NotNull(player);
             }
         }
+    }
 
+    public class Issue1585b_Tests
+    {
         [Fact]
         public void Dto_Read3()
         {

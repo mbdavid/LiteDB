@@ -30,9 +30,6 @@ namespace LiteDB.Engine
 
         public IndexCost(CollectionIndex index, BsonExpression expr, BsonExpression value, Collation collation)
         {
-            // copy root expression parameters to my value expression
-            expr.Parameters.CopyTo(value.Parameters);
-
             this.IndexExpression = index.Expression;
             this.Expression = expr;
 

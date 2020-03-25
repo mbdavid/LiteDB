@@ -279,9 +279,6 @@ namespace LiteDB
             // for expr.Type = parameter, just get value as index (fixed position)
             if (expr.Type == BsonExpressionType.Parameter)
             {
-                // update parameters in expression
-                parameters.CopyTo(expr.Parameters);
-
                 // get fixed position based on parameter value (must return int value)
                 var indexValue = expr.ExecuteScalar(root, collation);
 
@@ -320,9 +317,6 @@ namespace LiteDB
             // [<expr>] - index are an expression
             else
             {
-                // update parameters in expression
-                parameters.CopyTo(filterExpr.Parameters);
-
                 foreach (var item in arr)
                 {
                     // execute for each child value and except a first bool value (returns if true)

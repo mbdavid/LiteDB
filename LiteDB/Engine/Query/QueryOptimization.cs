@@ -91,9 +91,6 @@ namespace LiteDB.Engine
                     var left = predicate.Left;
                     var right = predicate.Right;
 
-                    predicate.Parameters.CopyTo(left.Parameters);
-                    predicate.Parameters.CopyTo(right.Parameters);
-
                     add(left);
                     add(right);
                 }
@@ -228,6 +225,7 @@ namespace LiteDB.Engine
                             .Select(x => Tuple.Create(x, expr.Right))
                             .FirstOrDefault();
                     }
+                    // ALL are not supported in index
                 }
                 else
                 {
