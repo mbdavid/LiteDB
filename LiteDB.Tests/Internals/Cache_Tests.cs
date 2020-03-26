@@ -11,7 +11,7 @@ namespace LiteDB.Internals
         [Fact]
         public void Cache_Read_Write()
         {
-            var m = new MemoryCache(10);
+            var m = new MemoryCache(new int[] { 10 });
 
             m.PagesInUse.Should().Be(0);
 
@@ -64,7 +64,7 @@ namespace LiteDB.Internals
         [Fact]
         public void Cache_Extends()
         {
-            var m = new MemoryCache(10);
+            var m = new MemoryCache(new int[] { 10 });
             var pos = 0;
 
             // in ctor, memory cache create only 1 memory segment

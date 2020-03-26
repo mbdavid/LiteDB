@@ -78,9 +78,12 @@ namespace LiteDB
         public const int MAX_TRANSACTION_SIZE = 100_000; // 100_000 (default) - 1000 (for tests)
 
         /// <summary>
-        /// Size, in PAGES, for each buffer array (used in MemoryStore) - Each byte array will be created with this size * PAGE_SIZE
+        /// Size, in PAGES, for each buffer array (used in MemoryStore)
+        /// It's an array to increase after each extend - limited in heighest value
+        /// Each byte array will be created with this size * PAGE_SIZE
+        /// Use minimal 12 to allocate at least 85Kb per segment (will use LOH)
         /// </summary>
-        public const int MEMORY_SEGMENT_SIZE = 1000; // 8Mb per extend
+        public static int[] MEMORY_SEGMENT_SIZES = new int[] { 12, 50, 100, 500, 1000 }; // 8Mb per extend
 
         /// <summary>
         /// Define how many documents will be keep in memory until clear cache and remove support to orderby/groupby

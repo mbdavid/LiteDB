@@ -33,9 +33,7 @@ namespace LiteDB.Engine
                 ["cache"] = new BsonDocument
                 {
                     ["extendSegments"] = _disk.Cache.ExtendSegments,
-                    ["memoryUsage"] =
-                    (_disk.Cache.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE) +
-                    (40 * (_disk.Cache.ExtendSegments * MEMORY_SEGMENT_SIZE)),
+                    ["extendPages"] = _disk.Cache.ExtendPages * PAGE_SIZE,
                     ["freePages"] = _disk.Cache.FreePages,
                     ["readablePages"] = _disk.Cache.GetPages().Count,
                     ["writablePages"] = _disk.Cache.WritablePages,
