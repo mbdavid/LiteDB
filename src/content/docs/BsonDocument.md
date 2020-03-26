@@ -21,18 +21,20 @@ customer["Address"] = new BsonDocument
 customer["Address"]["Number"] = "1331";
 ```
 
+LiteDB supports documents up to 16MB after BSON serialization.
+
 About document field **keys**:
 
 - Keys are case-insensitive
 - Duplicate keys are not allowed
-- LiteDB keeps the original key order, including mapped classes. The only exception is for `_id` field that will always be the first field. 
+- LiteDB keeps the original key order, including mapped classes. The only exception is for `_id` field, which will always be the first field. 
 
 About document field **values**:
 
 - Values can be any BSON value data type: Null, Int32, Int64, Decimal, Double, String, Embedded Document, Array, Binary, ObjectId, Guid, Boolean, DateTime, MinValue, MaxValue
-- When a field is indexed, the value must be less than 512 bytes after BSON serialization.
+- When a field is indexed, the value must be less than 256 bytes after BSON serialization.
 - `_id` field cannot be: `Null`, `MinValue` or `MaxValue`
-- `_id` is unique indexed field, so value must be less than 512 bytes
+- `_id` is unique indexed field, so value must be less than 256 bytes
 
 About .NET classes
 

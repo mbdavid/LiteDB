@@ -201,18 +201,19 @@
 <span class="na">    [&#34;Street&#34;]</span> <span class="p">=</span> <span class="s">&#34;Av. Protasio Alves&#34;</span>
 <span class="p">};</span>
 <span class="n">customer</span><span class="p">[</span><span class="s">&#34;Address&#34;</span><span class="p">][</span><span class="s">&#34;Number&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="s">&#34;1331&#34;</span><span class="p">;</span>
-</code></pre></div><p>About document field <strong>keys</strong>:</p>
+</code></pre></div><p>LiteDB supports documents up to 16MB after BSON serialization.</p>
+<p>About document field <strong>keys</strong>:</p>
 <ul>
 <li>Keys are case-insensitive</li>
 <li>Duplicate keys are not allowed</li>
-<li>LiteDB keeps the original key order, including mapped classes. The only exception is for <code>_id</code> field that will always be the first field.</li>
+<li>LiteDB keeps the original key order, including mapped classes. The only exception is for <code>_id</code> field, which will always be the first field.</li>
 </ul>
 <p>About document field <strong>values</strong>:</p>
 <ul>
 <li>Values can be any BSON value data type: Null, Int32, Int64, Decimal, Double, String, Embedded Document, Array, Binary, ObjectId, Guid, Boolean, DateTime, MinValue, MaxValue</li>
-<li>When a field is indexed, the value must be less than 512 bytes after BSON serialization.</li>
+<li>When a field is indexed, the value must be less than 256 bytes after BSON serialization.</li>
 <li><code>_id</code> field cannot be: <code>Null</code>, <code>MinValue</code> or <code>MaxValue</code></li>
-<li><code>_id</code> is unique indexed field, so value must be less than 512 bytes</li>
+<li><code>_id</code> is unique indexed field, so value must be less than 256 bytes</li>
 </ul>
 <p>About .NET classes</p>
 <ul>

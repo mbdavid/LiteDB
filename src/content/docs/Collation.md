@@ -20,7 +20,7 @@ Internally, the culture info is stored in the header of the datafile using its L
 
 - `rebuild {"collation": "en-GB/IgnoreCase"};` rebuilds the datafile with the `en-GB` culture and case-insensitive string comparison
 
-- `rebuild {"collation": "pt-BR/IgnoreCase,IgnoreSymbols"};` rebuilds the datafile with the `en-US` culture and case-insensitive string comparison that also ignores symbols (white spaces, punctuation, math symbols etc.)
+- `rebuild {"collation": "pt-BR/IgnoreCase,IgnoreSymbols"};` rebuilds the datafile with the `pt-BR` culture and case-insensitive string comparison that also ignores symbols (white spaces, punctuation, math symbols etc.)
 
 
 
