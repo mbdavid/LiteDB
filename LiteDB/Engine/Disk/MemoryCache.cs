@@ -384,7 +384,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get how many pages this cache extends in memory
         /// </summary>
-        public int ExtendPages => Enumerable.Range(0, _extends - 1).Select(x => _segmentSizes[Math.Min(_segmentSizes.Length - 1, _extends)]).Sum();
+        public int ExtendPages => Enumerable.Range(0, _extends).Select(x => _segmentSizes[Math.Min(_segmentSizes.Length - 1, x)]).Sum();
 
         /// <summary>
         /// Get how many pages are used as Writable at this moment
