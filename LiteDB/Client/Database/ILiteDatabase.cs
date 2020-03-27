@@ -26,7 +26,8 @@ namespace LiteDB
         /// Get a collection using a entity class as strong typed document. If collection does not exits, create a new one.
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
-        ILiteCollection<T> GetCollection<T>(string name);
+        /// <param name="autoId">Define autoId data type (when object contains no id field)</param>
+        ILiteCollection<T> GetCollection<T>(string name, BsonAutoId autoId = BsonAutoId.ObjectId);
 
         /// <summary>
         /// Get a collection using a name based on typeof(T).Name (BsonMapper.ResolveCollectionName function)

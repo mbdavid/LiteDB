@@ -78,9 +78,10 @@ namespace LiteDB
         /// Get a collection using a entity class as strong typed document. If collection does not exits, create a new one.
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
-        public ILiteCollection<T> GetCollection<T>(string name)
+        /// <param name="autoId">Define autoId data type (when object contains no id field)</param>
+        public ILiteCollection<T> GetCollection<T>(string name, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
-            return new LiteCollection<T>(name, BsonAutoId.ObjectId, _engine, _mapper);
+            return new LiteCollection<T>(name, autoId, _engine, _mapper);
         }
 
         /// <summary>
@@ -96,7 +97,7 @@ namespace LiteDB
         /// </summary>
         public ILiteCollection<T> GetCollection<T>(BsonAutoId autoId)
         {
-            return this.GetCollection<T>(null);
+            return this.GetCollection<T>(null, autoId);
         }
 
         /// <summary>
