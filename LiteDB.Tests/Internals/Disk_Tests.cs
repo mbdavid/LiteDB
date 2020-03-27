@@ -19,7 +19,7 @@ namespace LiteDB.Internals
                 LogStream = new MemoryStream()
             };
 
-            var disk = new DiskService(settings, 10);
+            var disk = new DiskService(settings, new int[] { 10 });
             var pages = new List<PageBuffer>();
 
             // let's create 100 pages with 0-99 full data
