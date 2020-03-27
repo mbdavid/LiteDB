@@ -59,7 +59,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    _autoId = BsonAutoId.ObjectId;
+                    _autoId = autoId;
                 }
             }
         }
