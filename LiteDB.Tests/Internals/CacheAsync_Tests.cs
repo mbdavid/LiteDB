@@ -4,6 +4,7 @@ using LiteDB.Engine;
 using System.Threading;
 using FluentAssertions;
 using Xunit;
+using static LiteDB.Constants;
 
 namespace LiteDB.Internals
 {

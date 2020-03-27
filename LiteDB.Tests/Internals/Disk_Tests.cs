@@ -5,6 +5,7 @@ using LiteDB.Engine;
 using Xunit;
 using System.Threading.Tasks;
 using System.Threading;
+using static LiteDB.Constants;
 
 namespace LiteDB.Internals
 {

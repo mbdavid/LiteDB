@@ -558,7 +558,7 @@ namespace LiteDB
         {
             var hash = 17;
             hash = 37 * hash + this.Type.GetHashCode();
-            hash = 37 * hash + this.RawValue.GetHashCode();
+            hash = 37 * hash + (this.RawValue?.GetHashCode() ?? 0);
             return hash;
         }
 
