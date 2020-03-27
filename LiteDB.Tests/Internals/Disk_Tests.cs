@@ -5,6 +5,7 @@ using LiteDB.Engine;
 using Xunit;
 using System.Threading.Tasks;
 using System.Threading;
+using static LiteDB.Constants;
 
 namespace LiteDB.Internals
 {
@@ -19,7 +20,7 @@ namespace LiteDB.Internals
                 LogStream = new MemoryStream()
             };
 
-            var disk = new DiskService(settings, 10);
+            var disk = new DiskService(settings, MEMORY_SEGMENT_SIZES);
             var pages = new List<PageBuffer>();
 
             // let's create 100 pages with 0-99 full data

@@ -4,6 +4,7 @@ using LiteDB.Engine;
 using System.Threading;
 using FluentAssertions;
 using Xunit;
+using static LiteDB.Constants;
 
 namespace LiteDB.Internals
 {
@@ -26,7 +27,7 @@ namespace LiteDB.Internals
                 toBlock?.Wait();
             }
 
-            var disk = new DiskService(new EngineSettings { DataStream = new MemoryStream() }, 10);
+            var disk = new DiskService(new EngineSettings { DataStream = new MemoryStream() }, MEMORY_SEGMENT_SIZES);
 
             var ta = new Task(() =>
             {
