@@ -58,21 +58,8 @@ namespace LiteDB.Engine
 
             transaction.OpenCursors.Add(_cursor);
 
-            try
-            {
-                // encapsulate all execution to catch any error
-                return new BsonDataReader(RunQuery(), _collection);
-            }
-            catch
-            {
-                // remove cursor
-                transaction.OpenCursors.Remove(_cursor);
-
-                // if any error, release transaction
-                _monitor.ReleaseTransaction(transaction);
-
-                throw;
-            }
+            // return new BsonDataReader with IEnumerable source
+            return new BsonDataReader(RunQuery(), _collection);
 
             IEnumerable<BsonDocument> RunQuery()
             {
