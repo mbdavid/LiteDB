@@ -37,7 +37,7 @@ namespace LiteDB
             this.AddRange(items);
         }
 
-        internal new IList<BsonValue> RawValue => (List<BsonValue>)base.RawValue;
+        public new IList<BsonValue> RawValue => (IList<BsonValue>)base.RawValue;
 
         public override BsonValue this[int index]
         {

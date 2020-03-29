@@ -43,7 +43,7 @@ namespace LiteDB
         /// <summary>
         /// Get internal .NET value object
         /// </summary>
-        internal virtual object RawValue { get; }
+        public virtual object RawValue { get; }
 
         #region Constructor
 
