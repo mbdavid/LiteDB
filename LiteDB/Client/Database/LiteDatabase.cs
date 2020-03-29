@@ -70,6 +70,15 @@ namespace LiteDB
             _mapper = mapper ?? BsonMapper.Global;
         }
 
+        /// <summary>
+        /// Start LiteDB database using a pre-exiting engine. When LiteDatabase instance dispose engine instance will be disposed too
+        /// </summary>
+        public LiteDatabase(ILiteEngine engine, BsonMapper mapper = null)
+        {
+            _engine = engine;
+            _mapper = mapper ?? BsonMapper.Global;
+        }
+
         #endregion
 
         #region Collections
