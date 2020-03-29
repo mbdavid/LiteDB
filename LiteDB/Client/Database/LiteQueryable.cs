@@ -348,7 +348,7 @@ namespace LiteDB
 
             try
             {
-                this.Select($"{{ count: COUNT(*) }}");
+                this.Select($"{{ count: COUNT(*._id) }}");
                 var ret = this.ToDocuments().Single()["count"].AsInt32;
 
                 return ret;
@@ -368,7 +368,7 @@ namespace LiteDB
 
             try
             {
-                this.Select($"{{ count: COUNT(*) }}");
+                this.Select($"{{ count: COUNT(*._id) }}");
                 var ret = this.ToDocuments().Single()["count"].AsInt64;
 
                 return ret;
@@ -388,7 +388,7 @@ namespace LiteDB
 
             try
             {
-                this.Select($"{{ exists: ANY(*) }}");
+                this.Select($"{{ exists: ANY(*._id) }}");
                 var ret = this.ToDocuments().Single()["exists"].AsBoolean;
 
                 return ret;
