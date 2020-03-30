@@ -24,6 +24,11 @@ namespace LiteDB
         /// </summary>
         public BsonMapper Mapper => _mapper;
 
+        /// <summary>
+        /// Returns true if the current instance is already disposed
+        /// </summary>
+        public bool IsDisposed { get; set; } = false;
+
         #endregion
 
         #region Ctor
@@ -376,6 +381,7 @@ namespace LiteDB
             {
                 _engine.Dispose();
             }
+            IsDisposed = true;
         }
     }
 }
