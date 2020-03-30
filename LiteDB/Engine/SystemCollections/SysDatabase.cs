@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using static LiteDB.Constants;
 
@@ -10,6 +11,8 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysDatabase()
         {
+            var version = typeof(LiteEngine).GetTypeInfo().Assembly.GetName().Version;
+
             yield return new BsonDocument
             {
                 ["name"] = _disk.GetName(FileOrigin.Data),
@@ -27,6 +30,7 @@ namespace LiteDB.Engine
 
                 ["currentReadVersion"] = _walIndex.CurrentReadVersion,
                 ["lastTransactionID"] = _walIndex.LastTransactionID,
+                ["engine"] = $"litedb-ce-v{version.Major}.{version.Minor}.{version.Build}",
 
                 ["pragmas"] = new BsonDocument(_header.Pragmas.Pragmas.ToDictionary(x => x.Name, x => x.Get())),
 
