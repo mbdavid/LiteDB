@@ -265,7 +265,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Analyze/Checkpoint/Shrink/UserVersion
+        #region Checkpoint/Rebuild
 
         /// <summary>
         /// Do database checkpoint. Copy all commited transaction from log file into datafile.
@@ -282,6 +282,10 @@ namespace LiteDB
         {
             return _engine.Rebuild(options);
         }
+
+        #endregion
+
+        #region Pragmas
 
         /// <summary>
         /// Get value from internal engine variables
@@ -306,6 +310,51 @@ namespace LiteDB
         {
             get => _engine.Pragma(Pragmas.USER_VERSION);
             set => _engine.Pragma(Pragmas.USER_VERSION, value);
+        }
+
+        /// <summary>
+        /// Get/Set database timeout - this timeout is used to wait for unlock using transactions
+        /// </summary>
+        public TimeSpan Timeout
+        {
+            get => TimeSpan.FromSeconds(_engine.Pragma(Pragmas.TIMEOUT).AsInt32);
+            set => _engine.Pragma(Pragmas.TIMEOUT, (int)value.TotalSeconds);
+        }
+
+        /// <summary>
+        /// Get/Set if database will deserialize dates in UTC timezone or Local timezone (default: Local)
+        /// </summary>
+        public bool UtcDate
+        {
+            get => _engine.Pragma(Pragmas.UTC_DATE);
+            set => _engine.Pragma(Pragmas.UTC_DATE, value);
+        }
+
+        /// <summary>
+        /// Get/Set database limit size (in bytes). New value must be equals or larger than current database size
+        /// </summary>
+        public long LimitSize
+        {
+            get => _engine.Pragma(Pragmas.LIMIT_SIZE);
+            set => _engine.Pragma(Pragmas.LIMIT_SIZE, value);
+        }
+
+        /// <summary>
+        /// Get/Set in how many pages (8 Kb each page) log file will auto checkpoint (copy from log file to data file). Use 0 to manual-only checkpoint (and no checkpoint on dispose)
+        /// Default: 1000 pages
+        /// </summary>
+        public int CheckpointSize
+        {
+            get => _engine.Pragma(Pragmas.CHECKPOINT);
+            set => _engine.Pragma(Pragmas.CHECKPOINT, value);
+        }
+
+        /// <summary>
+        /// Get database collection (this options can be changed only in rebuild proces)
+        /// </summary>
+        public Collation Collation
+        {
+            get => new Collation(_engine.Pragma(Pragmas.COLLATION).AsString);
         }
 
         #endregion

@@ -18,11 +18,6 @@ namespace LiteDB
         ILiteStorage<string> FileStorage { get; }
 
         /// <summary>
-        /// Get/Set database user version - use this version number to control database change model
-        /// </summary>
-        int UserVersion { get; set; }
-
-        /// <summary>
         /// Get a collection using a entity class as strong typed document. If collection does not exits, create a new one.
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
@@ -121,5 +116,36 @@ namespace LiteDB
         /// Set new value to internal engine variables
         /// </summary>
         BsonValue Pragma(string name, BsonValue value);
+
+        /// <summary>
+        /// Get/Set database user version - use this version number to control database change model
+        /// </summary>
+        int UserVersion { get; set; }
+
+        /// <summary>
+        /// Get/Set database timeout - this timeout is used to wait for unlock using transactions
+        /// </summary>
+        TimeSpan Timeout { get; set; }
+
+        /// <summary>
+        /// Get/Set if database will deserialize dates in UTC timezone or Local timezone (default: Local)
+        /// </summary>
+        bool UtcDate { get; set; }
+
+        /// <summary>
+        /// Get/Set database limit size (in bytes). New value must be equals or larger than current database size
+        /// </summary>
+        long LimitSize { get; set; }
+
+        /// <summary>
+        /// Get/Set in how many pages (8 Kb each page) log file will auto checkpoint (copy from log file to data file). Use 0 to manual-only checkpoint (and no checkpoint on dispose)
+        /// Default: 1000 pages
+        /// </summary>
+        int CheckpointSize { get; set; }
+
+        /// <summary>
+        /// Get database collection (this options can be changed only in rebuild proces)
+        /// </summary>
+        Collation Collation { get; }
     }
 }
