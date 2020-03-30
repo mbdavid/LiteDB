@@ -89,7 +89,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Fill current database with data inside file reader - run inside a transacion
         /// </summary>
-        internal void RebuildContent(IFileReader reader, UpgradeOption upgrade = UpgradeOption.True)
+        internal void RebuildContent(IFileReader reader)
         {
             // begin transaction and get TransactionID
             var transaction = _monitor.GetTransaction(true, false, out _);
@@ -98,16 +98,13 @@ namespace LiteDB.Engine
             {
                 foreach (var collection in reader.GetCollections())
                 {
-                    if (upgrade != UpgradeOption.DataOnly)
+                    // first create all user indexes (exclude _id index)
+                    foreach (var index in reader.GetIndexes(collection))
                     {
-                        // first create all user indexes (exclude _id index)
-                        foreach (var index in reader.GetIndexes(collection))
-                        {
-                            this.EnsureIndex(collection,
-                                index.Name,
-                                BsonExpression.Create(index.Expression),
-                                index.Unique);
-                        }
+                        this.EnsureIndex(collection,
+                            index.Name,
+                            BsonExpression.Create(index.Expression),
+                            index.Unique);
                     }
 
                     // get all documents from current collection

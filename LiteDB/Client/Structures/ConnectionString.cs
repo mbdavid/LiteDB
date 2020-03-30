@@ -41,7 +41,12 @@ namespace LiteDB
         /// <summary>
         /// "upgrade": Check if data file is an old version and convert before open (default: false)
         /// </summary>
-        public UpgradeOption Upgrade { get; set; } = UpgradeOption.False;
+        public bool Upgrade { get; set; } = false;
+
+        /// <summary>
+        /// "collation": Set default collaction when database creation (default: "[CurrentCulture]/IgnoreCase")
+        /// </summary>
+        public Collation Collation { get; set; }
 
         /// <summary>
         /// Initialize empty connection string
@@ -77,6 +82,8 @@ namespace LiteDB
             this.InitialSize = _values.GetFileSize(@"initial size", this.InitialSize);
             this.ReadOnly = _values.GetValue("readonly", this.ReadOnly);
 
+            this.Collation = _values.ContainsKey("collation") ? new Collation(_values.GetValue<string>("collation")) : this.Collation;
+
             this.Upgrade = _values.GetValue("upgrade", this.Upgrade);
         }
 
@@ -95,7 +102,8 @@ namespace LiteDB
                 Filename = this.Filename,
                 Password = this.Password,
                 InitialSize = this.InitialSize,
-                ReadOnly = this.ReadOnly
+                ReadOnly = this.ReadOnly,
+                Collation = this.Collation
             };
 
             // create engine implementation as Connection Type

@@ -47,6 +47,11 @@ namespace LiteDB.Engine
         public long InitialSize { get; set; } = 0;
 
         /// <summary>
+        /// Create database with custom string collection (used only to create database) (default: Collation.Default)
+        /// </summary>
+        public Collation Collation { get; set; }
+
+        /// <summary>
         /// Indicate that engine will open files in readonly mode (and will not support any database change)
         /// </summary>
         public bool ReadOnly { get; set; } = false;

@@ -43,14 +43,26 @@ namespace LiteDB
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-            if (connectionString.Upgrade != UpgradeOption.False)
+            if (connectionString.Upgrade == true)
             {
                 // try upgrade if need
-                LiteEngine.Upgrade(connectionString.Filename, connectionString.Password, connectionString.Upgrade);
+                LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
             }
 
             _engine = connectionString.CreateEngine();
             _mapper = mapper ?? BsonMapper.Global;
+
+            if (connectionString.Collation != null)
+            {
+                var current = this.Collation.ToString();
+
+                if (connectionString.Collation.ToString() != current)
+                {
+                    this.Dispose();
+
+                    throw new LiteException(0, $"Database collation '{current}' is different from connection string. Use Rebuild database to change collation.");
+                }
+            }
         }
 
         /// <summary>
@@ -59,11 +71,9 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(Stream stream, BsonMapper mapper = null)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
-
             var settings = new EngineSettings
             {
-                DataStream = stream
+                DataStream = stream ?? throw new ArgumentNullException(nameof(stream))
             };
 
             _engine = new LiteEngine(settings);
@@ -75,7 +85,7 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(ILiteEngine engine, BsonMapper mapper = null)
         {
-            _engine = engine;
+            _engine = engine ?? throw new ArgumentNullException(nameof(engine));
             _mapper = mapper ?? BsonMapper.Global;
         }
 
