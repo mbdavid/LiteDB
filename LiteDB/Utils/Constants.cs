@@ -48,12 +48,12 @@ namespace LiteDB
         /// <summary>
         /// Max size of a index entry - usde for string, binary, array and documents. Need fit in 1 byte length
         /// </summary>
-        public const int MAX_INDEX_KEY_LENGTH = 255;
+        public const int MAX_INDEX_KEY_LENGTH = 1023;
 
         /// <summary>
         /// Get max length of 1 single index node
         /// </summary>
-        public const int MAX_INDEX_LENGTH = 600;
+        public const int MAX_INDEX_LENGTH = 1400;
 
         /// <summary>
         /// Get how many slots collection pages will have for free list page (data/index)
