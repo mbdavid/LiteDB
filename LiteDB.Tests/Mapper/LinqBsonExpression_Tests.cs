@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using Xunit;
 
@@ -355,6 +356,11 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => DateTime.Now, "NOW()");
             TestExpr<User>(x => DateTime.UtcNow, "NOW_UTC()");
             TestExpr<User>(x => DateTime.Today, "TODAY()");
+
+            // using regex
+            TestExpr<User>(x => Regex.Split(x.Name, @"\s"), "SPLIT(Name, @p0, true)", @"\s");
+            TestExpr<User>(x => Regex.IsMatch(x.Name, @"^K"), "IS_MATCH(Name, @p0)", @"^K");
+
         }
 
         [Fact]

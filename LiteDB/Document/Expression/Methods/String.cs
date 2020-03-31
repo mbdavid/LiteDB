@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Text.RegularExpressions;
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -184,7 +185,33 @@ namespace LiteDB
             {
                 var values = value.AsString.Split(new string[] { separator.AsString }, StringSplitOptions.RemoveEmptyEntries);
 
-                foreach(var str in values)
+                foreach (var str in values)
+                {
+                    yield return str;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Slit value string based on regular expression pattern
+        /// </summary>
+        public static IEnumerable<BsonValue> SPLIT(BsonValue value, BsonValue pattern, BsonValue useRegex)
+        {
+            if (useRegex.IsBoolean && useRegex.AsBoolean)
+            {
+                if (value.IsString && pattern.IsString)
+                {
+                    var values = Regex.Split(value.AsString, pattern.AsString, RegexOptions.Compiled);
+
+                    foreach (var str in values)
+                    {
+                        yield return str;
+                    }
+                }
+            }
+            else
+            {
+                foreach(var str in SPLIT(value, pattern))
                 {
                     yield return str;
                 }
@@ -226,6 +253,41 @@ namespace LiteDB
             }
 
             return BsonValue.Null;
+        }
+
+        /// <summary>
+        /// Test if value is match with regular expression pattern
+        /// </summary>
+        public static BsonValue IS_MATCH(BsonValue value, BsonValue pattern)
+        {
+            if (value.IsString == false || pattern.IsString == false) return false;
+
+            return Regex.IsMatch(value.AsString, pattern.AsString);
+        }
+
+        /// <summary>
+        /// Apply regular expression pattern over value to get group data. Return null if not found
+        /// </summary>
+        public static BsonValue MATCH(BsonValue value, BsonValue pattern, BsonValue group)
+        {
+            if (value.IsString == false || pattern.IsString == false) return null;
+
+            var match = Regex.Match(value.AsString, pattern.AsString);
+
+            if (match.Success == false) return BsonValue.Null;
+
+            if (group.IsNumber)
+            {
+                return match.Groups[group.AsInt32].Value;
+            }
+            else if (group.IsString)
+            {
+                return match.Groups[group.AsString].Value;
+            }
+            else
+            {
+                return BsonValue.Null;
+            }
         }
     }
 }

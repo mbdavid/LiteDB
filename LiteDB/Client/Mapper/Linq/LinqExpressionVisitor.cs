@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -26,6 +27,7 @@ namespace LiteDB
             [typeof(Enumerable)] = new EnumerableResolver(),
             [typeof(Guid)] = new GuidResolver(),
             [typeof(Math)] = new MathResolver(),
+            [typeof(Regex)] = new RegexResolver(),
             [typeof(ObjectId)] = new ObjectIdResolver(),
             [typeof(String)] = new StringResolver(),
             [typeof(Nullable)] = new NullableResolver()
