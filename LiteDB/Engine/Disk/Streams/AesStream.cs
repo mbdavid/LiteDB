@@ -9,7 +9,7 @@ namespace LiteDB.Engine
     /// <summary>
     /// Encrypted AES Stream
     /// </summary>
-    public class AesStream : Stream
+    internal class AesStream : Stream
     {
         private readonly Aes _aes;
         private readonly ICryptoTransform _encryptor;

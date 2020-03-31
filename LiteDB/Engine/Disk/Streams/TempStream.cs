@@ -8,7 +8,7 @@ namespace LiteDB.Engine
     /// Implement a temporary stream that uses MemoryStream until get LIMIT bytes, then copy all to tempoary disk file and delete on dispose
     /// Can be pass 
     /// </summary>
-    public class TempStream : Stream
+    internal class TempStream : Stream
     {
         private Stream _stream = new MemoryStream();
         private string _filename = null;
