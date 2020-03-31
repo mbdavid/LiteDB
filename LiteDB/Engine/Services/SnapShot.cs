@@ -149,7 +149,6 @@ namespace LiteDB.Engine
             where T : BasePage
         {
             ENSURE(pageID <= _header.LastPageID, "request page must be less or equals lastest page in data file");
-            ENSURE(pageID != 0, "header page must be used by _header instance");
 
             // check for header page (return header single instance)
             //TODO: remove this
