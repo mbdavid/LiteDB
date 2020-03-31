@@ -18,6 +18,7 @@ namespace LiteDB
 
         private readonly ILiteEngine _engine;
         private readonly BsonMapper _mapper;
+        private readonly bool _disposeOnClose;
 
         /// <summary>
         /// Get current instance of BsonMapper used in this database instance (can be BsonMapper.Global)
@@ -51,6 +52,7 @@ namespace LiteDB
 
             _engine = connectionString.CreateEngine();
             _mapper = mapper ?? BsonMapper.Global;
+            _disposeOnClose = true;
 
             if (connectionString.Collation != null)
             {
@@ -78,15 +80,17 @@ namespace LiteDB
 
             _engine = new LiteEngine(settings);
             _mapper = mapper ?? BsonMapper.Global;
+            _disposeOnClose = true;
         }
 
         /// <summary>
         /// Start LiteDB database using a pre-exiting engine. When LiteDatabase instance dispose engine instance will be disposed too
         /// </summary>
-        public LiteDatabase(ILiteEngine engine, BsonMapper mapper = null)
+        public LiteDatabase(ILiteEngine engine, BsonMapper mapper = null, bool disposeOnClose = true)
         {
             _engine = engine ?? throw new ArgumentNullException(nameof(engine));
             _mapper = mapper ?? BsonMapper.Global;
+            _disposeOnClose = disposeOnClose;
         }
 
         #endregion
@@ -382,7 +386,7 @@ namespace LiteDB
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && _disposeOnClose)
             {
                 _engine.Dispose();
             }

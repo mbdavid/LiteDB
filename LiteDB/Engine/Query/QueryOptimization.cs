@@ -48,6 +48,9 @@ namespace LiteDB.Engine
             // split where expressions into TERMs (splited by AND operator)
             this.SplitWherePredicateInTerms();
 
+            // do terms optimizations
+            this.OptimizeTerms();
+
             // define Fields
             this.DefineQueryFields();
 
@@ -104,6 +107,28 @@ namespace LiteDB.Engine
             foreach(var predicate in _query.Where)
             {
                 add(predicate);
+            }
+        }
+
+        /// <summary>
+        /// Do some pre-defined optimization on terms to convert expensive filter in indexable filter
+        /// </summary>
+        private void OptimizeTerms()
+        {
+            // simple optimization
+            for (var i = 0; i < _terms.Count; i++)
+            {
+                var term = _terms[i];
+
+                // convert: { [Enum] ANY = [Path] } to { [Path] IN ARRAY([Enum]) }
+                // very used in LINQ expressions: `query.Where(x => ids.Contains(x.Id))`
+                if (term.Left?.IsScalar == false &&
+                    term.IsANY &&
+                    term.Type == BsonExpressionType.Equal &&
+                    term.Right?.Type == BsonExpressionType.Path)
+                {
+                    _terms[i] = BsonExpression.Create(term.Right.Source + " IN ARRAY(" + term.Left.Source + ")", term.Parameters);
+                }
             }
         }
 
