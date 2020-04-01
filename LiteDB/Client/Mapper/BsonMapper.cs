@@ -91,7 +91,7 @@ namespace LiteDB
         /// <summary>
         /// Get/Set maximum depth for nested object (default 20)
         /// </summary>
-        public static int MaxDepth { get; } = 20;
+        public int MaxDepth { get; set; }
 
         /// <summary>
         /// A custom callback to change MemberInfo behavior when converting to MemberMapper.
@@ -117,6 +117,7 @@ namespace LiteDB
             this.ResolveMember = (t, mi, mm) => { };
             this.ResolveCollectionName = (t) => Reflection.IsEnumerable(t) ? Reflection.GetListItemType(t).Name : t.Name;
             this.IncludeFields = false;
+            this.MaxDepth = 20;
 
             _typeInstantiator = customTypeInstantiator ?? ((Type t) => null);
             _typeNameBinder = typeNameBinder ?? DefaultTypeNameBinder.Instance;
