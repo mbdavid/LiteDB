@@ -23,8 +23,6 @@ namespace LiteDB
     /// </summary>
     public partial class BsonMapper
     {
-        private const int MAX_DEPTH = 20;
-
         #region Properties
 
         /// <summary>
@@ -89,6 +87,11 @@ namespace LiteDB
         /// Get/Set that mapper must include non public (private, protected and internal) (default: false)
         /// </summary>
         public bool IncludeNonPublic { get; set; }
+
+        /// <summary>
+        /// Get/Set maximum depth for nested object (default 20)
+        /// </summary>
+        public static int MaxDepth { get; } = 20;
 
         /// <summary>
         /// A custom callback to change MemberInfo behavior when converting to MemberMapper.
