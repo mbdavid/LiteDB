@@ -76,6 +76,12 @@ namespace LiteDB.Engine
                 if (buffer[0] == 1) throw new LiteException(0, "This data file is encrypted and needs a password to open");
 
                 _header = new HeaderPage(buffer);
+                
+                // test for same collation
+                if (settings.Collation != null && settings.Collation.ToString() != _header.Pragmas.Collation.ToString())
+                {
+                    throw new LiteException(0, $"Datafile collation '{_header.Pragmas.Collation}' is different from engine settings. Use Rebuild database to change collation.");
+                }
 
                 // initialize locker service
                 _locker = new LockService(_header.Pragmas);

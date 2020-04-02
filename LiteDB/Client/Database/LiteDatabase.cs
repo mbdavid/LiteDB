@@ -53,18 +53,6 @@ namespace LiteDB
             _engine = connectionString.CreateEngine();
             _mapper = mapper ?? BsonMapper.Global;
             _disposeOnClose = true;
-
-            if (connectionString.Collation != null)
-            {
-                var current = this.Collation.ToString();
-
-                if (connectionString.Collation.ToString() != current)
-                {
-                    this.Dispose();
-
-                    throw new LiteException(0, $"Database collation '{current}' is different from connection string. Use Rebuild database to change collation.");
-                }
-            }
         }
 
         /// <summary>
