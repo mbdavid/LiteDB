@@ -1,7 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
+     <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+   </PropertyGroup>
+   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+     <TargetFrameworks>net40;netcoreapp2.0</TargetFrameworks>
+   </PropertyGroup>    
+    
   <PropertyGroup>
-    <TargetFrameworks>net40</TargetFrameworks>
     <AssemblyName>LiteDB.Shell</AssemblyName>
     <PackageId>LiteDB.Shell</PackageId>    
     <OutputType>Exe</OutputType>

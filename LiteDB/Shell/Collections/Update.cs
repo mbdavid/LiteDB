@@ -29,7 +29,7 @@ namespace LiteDB.Shell
             // single document update
             if(s.Match(@"\s*\{"))
             {
-                var doc = JsonSerializer.Deserialize(s.ToString()).AsDocument;
+                var doc = JsonSerializer.Deserialize(s).AsDocument;
 
                 s.ThrowIfNotFinish();
 

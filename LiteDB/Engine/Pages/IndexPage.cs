@@ -17,6 +17,8 @@ namespace LiteDB
 
         private Dictionary<ushort, IndexNode> _nodes = new Dictionary<ushort, IndexNode>();
 
+        public Dictionary<ushort, IndexNode> Nodes => _nodes;
+
         public IndexPage(uint pageID)
             : base(pageID)
         {

@@ -69,7 +69,7 @@ namespace LiteDB
         private BsonValue ReadElement(ByteReader reader, out string name)
         {
             var type = reader.ReadByte();
-            name = this.ReadCString(reader);
+            name = reader.ReadCString();
 
             if (type == 0x01) // Double
             {
@@ -77,7 +77,7 @@ namespace LiteDB
             }
             else if (type == 0x02) // String
             {
-                return this.ReadString(reader);
+                return reader.ReadBsonString();
             }
             else if (type == 0x03) // Document
             {
@@ -145,29 +145,6 @@ namespace LiteDB
             }
 
             throw new NotSupportedException("BSON type not supported");
-        }
-
-        private string ReadString(ByteReader reader)
-        {
-            var length = reader.ReadInt32();
-            var bytes = reader.ReadBytes(length - 1);
-            reader.ReadByte(); // discard \x00
-            return Encoding.UTF8.GetString(bytes, 0, length - 1);
-        }
-
-        private string ReadCString(ByteReader reader)
-        {
-            var pos = 0;
-            var buffer = new byte[200];
-
-            while (true)
-            {
-                var data = reader.ReadByte();
-                if (data == 0x00 || pos == 200) break;
-                buffer[pos++] = data;
-            }
-
-            return Encoding.UTF8.GetString(buffer, 0, pos);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -60,6 +60,16 @@ namespace LiteDB
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
             return _engine.Value.InsertBulk(_name, this.GetBsonDocs(docs), batchSize, _autoId);
+        }
+
+        /// <summary>
+        /// Implements bulk upsert of documents in a collection. Usefull when need lots of documents.
+        /// </summary>
+        public int UpsertBulk(IEnumerable<T> docs, int batchSize = 5000)
+        {
+            if (docs == null) throw new ArgumentNullException(nameof(docs));
+
+            return _engine.Value.UpsertBulk(_name, this.GetBsonDocs(docs), batchSize, _autoId);
         }
 
         /// <summary>
