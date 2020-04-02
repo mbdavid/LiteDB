@@ -1,11 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+
+#if !NET35
+using System.Collections.Concurrent;
+#endif
 
 namespace LiteDB
 {
     internal class CacheService
     {
+
+#if NET35
         /// <summary>
         /// Collection to store clean only pages in cache
         /// </summary>
@@ -15,6 +22,17 @@ namespace LiteDB
         /// Collection to store dirty only pages in cache. If page was in _clean, remove from there and insert here
         /// </summary>
         private Dictionary<uint, BasePage> _dirty = new Dictionary<uint, BasePage>();
+#else
+        /// <summary>
+        /// Collection to store clean only pages in cache
+        /// </summary>
+        private ConcurrentDictionary<uint, BasePage> _clean = new ConcurrentDictionary<uint, BasePage>();
+
+        /// <summary>
+        /// Collection to store dirty only pages in cache. If page was in _clean, remove from there and insert here
+        /// </summary>
+        private ConcurrentDictionary<uint, BasePage> _dirty = new ConcurrentDictionary<uint, BasePage>();
+#endif
 
         private IDiskService _disk;
         private Logger _log;
@@ -58,7 +76,11 @@ namespace LiteDB
         /// </summary>
         public void SetDirty(BasePage page)
         {
+#if NET35
             _clean.Remove(page.PageID);
+#else
+            _clean.TryRemove(page.PageID, out _);
+#endif
             page.IsDirty = true;
             _dirty[page.PageID] = page;
         }
