@@ -247,7 +247,7 @@ namespace LiteDB
             var type = value?.GetType();
 
             // if type is string, use direct BsonValue(string) to avoid rules like TrimWhitespace/EmptyStringToNull in mapper
-            var arg = type == null ? BsonValue.Null : 
+            var arg = type == null ? BsonValue.Null :
                 type == typeof(string) ? new BsonValue((string)value) :
                 _mapper.Serialize(value.GetType(), value);
 
@@ -423,18 +423,18 @@ namespace LiteDB
 
             _builder.Append(op);
 
-            if(!_mapper.EnumAsInteger &&
-                node.Left.NodeType == ExpressionType.Convert && 
-                node.Left is UnaryExpression unex && 
-                unex.Operand.Type.GetTypeInfo().IsEnum && 
+            if (!_mapper.EnumAsInteger &&
+                node.Left.NodeType == ExpressionType.Convert &&
+                node.Left is UnaryExpression unex &&
+                unex.Operand.Type.GetTypeInfo().IsEnum &&
                 unex.Type == typeof(Int32))
             {
-                this.VisitAsPredicate(Expression.Constant(Enum.GetName(unex.Operand.Type, (node.Right as ConstantExpression).Value)), andOr);
+                this.VisitAsPredicate(Expression.Constant(Enum.GetName(unex.Operand.Type, this.Evaluate(node.Right))), andOr);
             }
             else
             {
                 this.VisitAsPredicate(node.Right, andOr);
-            }            
+            }
 
             _builder.Append(")");
 
@@ -540,7 +540,7 @@ namespace LiteDB
                 this.VisitAsPredicate(bin.Right, false);
             }
             // Visit .Any(x => `x.StartsWith("John")`)
-            else if(expression is MethodCallExpression met)
+            else if (expression is MethodCallExpression met)
             {
                 // requires only parameter in left side
                 if (met.Object.NodeType != ExpressionType.Parameter) throw new NotSupportedException("Any/All requires simple parameter on left side. Eg: `x.Customers.Select(c => c.Name).Any(n => n.StartsWith('J'))`");
@@ -625,7 +625,7 @@ namespace LiteDB
             var pars = method.GetParameters();
 
             // for List/Dictionary [int/string]
-            if (method.Name == "get_Item" && pars.Length == 1 && 
+            if (method.Name == "get_Item" && pars.Length == 1 &&
                 (pars[0].ParameterType == typeof(int) || pars[0].ParameterType == typeof(string)))
             {
                 obj = node.Object;
