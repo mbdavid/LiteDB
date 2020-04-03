@@ -13,5 +13,5 @@
   <task name="DELETE" sleep="45s">DELETE col1 WHERE 1 = 1</task>
   <task name="CHECKPOINT" sleep="10s">CHECKPOINT</task>
   <task name="COUNT" sleep="1s">SELECT COUNT(*) FROM col1</task>
-  <task name="SIZE" sleep="1s">SELECT { data: FORMAT(dataFileSize, 'n0'), log: FORMAT(logFileSize, 'n0') } FROM $database</task>
+  <task name="SIZE" sleep="1s">SELECT { data: FORMAT(dataSize, 'n0'), log: FORMAT(logSize, 'n0') } FROM $database</task>
 </test>

@@ -109,10 +109,10 @@ namespace LiteDB.Engine
                     _disk.LogLength > (_header.Pragmas.Checkpoint * PAGE_SIZE))
                 {
                     // run checkpoint in another thread
-                    Task.Run(() =>
-                    {
-                        _walIndex.Checkpoint();
-                    });
+                    // Task.Run(() =>
+                    // {
+                    //     _walIndex.Checkpoint();
+                    // });
                 }
             }
         }

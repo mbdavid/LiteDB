@@ -57,6 +57,9 @@ namespace LiteDB.Engine
                 // do checkpoint
                 _walIndex.Checkpoint();
 
+                // shrink file
+                _disk.ResetLogPosition(true);
+
                 // get new filelength to compare
                 var newLength = (_header.LastPageID + 1) * PAGE_SIZE;
 
