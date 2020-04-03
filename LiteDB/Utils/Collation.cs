@@ -25,7 +25,6 @@ namespace LiteDB
                 (CompareOptions)Enum.Parse(typeof(CompareOptions), parts[1]) : 
                 CompareOptions.None;
 
-            this.LCID = LiteDB.LCID.GetLCID(culture);
             this.SortOptions = sortOptions;
             this.Culture = new CultureInfo(culture);
 
@@ -34,21 +33,21 @@ namespace LiteDB
 
         public Collation(int lcid, CompareOptions sortOptions)
         {
-            this.LCID = lcid;
             this.SortOptions = sortOptions;
-            this.Culture = LiteDB.LCID.GetCulture(lcid);
+            this.Culture = CultureInfo.GetCultureInfo(lcid);
 
             _compareInfo = this.Culture.CompareInfo;
         }
 
-        public static Collation Default = new Collation(LiteDB.LCID.Current, CompareOptions.IgnoreCase);
-
-        public static Collation Binary = new Collation(127 /* Invariant */, CompareOptions.Ordinal);
+        /// <summary>
+        /// Default collation: CurrentCulture / IgnoreCase
+        /// </summary>
+        public static Collation Default = new Collation(CultureInfo.CurrentCulture.LCID, CompareOptions.IgnoreCase);
 
         /// <summary>
-        /// Get LCID code from culture
+        /// Binary collection: InvariantCulture / Ordinal
         /// </summary>
-        public int LCID { get; }
+        public static Collation Binary = new Collation(CultureInfo.InvariantCulture.LCID, CompareOptions.Ordinal);
 
         /// <summary>
         /// Get database language culture

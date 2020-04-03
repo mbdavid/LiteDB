@@ -92,7 +92,7 @@ namespace LiteDB.Engine
                     Validate = (v, h) => { throw new LiteException(0, "Pragma COLLATION is read only. Use Rebuild options."); },
                     Write = (b) =>
                     {
-                        b.Write(this.Collation.LCID, P_COLLATION_LCID);
+                        b.Write(this.Collation.Culture.LCID, P_COLLATION_LCID);
                         b.Write((int)this.Collation.SortOptions, P_COLLATION_SORT);
                     }
                 },
