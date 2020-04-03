@@ -14,7 +14,7 @@ namespace LiteDB
         {
             bool isAnonymousType = 
                 type.FullName.Contains("AnonymousType") &&
-                type.GetTypeInfo().GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Any();
+                type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Any();
 
             return isAnonymousType;
         }

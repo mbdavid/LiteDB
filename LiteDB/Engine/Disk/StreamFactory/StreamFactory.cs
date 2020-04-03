@@ -34,11 +34,11 @@ namespace LiteDB.Engine
         {
             if (_password == null)
             {
-                return new ConcurrentStream(_stream, canWrite);
+                return Stream.Synchronized(_stream);
             }
             else
             {
-                return new AesStream(_password, new ConcurrentStream(_stream, canWrite));
+                return new AesStream(_password, Stream.Synchronized(_stream));
             }
         }
 

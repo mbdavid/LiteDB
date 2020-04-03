@@ -53,7 +53,7 @@ namespace LiteDB
             if (memberInfo is PropertyInfo && propertyInfo.CanWrite == false) return null;
 
             // if *Structs*, use direct reflection - net35 has no Expression.Unbox to cast target
-            if (type.GetTypeInfo().IsValueType)
+            if (type.IsValueType)
             {
                 return memberInfo is FieldInfo ?
                     (GenericSetter)fieldInfo.SetValue :

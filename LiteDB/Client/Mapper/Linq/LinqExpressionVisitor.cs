@@ -426,7 +426,7 @@ namespace LiteDB
             if (!_mapper.EnumAsInteger &&
                 node.Left.NodeType == ExpressionType.Convert &&
                 node.Left is UnaryExpression unex &&
-                unex.Operand.Type.GetTypeInfo().IsEnum &&
+                unex.Operand.Type.IsEnum &&
                 unex.Type == typeof(Int32))
             {
                 this.VisitAsPredicate(Expression.Constant(Enum.GetName(unex.Operand.Type, this.Evaluate(node.Right))), andOr);

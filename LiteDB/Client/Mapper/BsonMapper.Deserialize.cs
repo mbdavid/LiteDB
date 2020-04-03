@@ -87,8 +87,6 @@ namespace LiteDB
                 type = Reflection.UnderlyingTypeOf(type);
             }
 
-            var typeInfo = type.GetTypeInfo();
-
             // check if your type is already a BsonValue/BsonDocument/BsonArray
             if (type == typeof(BsonValue))
             {
@@ -122,7 +120,7 @@ namespace LiteDB
             }
 
             // enum value is an int
-            else if (typeInfo.IsEnum)
+            else if (type.IsEnum)
             {
                 if (value.IsString) return Enum.Parse(type, value.AsString);
 
@@ -191,7 +189,7 @@ namespace LiteDB
 
                 if (o is IDictionary dict)
                 {
-                    if (o.GetType().GetTypeInfo().IsGenericType)
+                    if (o.IsGenericType)
                     {
                         var k = type.GetGenericArguments()[0];
                         var t = type.GetGenericArguments()[1];
@@ -256,7 +254,7 @@ namespace LiteDB
 
         private void DeserializeDictionary(Type K, Type T, IDictionary dict, BsonDocument value)
         {
-            var isKEnum = K.GetTypeInfo().IsEnum;
+            var isKEnum = K.IsEnum;
             foreach (var el in value.GetElements())
             {
                 var k = isKEnum ? Enum.Parse(K, el.Key) : Convert.ChangeType(el.Key, K);

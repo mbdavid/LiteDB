@@ -11,7 +11,7 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysDatabase()
         {
-            var version = typeof(LiteEngine).GetTypeInfo().Assembly.GetName().Version;
+            var version = typeof(LiteEngine).Assembly.GetName().Version;
 
             yield return new BsonDocument
             {
