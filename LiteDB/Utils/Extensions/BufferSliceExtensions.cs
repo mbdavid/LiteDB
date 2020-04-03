@@ -243,7 +243,7 @@ namespace LiteDB
             if (value.IsString)
             {
                 var str = value.AsString;
-                var strLength = (byte)Encoding.UTF8.GetByteCount(str);
+                var strLength = (ushort)Encoding.UTF8.GetByteCount(str);
 
                 ExtendedLengthHelper.WriteLength(BsonType.String, strLength, out var typeByte, out var lengthByte);
 
