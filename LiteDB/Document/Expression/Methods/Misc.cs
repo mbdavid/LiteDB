@@ -104,6 +104,20 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Get all values from a document
+        /// </summary>
+        public static IEnumerable<BsonValue> VALUES(BsonValue document)
+        {
+            if(document.IsDocument)
+            {
+                foreach(var value in document.AsDocument.Values)
+                {
+                    yield return value;
+                }
+            }
+        }
+
+        /// <summary>
         /// Return CreationTime from ObjectId value - returns null if not an ObjectId
         /// </summary>
         public static BsonValue OID_CREATIONTIME(BsonValue objectId)
