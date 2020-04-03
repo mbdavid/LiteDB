@@ -17,14 +17,9 @@ namespace LiteDB.Engine
     public class EngineSettings
     {
         /// <summary>
-        /// Get/Set custom stream to be used as datafile (can be MemoryStrem or TempStream). Do not use FileStream - to use physical file, use "filename" attribute (and keep DataStrem/WalStream null)
+        /// Get/Set custom stream to be used as datafile (can be MemoryStrem or TempStream). Do not use FileStream - to use physical file, use "filename" attribute (and keep DataStrem null)
         /// </summary>
         public Stream DataStream { get; set; } = null;
-
-        /// <summary>
-        /// Get/Set custom stream to be used as log file. If is null, use a new TempStream (for TempStrem datafile) or MemoryStream (for MemoryStream datafile)
-        /// </summary>
-        public Stream LogStream { get; set; } = null;
 
         /// <summary>
         /// Get/Set custom stream to be used as temp file. If is null, will create new FileStreamFactory with "-tmp" on name
@@ -75,37 +70,10 @@ namespace LiteDB.Engine
             }
             else if (!string.IsNullOrEmpty(this.Filename))
             {
-                return new FileStreamFactory(this.Filename, this.Password, this.ReadOnly, false);
+                return new FileStreamFactory(this.Filename, this.Password, false);
             }
 
             throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");
-        }
-
-        /// <summary>
-        /// Create new IStreamFactory for logfile
-        /// </summary>
-        internal IStreamFactory CreateLogFactory()
-        {
-            if (this.LogStream != null)
-            {
-                return new StreamFactory(this.LogStream, this.Password);
-            }
-            else if (this.Filename == ":memory:")
-            {
-                return new StreamFactory(new MemoryStream(), this.Password);
-            }
-            else if (this.Filename == ":temp:")
-            {
-                return new StreamFactory(new TempStream(), this.Password);
-            }
-            else if (!string.IsNullOrEmpty(this.Filename))
-            {
-                var logName = FileHelper.GetLogFile(this.Filename);
-
-                return new FileStreamFactory(logName, this.Password, this.ReadOnly, false);
-            }
-
-            return new StreamFactory(new MemoryStream(), this.Password);
         }
 
         /// <summary>
@@ -129,7 +97,7 @@ namespace LiteDB.Engine
             {
                 var tempName = FileHelper.GetTempFile(this.Filename);
 
-                return new FileStreamFactory(tempName, this.Password, false, true);
+                return new FileStreamFactory(tempName, this.Password, true);
             }
 
             return new StreamFactory(new TempStream(), this.Password);

@@ -15,14 +15,12 @@ namespace LiteDB.Engine
     {
         private readonly string _filename;
         private readonly string _password;
-        private readonly bool _readonly;
         private readonly bool _hidden;
 
-        public FileStreamFactory(string filename, string password, bool readOnly, bool hidden)
+        public FileStreamFactory(string filename, string password, bool hidden)
         {
             _filename = filename;
             _password = password;
-            _readonly = readOnly;
             _hidden = hidden;
         }
 
@@ -34,21 +32,20 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new data file FileStream instance based on filename
         /// </summary>
-        public Stream GetStream(bool canWrite, bool sequencial)
+        public Stream GetStream(bool readOnly)
         {
-            var write = canWrite && (_readonly == false);
-
-            var isNewFile = write && this.Exists() == false;
+            var isNewFile = readOnly == false && this.Exists() == false;
 
             var stream = new FileStream(_filename,
-                _readonly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
-                write ? FileAccess.ReadWrite : FileAccess.Read,
-                write ? FileShare.Read : FileShare.ReadWrite,
+                readOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
+                readOnly ? FileAccess.Read : FileAccess.ReadWrite,
+                readOnly ? FileShare.ReadWrite : FileShare.Read,
                 PAGE_SIZE,
-                sequencial ? FileOptions.SequentialScan : FileOptions.RandomAccess);
+                readOnly ? FileOptions.RandomAccess : FileOptions.SequentialScan);
 
             if (isNewFile && _hidden)
             {
+                // hidden sort file
                 File.SetAttributes(_filename, FileAttributes.Hidden);
             }
 
@@ -79,11 +76,6 @@ namespace LiteDB.Engine
         {
             File.Delete(_filename);
         }
-
-        /// <summary>
-        /// Test if this file are locked by another process
-        /// </summary>
-        public bool IsLocked() => this.Exists() && FileHelper.IsFileLocked(_filename);
 
         /// <summary>
         /// Close all stream on end

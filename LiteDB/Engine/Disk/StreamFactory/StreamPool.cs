@@ -19,20 +19,20 @@ namespace LiteDB.Engine
     internal class StreamPool : IDisposable
     {
         private readonly ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
-        private readonly Lazy<Stream> _writer;
+        private readonly Stream _writer;
         private readonly IStreamFactory _factory;
 
-        public StreamPool(IStreamFactory factory, bool appendOnly)
+        public StreamPool(IStreamFactory factory, bool readOnly)
         {
             _factory = factory;
 
-            _writer = new Lazy<Stream>(() => _factory.GetStream(true, appendOnly), true);
+            _writer = readOnly ? null : _factory.GetStream(false);
         }
 
         /// <summary>
         /// Get single Stream writer instance
         /// </summary>
-        public Stream Writer => _writer.Value;
+        public Stream Writer => _writer;
 
         /// <summary>
         /// Rent a Stream reader instance
@@ -41,7 +41,7 @@ namespace LiteDB.Engine
         {
             if (!_pool.TryTake(out var stream))
             {
-                stream = _factory.GetStream(false, false);
+                stream = _factory.GetStream(true);
             }
 
             return stream;
@@ -70,9 +70,9 @@ namespace LiteDB.Engine
             }
 
             // do writer dispose (wait async writer thread)
-            if (_writer.IsValueCreated)
+            if (_writer != null)
             {
-                _writer.Value.Dispose();
+                _writer.Dispose();
             }
         }
     }

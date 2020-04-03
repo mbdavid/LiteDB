@@ -42,8 +42,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void EnqueuePage(PageBuffer page)
         {
-            ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
-
             _queue.Enqueue(page);
         }
 

@@ -96,40 +96,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Try enter in exclusive mode - if not possible, just exit with false (do not wait and no exceptions)
-        /// If mustExit returns true, must call ExitExclusive after use
-        /// </summary>
-        public bool TryEnterExclusive(out bool mustExit)
-        {
-            // if already in exclusive mode return true but "enter" indicator must be false (do not exit)
-            if (_transaction.IsWriteLockHeld)
-            {
-                mustExit = false;
-                return true;
-            }
-
-            // if there is any open transaction, exit with false
-            if (_transaction.IsReadLockHeld || _transaction.CurrentReadCount > 0)
-            {
-                mustExit = false;
-                return false;
-            }
-
-            // try enter in exclusive mode - but if not possible, just exit with false
-            if (_transaction.TryEnterWriteLock(10) == false)
-            {
-                mustExit = false;
-                return false;
-            }
-
-            ENSURE(_transaction.RecursiveReadCount == 0, "must have no other transaction here");
-
-            // now, current thread are in exclusive mode (must run ExitExclusive to exit)
-            mustExit = true;
-            return true;
-        }
-
-        /// <summary>
         /// Exit exclusive lock
         /// </summary>
         public void ExitExclusive()

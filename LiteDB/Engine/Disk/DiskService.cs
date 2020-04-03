@@ -17,66 +17,69 @@ namespace LiteDB.Engine
     internal class DiskService : IDisposable
     {
         private readonly MemoryCache _cache;
-        private readonly Lazy<DiskWriterQueue> _queue;
+        private readonly DiskWriterQueue _queue;
 
-        private IStreamFactory _dataFactory;
-        private readonly IStreamFactory _logFactory;
+        private IStreamFactory _streamFactory;
 
-        private StreamPool _dataPool;
-        private readonly StreamPool _logPool;
+        private StreamPool _streamPool;
 
-        private long _dataLength;
-        private long _logLength;
+        private HeaderPage _header;
+
+        private long _logStartPosition;
+        private long _logEndPosition;
 
         public DiskService(EngineSettings settings, int[] memorySegmentSizes)
         {
             _cache = new MemoryCache(memorySegmentSizes);
 
             // get new stream factory based on settings
-            _dataFactory = settings.CreateDataFactory();
-            _logFactory = settings.CreateLogFactory();
+            _streamFactory = settings.CreateDataFactory();
+
+            var isNew = _streamFactory.Exists() == false;
 
             // create stream pool
-            _dataPool = new StreamPool(_dataFactory, false);
-            _logPool = new StreamPool(_logFactory, true);
+            _streamPool = new StreamPool(_streamFactory, settings.ReadOnly);
 
-            var isNew = _dataFactory.Exists() == false;
-
-            // create lazy async writer queue for log file
-            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer));
+            // create async writer queue for log file
+            _queue = new DiskWriterQueue(_streamPool.Writer);
 
             // create new database if not exist yet
             if (isNew)
             {
-                LOG($"creating new database: '{Path.GetFileName(_dataFactory.Name)}'", "DISK");
+                LOG($"creating new database: '{Path.GetFileName(_streamFactory.Name)}'", "DISK");
 
-                this.Initialize(_dataPool.Writer, settings.Collation, settings.InitialSize);
-            }
-
-            // if not readonly, force open writable datafile
-            if (settings.ReadOnly == false)
-            {
-                var dummy = _dataPool.Writer.CanRead;
-            }
-
-            // get initial data file length
-            _dataLength = _dataFactory.GetLength() - PAGE_SIZE;
-
-            // get initial log file length
-            if (_logFactory.Exists())
-            {
-                _logLength = _logFactory.GetLength() - PAGE_SIZE;
+                _header = this.Initialize(_streamPool.Writer, settings.Collation, settings.InitialSize);
             }
             else
             {
-                _logLength = -PAGE_SIZE;
+                // load header page from position 0 from file
+                var stream = _streamPool.Rent();
+                var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
+
+                try
+                {
+                    stream.Position = 0;
+                    stream.Read(buffer.Array, 0, PAGE_SIZE);
+
+                    // if first byte are 1 this datafile are encrypted but has do defined password to open
+                    if (buffer[0] == 1) throw new LiteException(0, "This data file is encrypted and needs a password to open");
+
+                    _header = new HeaderPage(buffer);
+                }
+                finally
+                {
+                    _streamPool.Return(stream);
+                }
             }
+
+            _logStartPosition = (_header.LastPageID + 1) * PAGE_SIZE;
+            _logEndPosition = _streamFactory.GetLength();
         }
 
         /// <summary>
         /// Get async queue writer
         /// </summary>
-        public DiskWriterQueue Queue => _queue.Value;
+        public DiskWriterQueue Queue => _queue;
 
         /// <summary>
         /// Get memory cache instance
@@ -84,14 +87,29 @@ namespace LiteDB.Engine
         public MemoryCache Cache => _cache;
 
         /// <summary>
-        /// Get Stream pool used inside disk service
+        /// Get writer Stream single instance
         /// </summary>
-        public StreamPool GetPool(FileOrigin origin) => origin == FileOrigin.Data ? _dataPool : _logPool;
+        public Stream Writer => _streamPool.Writer;
+
+        /// <summary>
+        /// Get stream factory instance;
+        /// </summary>
+        public IStreamFactory Factory => _streamFactory;
+
+        /// <summary>
+        /// Get header page single database instance
+        /// </summary>
+        public HeaderPage Header => _header;
+
+        /// <summary>
+        /// Get log length
+        /// </summary>
+        public long LogLength => _logEndPosition - _logStartPosition;
 
         /// <summary>
         /// Create a new empty database (use synced mode)
         /// </summary>
-        private void Initialize(Stream stream, Collation collation, long initialSize)
+        private HeaderPage Initialize(Stream stream, Collation collation, long initialSize)
         {
             var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
             var header = new HeaderPage(buffer, 0);
@@ -110,6 +128,8 @@ namespace LiteDB.Engine
             }
 
             stream.FlushToDisk();
+
+            return header;
         }
 
         /// <summary>
@@ -117,44 +137,7 @@ namespace LiteDB.Engine
         /// </summary>
         public DiskReader GetReader()
         {
-            return new DiskReader(_cache, _dataPool, _logPool);
-        }
-
-        /// <summary>
-        /// When a page are requested as Writable but not saved in disk, must be discard before release
-        /// </summary>
-        public void DiscardDirtyPages(IEnumerable<PageBuffer> pages)
-        {
-            // only for ROLLBACK action
-            foreach (var page in pages)
-            {
-                // complete discard page and content
-                _cache.DiscardPage(page);
-            }
-        }
-
-        /// <summary>
-        /// Discard pages that contains valid data and was not modified
-        /// </summary>
-        public void DiscardCleanPages(IEnumerable<PageBuffer> pages)
-        {
-            foreach (var page in pages)
-            {
-                // if page was not modified, try move to readable list
-                if (_cache.TryMoveToReadable(page) == false)
-                {
-                    // if already in readable list, just discard
-                    _cache.DiscardPage(page);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Request for a empty, writable non-linked page.
-        /// </summary>
-        public PageBuffer NewPage()
-        {
-            return _cache.NewPage();
+            return new DiskReader(_cache, _streamPool);
         }
 
         /// <summary>
@@ -170,38 +153,19 @@ namespace LiteDB.Engine
 
                 // adding this page into file AS new page (at end of file)
                 // must add into cache to be sure that new readers can see this page
-                page.Position = Interlocked.Add(ref _logLength, PAGE_SIZE);
-
-                // should mark page origin to log because async queue works only for log file
-                // if this page came from data file, must be changed before MoveToReadable
-                page.Origin = FileOrigin.Log;
+                page.Position = (Interlocked.Add(ref _logEndPosition, PAGE_SIZE)) - PAGE_SIZE;
 
                 // mark this page as readable and get cached paged to enqueue
                 var readable = _cache.MoveToReadable(page);
 
-                _queue.Value.EnqueuePage(readable);
+                _queue.EnqueuePage(readable);
 
                 count++;
             }
 
-            _queue.Value.Run();
+            _queue.Run();
 
             return count;
-        }
-
-        /// <summary>
-        /// Get virtual file length: real file can be small but async thread can still writing on disk
-        /// </summary>
-        public long GetLength(FileOrigin origin)
-        {
-            if (origin == FileOrigin.Log)
-            {
-                return _logLength + PAGE_SIZE;
-            }
-            else
-            {
-                return _dataLength + PAGE_SIZE;
-            }
         }
 
         /// <summary>
@@ -211,6 +175,8 @@ namespace LiteDB.Engine
         {
             if (settings.Password == password) return;
 
+            throw new NotImplementedException();
+            /*
             // empty data file
             this.SetLength(0, FileOrigin.Data);
 
@@ -230,28 +196,32 @@ namespace LiteDB.Engine
 
             // get initial data file length
             _dataLength = - PAGE_SIZE;
+            */
         }
 
         #region Sync Read/Write operations
 
         /// <summary>
-        /// Read all database pages inside file with no cache using. PageBuffers dont need to be Released
+        /// Read all log from current log position to end of file. 
+        /// This operation are sync and should not be run with any page on queue
         /// </summary>
-        public IEnumerable<PageBuffer> ReadFull(FileOrigin origin)
+        public IEnumerable<PageBuffer> ReadLog()
         {
             // do not use MemoryCache factory - reuse same buffer array (one page per time)
             // do not use BufferPool because header page can't be shared (byte[] is used inside page return)
             var buffer = new byte[PAGE_SIZE];
 
-            var pool = origin == FileOrigin.Log ? _logPool : _dataPool;
-            var stream = pool.Rent();
+            var stream = _streamPool.Rent();
+
+            ENSURE(_queue.Length == 0, "no pages on queue before read sync log");
 
             try
             {
-                // get length before starts (avoid grow during loop)
-                var length = this.GetLength(origin);
+                // get file length
+                var length = _streamFactory.GetLength();
 
-                stream.Position = 0;
+                // set to first log page position
+                stream.Position = _logStartPosition;
 
                 while (stream.Position < length)
                 {
@@ -262,31 +232,26 @@ namespace LiteDB.Engine
                     yield return new PageBuffer(buffer, 0, 0)
                     {
                         Position = position,
-                        Origin = origin,
                         ShareCounter = 0
                     };
                 }
             }
             finally
             {
-                pool.Return(stream);
+                _streamPool.Return(stream);
             }
         }
 
         /// <summary>
-        /// Write pages DIRECT in disk with NO queue. This pages are not cached and are not shared - WORKS FOR DATA FILE ONLY
+        /// Write pages DIRECT in disk with NO queue. Used in CHECKPOINT only
         /// </summary>
-        public void Write(IEnumerable<PageBuffer> pages, FileOrigin origin)
+        public void Write(IEnumerable<PageBuffer> pages)
         {
-            ENSURE(origin == FileOrigin.Data);
-
-            var stream = origin == FileOrigin.Data ? _dataPool.Writer : _logPool.Writer;
+            var stream = _streamPool.Writer;
 
             foreach (var page in pages)
             {
                 ENSURE(page.ShareCounter == 0, "this page can't be shared to use sync operation - do not use cached pages");
-
-                _dataLength = Math.Max(_dataLength, page.Position);
 
                 stream.Position = page.Position;
 
@@ -297,32 +262,17 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Set new length for file in sync mode. Queue must be empty before set length
+        /// Reset log position at end of file (based on header.LastPageID) and shrink file
         /// </summary>
-        public void SetLength(long length, FileOrigin origin)
+        public void ResetLogPosition(bool shrink)
         {
-            var stream = origin == FileOrigin.Log ? _logPool.Writer : _dataPool.Writer;
+            _logStartPosition = (_header.LastPageID + 1) * PAGE_SIZE;
+            _logEndPosition = _header.LastPageID * PAGE_SIZE; // always 1 PAGE_SIZE beause incremenets before use
 
-            if (origin == FileOrigin.Log)
+            if (shrink)
             {
-                ENSURE(_queue.Value.Length == 0, "queue must be empty before set new length");
-
-                Interlocked.Exchange(ref _logLength, length - PAGE_SIZE);
+                _streamPool.Writer.SetLength(_logStartPosition);
             }
-            else
-            {
-                Interlocked.Exchange(ref _dataLength, length - PAGE_SIZE);
-            }
-
-            stream.SetLength(length);
-        }
-
-        /// <summary>
-        /// Get file name (or Stream name)
-        /// </summary>
-        public string GetName(FileOrigin origin)
-        {
-            return origin == FileOrigin.Data ? _dataFactory.Name : _logFactory.Name;
         }
 
         #endregion
@@ -330,17 +280,10 @@ namespace LiteDB.Engine
         public void Dispose()
         {
             // dispose queue (wait finish)
-            if (_queue.IsValueCreated) _queue.Value.Dispose();
-
-            // get stream length from writer - is safe because only this instance
-            // can change file size
-            var delete = _logFactory.Exists() && _logPool.Writer.Length == 0;
+            _queue.Dispose();
 
             // dispose Stream pools
-            _dataPool.Dispose();
-            _logPool.Dispose();
-
-            if (delete) _logFactory.Delete();
+            _streamPool.Dispose();
 
             // other disposes
             _cache.Dispose();

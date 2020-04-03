@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -102,13 +103,16 @@ namespace LiteDB.Engine
             }
             finally
             {
-                //TODO: acho que não é este o lugar para fazer o teste - devo capturar o ReleaseTransaction para isso 
-                // (ou seja, faz no final da transacao)
-
-                // do auto-checkpoint if enabled (default: 1000 pages)
-                if (_header.Pragmas.Checkpoint > 0 && _disk.GetLength(FileOrigin.Log) > (_header.Pragmas.Checkpoint * PAGE_SIZE))
+                // do auto-checkpoint if enabled and write transaction (default: 1000 pages)
+                if (_header.Pragmas.Checkpoint > 0 && 
+                    transaction.Mode == LockMode.Write &&
+                    _disk.LogLength > (_header.Pragmas.Checkpoint * PAGE_SIZE))
                 {
-                    _walIndex.TryCheckpoint();
+                    // run checkpoint in another thread
+                    Task.Run(() =>
+                    {
+                        _walIndex.Checkpoint();
+                    });
                 }
             }
         }

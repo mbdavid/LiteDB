@@ -69,13 +69,8 @@ namespace LiteDB.Engine
                 // initialize disk service (will create database if needed)
                 _disk = new DiskService(settings, MEMORY_SEGMENT_SIZES);
 
-                // read page with no cache ref (has a own PageBuffer) - do not Release() support
-                var buffer = _disk.ReadFull(FileOrigin.Data).First();
-
-                // if first byte are 1 this datafile are encrypted but has do defined password to open
-                if (buffer[0] == 1) throw new LiteException(0, "This data file is encrypted and needs a password to open");
-
-                _header = new HeaderPage(buffer);
+                // get header page from disk service
+                _header = _disk.Header;
                 
                 // test for same collation
                 if (settings.Collation != null && settings.Collation.ToString() != _header.Pragmas.Collation.ToString())
@@ -89,11 +84,8 @@ namespace LiteDB.Engine
                 // initialize wal-index service
                 _walIndex = new WalIndexService(_disk, _locker);
 
-                // if exists log file, restore wal index references (can update full _header instance)
-                if (_disk.GetLength(FileOrigin.Log) > 0)
-                {
-                    _walIndex.RestoreIndex(ref _header);
-                }
+                // restore wal index references, if exists
+                _walIndex.RestoreIndex(_header);
 
                 // initialize sort temp disk
                 _sortDisk = new SortDisk(settings.CreateTempFactory(), CONTAINER_SORT_SIZE, _header.Pragmas);
@@ -159,7 +151,7 @@ namespace LiteDB.Engine
                 _monitor?.Dispose();
 
                 // do a soft checkpoint (only if exclusive lock is possible)
-                if (_header?.Pragmas.Checkpoint > 0) _walIndex?.TryCheckpoint();
+                if (_header?.Pragmas.Checkpoint > 0) _walIndex?.Checkpoint();
 
                 // close all disk streams (and delete log if empty)
                 _disk?.Dispose();

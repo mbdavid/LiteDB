@@ -23,7 +23,7 @@ namespace LiteDB.Engine
             _collections = header.GetCollections().ToDictionary(x => x.Key, x => x.Value);
 
             // using writer stream from pool (no need to return)
-            _stream = disk.GetPool(FileOrigin.Data).Writer;
+            _stream = disk.Writer;
         }
 
         /// <summary>

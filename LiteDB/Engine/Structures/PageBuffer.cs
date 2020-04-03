@@ -28,11 +28,6 @@ namespace LiteDB.Engine
         public long Position;
 
         /// <summary>
-        /// Get/Set page bytes origin (data/log)
-        /// </summary>
-        public FileOrigin Origin;
-
-        /// <summary>
         /// Get/Set how many read-share threads are using this page. -1 means 1 thread are using as writable
         /// </summary>
         public int ShareCounter;
@@ -47,7 +42,6 @@ namespace LiteDB.Engine
         {
             this.UniqueID = uniqueID;
             this.Position = long.MaxValue;
-            this.Origin = FileOrigin.None;
             this.ShareCounter = 0;
             this.Timestamp = 0;
         }
@@ -76,7 +70,7 @@ namespace LiteDB.Engine
             var pageID = this.ReadUInt32(0);
             var pageType = this[4];
 
-            return $"ID: {this.UniqueID} - Position: {p}/{this.Origin} - Shared: {s} - ({base.ToString()}) :: Content: [{pageID.ToString("0:0000")}/{(PageType)pageType}]";
+            return $"ID: {this.UniqueID} - Position: {p} - Shared: {s} - ({base.ToString()}) :: Content: [{pageID.ToString("0:0000")}/{(PageType)pageType}]";
         }
     }
 }

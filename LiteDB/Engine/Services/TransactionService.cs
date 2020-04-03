@@ -209,7 +209,7 @@ namespace LiteDB.Engine
 
                         // clone header page
                         var buffer = _header.UpdateBuffer();
-                        var clone = _disk.NewPage();
+                        var clone = _disk.Cache.NewPage();
 
                         // mem copy from current header to new header clone
                         Buffer.BlockCopy(buffer.Array, buffer.Offset, clone.Array, clone.Offset, clone.Count);
@@ -227,7 +227,7 @@ namespace LiteDB.Engine
 
             // now, discard all clean pages (because those pages are writable and must be readable)
             // from write snapshots
-            _disk.DiscardCleanPages(_snapshots.Values
+            _disk.Cache.DiscardCleanPages(_snapshots.Values
                     .Where(x => x.Mode == LockMode.Write)
                     .SelectMany(x => x.GetWritablePages(false, commit))
                     .Select(x => x.Buffer));
@@ -289,10 +289,10 @@ namespace LiteDB.Engine
                 if (snapshot.Mode == LockMode.Write)
                 {
                     // discard all dirty pages
-                    _disk.DiscardDirtyPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer));
+                    _disk.Cache.DiscardDirtyPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer));
 
                     // discard all clean pages
-                    _disk.DiscardCleanPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer));
+                    _disk.Cache.DiscardCleanPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer));
                 }
 
                 // now, release pages
@@ -325,7 +325,7 @@ namespace LiteDB.Engine
                         var pageID = _transPages.NewPages[i];
                         var next = i < _transPages.NewPages.Count - 1 ? _transPages.NewPages[i + 1] : _header.FreeEmptyPageList;
 
-                        var buffer = _disk.NewPage();
+                        var buffer = _disk.Cache.NewPage();
 
                         var page = new BasePage(buffer, pageID, PageType.Empty)
                         {
@@ -346,7 +346,7 @@ namespace LiteDB.Engine
 
                     // clone header buffer
                     var buf = _header.UpdateBuffer();
-                    var clone = _disk.NewPage();
+                    var clone = _disk.Cache.NewPage();
 
                     Buffer.BlockCopy(buf.Array, buf.Offset, clone.Array, clone.Offset, clone.Count);
 
@@ -387,10 +387,10 @@ namespace LiteDB.Engine
                 foreach (var snapshot in _snapshots.Values.Where(x => x.Mode == LockMode.Write))
                 {
                     // discard all dirty pages
-                    _disk.DiscardDirtyPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer));
+                    _disk.Cache.DiscardDirtyPages(snapshot.GetWritablePages(true, true).Select(x => x.Buffer));
 
                     // discard all clean pages
-                    _disk.DiscardCleanPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer));
+                    _disk.Cache.DiscardCleanPages(snapshot.GetWritablePages(false, true).Select(x => x.Buffer));
                 }
 
                 // release buffers in read-only snaphosts

@@ -28,9 +28,9 @@ namespace LiteDB.Engine
         public string Name => _stream is MemoryStream ? ":memory:" : _stream is TempStream ? ":temp:" : ":stream:";
 
         /// <summary>
-        /// Use ConcurrentStream wrapper to support multi thread in same Stream (using lock control)
+        /// Use Synchronized wrapper to support multi thread in same Stream (using lock control)
         /// </summary>
-        public Stream GetStream(bool canWrite, bool sequencial)
+        public Stream GetStream(bool readOnly)
         {
             if (_password == null)
             {
@@ -61,11 +61,6 @@ namespace LiteDB.Engine
         public void Delete()
         {
         }
-
-        /// <summary>
-        /// Test if this file are locked by another process (there is no way to test when Stream only)
-        /// </summary>
-        public bool IsLocked() => false;
 
         /// <summary>
         /// Do no dispose on finish

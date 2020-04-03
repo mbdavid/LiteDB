@@ -13,7 +13,7 @@ namespace LiteDB.Engine
         public long Rebuild(RebuildOptions options)
         {
             // enter database in exclusive mode
-            var mustExit = _locker.EnterExclusive();
+            var entered = _locker.EnterExclusive();
 
             // get a header backup/savepoint before change
             PageBuffer savepoint = null;
@@ -23,16 +23,13 @@ namespace LiteDB.Engine
                 // do a checkpoint before starts
                 _walIndex.Checkpoint();
 
-                var originalLength = _disk.GetLength(FileOrigin.Data);
+                var originalLength = (_header.LastPageID + 1) * PAGE_SIZE;
 
                 // create a savepoint in header page - restore if any error occurs
                 savepoint = _header.Savepoint();
 
                 // must clear all cache pages because all of them will change
                 _disk.Cache.Clear();
-
-                // must check if there is no data log
-                if (_disk.GetLength(FileOrigin.Log) > 0) throw new LiteException(0, "Rebuild operation requires no log file - run Checkpoint before continue");
 
                 // initialize V8 file reader
                 var reader = new FileReaderV8(_header, _disk);
@@ -60,11 +57,8 @@ namespace LiteDB.Engine
                 // do checkpoint
                 _walIndex.Checkpoint();
 
-                // set new fileLength
-                _disk.SetLength((_header.LastPageID + 1) * PAGE_SIZE, FileOrigin.Data);
-
                 // get new filelength to compare
-                var newLength = _disk.GetLength(FileOrigin.Data);
+                var newLength = (_header.LastPageID + 1) * PAGE_SIZE;
 
                 return originalLength - newLength;
             }
@@ -79,7 +73,7 @@ namespace LiteDB.Engine
             }
             finally
             {
-                if (mustExit)
+                if (entered)
                 {
                     _locker.ExitExclusive();
                 }

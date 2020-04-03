@@ -20,7 +20,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get new Stream instance
         /// </summary>
-        Stream GetStream(bool canWrite, bool sequencial);
+        Stream GetStream(bool readOnly);
 
         /// <summary>
         /// Get file length
@@ -37,11 +37,6 @@ namespace LiteDB.Engine
         /// Delete physical file on disk
         /// </summary>
         void Delete();
-
-        /// <summary>
-        /// Test if this file are used by another process
-        /// </summary>
-        bool IsLocked();
 
         /// <summary>
         /// Indicate that factory must be dispose on finish

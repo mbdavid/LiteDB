@@ -193,7 +193,7 @@ namespace LiteDB.Engine
             if (_transPages.DirtyPages.TryGetValue(pageID, out var walPosition))
             {
                 // read page from log file
-                var buffer = _reader.ReadPage(walPosition.Position, _mode == LockMode.Write, FileOrigin.Log);
+                var buffer = _reader.ReadPage(walPosition.Position, _mode == LockMode.Write);
                 var dirty = BasePage.ReadPage<T>(buffer);
 
                 origin = FileOrigin.Log;
@@ -211,7 +211,7 @@ namespace LiteDB.Engine
             if (pos != long.MaxValue)
             {
                 // read page from log file
-                var buffer = _reader.ReadPage(pos, _mode == LockMode.Write, FileOrigin.Log);
+                var buffer = _reader.ReadPage(pos, _mode == LockMode.Write);
                 var logPage = BasePage.ReadPage<T>(buffer);
 
                 // clear some data inside this page (will be override when write on log file)
@@ -229,7 +229,7 @@ namespace LiteDB.Engine
                 var pagePosition = BasePage.GetPagePosition(pageID);
 
                 // read page from data file
-                var buffer = _reader.ReadPage(pagePosition, _mode == LockMode.Write, FileOrigin.Data);
+                var buffer = _reader.ReadPage(pagePosition, _mode == LockMode.Write);
                 var diskpage = BasePage.ReadPage<T>(buffer);
 
                 origin = FileOrigin.Data;

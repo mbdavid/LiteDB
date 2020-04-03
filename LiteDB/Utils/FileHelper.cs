@@ -35,63 +35,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get LOG file based on data file
-        /// </summary>
-        public static string GetLogFile(string filename) => GetSufixFile(filename, "-log", false);
-
-        /// <summary>
         /// Get TEMP file based on data file
         /// </summary>
         public static string GetTempFile(string filename) => GetSufixFile(filename, "-tmp", false);
-
-        /// <summary>
-        /// Test if file are used by any process
-        /// </summary>
-        public static bool IsFileLocked(string filename)
-        {
-            FileStream stream = null;
-            var file = new FileInfo(filename);
-
-            try
-            {
-                stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None);
-            }
-            catch (IOException ex)
-            {
-                return ex.IsLocked();
-            }
-            finally
-            {
-                stream?.Dispose();
-            }
-
-            //file is not locked
-            return false;
-        }
-
-        /// <summary>
-        /// Try execute some action while has lock exception
-        /// </summary>
-        public static bool TryExec(Action action, TimeSpan timeout)
-        {
-            var timer = DateTime.UtcNow.Add(timeout);
-
-            do
-            {
-                try
-                {
-                    action();
-                    return true;
-                }
-                catch (IOException ex)
-                {
-                    ex.WaitIfLocked(25);
-                }
-            }
-            while (DateTime.UtcNow < timer);
-
-            return false;
-        }
 
         /// <summary>
         /// Convert storage unit string "1gb", "10 mb", "80000" to long bytes

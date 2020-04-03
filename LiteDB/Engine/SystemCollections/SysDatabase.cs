@@ -15,7 +15,7 @@ namespace LiteDB.Engine
 
             yield return new BsonDocument
             {
-                ["name"] = _disk.GetName(FileOrigin.Data),
+                ["name"] = _disk.Factory.Name,
                 ["encrypted"] = _settings.Password != null,
                 ["readOnly"] = _settings.ReadOnly,
 
@@ -24,8 +24,9 @@ namespace LiteDB.Engine
 
                 ["creationTime"] = _header.CreationTime,
 
-                ["dataFileSize"] = (int)_disk.GetLength(FileOrigin.Data),
-                ["logFileSize"] = (int)_disk.GetLength(FileOrigin.Log),
+                ["dataSize"] = (int)(_header.LastPageID + 1) * PAGE_SIZE,
+                ["logSize"] = (int)_disk.LogLength,
+                ["fileSize"] = (int)_disk.Factory.GetLength(),
                 ["asyncQueueLength"] = _disk.Queue.Length,
 
                 ["currentReadVersion"] = _walIndex.CurrentReadVersion,
@@ -51,7 +52,6 @@ namespace LiteDB.Engine
                     ["initialTransactionSize"] = _monitor.InitialSize,
                     ["availableSize"] = _monitor.FreePages
                 }
-
             };
         }
     }

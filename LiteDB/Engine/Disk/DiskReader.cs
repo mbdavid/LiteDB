@@ -20,33 +20,26 @@ namespace LiteDB.Engine
     {
         private readonly MemoryCache _cache;
 
-        private readonly StreamPool _dataPool;
-        private readonly StreamPool _logPool;
+        private readonly StreamPool _streamPool;
 
-        private readonly Lazy<Stream> _dataStream;
-        private readonly Lazy<Stream> _logStream;
+        private readonly Lazy<Stream> _stream;
 
-        public DiskReader(MemoryCache cache, StreamPool dataPool, StreamPool logPool)
+        public DiskReader(MemoryCache cache, StreamPool streamPool)
         {
             _cache = cache;
-            _dataPool = dataPool;
-            _logPool = logPool;
+            _streamPool = streamPool;
 
-            _dataStream = new Lazy<Stream>(() => _dataPool.Rent());
-            _logStream = new Lazy<Stream>(() => _logPool.Rent());
+            // use lazy because you can have transaction that will read only from cache
+            _stream = new Lazy<Stream>(() => _streamPool.Rent());
         }
 
-        public PageBuffer ReadPage(long position, bool writable, FileOrigin origin)
+        public PageBuffer ReadPage(long position, bool writable)
         {
             ENSURE(position % PAGE_SIZE == 0, "invalid page position");
 
-            var stream = origin == FileOrigin.Data ?
-                _dataStream.Value :
-                _logStream.Value;
-
             var page = writable ?
-                _cache.GetWritablePage(position, origin, (pos, buf) => this.ReadStream(stream, pos, buf)) :
-                _cache.GetReadablePage(position, origin, (pos, buf) => this.ReadStream(stream, pos, buf));
+                _cache.GetWritablePage(position, (pos, buf) => this.ReadStream(_stream.Value, pos, buf)) :
+                _cache.GetReadablePage(position, (pos, buf) => this.ReadStream(_stream.Value, pos, buf));
 
             return page;
         }
@@ -58,7 +51,6 @@ namespace LiteDB.Engine
         {
             // can't test "Length" from out-to-date stream
             // ENSURE(stream.Length <= position - PAGE_SIZE, "can't be read from beyond file length");
-
             stream.Position = position;
 
             stream.Read(buffer.Array, buffer.Offset, buffer.Count);
@@ -79,14 +71,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
-            if (_dataStream.IsValueCreated)
+            if (_stream.IsValueCreated)
             {
-                _dataPool.Return(_dataStream.Value);
-            }
-
-            if (_logStream.IsValueCreated)
-            {
-                _logPool.Return(_logStream.Value);
+                _streamPool.Return(_stream.Value);
             }
         }
     }

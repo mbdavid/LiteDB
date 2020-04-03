@@ -28,9 +28,9 @@ namespace LiteDB.Engine
         private readonly ConcurrentQueue<PageBuffer> _free = new ConcurrentQueue<PageBuffer>();
 
         /// <summary>
-        /// Contains only clean pages (from both data/log file) - support page concurrency use
-        /// - MUST have defined Origin and Position
-        /// - Contains only 1 instance per Position/Origin
+        /// Contains only clean pages - support page concurrency use
+        /// - MUST:
+        /// - Contains only 1 instance per Position
         /// - Contains only pages with ShareCounter >= 0
         /// *  = 0 - Page are avaiable but are not using by anyone (can be moved into _free list in next Extend())
         /// * >= 1 - Page are in used by 1 or more threads. Page must run "Release" when finish use
@@ -59,19 +59,15 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get page from clean cache (readable). If page not exits, create this new page and load data using factory fn
         /// </summary>
-        public PageBuffer GetReadablePage(long position, FileOrigin origin, Action<long, BufferSlice> factory)
+        public PageBuffer GetReadablePage(long position, Action<long, BufferSlice> factory)
         {
-            // get dict key based on position/origin
-            var key = this.GetReadableKey(position, origin);
-
             // try get from _readble dict or create new
-            var page = _readable.GetOrAdd(key, (k) =>
+            var page = _readable.GetOrAdd(position, (k) =>
             {
                 // get new page from _free pages (or extend)
                 var newPage = this.GetFreePage();
 
                 newPage.Position = position;
-                newPage.Origin = origin;
 
                 // load page content with disk stream
                 factory(position, newPage);
@@ -88,25 +84,6 @@ namespace LiteDB.Engine
             return page;
         }
 
-        /// <summary>
-        /// Get unique position in dictionary according with origin. Use positive/negative values
-        /// </summary>
-        private long GetReadableKey(long position, FileOrigin origin)
-        {
-            ENSURE(origin != FileOrigin.None, "file origin must be defined");
-
-            if (origin == FileOrigin.Data)
-            {
-                return position;
-            }
-            else
-            {
-                if (position == 0) return long.MinValue;
-
-                return -position;
-            }
-        }
-
         #endregion
 
         #region Writable Pages
@@ -115,15 +92,13 @@ namespace LiteDB.Engine
         /// Request for a writable page - no other can read this page and this page has no reference
         /// Writable pages can be MoveToReadable() or DiscardWritable() - but never Released()
         /// </summary>
-        public PageBuffer GetWritablePage(long position, FileOrigin origin, Action<long, BufferSlice> factory)
+        public PageBuffer GetWritablePage(long position, Action<long, BufferSlice> factory)
         {
-            var key = this.GetReadableKey(position, origin);
-
             // write pages always contains a new buffer array
-            var writable = this.NewPage(position, origin);
+            var writable = this.NewPage(position);
 
             // if requested page already in cache, just copy buffer and avoid load from stream
-            if (_readable.TryGetValue(key, out var clean))
+            if (_readable.TryGetValue(position, out var clean))
             {
                 Buffer.BlockCopy(clean.Array, clean.Offset, writable.Array, writable.Offset, PAGE_SIZE);
             }
@@ -140,13 +115,13 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer NewPage()
         {
-            return this.NewPage(long.MaxValue, FileOrigin.None);
+            return this.NewPage(long.MaxValue);
         }
 
         /// <summary>
         /// Create new page using an empty buffer block. Mark this page as writable.
         /// </summary>
-        private PageBuffer NewPage(long position, FileOrigin origin)
+        private PageBuffer NewPage(long position)
         {
             var page = this.GetFreePage();
 
@@ -164,7 +139,6 @@ namespace LiteDB.Engine
 
             ENSURE(page.All(0), "new page must be full zero empty before return");
 
-            page.Origin = origin;
             page.Timestamp = DateTime.UtcNow.Ticks;
 
             return page;
@@ -178,14 +152,11 @@ namespace LiteDB.Engine
         {
             ENSURE(page.Position != long.MaxValue, "page must have a position");
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable");
-            ENSURE(page.Origin != FileOrigin.None, "page must has defined origin");
-
-            var key = this.GetReadableKey(page.Position, page.Origin);
 
             // set page as not in use
             page.ShareCounter = 0;
 
-            var added = _readable.TryAdd(key, page);
+            var added = _readable.TryAdd(page.Position, page);
 
             // if not added, let's back ShareCounter to writable state
             if (!added)
@@ -205,20 +176,17 @@ namespace LiteDB.Engine
         public PageBuffer MoveToReadable(PageBuffer page)
         {
             ENSURE(page.Position != long.MaxValue, "page must have position to be readable");
-            ENSURE(page.Origin != FileOrigin.None, "page should be a source before move to readable");
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable before from to readable dict");
 
-            var key = this.GetReadableKey(page.Position, page.Origin);
             var added = true;
 
             // no concurrency in writable page
             page.ShareCounter = 1;
 
-            var readable = _readable.AddOrUpdate(key, page, (newKey, current) =>
+            var readable = _readable.AddOrUpdate(page.Position, page, (newKey, current) =>
             {
                 // if page already exist inside readable list, should never be in-used (this will be garanteed by lock control)
                 ENSURE(current.ShareCounter == 0, "user must ensure this page are not in use when mark as read only");
-                ENSURE(current.Origin == page.Origin, "origin must be same");
 
                 current.ShareCounter = 1;
 
@@ -241,6 +209,39 @@ namespace LiteDB.Engine
             return readable;
         }
 
+        #endregion
+
+        #region DiscardPages
+
+        /// <summary>
+        /// When a page are requested as Writable but not saved in disk, must be discard before release
+        /// </summary>
+        public void DiscardDirtyPages(IEnumerable<PageBuffer> pages)
+        {
+            // only for ROLLBACK action
+            foreach (var page in pages)
+            {
+                // complete discard page and content
+                this.DiscardPage(page);
+            }
+        }
+
+        /// <summary>
+        /// Discard pages that contains valid data and was not modified
+        /// </summary>
+        public void DiscardCleanPages(IEnumerable<PageBuffer> pages)
+        {
+            foreach (var page in pages)
+            {
+                // if page was not modified, try move to readable list
+                if (this.TryMoveToReadable(page) == false)
+                {
+                    // if already in readable list, just discard
+                    this.DiscardPage(page);
+                }
+            }
+        }
+
         /// <summary>
         /// Complete discard a writable page - clean content and move to free list
         /// </summary>
@@ -251,7 +252,6 @@ namespace LiteDB.Engine
             // clear page controls
             page.ShareCounter = 0;
             page.Position = long.MaxValue;
-            page.Origin = FileOrigin.None;
 
             // DO NOT CLEAR CONTENT
             // when this page will requested from free list will be clear if request was from NewPage()
@@ -274,7 +274,6 @@ namespace LiteDB.Engine
             {
                 ENSURE(page.Position == long.MaxValue, "pages in memory store must have no position defined");
                 ENSURE(page.ShareCounter == 0, "pages in memory store must be non-shared");
-                ENSURE(page.Origin == FileOrigin.None, "page in memory must have no page origin");
 
                 return page;
             }
@@ -339,7 +338,6 @@ namespace LiteDB.Engine
 
                         // clean controls
                         page.Position = long.MaxValue;
-                        page.Origin = FileOrigin.None;
 
                         _free.Enqueue(page);
                     }
@@ -410,7 +408,6 @@ namespace LiteDB.Engine
             foreach (var page in _readable.Values)
             {
                 page.Position = long.MaxValue;
-                page.Origin = FileOrigin.None;
 
                 _free.Enqueue(page);
 

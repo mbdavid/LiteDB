@@ -107,7 +107,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Load page content based on page buffer
         /// </summary>
-        private void LoadPage()
+        public void LoadPage()
         {
             // check database file format
             var info = _buffer.ReadString(P_HEADER_INFO, HEADER_INFO.Length);
