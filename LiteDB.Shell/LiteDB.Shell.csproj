@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
    <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
      <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
@@ -12,9 +12,9 @@
     <PackageId>LiteDB.Shell</PackageId>    
     <OutputType>Exe</OutputType>
     <RootNamespace>LiteDB.Shell</RootNamespace>
-    <AssemblyVersion>4.1.5.0</AssemblyVersion>
-    <FileVersion>4.1.5</FileVersion>
-    <VersionPrefix>4.1.5</VersionPrefix>
+    <AssemblyVersion>4.1.4.0</AssemblyVersion>
+    <FileVersion>4.1.4</FileVersion>
+    <VersionPrefix>4.1.4</VersionPrefix>
     <Authors>Maurício David</Authors>
     <Copyright>MIT</Copyright>
     <NeutralLanguage>en-US</NeutralLanguage>
