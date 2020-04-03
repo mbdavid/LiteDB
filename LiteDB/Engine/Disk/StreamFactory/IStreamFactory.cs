@@ -29,11 +29,6 @@ namespace LiteDB.Engine
         long GetLength();
 
         /// <summary>
-        /// Checks if file exists
-        /// </summary>
-        bool Exists();
-
-        /// <summary>
         /// Delete physical file on disk
         /// </summary>
         void Delete();

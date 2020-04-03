@@ -190,6 +190,8 @@ namespace LiteDB.Engine
                 var isConfirmed = buffer.ReadBool(BasePage.P_IS_CONFIRMED);
                 var transactionID = buffer.ReadUInt32(BasePage.P_TRANSACTION_ID);
 
+                if (transactionID == 0 || transactionID == uint.MaxValue) continue;
+
                 var position = new PagePosition(pageID, buffer.Position);
 
                 if (positions.TryGetValue(transactionID, out var list))
@@ -246,6 +248,8 @@ namespace LiteDB.Engine
                 // getting all "good" pages from log file to be copied into data file
                 IEnumerable<PageBuffer> source()
                 {
+                    PageBuffer header = null;
+
                     foreach (var buffer in _disk.ReadLog())
                     {
                         // read direct from buffer to avoid create BasePage structure
@@ -264,8 +268,21 @@ namespace LiteDB.Engine
 
                             counter++;
 
-                            yield return buffer;
+                            if (pageID == 0)
+                            {
+                                header = buffer;
+                            }
+                            else
+                            {
+                                yield return buffer;
+                            }
                         }
+                    }
+
+                    // update header as last page
+                    if (header != null)
+                    {
+                        yield return header;
                     }
                 }
 

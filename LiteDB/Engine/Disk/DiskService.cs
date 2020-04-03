@@ -35,13 +35,14 @@ namespace LiteDB.Engine
             // get new stream factory based on settings
             _streamFactory = settings.CreateDataFactory();
 
-            var isNew = _streamFactory.Exists() == false;
-
             // create stream pool
             _streamPool = new StreamPool(_streamFactory, settings.ReadOnly);
 
             // create async writer queue for log file
             _queue = new DiskWriterQueue(_streamPool.Writer);
+
+            // checks if is a new file
+            var isNew = settings.ReadOnly == false && _streamPool.Writer.Length == 0;
 
             // create new database if not exist yet
             if (isNew)
@@ -72,6 +73,7 @@ namespace LiteDB.Engine
                 }
             }
 
+            // define start/end position for log content
             _logStartPosition = (_header.LastPageID + 1) * PAGE_SIZE;
             _logEndPosition = _streamFactory.GetLength();
         }
@@ -151,9 +153,15 @@ namespace LiteDB.Engine
             {
                 ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to enqueue page, page must be writable");
 
-                // adding this page into file AS new page (at end of file)
-                // must add into cache to be sure that new readers can see this page
-                page.Position = (Interlocked.Add(ref _logEndPosition, PAGE_SIZE)) - PAGE_SIZE;
+                var dataPosition = page.ReadInt32(0) * PAGE_SIZE;
+
+                do
+                {
+                    // adding this page into file AS new page (at end of file)
+                    // must add into cache to be sure that new readers can see this page
+                    page.Position = (Interlocked.Add(ref _logEndPosition, PAGE_SIZE)) - PAGE_SIZE;
+                }
+                while (dataPosition > page.Position);
 
                 // mark this page as readable and get cached paged to enqueue
                 var readable = _cache.MoveToReadable(page);
@@ -266,8 +274,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void ResetLogPosition(bool shrink)
         {
-            _logStartPosition = (_header.LastPageID + 1) * PAGE_SIZE;
-            _logEndPosition = _header.LastPageID * PAGE_SIZE; // always 1 PAGE_SIZE beause incremenets before use
+            _logStartPosition = _logEndPosition = (_header.LastPageID + 1) * PAGE_SIZE;
 
             if (shrink)
             {

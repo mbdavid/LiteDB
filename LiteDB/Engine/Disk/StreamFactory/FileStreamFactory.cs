@@ -34,8 +34,6 @@ namespace LiteDB.Engine
         /// </summary>
         public Stream GetStream(bool readOnly)
         {
-            var isNewFile = readOnly == false && this.Exists() == false;
-
             var stream = new FileStream(_filename,
                 readOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
                 readOnly ? FileAccess.Read : FileAccess.ReadWrite,
@@ -43,7 +41,8 @@ namespace LiteDB.Engine
                 PAGE_SIZE,
                 readOnly ? FileOptions.RandomAccess : FileOptions.SequentialScan);
 
-            if (isNewFile && _hidden)
+            // new file
+            if (readOnly == false && stream.Length == 0 && _hidden)
             {
                 // hidden sort file
                 File.SetAttributes(_filename, FileAttributes.Hidden);
@@ -59,14 +58,6 @@ namespace LiteDB.Engine
         {
             // getting size from OS - if encrypted must remove salt first page
             return new FileInfo(_filename).Length - (_password == null ? 0 : PAGE_SIZE);
-        }
-
-        /// <summary>
-        /// Check if file exists (without open it)
-        /// </summary>
-        public bool Exists()
-        {
-            return File.Exists(_filename);
         }
 
         /// <summary>

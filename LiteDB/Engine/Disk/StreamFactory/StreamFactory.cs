@@ -51,11 +51,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Check if file exists based on stream length
-        /// </summary>
-        public bool Exists() => _stream.Length > 0;
-
-        /// <summary>
         /// There is no delete method in Stream factory
         /// </summary>
         public void Delete()
