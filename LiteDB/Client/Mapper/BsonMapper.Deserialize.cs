@@ -189,7 +189,7 @@ namespace LiteDB
 
                 if (o is IDictionary dict)
                 {
-                    if (o.IsGenericType)
+                    if (o.GetType().IsGenericType)
                     {
                         var k = type.GetGenericArguments()[0];
                         var t = type.GetGenericArguments()[1];
