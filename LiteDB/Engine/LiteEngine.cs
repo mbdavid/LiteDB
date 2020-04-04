@@ -151,7 +151,7 @@ namespace LiteDB.Engine
                 _monitor?.Dispose();
 
                 // do a soft checkpoint (only if exclusive lock is possible)
-                if (_header?.Pragmas.Checkpoint > 0) _walIndex?.Checkpoint();
+                if (_header?.Pragmas.Checkpoint > 0) _walIndex?.Checkpoint(true);
 
                 // close all disk streams (and delete log if empty)
                 _disk?.Dispose();

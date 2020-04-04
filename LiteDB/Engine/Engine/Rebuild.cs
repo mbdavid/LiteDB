@@ -13,7 +13,7 @@ namespace LiteDB.Engine
         public long Rebuild(RebuildOptions options)
         {
             // enter database in exclusive mode
-            var entered = _locker.EnterExclusive();
+            var lockWasTaken = _locker.EnterExclusive();
 
             // get a header backup/savepoint before change
             PageBuffer savepoint = null;
@@ -57,9 +57,6 @@ namespace LiteDB.Engine
                 // do checkpoint
                 _walIndex.Checkpoint();
 
-                // shrink file
-                _disk.ResetLogPosition(true);
-
                 // get new filelength to compare
                 var newLength = (_header.LastPageID + 1) * PAGE_SIZE;
 
@@ -76,7 +73,7 @@ namespace LiteDB.Engine
             }
             finally
             {
-                if (entered)
+                if (lockWasTaken)
                 {
                     _locker.ExitExclusive();
                 }

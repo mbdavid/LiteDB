@@ -226,15 +226,22 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Do checkpoint operation to copy log pages into data file. Return how many pages as saved into data file
+        /// Soft checkpoint try execute only if there is no one using (try exclusive lock - if not possible just exit)
         /// </summary>
-        public int Checkpoint()
+        public int Checkpoint(bool soft = false)
         {
             LOG($"checkpoint", "WAL");
 
-            // if no log just exist
-            if (_disk.LogLength == 0) return 0;
-
-            var entered = _locker.EnterExclusive();
+            bool lockWasTaken;
+            
+            if (soft)
+            {
+                if (_locker.TryEnterExclusive(out lockWasTaken) == false) return 0;
+            }
+            else
+            {
+                lockWasTaken = _locker.EnterExclusive();
+            }
 
             try
             {
@@ -296,7 +303,7 @@ namespace LiteDB.Engine
             }
             finally
             {
-                if (entered)
+                if (lockWasTaken)
                 {
                     _locker.ExitExclusive();
                 }
