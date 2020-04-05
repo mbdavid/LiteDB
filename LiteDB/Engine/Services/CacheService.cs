@@ -136,11 +136,8 @@ namespace LiteDB
         /// </summary>
         public void ClearPages()
         {
-            lock(_clean)
-            {
-                _log.Write(Logger.CACHE, "cleaning cache");
-                _clean.Clear();
-            }
+            _log.Write(Logger.CACHE, "cleaning cache");
+            _clean.Clear();
         }
     }
 }
