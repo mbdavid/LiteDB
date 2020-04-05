@@ -17,7 +17,7 @@ namespace LiteDB.Engine
     internal class SortDisk : IDisposable
     {
         private readonly IStreamFactory _factory;
-        private readonly StreamPool _pool;
+        private readonly Lazy<StreamPool> _pool;
         private readonly ConcurrentBag<long> _freePositions = new ConcurrentBag<long>();
         private long _lastContainerPosition = 0;
         private readonly int _containerSize;
@@ -35,7 +35,7 @@ namespace LiteDB.Engine
 
             _lastContainerPosition = -containerSize;
 
-            _pool = new StreamPool(_factory, false);
+            _pool = new Lazy<StreamPool>(() => new StreamPool(_factory, false));
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace LiteDB.Engine
         /// </summary>
         public Stream GetReader()
         {
-            return _pool.Rent();
+            return _pool.Value.Rent();
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Return(Stream stream)
         {
-            _pool.Return(stream);
+            _pool.Value.Return(stream);
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Write(long position, BufferSlice buffer)
         {
-            var writer = _pool.Writer;
+            var writer = _pool.Value.Writer;
 
             // there is only a single writer instance, must be lock to ensure only 1 single thread are writing
             lock(writer)
@@ -95,7 +95,7 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            _pool.Dispose();
+            if (_pool.IsValueCreated) _pool.Value.Dispose();
 
             _factory.Delete();
         }

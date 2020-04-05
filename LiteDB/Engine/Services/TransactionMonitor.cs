@@ -18,6 +18,7 @@ namespace LiteDB.Engine
         private readonly ThreadLocal<TransactionService> _slot = new ThreadLocal<TransactionService>();
 
         private readonly HeaderPage _header;
+        private readonly EngineSettings _settings;
         private readonly LockService _locker;
         private readonly DiskService _disk;
         private readonly WalIndexService _walIndex;
@@ -30,9 +31,10 @@ namespace LiteDB.Engine
         public int FreePages => _freePages;
         public int InitialSize => _initialSize;
 
-        public TransactionMonitor(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex)
+        public TransactionMonitor(HeaderPage header, EngineSettings settings, LockService locker, DiskService disk, WalIndexService walIndex)
         {
             _header = header;
+            _settings = settings;
             _locker = locker;
             _disk = disk;
             _walIndex = walIndex;
@@ -64,7 +66,7 @@ namespace LiteDB.Engine
                     // check if current thread contains any transaction
                     alreadyLock = _transactions.Values.Any(x => x.ThreadID == Environment.CurrentManagedThreadId);
 
-                    transaction = new TransactionService(_header, _locker, _disk, _walIndex, initialSize, this, queryOnly);
+                    transaction = new TransactionService(_header, _settings, _locker, _disk, _walIndex, initialSize, this, queryOnly);
 
                     // add transaction to execution transaction dict
                     _transactions[transaction.TransactionID] = transaction;

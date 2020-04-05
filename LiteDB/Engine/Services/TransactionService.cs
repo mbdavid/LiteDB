@@ -16,6 +16,7 @@ namespace LiteDB.Engine
     {
         // instances from Engine
         private readonly HeaderPage _header;
+        private readonly EngineSettings _settings;
         private readonly LockService _locker;
         private readonly DiskService _disk;
         private readonly DiskReader _reader;
@@ -56,10 +57,11 @@ namespace LiteDB.Engine
         /// </summary>
         public bool ExplicitTransaction { get; set; } = false;
 
-        public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, int maxTransactionSize, TransactionMonitor monitor, bool queryOnly)
+        public TransactionService(HeaderPage header, EngineSettings settings, LockService locker, DiskService disk, WalIndexService walIndex, int maxTransactionSize, TransactionMonitor monitor, bool queryOnly)
         {
             // retain instances
             _header = header;
+            _settings = settings;
             _locker = locker;
             _disk = disk;
             _walIndex = walIndex;
@@ -80,6 +82,9 @@ namespace LiteDB.Engine
         public Snapshot CreateSnapshot(LockMode mode, string collection, bool addIfNotExists)
         {
             ENSURE(_state == TransactionState.Active, "transaction must be active to create new snapshot");
+
+            // check for readonly database
+            if (mode == LockMode.Write && _settings.ReadOnly) throw new LiteException(0, "Database was initialized as read only. No write operations are supported");
 
             Snapshot create() => new Snapshot(mode, collection, _header, _transactionID, _transPages, _locker, _walIndex, _reader, addIfNotExists);
 

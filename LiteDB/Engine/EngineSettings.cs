@@ -85,7 +85,7 @@ namespace LiteDB.Engine
             {
                 return new StreamFactory(this.TempStream, this.Password);
             }
-            else if (this.Filename == ":memory:")
+            else if (this.Filename == ":memory:" || this.ReadOnly)
             {
                 return new StreamFactory(new MemoryStream(), this.Password);
             }

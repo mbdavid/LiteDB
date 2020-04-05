@@ -198,6 +198,8 @@ namespace LiteDB.Engine
         {
             var size = SortContainer.GetKeyLength(source.Current.Key) + PageAddress.SIZE;
 
+            if (size > MAX_INDEX_KEY_LENGTH) throw new LiteException(0, $"Current value are larger than {MAX_INDEX_KEY_LENGTH} bytes and can't be sorted.");
+
             yield return source.Current;
 
             while (source.MoveNext())

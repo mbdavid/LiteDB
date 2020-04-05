@@ -91,7 +91,7 @@ namespace LiteDB.Engine
                 _sortDisk = new SortDisk(settings.CreateTempFactory(), CONTAINER_SORT_SIZE, _header.Pragmas);
 
                 // initialize transaction monitor as last service
-                _monitor = new TransactionMonitor(_header, _locker, _disk, _walIndex);
+                _monitor = new TransactionMonitor(_header, _settings, _locker, _disk, _walIndex);
 
                 // register system collections
                 this.InitializeSystemCollections();
@@ -151,7 +151,7 @@ namespace LiteDB.Engine
                 _monitor?.Dispose();
 
                 // do a soft checkpoint (only if exclusive lock is possible)
-                if (_header?.Pragmas.Checkpoint > 0) _walIndex?.Checkpoint(true);
+                if (_header?.Pragmas.Checkpoint > 0 && _settings.ReadOnly == false) _walIndex?.Checkpoint(true);
 
                 // close all disk streams (and delete log if empty)
                 _disk?.Dispose();
