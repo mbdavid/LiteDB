@@ -12,7 +12,7 @@ namespace LiteDB.Shell.Commands
     {
         public bool IsCommand(StringScanner s)
         {
-            return s.Match(@"show\scollections$");
+            return s.Match(@"show\scollections\s*;?$");
         }
 
         public void Execute(StringScanner s, Env env)

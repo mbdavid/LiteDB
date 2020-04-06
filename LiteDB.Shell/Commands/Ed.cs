@@ -13,7 +13,7 @@ namespace LiteDB.Shell.Commands
     {
         public bool IsCommand(StringScanner s)
         {
-            return s.Match(@"ed$");
+            return s.Match(@"ed\s*;?$");
         }
 
         public void Execute(StringScanner s, Env env)

@@ -11,7 +11,7 @@ namespace LiteDB.Shell.Commands
     {
         public bool IsCommand(StringScanner s)
         {
-            return s.Match(@"(quit|exit)$");
+            return s.Match(@"(quit|exit)\s*;?$");
         }
 
         public void Execute(StringScanner s, Env env)

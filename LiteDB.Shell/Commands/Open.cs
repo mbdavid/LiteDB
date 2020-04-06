@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell.Commands
 {
@@ -23,7 +24,8 @@ namespace LiteDB.Shell.Commands
 
         public void Execute(StringScanner s, Env env)
         {
-            var connectionString = new ConnectionString(s.Scan(@".+").TrimToNull());
+            var text = Regex.Replace(s.Scan(@".+").TrimToNull(), @";\s*$", "").Trim();
+            var connectionString = new ConnectionString(text);
 
             if (env.Database != null)
             {

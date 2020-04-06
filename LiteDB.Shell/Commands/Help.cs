@@ -16,7 +16,7 @@ namespace LiteDB.Shell.Commands
     {
         public bool IsCommand(StringScanner s)
         {
-            return s.Scan(@"help\s*").Length > 0;
+            return s.Scan(@"help\s*;?").Length > 0;
         }
 
         public void Execute(StringScanner s, Env env)

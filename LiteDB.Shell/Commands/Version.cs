@@ -11,7 +11,7 @@ namespace LiteDB.Shell.Commands
     {
         public bool IsCommand(StringScanner s)
         {
-            return s.Scan(@"ver(sion)?$").Length > 0;
+            return s.Scan(@"ver(sion)?\s*;?$").Length > 0;
         }
 
         public void Execute(StringScanner s, Env env)
