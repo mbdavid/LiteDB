@@ -66,10 +66,17 @@ namespace LiteDB.Engine
                     if (buffer[0] == 1) throw new LiteException(0, "This data file is encrypted and needs a password to open");
 
                     _header = new HeaderPage(buffer);
-                }
-                finally
-                {
+
                     _streamPool.Return(stream);
+                }
+                catch
+                {
+                    // return to pool before dispose 
+                    _streamPool.Return(stream);
+
+                    this.Dispose();
+
+                    throw;
                 }
             }
 
@@ -121,6 +128,12 @@ namespace LiteDB.Engine
             var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
             var header = new HeaderPage(buffer, 0);
 
+            var pages = initialSize == 0 ? 0 : (int)(initialSize / PAGE_SIZE) - 1;
+
+            // update last page ID (when initialSize > 0)
+            header.LastPageID = (uint)pages;
+            header.FreeEmptyPageList = pages == 0 ? uint.MaxValue : 1u;
+
             // update collation
             header.Pragmas.Set(Pragmas.COLLATION, (collation ?? Collation.Default).ToString(), false);
 
@@ -129,9 +142,21 @@ namespace LiteDB.Engine
 
             stream.Write(buffer.Array, buffer.Offset, PAGE_SIZE);
 
-            if (initialSize > 0)
+            // create empty pages if defined initial size
+            if (pages > 0)
             {
-                stream.SetLength(initialSize);
+                stream.SetLength((pages + 1) * PAGE_SIZE);
+
+                for (uint p = 1; p <= pages; p++)
+                {
+                    var empty = new BasePage(new PageBuffer(new byte[PAGE_SIZE], 0, 0), p, PageType.Empty);
+
+                    empty.NextPageID = p < pages ? p + 1 : uint.MaxValue;
+
+                    empty.UpdateBuffer();
+
+                    stream.Write(empty.Buffer.Array, 0, PAGE_SIZE);
+                }
             }
 
             stream.FlushToDisk();
@@ -148,7 +173,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write pages inside file origin using async queue - WORKS ONLY FOR LOG FILE - returns how many pages are inside "pages"
+        /// Write pages inside file origin using async queue - returns how many pages are inside "pages"
         /// </summary>
         public int WriteAsync(IEnumerable<PageBuffer> pages)
         {
@@ -158,7 +183,7 @@ namespace LiteDB.Engine
             {
                 ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to enqueue page, page must be writable");
 
-                var dataPosition = page.ReadInt32(0) * PAGE_SIZE;
+                var dataPosition = BasePage.GetPagePosition(page.ReadInt32(BasePage.P_PAGE_ID));
 
                 do
                 {
@@ -189,13 +214,11 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<PageBuffer> ReadLog()
         {
-            // do not use MemoryCache factory - reuse same buffer array (one page per time)
-            // do not use BufferPool because header page can't be shared (byte[] is used inside page return)
-            var buffer = new byte[PAGE_SIZE];
-
-            var stream = _streamPool.Rent();
-
             ENSURE(_queue.Length == 0, "no pages on queue before read sync log");
+
+            // do not use MemoryCache factory - reuse same buffer array (one page per time)
+            var buffer = new byte[PAGE_SIZE];
+            var stream = _streamPool.Rent();
 
             try
             {
@@ -229,13 +252,14 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<PageBuffer> ReadFull()
         {
-            var length = _streamFactory.GetLength();
             var buffer = new byte[PAGE_SIZE];
-
             var stream = _streamPool.Rent();
 
             try
             {
+                // get file length
+                var length = _streamFactory.GetLength();
+
                 stream.Position = 0;
 
                 while (stream.Position < length)
@@ -294,13 +318,13 @@ namespace LiteDB.Engine
         public void Dispose()
         {
             // dispose queue (wait finish)
-            _queue.Dispose();
+            _queue?.Dispose();
 
             // dispose Stream pools
-            _streamPool.Dispose();
+            _streamPool?.Dispose();
 
             // other disposes
-            _cache.Dispose();
+            _cache?.Dispose();
         }
     }
 }

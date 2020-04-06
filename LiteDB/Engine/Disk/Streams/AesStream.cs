@@ -50,6 +50,9 @@ namespace LiteDB.Engine
                 {
                     this.Salt = NewSalt();
 
+                    // reserve first page to SALT
+                    _stream.SetLength(PAGE_SIZE);
+
                     // first byte =1 means this datafile is encrypted
                     _stream.WriteByte(1);
                     _stream.Write(this.Salt, 0, ENCRYPTION_SALT_SIZE);

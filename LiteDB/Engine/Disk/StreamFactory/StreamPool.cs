@@ -64,7 +64,7 @@ namespace LiteDB.Engine
             if (_factory.CloseOnDispose == false) return;
 
             // dispose all reader stream
-            foreach (var stream in _pool)
+            foreach (var stream in _pool.ToArray())
             {
                 stream.Dispose();
             }

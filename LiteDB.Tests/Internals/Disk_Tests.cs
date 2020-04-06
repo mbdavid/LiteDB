@@ -16,19 +16,20 @@ namespace LiteDB.Internals
         {
             var settings = new EngineSettings
             {
-                DataStream = new MemoryStream(),
-                LogStream = new MemoryStream()
+                DataStream = new MemoryStream()
             };
 
             var disk = new DiskService(settings, new int[] { 10 });
             var pages = new List<PageBuffer>();
 
             // let's create 100 pages with 0-99 full data
-            for (var i = 0; i < 100; i++)
+            for (var i = 1; i <= 100; i++)
             {
-                var p = disk.NewPage();
+                var p = disk.Cache.NewPage();
 
-                p.Fill((byte) i); // fills with 0 - 99
+                p.Fill((byte) i); // fills with 1 - 100
+
+                p.Write(i, 0); // but fix a valid pageID
 
                 pages.Add(p);
             }
@@ -45,11 +46,11 @@ namespace LiteDB.Internals
             // lets do some read tests
             var reader = disk.GetReader();
 
-            for (var i = 0; i < 100; i++)
+            for (var i = 1; i <= 100; i++)
             {
-                var p = reader.ReadPage(i * 8192, false, FileOrigin.Log);
+                var p = reader.ReadPage(i * 8192, false);
 
-                p.All((byte) i).Should().BeTrue();
+                p.Slice(4, PAGE_SIZE - 4).All((byte) i).Should().BeTrue(); // remove pageID 4 first bytes
 
                 p.Release();
             }

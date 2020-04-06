@@ -34,11 +34,11 @@ namespace LiteDB.Engine
         {
             if (_password == null)
             {
-                return Stream.Synchronized(_stream);
+                return new ConcurrentStream(_stream);
             }
             else
             {
-                return new AesStream(_password, Stream.Synchronized(_stream));
+                return new AesStream(_password, new ConcurrentStream(_stream));
             }
         }
 
@@ -47,6 +47,7 @@ namespace LiteDB.Engine
         /// </summary>
         public long GetLength()
         {
+            // if using AesStream reduce PAGE_SIZE (first SALT page)
             return _stream.Length - (_password == null ? 0 : PAGE_SIZE);
         }
 

@@ -49,10 +49,12 @@ namespace LiteDB.Engine
 
                 var doc = new BsonDocument
                 {
+                    ["position"] = buffer.Position,
+                    ["origin"] = page.PageID == 0 && page.TransactionID == 0 && page.PageType == PageType.Empty ? "blank" :
+                        buffer.Position < _disk.LogStartPosition ? "data" : "log",
+
                     ["pageID"] = (int)page.PageID,
                     ["pageType"] = page.PageType.ToString(),
-                    ["_position"] = buffer.Position,
-                    ["_origin"] = buffer.Position < _disk.LogStartPosition ? FileOrigin.Data.ToString() : FileOrigin.Log.ToString(),
                     ["nextPageID"] = (int)page.NextPageID,
                     ["prevPageID"] = (int)page.PrevPageID,
                     ["collection"] = collections.GetOrDefault(page.ColID, "-"),

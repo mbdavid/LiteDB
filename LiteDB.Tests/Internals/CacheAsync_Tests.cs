@@ -55,7 +55,7 @@ namespace LiteDB.Internals
                 wb.Wait();
 
                 // (1 <-) continue from thread A
-                var p0 = r.ReadPage(0, false, FileOrigin.Log);
+                var p0 = r.ReadPage(0, false);
 
                 // share counter can be 2 or 3
                 // - if 2, page was not persisted yet on disk (async)

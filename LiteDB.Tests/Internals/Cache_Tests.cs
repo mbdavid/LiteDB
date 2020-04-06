@@ -21,7 +21,6 @@ namespace LiteDB.Internals
             (p0.ShareCounter).Should().Be(-1);
 
             // simulate write operation on page
-            p0.Origin = FileOrigin.Log;
             p0.Position = 0;
             p0.Write(123, 10);
 
@@ -34,13 +33,13 @@ namespace LiteDB.Internals
             p0.ShareCounter.Should().Be(0);
 
             // now get same page again
-            var p1 = m.GetReadablePage(0, FileOrigin.Log, (p, s) => { });
+            var p1 = m.GetReadablePage(0, (p, s) => { });
 
             p1.ReadInt32(10).Should().Be(123);
             p1.ShareCounter.Should().Be(1);
 
             // let's read again (must return same instance but increment share counter)
-            var p2 = m.GetReadablePage(0, FileOrigin.Log, (p, s) => { });
+            var p2 = m.GetReadablePage(0, (p, s) => { });
 
             p1.Should().Be(p2);
 
@@ -84,7 +83,6 @@ namespace LiteDB.Internals
             foreach (var p in pages.Take(5))
             {
                 // simulate write
-                p.Origin = FileOrigin.Log;
                 p.Position = ++pos;
 
                 m.TryMoveToReadable(p);
@@ -109,7 +107,6 @@ namespace LiteDB.Internals
             foreach (var p in pages.Where(x => x.ShareCounter == -1).Take(10))
             {
                 // simulate write
-                p.Origin = FileOrigin.Log;
                 p.Position = ++pos;
 
                 m.TryMoveToReadable(p);

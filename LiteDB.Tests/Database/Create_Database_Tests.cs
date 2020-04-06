@@ -13,7 +13,7 @@ namespace LiteDB.Tests.Database
         public void Create_Database_With_Initial_Size()
         {
             var initial = 10 * 8192; // initial size: 80kb
-            //var minimal = 8192 * 5; // 1 header + 1 collection + 1 data + 1 index = 4 pages minimal
+            var minimal = 8192 * 4; // 1 header + 1 collection + 1 data + 1 index = 4 pages minimal
 
             using (var file = new TempFile())
             {
@@ -27,15 +27,18 @@ namespace LiteDB.Tests.Database
                     // test if file has 40kb
                     file.Size.Should().Be(initial);
 
-                    // simple insert to test if datafile still with 40kb
-                    col.Insert(new BsonDocument { ["_id"] = 1 }); // use 3 pages to this
+                    // simple insert to test if datafile
+                    col.Insert(new BsonDocument { ["_id"] = 1 }); // use 4 pages to this (1 data, 1 index, 1 collection + header)
+
+                    // after checkpoint must keep same initial size
+                    db.Checkpoint();
 
                     file.Size.Should().Be(initial);
 
                     // ok, now shrink and test if file are minimal size
-                    //** db.Shrink();
-                    //** 
-                    //** file.Size.Should().Be(minimal);
+                    db.Rebuild();
+
+                    file.Size.Should().Be(minimal);
                 }
             }
         }

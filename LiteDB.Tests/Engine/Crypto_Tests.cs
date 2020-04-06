@@ -13,9 +13,8 @@ namespace LiteDB.Tests.Engine
         public void Plain_Datafile()
         {
             var data = new MemoryStream();
-            var log = new MemoryStream();
 
-            var settings = new EngineSettings {DataStream = data, LogStream = log};
+            var settings = new EngineSettings { DataStream = data };
 
             using (var e = new LiteEngine(settings))
             {
@@ -37,9 +36,8 @@ namespace LiteDB.Tests.Engine
         public void Crypto_Datafile()
         {
             var data = new MemoryStream();
-            var log = new MemoryStream();
 
-            var settings = new EngineSettings {DataStream = data, LogStream = log, Password = "abc"};
+            var settings = new EngineSettings { DataStream = data, Password = "abc" };
 
             using (var e = new LiteEngine(settings))
             {
