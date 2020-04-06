@@ -176,37 +176,6 @@ namespace LiteDB.Engine
             return count;
         }
 
-        /// <summary>
-        /// Clear data file, close any data stream pool, change password and re-create data factory
-        /// </summary>
-        public void ChangePassword(string password, EngineSettings settings)
-        {
-            if (settings.Password == password) return;
-
-            throw new NotImplementedException();
-            /*
-            // empty data file
-            this.SetLength(0, FileOrigin.Data);
-
-            // close all streams
-            _dataPool.Dispose();
-            
-            // delete data file
-            _dataFactory.Delete();
-
-            settings.Password = password;
-
-            // new datafile will be created with new password
-            _dataFactory = settings.CreateDataFactory();
-
-            // create stream pool
-            _dataPool = new StreamPool(_dataFactory, false);
-
-            // get initial data file length
-            _dataLength = - PAGE_SIZE;
-            */
-        }
-
         #region Sync Read/Write operations
 
         /// <summary>

@@ -48,12 +48,6 @@ namespace LiteDB.Engine
                 // rebuild entrie database using FileReader
                 this.RebuildContent(reader);
 
-                // change password (can be a problem if any error occurs after here)
-                if (options != null)
-                {
-                    _disk.ChangePassword(options.Password, _settings);
-                }
-
                 // do checkpoint
                 _walIndex.Checkpoint();
 
