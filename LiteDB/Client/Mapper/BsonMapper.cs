@@ -23,8 +23,6 @@ namespace LiteDB
     /// </summary>
     public partial class BsonMapper
     {
-        private const int MAX_DEPTH = 20;
-
         #region Properties
 
         /// <summary>
@@ -91,6 +89,11 @@ namespace LiteDB
         public bool IncludeNonPublic { get; set; }
 
         /// <summary>
+        /// Get/Set maximum depth for nested object (default 20)
+        /// </summary>
+        public int MaxDepth { get; set; }
+
+        /// <summary>
         /// A custom callback to change MemberInfo behavior when converting to MemberMapper.
         /// Use mapper.ResolveMember(Type entity, MemberInfo property, MemberMapper documentMappedField)
         /// Set FieldName to null if you want remove from mapped document
@@ -114,6 +117,7 @@ namespace LiteDB
             this.ResolveMember = (t, mi, mm) => { };
             this.ResolveCollectionName = (t) => Reflection.IsEnumerable(t) ? Reflection.GetListItemType(t).Name : t.Name;
             this.IncludeFields = false;
+            this.MaxDepth = 20;
 
             _typeInstantiator = customTypeInstantiator ?? ((Type t) => null);
             _typeNameBinder = typeNameBinder ?? DefaultTypeNameBinder.Instance;
