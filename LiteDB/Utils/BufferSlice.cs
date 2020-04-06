@@ -64,7 +64,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Checks if all values contains only value parameter (used for DEBUG)
+        /// Checks if all values contains only value parameter
         /// </summary>
         public bool All(byte value)
         {

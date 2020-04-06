@@ -79,6 +79,12 @@ namespace LiteDB.Shell
                 return (env) => command.Execute(s, env);
             }
 
+            // support only ;
+            if (s.Scan(@"\s*;?$").Length > 0)
+            {
+                return new Action<Env>((e) => { });
+            }
+
             return null;
         }
 

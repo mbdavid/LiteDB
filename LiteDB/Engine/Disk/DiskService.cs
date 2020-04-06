@@ -109,6 +109,11 @@ namespace LiteDB.Engine
         public long LogLength => _logEndPosition - _logStartPosition;
 
         /// <summary>
+        /// Get log start position in disk
+        /// </summary>
+        public long LogStartPosition => _logStartPosition;
+
+        /// <summary>
         /// Create a new empty database (use synced mode)
         /// </summary>
         private HeaderPage Initialize(Stream stream, Collation collation, long initialSize)
@@ -199,6 +204,39 @@ namespace LiteDB.Engine
 
                 // set to first log page position
                 stream.Position = _logStartPosition;
+
+                while (stream.Position < length)
+                {
+                    var position = stream.Position;
+
+                    stream.Read(buffer, 0, PAGE_SIZE);
+
+                    yield return new PageBuffer(buffer, 0, 0)
+                    {
+                        Position = position,
+                        ShareCounter = 0
+                    };
+                }
+            }
+            finally
+            {
+                _streamPool.Return(stream);
+            }
+        }
+
+        /// <summary>
+        /// Read all pages inside datafile - do not consider in-cache only pages. Returns both Data and Log pages
+        /// </summary>
+        public IEnumerable<PageBuffer> ReadFull()
+        {
+            var length = _streamFactory.GetLength();
+            var buffer = new byte[PAGE_SIZE];
+
+            var stream = _streamPool.Rent();
+
+            try
+            {
+                stream.Position = 0;
 
                 while (stream.Position < length)
                 {
