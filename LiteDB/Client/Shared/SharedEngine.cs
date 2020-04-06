@@ -1,6 +1,7 @@
 ﻿using LiteDB.Engine;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -18,7 +19,7 @@ namespace LiteDB
         {
             _settings = settings;
 
-            var name = settings.Filename.ToLower().Sha1();
+            var name = Path.GetFullPath(settings.Filename).ToLower().Sha1();
 
             _mutex = new Mutex(false, name + ".Mutex");
         }
