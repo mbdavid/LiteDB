@@ -21,7 +21,14 @@ namespace LiteDB
 
             var name = Path.GetFullPath(settings.Filename).ToLower().Sha1();
 
-            _mutex = new Mutex(false, name + ".Mutex");
+            try
+            {
+                _mutex = new Mutex(false, name + ".Mutex");
+            }
+            catch(NotSupportedException ex)
+            {
+                throw new PlatformNotSupportedException("Shared mode is not supported in platforms that do not implement named mutex.", ex);
+            }
         }
 
         /// <summary>
