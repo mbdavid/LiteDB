@@ -12,6 +12,9 @@ namespace LiteDB.Engine
         /// </summary>
         public long Rebuild(RebuildOptions options)
         {
+            throw new NotImplementedException();
+
+            /*
             // enter database in exclusive mode
             var lockWasTaken = _locker.EnterExclusive();
 
@@ -25,11 +28,11 @@ namespace LiteDB.Engine
 
                 var originalLength = (_header.LastPageID + 1) * PAGE_SIZE;
 
-                // create a savepoint in header page - restore if any error occurs
-                savepoint = _header.Savepoint();
-
                 // must clear all cache pages because all of them will change
                 _disk.Cache.Clear();
+
+                // create a savepoint in header page - restore if any error occurs
+                savepoint = _header.Savepoint();
 
                 // initialize V8 file reader
                 var reader = new FileReaderV8(_header, _disk);
@@ -49,7 +52,13 @@ namespace LiteDB.Engine
                 this.RebuildContent(reader);
 
                 // do checkpoint
-                _walIndex.Checkpoint();
+                _walIndex.Checkpoint(false);
+
+                // if options are defined, change password (if change also)
+                if (options != null)
+                {
+                    _disk.ChangePassword(options.Password, _settings);
+                }
 
                 // get new filelength to compare
                 var newLength = (_header.LastPageID + 1) * PAGE_SIZE;
@@ -72,6 +81,7 @@ namespace LiteDB.Engine
                     _locker.ExitExclusive();
                 }
             }
+            */
         }
 
         /// <summary>

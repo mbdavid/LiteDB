@@ -37,7 +37,30 @@ namespace LiteDB
         /// <summary>
         /// Get TEMP file based on data file
         /// </summary>
-        public static string GetTempFile(string filename) => GetSufixFile(filename, "-tmp", false);
+        public static string GetTempFile(string filename) => GetSufixFile(filename, "-tmp", true);
+
+        /// <summary>
+        /// Copy stream from source to dest using PAGE_SIZE buffer. Can limit length
+        /// </summary>
+        public static void CopyTo(Stream source, Stream dest, long length = long.MaxValue)
+        {
+            // start at begining
+            source.Position = 0;
+            dest.Position = 0;
+
+            // get min of source length vs parameter
+            var min = Math.Min(source.Length, length);
+
+            while (source.Position < min)
+            {
+                var bytes = new byte[PAGE_SIZE];
+
+                source.Read(bytes, 0, PAGE_SIZE);
+                dest.Write(bytes, 0, PAGE_SIZE);
+            }
+
+            dest.FlushToDisk();
+        }
 
         /// <summary>
         /// Convert storage unit string "1gb", "10 mb", "80000" to long bytes

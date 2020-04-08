@@ -19,6 +19,11 @@ namespace LiteDB.Engine
         private readonly CryptoStream _reader;
         private readonly CryptoStream _writer;
 
+        /// <summary>
+        /// Get plain stream
+        /// </summary>
+        public Stream BaseStream => _stream;
+
         public byte[] Salt { get; }
 
         public override bool CanRead => _stream.CanRead;
@@ -35,13 +40,12 @@ namespace LiteDB.Engine
             set => this.Seek(value, SeekOrigin.Begin);
         }
 
-        public long StreamPosition => _stream.Position;
-
-        public AesStream(string password, Stream stream)
+        public AesStream(string password, Stream stream, bool initialize = false)
         {
             _stream = stream;
+            _stream.Position = 0;
 
-            var isNew = _stream.Length == 0;
+            var isNew = _stream.Length == 0 || initialize;
 
             try
             {
@@ -50,12 +54,13 @@ namespace LiteDB.Engine
                 {
                     this.Salt = NewSalt();
 
-                    // reserve first page to SALT
-                    _stream.SetLength(PAGE_SIZE);
-
-                    // first byte =1 means this datafile is encrypted
                     _stream.WriteByte(1);
                     _stream.Write(this.Salt, 0, ENCRYPTION_SALT_SIZE);
+
+                    // fill all page with 0
+                    var left = PAGE_SIZE - ENCRYPTION_SALT_SIZE - 1;
+
+                    _stream.Write(new byte[left], 0, left);
                 }
                 else
                 {

@@ -22,11 +22,6 @@ namespace LiteDB.Engine
         public Stream DataStream { get; set; } = null;
 
         /// <summary>
-        /// Get/Set custom stream to be used as temp file. If is null, will create new FileStreamFactory with "-tmp" on name
-        /// </summary>
-        public Stream TempStream { get; set; } = null;
-
-        /// <summary>
         /// Full path or relative path from DLL directory. Can use ':temp:' for temp database or ':memory:' for in-memory database. (default: null)
         /// </summary>
         public string Filename { get; set; }
@@ -79,28 +74,24 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new IStreamFactory for temporary file (sort)
         /// </summary>
-        internal IStreamFactory CreateTempFactory()
+        internal IStreamFactory CreateTempFactory(string suffix, bool hidden, string password)
         {
-            if (this.TempStream != null)
+            if (this.DataStream is MemoryStream || this.Filename == ":memory:" || this.ReadOnly)
             {
-                return new StreamFactory(this.TempStream, this.Password);
-            }
-            else if (this.Filename == ":memory:" || this.ReadOnly)
-            {
-                return new StreamFactory(new MemoryStream(), this.Password);
+                return new StreamFactory(new MemoryStream(), password);
             }
             else if (this.Filename == ":temp:")
             {
-                return new StreamFactory(new TempStream(), this.Password);
+                return new StreamFactory(new TempStream(), password);
             }
             else if (!string.IsNullOrEmpty(this.Filename))
             {
-                var tempName = FileHelper.GetTempFile(this.Filename);
+                var tempName = FileHelper.GetSufixFile(this.Filename, suffix, true);
 
-                return new FileStreamFactory(tempName, this.Password, true);
+                return new FileStreamFactory(tempName, password, hidden);
             }
 
-            return new StreamFactory(new TempStream(), this.Password);
+            return new StreamFactory(new TempStream(), null);
         }
     }
 }

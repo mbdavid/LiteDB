@@ -14,7 +14,7 @@ namespace LiteDB.Engine
     /// Implement custom fast/in memory mapped disk access
     /// [ThreadSafe]
     /// </summary>
-    internal class DiskService : IDisposable
+    internal class DiskService : ILogReader, IDisposable
     {
         private readonly MemoryCache _cache;
         private readonly DiskWriterQueue _queue;
