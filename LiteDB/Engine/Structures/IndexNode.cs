@@ -78,7 +78,7 @@ namespace LiteDB.Engine
         /// </summary>
         public static int GetNodeLength(byte level, BsonValue key, out int keyLength)
         {
-            keyLength = GetKeyLength(key);
+            keyLength = GetKeyLength(key, true);
 
             return INDEX_NODE_FIXED_SIZE +
                 (level * 2 * PageAddress.SIZE) + // prev/next
@@ -91,11 +91,11 @@ namespace LiteDB.Engine
         /// [1 byte] - KeyLength (used only in String|Byte[])
         /// [N bytes] - BsonValue in bytes (0-254)
         /// </summary>
-        public static int GetKeyLength(BsonValue key)
+        public static int GetKeyLength(BsonValue key, bool recalc)
         {
             return 1 +
                 ((key.IsString || key.IsBinary) ? 1 : 0) +
-                key.GetBytesCount(true);
+                key.GetBytesCount(recalc);
         }
 
         /// <summary>
