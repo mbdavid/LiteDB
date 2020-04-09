@@ -15,6 +15,9 @@ namespace LiteDB.Engine
             // enter database in exclusive mode
             var lockWasTaken = _locker.EnterExclusive();
 
+            // get a header backup/savepoint before change
+            PageBuffer savepoint = null;
+
             try
             {
                 // do a checkpoint before starts
@@ -22,53 +25,39 @@ namespace LiteDB.Engine
 
                 var originalLength = (_header.LastPageID + 1) * PAGE_SIZE;
 
+                // must clear all cache pages because all of them will change
+                _disk.Cache.Clear();
+
+                // create a savepoint in header page - restore if any error occurs
+                savepoint = _header.Savepoint();
+
                 // initialize V8 file reader
                 var reader = new FileReaderV8(_header, _disk);
 
-                // create a new engine after current database with no encryption
-                var offset = _disk.Factory.GetLength() + (_settings.Password != null ? PAGE_SIZE : 0);
-                var stream = (_disk.Writer as AesStream)?.BaseStream ?? _disk.Writer;
+                // clear current header
+                _header.FreeEmptyPageList = uint.MaxValue;
+                _header.LastPageID = 0;
+                _header.GetCollections().ToList().ForEach(c => _header.DeleteCollection(c.Key));
 
-                var engine = new LiteEngine(new EngineSettings
+                // override collation pragma
+                if (options?.Collation != null)
                 {
-                    DataStream = new OffsetStream(stream, offset),
-                    Collation = options?.Collation
-                });
+                    _header.Pragmas.Set(Pragmas.COLLATION, options.Collation.ToString(), false);
+                }
 
                 // rebuild entrie database using FileReader
-                this.RebuildContent(reader, engine);
+                this.RebuildContent(reader);
+
+                // change 
+
+                // do checkpoint
+                _walIndex.Checkpoint(false);
 
                 // if options are defined, change password (if change also)
                 if (options != null)
                 {
                     _disk.ChangePassword(options.Password, _settings);
-
-                    // close 
-                    engine.Dispose();
-
-                    // re-link
-                    stream = (_disk.Writer as AesStream)?.BaseStream ?? _disk.Writer;
-
-                    engine = new LiteEngine(new EngineSettings
-                    {
-                        DataStream = new OffsetStream(stream, offset),
-                        Collation = options?.Collation
-                    });
                 }
-
-                // confirm transactions from another engine
-                _walIndex.ConfirmTransaction(1, new List<PagePosition>()); // for Pragma/Checkpoint
-                _walIndex.ConfirmTransaction(2, new List<PagePosition>()); // for all data
-
-                // update LastPageID/FreeEmptyPageList in current database
-                _header.LastPageID = engine._header.LastPageID;
-                _header.FreeEmptyPageList = engine._header.FreeEmptyPageList;
-
-                // do checkpoint in this engine but using another engine as log page sources
-                _walIndex.Checkpoint(false, engine._disk);
-
-                // dispose engine
-                engine.Dispose();
 
                 // get new filelength to compare
                 var newLength = (_header.LastPageID + 1) * PAGE_SIZE;
@@ -77,6 +66,10 @@ namespace LiteDB.Engine
             }
             catch
             {
+                if (savepoint != null)
+                {
+                    _header.Restore(savepoint);
+                }
 
                 throw;
             }
@@ -92,13 +85,10 @@ namespace LiteDB.Engine
         /// <summary>
         /// Fill current database with data inside file reader - run inside a transacion
         /// </summary>
-        internal void RebuildContent(IFileReader reader, LiteEngine engine)
+        internal void RebuildContent(IFileReader reader)
         {
-            // no checkpoint 
-            engine.Pragma(Pragmas.CHECKPOINT, 0);
-
             // begin transaction and get TransactionID
-            engine.BeginTrans();
+            this.BeginTrans();
 
             try
             {
@@ -107,7 +97,7 @@ namespace LiteDB.Engine
                     // first create all user indexes (exclude _id index)
                     foreach (var index in reader.GetIndexes(collection))
                     {
-                        engine.EnsureIndex(collection,
+                        this.EnsureIndex(collection,
                             index.Name,
                             BsonExpression.Create(index.Expression),
                             index.Unique);
@@ -117,17 +107,17 @@ namespace LiteDB.Engine
                     var docs = reader.GetDocuments(collection);
 
                     // insert all in documents
-                    engine.Insert(collection, docs, BsonAutoId.ObjectId);
+                    this.Insert(collection, docs, BsonAutoId.ObjectId);
                 }
 
-                engine.Commit();
+                this.Commit();
 
                 // wait async queue writer
-                engine._disk.Queue.Wait();
+                _disk.Queue.Wait();
             }
             catch (Exception)
             {
-                engine.Rollback();
+                this.Rollback();
 
                 throw;
             }

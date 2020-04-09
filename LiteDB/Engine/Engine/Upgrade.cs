@@ -57,7 +57,7 @@ namespace LiteDB.Engine
 
                 using (var engine = new LiteEngine(settings))
                 {
-                    engine.RebuildContent(reader, engine);
+                    engine.RebuildContent(reader);
 
                     // after rebuild, copy log bytes into data file
                     engine.Checkpoint();

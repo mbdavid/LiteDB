@@ -14,7 +14,7 @@ namespace LiteDB.Engine
     /// Implement custom fast/in memory mapped disk access
     /// [ThreadSafe]
     /// </summary>
-    internal class DiskService : ILogReader, IDisposable
+    internal class DiskService : IDisposable
     {
         private readonly MemoryCache _cache;
         private DiskWriterQueue _queue;
@@ -325,41 +325,7 @@ namespace LiteDB.Engine
         {
             if (settings.Password == password) return;
 
-            // change current settings password
-            settings.Password = password;
-
-            // get base stream (plain, with no encryption)
-            var baseStream = (_streamPool.Writer as AesStream)?.BaseStream ?? _streamPool.Writer;
-
-            baseStream.Position = 0;
-
-            // if encrypt database
-            if (password != null)
-            {
-                // create a encrypted memorystream just copy into curren stream (first page)
-                var memory = new MemoryStream();
-                var encrypted = new AesStream(password, memory);
-
-                baseStream.Write(memory.ToArray(), 0, PAGE_SIZE);
-            }
-            else
-            {
-                // initialize as new database
-                Initialize(baseStream, settings.Collation, 0);
-            }
-
-            // close all streams
-            _streamPool.Dispose();
-            _queue.Dispose();
-
-            // new datafile will be created with new password
-            _streamFactory = settings.CreateDataFactory();
-
-            // create stream pool
-            _streamPool = new StreamPool(_streamFactory, false);
-
-            // create async writer queue for log file
-            _queue = new DiskWriterQueue(_streamPool.Writer);
+            throw new NotImplementedException();
         }
 
         #endregion
