@@ -57,10 +57,7 @@ namespace LiteDB.Engine
 
                 using (var engine = new LiteEngine(settings))
                 {
-                    // copy all database to new Log file with NO checkpoint during all rebuild
-                    engine.Pragma(Pragmas.CHECKPOINT, 0);
-
-                    engine.RebuildContent(reader);
+                    engine.RebuildContent(reader, engine);
 
                     // after rebuild, copy log bytes into data file
                     engine.Checkpoint();

@@ -13,6 +13,11 @@ namespace LiteDB.Engine
         {
             var version = typeof(LiteEngine).Assembly.GetName().Version;
 
+            BsonValue number(long num)
+            {
+                return num < int.MaxValue ? new BsonValue((int)num) : new BsonValue(num);
+            }
+
             yield return new BsonDocument
             {
                 ["name"] = _disk.Factory.Name,
@@ -24,14 +29,23 @@ namespace LiteDB.Engine
 
                 ["creationTime"] = _header.CreationTime,
 
-                ["dataSize"] = (int)(_header.LastPageID + 1) * PAGE_SIZE,
-                ["logSize"] = (int)_disk.LogLength,
-                ["fileSize"] = (int)_disk.Factory.GetLength(),
-                ["asyncQueueLength"] = _disk.Queue.Length,
-
                 ["currentReadVersion"] = _walIndex.CurrentReadVersion,
                 ["lastTransactionID"] = _walIndex.LastTransactionID,
                 ["engine"] = $"litedb-ce-v{version.Major}.{version.Minor}.{version.Build}",
+
+                ["disk"] = new BsonDocument
+                {
+                    ["fileSize"] = number(_disk.Factory.GetLength()),
+                    ["dataSize"] = number((_header.LastPageID + 1) * PAGE_SIZE),
+                    ["asyncQueueLength"] = _disk.Queue.Length,
+                },
+
+                ["log"] = new BsonDocument
+                {
+                    ["size"] = number(_disk.LogLength),
+                    ["startPosition"] = number(_disk.LogStartPosition),
+                    ["endPosition"] = number(_disk.LogEndPosition)
+                },
 
                 ["pragmas"] = new BsonDocument(_header.Pragmas.Pragmas.ToDictionary(x => x.Name, x => x.Get())),
 

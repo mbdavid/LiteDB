@@ -228,7 +228,7 @@ namespace LiteDB.Engine
         /// Do checkpoint operation to copy log pages into data file. Return how many pages as saved into data file
         /// Soft checkpoint try execute only if there is no one using (try exclusive lock - if not possible just exit)
         /// </summary>
-        public int Checkpoint(bool soft = false)
+        public int Checkpoint(bool soft = false, ILogReader logReader = null)
         {
             LOG($"checkpoint", "WAL");
 
@@ -245,6 +245,8 @@ namespace LiteDB.Engine
 
             try
             {
+                if (logReader == null) logReader = _disk;
+
                 // wait all pages write on disk
                 _disk.Queue.Wait();
 
@@ -255,7 +257,7 @@ namespace LiteDB.Engine
                 // getting all "good" pages from log file to be copied into data file
                 IEnumerable<PageBuffer> source()
                 {
-                    foreach (var buffer in _disk.ReadLog())
+                    foreach (var buffer in logReader.ReadLog())
                     {
                         // read direct from buffer to avoid create BasePage structure
                         var transactionID = buffer.ReadUInt32(BasePage.P_TRANSACTION_ID);

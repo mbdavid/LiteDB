@@ -21,6 +21,8 @@ namespace LiteDB.Engine
             _disk = disk;
         }
 
+        private BsonValue Number(long num) => num < int.MaxValue ? new BsonValue((int)num) : new BsonValue(num);
+
         public override IEnumerable<BsonDocument> Input(BsonValue options)
         {
             var pageID = GetOption(options, "pageID");
@@ -49,7 +51,7 @@ namespace LiteDB.Engine
 
                 var doc = new BsonDocument
                 {
-                    ["position"] = buffer.Position,
+                    ["position"] = Number(buffer.Position),
                     ["origin"] = page.PageID == 0 && page.TransactionID == 0 && page.PageType == PageType.Empty ? "blank" :
                         buffer.Position < _disk.LogStartPosition ? "data" : "log",
 
@@ -92,7 +94,7 @@ namespace LiteDB.Engine
             {
                 ["pageID"] = (int)page.PageID,
                 ["pageType"] = page.PageType.ToString(),
-                ["_position"] = position,
+                ["_position"] = Number(position),
                 ["_origin"] = origin.ToString(),
                 ["_version"] = walVersion,
                 ["nextPageID"] = (int)page.NextPageID,

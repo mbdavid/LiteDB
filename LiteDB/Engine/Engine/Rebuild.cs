@@ -12,14 +12,8 @@ namespace LiteDB.Engine
         /// </summary>
         public long Rebuild(RebuildOptions options)
         {
-            throw new NotImplementedException();
-
-            /*
             // enter database in exclusive mode
             var lockWasTaken = _locker.EnterExclusive();
-
-            // get a header backup/savepoint before change
-            PageBuffer savepoint = null;
 
             try
             {
@@ -28,37 +22,53 @@ namespace LiteDB.Engine
 
                 var originalLength = (_header.LastPageID + 1) * PAGE_SIZE;
 
-                // must clear all cache pages because all of them will change
-                _disk.Cache.Clear();
-
-                // create a savepoint in header page - restore if any error occurs
-                savepoint = _header.Savepoint();
-
                 // initialize V8 file reader
                 var reader = new FileReaderV8(_header, _disk);
 
-                // clear current header
-                _header.FreeEmptyPageList = uint.MaxValue;
-                _header.LastPageID = 0;
-                _header.GetCollections().ToList().ForEach(c => _header.DeleteCollection(c.Key));
+                // create a new engine after current database with no encryption
+                var offset = _disk.Factory.GetLength() + (_settings.Password != null ? PAGE_SIZE : 0);
+                var stream = (_disk.Writer as AesStream)?.BaseStream ?? _disk.Writer;
 
-                // override collation pragma
-                if (options?.Collation != null)
+                var engine = new LiteEngine(new EngineSettings
                 {
-                    _header.Pragmas.Set(Pragmas.COLLATION, options.Collation.ToString(), false);
-                }
+                    DataStream = new OffsetStream(stream, offset),
+                    Collation = options?.Collation
+                });
 
                 // rebuild entrie database using FileReader
-                this.RebuildContent(reader);
-
-                // do checkpoint
-                _walIndex.Checkpoint(false);
+                this.RebuildContent(reader, engine);
 
                 // if options are defined, change password (if change also)
                 if (options != null)
                 {
                     _disk.ChangePassword(options.Password, _settings);
+
+                    // close 
+                    engine.Dispose();
+
+                    // re-link
+                    stream = (_disk.Writer as AesStream)?.BaseStream ?? _disk.Writer;
+
+                    engine = new LiteEngine(new EngineSettings
+                    {
+                        DataStream = new OffsetStream(stream, offset),
+                        Collation = options?.Collation
+                    });
                 }
+
+                // confirm transactions from another engine
+                _walIndex.ConfirmTransaction(1, new List<PagePosition>()); // for Pragma/Checkpoint
+                _walIndex.ConfirmTransaction(2, new List<PagePosition>()); // for all data
+
+                // update LastPageID/FreeEmptyPageList in current database
+                _header.LastPageID = engine._header.LastPageID;
+                _header.FreeEmptyPageList = engine._header.FreeEmptyPageList;
+
+                // do checkpoint in this engine but using another engine as log page sources
+                _walIndex.Checkpoint(false, engine._disk);
+
+                // dispose engine
+                engine.Dispose();
 
                 // get new filelength to compare
                 var newLength = (_header.LastPageID + 1) * PAGE_SIZE;
@@ -67,10 +77,6 @@ namespace LiteDB.Engine
             }
             catch
             {
-                if (savepoint != null)
-                {
-                    _header.Restore(savepoint);
-                }
 
                 throw;
             }
@@ -81,16 +87,18 @@ namespace LiteDB.Engine
                     _locker.ExitExclusive();
                 }
             }
-            */
         }
 
         /// <summary>
         /// Fill current database with data inside file reader - run inside a transacion
         /// </summary>
-        internal void RebuildContent(IFileReader reader)
+        internal void RebuildContent(IFileReader reader, LiteEngine engine)
         {
+            // no checkpoint 
+            engine.Pragma(Pragmas.CHECKPOINT, 0);
+
             // begin transaction and get TransactionID
-            var transaction = _monitor.GetTransaction(true, false, out _);
+            engine.BeginTrans();
 
             try
             {
@@ -99,7 +107,7 @@ namespace LiteDB.Engine
                     // first create all user indexes (exclude _id index)
                     foreach (var index in reader.GetIndexes(collection))
                     {
-                        this.EnsureIndex(collection,
+                        engine.EnsureIndex(collection,
                             index.Name,
                             BsonExpression.Create(index.Expression),
                             index.Unique);
@@ -108,31 +116,20 @@ namespace LiteDB.Engine
                     // get all documents from current collection
                     var docs = reader.GetDocuments(collection);
 
-                    // get snapshot, indexer and data services
-                    var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
-                    var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
-                    var data = new DataService(snapshot);
-
-                    // insert one-by-one
-                    foreach (var doc in docs)
-                    {
-                        transaction.Safepoint();
-
-                        this.InsertDocument(snapshot, doc, BsonAutoId.ObjectId, indexer, data);
-                    }
+                    // insert all in documents
+                    engine.Insert(collection, docs, BsonAutoId.ObjectId);
                 }
 
-                transaction.Commit();
+                engine.Commit();
+
+                // wait async queue writer
+                engine._disk.Queue.Wait();
             }
             catch (Exception)
             {
-                _walIndex.Clear();
+                engine.Rollback();
 
                 throw;
-            }
-            finally
-            {
-                _monitor.ReleaseTransaction(transaction);
             }
         }
     }
