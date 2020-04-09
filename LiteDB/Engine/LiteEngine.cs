@@ -88,7 +88,7 @@ namespace LiteDB.Engine
                 _walIndex.RestoreIndex(_header);
 
                 // initialize sort temp disk
-                _sortDisk = new SortDisk(settings.CreateTempFactory("-tmp", true, null), CONTAINER_SORT_SIZE, _header.Pragmas);
+                _sortDisk = new SortDisk(settings.CreateTempFactory(), CONTAINER_SORT_SIZE, _header.Pragmas);
 
                 // initialize transaction monitor as last service
                 _monitor = new TransactionMonitor(_header, _settings, _locker, _disk, _walIndex);

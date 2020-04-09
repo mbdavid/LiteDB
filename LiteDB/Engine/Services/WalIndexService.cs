@@ -64,8 +64,8 @@ namespace LiteDB.Engine
                 // clear cache
                 _disk.Cache.Clear();
 
-                // clear log file (sync)
-                _disk.ResetLogPosition(true);
+                // clear log file (sync) and shrink database
+                _disk.ResetLogPosition();
             }
             finally
             {

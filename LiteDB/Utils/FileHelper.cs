@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -35,31 +37,25 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get TEMP file based on data file
+        /// Set length to a Stream - keep tring if get any error (during 1 minute)
         /// </summary>
-        public static string GetTempFile(string filename) => GetSufixFile(filename, "-tmp", true);
-
-        /// <summary>
-        /// Copy stream from source to dest using PAGE_SIZE buffer. Can limit length
-        /// </summary>
-        public static void CopyTo(Stream source, Stream dest, long length = long.MaxValue)
+        public static void SetLength(Stream stream, long length)
         {
-            // start at begining
-            source.Position = 0;
-            dest.Position = 0;
+            var sw = Stopwatch.StartNew();
 
-            // get min of source length vs parameter
-            var min = Math.Min(source.Length, length);
-
-            while (source.Position < min)
+            while(sw.ElapsedMilliseconds < 60000)
             {
-                var bytes = new byte[PAGE_SIZE];
+                try
+                {
+                    stream.SetLength(length);
 
-                source.Read(bytes, 0, PAGE_SIZE);
-                dest.Write(bytes, 0, PAGE_SIZE);
+                    break;
+                }
+                catch
+                {
+                    Task.Delay(100).Wait();
+                }
             }
-
-            dest.FlushToDisk();
         }
 
         /// <summary>

@@ -74,21 +74,21 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new IStreamFactory for temporary file (sort)
         /// </summary>
-        internal IStreamFactory CreateTempFactory(string suffix, bool hidden, string password)
+        internal IStreamFactory CreateTempFactory()
         {
             if (this.DataStream is MemoryStream || this.Filename == ":memory:" || this.ReadOnly)
             {
-                return new StreamFactory(new MemoryStream(), password);
+                return new StreamFactory(new MemoryStream(), null);
             }
             else if (this.Filename == ":temp:")
             {
-                return new StreamFactory(new TempStream(), password);
+                return new StreamFactory(new TempStream(), null);
             }
             else if (!string.IsNullOrEmpty(this.Filename))
             {
-                var tempName = FileHelper.GetSufixFile(this.Filename, suffix, true);
+                var tempName = FileHelper.GetSufixFile(this.Filename, "-tmp", true);
 
-                return new FileStreamFactory(tempName, password, hidden);
+                return new FileStreamFactory(tempName, null, true);
             }
 
             return new StreamFactory(new TempStream(), null);

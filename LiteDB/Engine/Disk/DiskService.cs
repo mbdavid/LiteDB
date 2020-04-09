@@ -150,8 +150,6 @@ namespace LiteDB.Engine
             // create empty pages if defined initial size
             if (pages > 0)
             {
-                stream.SetLength((pages + 1) * PAGE_SIZE);
-
                 for (uint p = 1; p <= pages; p++)
                 {
                     var empty = new BasePage(new PageBuffer(new byte[PAGE_SIZE], 0, 0), p, PageType.Empty);
@@ -308,14 +306,11 @@ namespace LiteDB.Engine
         /// <summary>
         /// Reset log position at end of file (based on header.LastPageID) and shrink file
         /// </summary>
-        public void ResetLogPosition(bool shrink)
+        public void ResetLogPosition()
         {
             _logStartPosition = _logEndPosition = (_header.LastPageID + 1) * PAGE_SIZE;
 
-            if (shrink)
-            {
-                _streamPool.Writer.SetLength(_logStartPosition);
-            }
+            FileHelper.SetLength(_streamPool.Writer, _logStartPosition);
         }
 
         /// <summary>
