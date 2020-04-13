@@ -86,7 +86,8 @@ namespace LiteDB.Engine
             if (_snapshots.TryGetValue(collection, out var snapshot))
             {
                 // if current snapshot are ReadOnly but request is about Write mode, dispose read and re-create new in WriteMode
-                if (mode == LockMode.Write && snapshot.Mode == LockMode.Read)
+                // or if a previous snapshot was opened with addIfNotExists=false
+                if ((mode == LockMode.Write && snapshot.Mode == LockMode.Read) || (addIfNotExists && snapshot.CollectionPage == null))
                 {
                     // dispose current read-only snapshot
                     snapshot.Dispose();
