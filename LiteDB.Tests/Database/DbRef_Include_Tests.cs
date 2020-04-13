@@ -114,7 +114,7 @@ namespace LiteDB.Tests.Database
 
                 orders.Insert(order);
 
-                orders.EnsureIndex(x => x.Customer.Id);
+                //orders.EnsureIndex(x => x.Customer.Id);
 
                 // query orders using customer $id
                 // include customer data and customer address
