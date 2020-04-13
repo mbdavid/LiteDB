@@ -273,7 +273,9 @@ namespace LiteDB
                 // otherwise, resolve all expression as inner expression = false
                 else
                 {
+                    _builder.Append("(");
                     this.Visit(node.Operand);
+                    _builder.Append(")");
                     _builder.Append(" = false");
                 }
             }

@@ -214,6 +214,10 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.PhoneNumbers.Contains(1234), "PhoneNumbers ANY = @p0", 1234);
             TestExpr<User>(x => x.Phones2.Contains(new Phone { Number = 1 }), "Phones2 ANY = { Number: @p0 }", 1);
 
+            // negated contains
+            TestExpr<User>(x => !x.PhoneNumbers.Contains(1234), "(PhoneNumbers ANY = @p0) = false", 1234);
+            TestExpr<User>(x => !x.Phones2.Contains(new Phone { Number = 1 }), "(Phones2 ANY = { Number: @p0 }) = false", 1);
+
             // fixed position with filter expression
             TestExpr<User>(x => x.Phones.First(p => p.Number == 1), "FIRST(FILTER($.Phones=>(@.Number=@p0)))", 1);
 
@@ -240,7 +244,7 @@ namespace LiteDB.Tests.Mapper
             TestPredicate<User>(x => x.Active && !x.Active, "((Active = true) AND (Active = false))");
             TestPredicate<User>(x => !x.Active, "(Active = false)");
             TestPredicate<User>(x => !x.Active == true, "((Active = false) = @p0)", true);
-            TestPredicate<User>(x => !(x.Salary == 50), "(Salary = @p0) = false", 50);
+            TestPredicate<User>(x => !(x.Salary == 50), "((Salary = @p0)) = false", 50);
 
             // test for precedence order
             TestPredicate<User>(x => x.Name.StartsWith("J") == false, "(Name LIKE (@p0 + '%') = @p1)", "J", false);
