@@ -65,14 +65,8 @@ namespace LiteDB
                         if (typeInfo.IsGenericType)
                         {
                             var typeDef = type.GetGenericTypeDefinition();
-
-                            if (typeDef == typeof(IList<>) ||
-                                typeDef == typeof(ICollection<>) ||
-                                typeDef == typeof(IEnumerable<>))
-                            {
-                                return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
-                            }
-                            else if (typeDef == typeof(ISet<>))
+                            
+                            if (typeDef == typeof(ISet<>))
                             {
                                 return CreateInstance(GetGenericSetOfType(UnderlyingTypeOf(type)));
                             }
@@ -82,6 +76,13 @@ namespace LiteDB
                                 var v = type.GetGenericArguments()[1];
 
                                 return CreateInstance(GetGenericDictionaryOfType(k, v));
+                            }
+                            else if (typeDef == typeof(IList<>) ||
+                                     typeDef == typeof(ICollection<>) ||
+                                     typeDef == typeof(IEnumerable<>) ||
+                                     typeof(IEnumerable).IsAssignableFrom(typeDef))
+                            {
+                                return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
                             }
                         }
 
