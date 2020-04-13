@@ -38,9 +38,8 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get all pages from datafile based only in Page Position
+        /// Get all pages from datafile based only in Page Position (get from disk - not from cache)
         /// </summary>
-        /// <returns></returns>
         private IEnumerable<BsonDocument> DumpPages()
         {
             var collections = _header.GetCollections().ToDictionary(x => x.Value, x => x.Key);
@@ -88,15 +87,12 @@ namespace LiteDB.Engine
 
             var snapshot = transaction.CreateSnapshot(LockMode.Read, "$", false);
 
-            var page = snapshot.GetPage<BasePage>(pageID, out var origin, out var position, out var walVersion);
+            var page = pageID == 0 ? _header : snapshot.GetPage<BasePage>(pageID);
 
             var doc = new BsonDocument
             {
                 ["pageID"] = (int)page.PageID,
                 ["pageType"] = page.PageType.ToString(),
-                ["_position"] = Number(position),
-                ["_origin"] = origin.ToString(),
-                ["_version"] = walVersion,
                 ["nextPageID"] = (int)page.NextPageID,
                 ["prevPageID"] = (int)page.PrevPageID,
                 ["collection"] = collections.GetOrDefault(page.ColID, "-"),

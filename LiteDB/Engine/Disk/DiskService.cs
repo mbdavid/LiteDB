@@ -55,7 +55,7 @@ namespace LiteDB.Engine
             {
                 // load header page from position 0 from file
                 var stream = _streamPool.Rent();
-                var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
+                var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0) { Position = 0 };
 
                 try
                 {
@@ -130,7 +130,7 @@ namespace LiteDB.Engine
         /// </summary>
         private HeaderPage Initialize(Stream stream, Collation collation, long initialSize)
         {
-            var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
+            var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0) { Position = 0 };
             var header = new HeaderPage(buffer, 0);
 
             var pages = initialSize == 0 ? 0 : (int)(initialSize / PAGE_SIZE) - 1;
