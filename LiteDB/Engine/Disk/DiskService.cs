@@ -320,7 +320,86 @@ namespace LiteDB.Engine
         {
             if (settings.Password == password) return;
 
-            throw new NotImplementedException();
+            // rebuild file
+            this.ChangePasswordRebuild(password);
+
+            // change current settings password
+            settings.Password = password;
+
+            // close all streams
+            _streamPool.Dispose();
+
+            // new datafile will be created with new password
+            _streamFactory = settings.CreateDataFactory();
+
+            // create stream pool
+            _streamPool = new StreamPool(_streamFactory, false);
+
+            // log position still at same position
+        }
+
+        /// <summary>
+        /// Rebuild datafile copy source to destination with 2 different Stream (pointing to same file)
+        /// Can add, remove or change a password
+        /// </summary>
+        private void ChangePasswordRebuild(string password)
+        {
+            var source = this.Writer;
+            var length = source.Length;
+
+            // if destination stream are encrypted, came from end to begin
+            if (password != null)
+            {
+                // encrypt
+                var header = new byte[PAGE_SIZE];
+
+                // read header page
+                source.Position = 0;
+                source.Read(header, 0, PAGE_SIZE);
+
+                // create aes stream and initialize first page
+                var destination = new AesStream(password, this.Writer is AesStream ? (this.Writer as AesStream).BaseStream : this.Writer, true);
+
+                var position = length - PAGE_SIZE;
+                var buffer = new byte[PAGE_SIZE];
+
+                while (position > 0)
+                {
+                    source.Position = position;
+                    source.Read(buffer, 0, PAGE_SIZE);
+
+                    destination.Position = position;
+                    destination.Write(buffer, 0, PAGE_SIZE);
+
+                    position -= PAGE_SIZE;
+                }
+
+                // write header page
+                destination.Position = 0;
+                destination.Write(header, 0, PAGE_SIZE);
+            }
+            else
+            {
+                var destination = (source as AesStream).BaseStream;
+
+                var position = 0;
+                var buffer = new byte[PAGE_SIZE];
+
+                while (position < length)
+                {
+                    source.Position = position;
+                    source.Read(buffer, 0, PAGE_SIZE);
+
+                    destination.Position = position;
+                    destination.Write(buffer, 0, PAGE_SIZE);
+
+                    position += PAGE_SIZE;
+                }
+
+                ENSURE(destination.Length == length + PAGE_SIZE, "current source must have 1 extra page for SALT");
+
+                destination.SetLength(length);
+            }
         }
 
         #endregion
