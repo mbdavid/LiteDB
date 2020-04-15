@@ -585,7 +585,9 @@ namespace LiteDB
                 case ExpressionType.GreaterThanOrEqual: return " >= ";
                 case ExpressionType.LessThan: return " < ";
                 case ExpressionType.LessThanOrEqual: return " <= ";
+                case ExpressionType.And: return " AND ";
                 case ExpressionType.AndAlso: return " AND ";
+                case ExpressionType.Or: return " OR ";
                 case ExpressionType.OrElse: return " OR ";
             }
 

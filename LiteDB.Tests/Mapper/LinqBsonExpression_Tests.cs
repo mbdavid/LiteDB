@@ -236,6 +236,9 @@ namespace LiteDB.Tests.Mapper
             TestPredicate<User>(x => x.Salary != 50, "(Salary != @p0)", 50);
             TestPredicate<User>(x => x.Salary == x.Id, "(Salary = _id)");
             TestPredicate<User>(x => x.Salary > 50 && x.Name == "John", "((Salary > @p0) AND (Name = @p1))", 50, "John");
+            TestPredicate<User>(x => x.Salary > 50 & x.Name == "John", "((Salary > @p0) AND (Name = @p1))", 50, "John");
+            TestPredicate<User>(x => x.Salary > 50 || x.Name == "John", "((Salary > @p0) OR (Name = @p1))", 50, "John");
+            TestPredicate<User>(x => x.Salary > 50 | x.Name == "John", "((Salary > @p0) OR (Name = @p1))", 50, "John");
 
             // unary expressions
             TestPredicate<User>(x => x.Active, "(Active = true)");
