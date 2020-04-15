@@ -259,7 +259,7 @@ namespace LiteDB
             var isKEnum = K.GetTypeInfo().IsEnum;
             foreach (var el in value.GetElements())
             {
-                var k = isKEnum ? Enum.Parse(K, el.Key) : Convert.ChangeType(el.Key, K);
+                var k = isKEnum ? Enum.Parse(K, el.Key) : K == typeof(Uri) ? new Uri(el.Key) : Convert.ChangeType(el.Key, K);
                 var v = this.Deserialize(T, el.Value);
 
                 dict.Add(k, v);
