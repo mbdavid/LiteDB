@@ -21,7 +21,7 @@ namespace LiteDB.Engine
             try
             {
                 // do a checkpoint before starts
-                _walIndex.Checkpoint();
+                _walIndex.Checkpoint(false, true);
 
                 var originalLength = (_header.LastPageID + 1) * PAGE_SIZE;
 
@@ -49,7 +49,7 @@ namespace LiteDB.Engine
                 this.RebuildContent(reader);
 
                 // do checkpoint
-                _walIndex.Checkpoint(false);
+                _walIndex.Checkpoint(false, true);
 
                 // override header page
                 _disk.Write(new[] { _header.UpdateBuffer() });

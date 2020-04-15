@@ -118,7 +118,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Run checkpoint command to copy log file into data file
         /// </summary>
-        public int Checkpoint() => _walIndex.Checkpoint();
+        public int Checkpoint() => _walIndex.Checkpoint(false, true);
 
         public void Dispose()
         {
@@ -151,7 +151,7 @@ namespace LiteDB.Engine
                 _monitor?.Dispose();
 
                 // do a soft checkpoint (only if exclusive lock is possible)
-                if (_header?.Pragmas.Checkpoint > 0 && _settings.ReadOnly == false) _walIndex?.Checkpoint(true);
+                if (_header?.Pragmas.Checkpoint > 0 && _settings.ReadOnly == false) _walIndex?.Checkpoint(true, true);
 
                 // close all disk streams (and delete log if empty)
                 _disk?.Dispose();

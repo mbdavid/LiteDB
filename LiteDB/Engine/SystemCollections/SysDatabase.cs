@@ -36,8 +36,9 @@ namespace LiteDB.Engine
                 ["disk"] = new BsonDocument
                 {
                     ["fileSize"] = number(_disk.Factory.GetLength()),
-                    ["dataSize"] = number((_header.LastPageID + 1) * PAGE_SIZE),
+                    ["dataSize"] = number(_disk.LogStartPosition),
                     ["logSize"] = number(_disk.LogLength),
+                    ["blankSize"] = number(_disk.Factory.GetLength() - _disk.LogEndPosition),
                     ["asyncQueueLength"] = _disk.Queue.Length,
                 },
 

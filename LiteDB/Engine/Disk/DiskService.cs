@@ -82,7 +82,7 @@ namespace LiteDB.Engine
 
             // define start/end position for log content
             _logStartPosition = (_header.LastPageID + 1) * PAGE_SIZE;
-            _logEndPosition = _streamFactory.GetLength();
+            _logEndPosition = _logStartPosition; // will be updated by RestoreIndex
         }
 
         /// <summary>
@@ -121,9 +121,9 @@ namespace LiteDB.Engine
         public long LogStartPosition => _logStartPosition;
 
         /// <summary>
-        /// Get log end position in disk
+        /// Get/Set log end position in disk
         /// </summary>
-        public long LogEndPosition => _logEndPosition;
+        public long LogEndPosition { get => _logEndPosition; set => _logEndPosition = value; }
 
         /// <summary>
         /// Create a new empty database (use synced mode)
@@ -214,8 +214,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read all log from current log position to end of file. 
         /// This operation are sync and should not be run with any page on queue
+        /// Use fullLogArea to read file to end
         /// </summary>
-        public IEnumerable<PageBuffer> ReadLog()
+        public IEnumerable<PageBuffer> ReadLog(bool fullLogArea)
         {
             ENSURE(_queue.Length == 0, "no pages on queue before read sync log");
 
@@ -226,12 +227,12 @@ namespace LiteDB.Engine
             try
             {
                 // get file length
-                var length = _streamFactory.GetLength();
+                var endPosition = fullLogArea ? _streamFactory.GetLength() : _logEndPosition;
 
                 // set to first log page position
                 stream.Position = _logStartPosition;
 
-                while (stream.Position < length)
+                while (stream.Position < endPosition)
                 {
                     var position = stream.Position;
 
@@ -304,13 +305,16 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Reset log position at end of file (based on header.LastPageID) and shrink file
+        /// Reset log position at end of file (based on header.LastPageID) and crop file if require
         /// </summary>
-        public void ResetLogPosition()
+        public void ResetLogPosition(bool crop)
         {
             _logStartPosition = _logEndPosition = (_header.LastPageID + 1) * PAGE_SIZE;
 
-            FileHelper.SetLength(_streamPool.Writer, _logStartPosition);
+            if (crop)
+            {
+                FileHelper.SetLength(_streamPool.Writer, _logStartPosition);
+            }
         }
 
         /// <summary>

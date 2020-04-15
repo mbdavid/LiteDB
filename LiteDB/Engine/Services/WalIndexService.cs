@@ -48,7 +48,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Clear WAL index links and cache memory. Used after checkpoint and rebuild rollback
         /// </summary>
-        public void Clear()
+        public void Clear(bool crop)
         {
             _indexLock.TryEnterWriteLock(-1);
 
@@ -65,7 +65,7 @@ namespace LiteDB.Engine
                 _disk.Cache.Clear();
 
                 // clear log file (sync) and shrink database
-                _disk.ResetLogPosition();
+                _disk.ResetLogPosition(crop);
             }
             finally
             {
@@ -176,14 +176,16 @@ namespace LiteDB.Engine
         /// <summary>
         /// Load all confirmed transactions from log file (used only when open datafile)
         /// Don't need lock because it's called on ctor of LiteEngine
+        /// Update _disk instance with last log position
         /// </summary>
         public void RestoreIndex(HeaderPage header)
         {
             // get all page positions
             var positions = new Dictionary<long, List<PagePosition>>();
+            var last = 0L;
 
             // read all pages to get confirmed transactions (do not read page content, only page header)
-            foreach (var buffer in _disk.ReadLog())
+            foreach (var buffer in _disk.ReadLog(true))
             {
                 // read direct from buffer to avoid create BasePage structure
                 var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
@@ -205,6 +207,9 @@ namespace LiteDB.Engine
 
                 if (isConfirmed)
                 {
+                    // update last IsConfirmed page
+                    last = buffer.Position;
+
                     this.ConfirmTransaction(transactionID, positions[transactionID]);
 
                     var pageType = (PageType)buffer.ReadByte(BasePage.P_PAGE_TYPE);
@@ -222,13 +227,20 @@ namespace LiteDB.Engine
                 // update last transaction ID
                 _lastTransactionID = (int)transactionID;
             }
+
+            // update last log position acording with last IsConfirmed on log
+            if (last > 0)
+            {
+                _disk.LogEndPosition = last + PAGE_SIZE;
+            }
         }
 
         /// <summary>
         /// Do checkpoint operation to copy log pages into data file. Return how many pages as saved into data file
         /// Soft checkpoint try execute only if there is no one using (try exclusive lock - if not possible just exit)
+        /// If crop = true, reduce data file removing all log area. If not, keeps file with same size and clean all isConfirmed pages
         /// </summary>
-        public int Checkpoint(bool soft = false)
+        public int Checkpoint(bool soft, bool crop)
         {
             LOG($"checkpoint", "WAL");
 
@@ -255,7 +267,11 @@ namespace LiteDB.Engine
                 // getting all "good" pages from log file to be copied into data file
                 IEnumerable<PageBuffer> source()
                 {
-                    foreach (var buffer in _disk.ReadLog())
+                    // collect all isConfirmedPages
+                    var confirmedPages = new List<long>();
+                    var finalDataPosition = (_disk.Header.LastPageID + 1) * PAGE_SIZE;
+
+                    foreach (var buffer in _disk.ReadLog(false))
                     {
                         // read direct from buffer to avoid create BasePage structure
                         var transactionID = buffer.ReadUInt32(BasePage.P_TRANSACTION_ID);
@@ -263,15 +279,37 @@ namespace LiteDB.Engine
                         // only confirmed pages can be write on data disk
                         if (_confirmTransactions.Contains(transactionID))
                         {
-                            var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
+                            // if page is confirmed page and are after data area, add to list
+                            var isConfirmed = buffer.ReadBool(BasePage.P_IS_CONFIRMED);
+
+                            if (isConfirmed && buffer.Position >= finalDataPosition)
+                            {
+                                confirmedPages.Add(buffer.Position);
+                            }
 
                             // clear isConfirmed/transactionID
                             buffer.Write(uint.MaxValue, BasePage.P_TRANSACTION_ID);
                             buffer.Write(false, BasePage.P_IS_CONFIRMED);
 
+                            // update buffer position to data area position
+                            var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
+
                             buffer.Position = BasePage.GetPagePosition(pageID);
 
                             counter++;
+
+                            yield return buffer;
+                        }
+                    }
+
+                    // if not crop data file, fill with 0 all confirmed pages after data area
+                    if (crop == false)
+                    {
+                        var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
+
+                        foreach(var position in confirmedPages)
+                        {
+                            buffer.Position = position;
 
                             yield return buffer;
                         }
@@ -282,7 +320,7 @@ namespace LiteDB.Engine
                 _disk.Write(source());
 
                 // clear log file, clear wal index, memory cache,
-                this.Clear();
+                this.Clear(crop);
 
                 return counter;
             }

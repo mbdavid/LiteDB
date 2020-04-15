@@ -108,7 +108,7 @@ namespace LiteDB.Engine
                     transaction.Mode == LockMode.Write &&
                     _disk.LogLength > (_header.Pragmas.Checkpoint * PAGE_SIZE))
                 {
-                    _walIndex.Checkpoint(true);
+                    _walIndex.Checkpoint(true, false);
                 }
             }
         }
