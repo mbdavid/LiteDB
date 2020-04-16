@@ -210,7 +210,7 @@
 <li>A property can be decorated with <code>[BsonIgnore]</code> in order not to be mapped to a document field</li>
 <li>A property can be decorated with <code>[BsonField(&quot;fieldName&quot;)]</code> to customize the name of the document field</li>
 <li>No circular references are allowed</li>
-<li>Max depth of 20 inner classes</li>
+<li>By default, max depth of 20 inner classes (this can be changed in the <code>BsonMapper</code>)</li>
 <li>You can use <code>BsonMapper</code> global instance (<code>BsonMapper.Global</code>) or a custom instance and pass to <code>LiteDatabase</code> in its constructor. Keep this instance in a single place to avoid re-creating the mappings each time you use a database.</li>
 </ul>
 <p>In addition to basic BSON types, <code>BsonMapper</code> maps others .NET types to BSON data type:</p>
@@ -245,10 +245,6 @@
 <tr>
 <td><code>T[]</code></td>
 <td>Array</td>
-</tr>
-<tr>
-<td><code>NameValueCollection</code></td>
-<td>Document</td>
 </tr>
 <tr>
 <td><code>IDictionary&lt;K,T&gt;</code></td>

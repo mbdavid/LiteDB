@@ -31,7 +31,7 @@ var schemelessCollection = db.GetCollection("customer"); // <T> is BsonDocument
 - A property can be decorated with `[BsonIgnore]` in order not to be mapped to a document field
 - A property can be decorated with `[BsonField("fieldName")]` to customize the name of the document field
 - No circular references are allowed
-- Max depth of 20 inner classes
+- By default, max depth of 20 inner classes (this can be changed in the `BsonMapper`)
 - You can use `BsonMapper` global instance (`BsonMapper.Global`) or a custom instance and pass to `LiteDatabase` in its constructor. Keep this instance in a single place to avoid re-creating the mappings each time you use a database.
 
 In addition to basic BSON types, `BsonMapper` maps others .NET types to BSON data type:
@@ -44,7 +44,6 @@ In addition to basic BSON types, `BsonMapper` maps others .NET types to BSON dat
 |`Char`, `Enum`                     |String        |
 |`IList<T>`                         |Array         |
 |`T[]`                              |Array         |
-|`NameValueCollection`              |Document      |
 |`IDictionary<K,T>`                 |Document      |
 |Any other .NET type                |Document      |
 

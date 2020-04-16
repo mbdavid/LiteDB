@@ -15,7 +15,7 @@ LiteDatabase can be initialized using a string connection, with `key1=value1; ke
 |Password|string|Encrypt (using AES) your datafile with a password|null (no encryption)|
 |InitialSize|string or long|Initial size for the datafile (string suppoorts "KB", "MB" and "GB")|0|
 |ReadOnly|bool|Open datafile in read-only mode|false|
-|Upgrade|string|Check if datafile is of an older version and upgrade it before opening|"false"|
+|Upgrade|bool|Check if datafile is of an older version and upgrade it before opening|false|
 
 #### Connection Type
 
@@ -24,11 +24,6 @@ LiteDB offers 2 types of connections: `Direct` and `Shared`. This affect how eng
 - `Direct`: Engine will open the datafoçe in exclusive mode and will keep it open until `Dispose()`. The datafile cannot be opened by another process. This is the recommended mode because it's faster and cachable.
 - `Shared`: Engine will be close the datafile after each operation. Locks are made using `Mutex`. This is more expensive but you can open same file from multiple processes.
 
-#### Upgrade
-
-- `False`: LiteDB will not try to upgrade an older datafile format
-- `True`: LiteDB will try to upgrade an older datafile format
-- `DataOnly`: LiteDB will try to upgrade only the data from an older datafile (indexes are not recreated). This is useful if you have a v4 datafile with an indexed field value over 255 bytes, which is not supported in v5.
 
 ### Example
 
