@@ -664,7 +664,9 @@ namespace LiteDB
             if (ensurePredicate)
             {
                 _builder.Append("(");
+                _builder.Append("(");
                 base.Visit(expr);
+                _builder.Append(")");
                 _builder.Append(" = true)");
             }
             else
