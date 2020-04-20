@@ -35,7 +35,7 @@ namespace LiteDB
 
         private readonly BsonMapper _mapper;
         private readonly Expression _expr;
-        private readonly string _rootParameter = null;
+        private readonly ParameterExpression _rootParameter = null;
 
         private readonly BsonDocument _parameters = new BsonDocument();
         private int _paramIndex = 0;
@@ -51,7 +51,7 @@ namespace LiteDB
 
             if (expr is LambdaExpression lambda)
             {
-                _rootParameter = lambda.Parameters.First().Name;
+                _rootParameter = lambda.Parameters.First();
             }
             else
             {
@@ -105,7 +105,7 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            _builder.Append(node.Name == _rootParameter ? "$" : "@");
+            _builder.Append(_rootParameter.Equals(node) ? "$" : "@");
 
             return base.VisitParameter(node);
         }
