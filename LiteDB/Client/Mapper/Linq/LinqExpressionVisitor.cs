@@ -602,7 +602,7 @@ namespace LiteDB
             var name = member.Name;
 
             // checks if parent field are not DbRef (checks for same dataType)
-            var isParentDbRef = _dbRefType != null && _dbRefType == member.DeclaringType;
+            var isParentDbRef = _dbRefType != null && member.DeclaringType.IsAssignableFrom(_dbRefType);
 
             // get class entity from mapper
             var entity = _mapper.GetEntityMapper(member.DeclaringType);
