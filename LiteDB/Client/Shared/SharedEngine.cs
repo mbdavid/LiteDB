@@ -23,7 +23,7 @@ namespace LiteDB
 
             try
             {
-                _mutex = new Mutex(false, name + ".Mutex");
+                _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
             }
             catch(NotSupportedException ex)
             {
