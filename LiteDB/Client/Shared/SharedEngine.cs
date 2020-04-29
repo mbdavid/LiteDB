@@ -56,7 +56,11 @@ namespace LiteDB
 
                 if (_stack == 1)
                 {
-                    _mutex.WaitOne();
+                    try
+                    {
+                        _mutex.WaitOne();
+                    }
+                    catch (AbandonedMutexException) { }
 
                     try
                     {
