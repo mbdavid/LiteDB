@@ -67,6 +67,9 @@ namespace LiteDB.Engine
 
                     // re-enable auto-checkpoint pragma
                     engine.Pragma(Pragmas.CHECKPOINT, 1000);
+
+                    // copy userVersion from old datafile
+                    engine.Pragma("USER_VERSION", (reader as FileReaderV7).UserVersion);
                 }
             }
 
