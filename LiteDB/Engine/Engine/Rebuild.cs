@@ -60,6 +60,9 @@ namespace LiteDB.Engine
                 // do checkpoint
                 _walIndex.Checkpoint();
 
+                // override header page
+                _disk.Write(new[] { _header.UpdateBuffer() }, FileOrigin.Data);
+
                 // set new fileLength
                 _disk.SetLength((_header.LastPageID + 1) * PAGE_SIZE, FileOrigin.Data);
 
