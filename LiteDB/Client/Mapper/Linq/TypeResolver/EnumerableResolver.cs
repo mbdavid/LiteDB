@@ -52,8 +52,8 @@ namespace LiteDB
                 case "Max()": return "MAX(@0)";
                 case "Min()": return "MIN(@0)";
 
-                // aggregate with map function
-                case "Count(Func<T,TResult>)": return "COUNT(MAP(@0 => @1))";
+                // aggregate
+                case "Count(Func<T,TResult>)": return "COUNT(FILTER(@0 => @1))";
                 case "Sum(Func<T,TResult>)": return "SUM(MAP(@0 => @1))";
                 case "Average(Func<T,TResult>)": return "AVG(MAP(@0 => @1))";
                 case "Max(Func<T,TResult>)": return "MAX(MAP(@0 => @1))";

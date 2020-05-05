@@ -35,7 +35,7 @@ namespace LiteDB
 
         private readonly BsonMapper _mapper;
         private readonly Expression _expr;
-        private readonly string _rootParameter = null;
+        private readonly ParameterExpression _rootParameter = null;
 
         private readonly BsonDocument _parameters = new BsonDocument();
         private int _paramIndex = 0;
@@ -51,7 +51,7 @@ namespace LiteDB
 
             if (expr is LambdaExpression lambda)
             {
-                _rootParameter = lambda.Parameters.First().Name;
+                _rootParameter = lambda.Parameters.First();
             }
             else
             {
@@ -105,7 +105,7 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            _builder.Append(node.Name == _rootParameter ? "$" : "@");
+            _builder.Append(_rootParameter.Equals(node) ? "$" : "@");
 
             return base.VisitParameter(node);
         }
@@ -585,7 +585,9 @@ namespace LiteDB
                 case ExpressionType.GreaterThanOrEqual: return " >= ";
                 case ExpressionType.LessThan: return " < ";
                 case ExpressionType.LessThanOrEqual: return " <= ";
+                case ExpressionType.And: return " AND ";
                 case ExpressionType.AndAlso: return " AND ";
+                case ExpressionType.Or: return " OR ";
                 case ExpressionType.OrElse: return " OR ";
             }
 
@@ -600,7 +602,7 @@ namespace LiteDB
             var name = member.Name;
 
             // checks if parent field are not DbRef (checks for same dataType)
-            var isParentDbRef = _dbRefType != null && _dbRefType == member.DeclaringType;
+            var isParentDbRef = _dbRefType != null && member.DeclaringType.IsAssignableFrom(_dbRefType);
 
             // get class entity from mapper
             var entity = _mapper.GetEntityMapper(member.DeclaringType);
@@ -662,7 +664,9 @@ namespace LiteDB
             if (ensurePredicate)
             {
                 _builder.Append("(");
+                _builder.Append("(");
                 base.Visit(expr);
+                _builder.Append(")");
                 _builder.Append(" = true)");
             }
             else

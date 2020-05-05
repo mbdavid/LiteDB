@@ -5,6 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+#if NETFRAMEWORK
+using System.Security.AccessControl;
+using System.Security.Principal;
+#endif
 
 namespace LiteDB
 {
@@ -23,9 +27,19 @@ namespace LiteDB
 
             try
             {
-                _mutex = new Mutex(false, name + ".Mutex");
+#if NETFRAMEWORK
+                var allowEveryoneRule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null),
+                           MutexRights.FullControl, AccessControlType.Allow);
+
+                var securitySettings = new MutexSecurity();
+                securitySettings.AddAccessRule(allowEveryoneRule);
+
+                _mutex = new Mutex(false, "Global\\" + name + ".Mutex", out _, securitySettings);
+#else
+                _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
+#endif
             }
-            catch(NotSupportedException ex)
+            catch (NotSupportedException ex)
             {
                 throw new PlatformNotSupportedException("Shared mode is not supported in platforms that do not implement named mutex.", ex);
             }
@@ -42,7 +56,11 @@ namespace LiteDB
 
                 if (_stack == 1)
                 {
-                    _mutex.WaitOne();
+                    try
+                    {
+                        _mutex.WaitOne();
+                    }
+                    catch (AbandonedMutexException) { }
 
                     try
                     {
@@ -63,7 +81,7 @@ namespace LiteDB
         /// </summary>
         private void CloseDatabase()
         {
-            lock(_mutex)
+            lock (_mutex)
             {
                 _stack--;
 

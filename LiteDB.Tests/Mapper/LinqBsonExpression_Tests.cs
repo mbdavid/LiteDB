@@ -236,12 +236,15 @@ namespace LiteDB.Tests.Mapper
             TestPredicate<User>(x => x.Salary != 50, "(Salary != @p0)", 50);
             TestPredicate<User>(x => x.Salary == x.Id, "(Salary = _id)");
             TestPredicate<User>(x => x.Salary > 50 && x.Name == "John", "((Salary > @p0) AND (Name = @p1))", 50, "John");
+            TestPredicate<User>(x => x.Salary > 50 & x.Name == "John", "((Salary > @p0) AND (Name = @p1))", 50, "John");
+            TestPredicate<User>(x => x.Salary > 50 || x.Name == "John", "((Salary > @p0) OR (Name = @p1))", 50, "John");
+            TestPredicate<User>(x => x.Salary > 50 | x.Name == "John", "((Salary > @p0) OR (Name = @p1))", 50, "John");
 
             // unary expressions
             TestPredicate<User>(x => x.Active, "(Active = true)");
-            TestPredicate<User>(x => x.Active && x.Active, "((Active = true) AND (Active = true))");
-            TestPredicate<User>(x => x.Active && x.Active && x.Active, "((($.Active=true) AND ($.Active=true)) AND ($.Active=true))");
-            TestPredicate<User>(x => x.Active && !x.Active, "((Active = true) AND (Active = false))");
+            TestPredicate<User>(x => x.Active && x.Active, "(((Active) = true) AND ((Active) = true))");
+            TestPredicate<User>(x => x.Active && x.Active && x.Active, "(((($.Active)=true) AND (($.Active)=true)) AND (($.Active)=true))");
+            TestPredicate<User>(x => x.Active && !x.Active, "(((Active) = true) AND (Active = false))");
             TestPredicate<User>(x => !x.Active, "(Active = false)");
             TestPredicate<User>(x => !x.Active == true, "((Active = false) = @p0)", true);
             TestPredicate<User>(x => !(x.Salary == 50), "((Salary = @p0)) = false", 50);
@@ -275,7 +278,7 @@ namespace LiteDB.Tests.Mapper
             TestPredicate<User>(x => x.Latitude > 0, "(Latitude > @p0)", 0);
 
             TestPredicate<User>(x => x.Latitude != null && x.Latitude > 0, "((Latitude != @p0) AND (Latitude > @p1))", BsonValue.Null, 0);
-            TestPredicate<User>(x => x.Latitude.HasValue && x.Latitude > 0, "(((IS_NULL(Latitude) = false) = true) AND (Latitude > @p0))", 0);
+            TestPredicate<User>(x => x.Latitude.HasValue && x.Latitude > 0, "((((IS_NULL(Latitude) = false)) = true) AND (Latitude > @p0))", 0);
         }
 
         [Fact]

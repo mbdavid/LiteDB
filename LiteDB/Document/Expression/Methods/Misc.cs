@@ -75,6 +75,13 @@ namespace LiteDB
                     yield return value;
                 }
             }
+            else if (array.IsBinary)
+            {
+                foreach (var value in array.AsBinary)
+                {
+                    yield return (int)value;
+                }
+            }
             else
             {
                 yield return array;
@@ -108,9 +115,9 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> VALUES(BsonValue document)
         {
-            if(document.IsDocument)
+            if (document.IsDocument)
             {
-                foreach(var value in document.AsDocument.Values)
+                foreach (var value in document.AsDocument.Values)
                 {
                     yield return value;
                 }
@@ -171,10 +178,10 @@ namespace LiteDB
             {
                 var numInt = num.AsInt32;
 
-                if(numInt > 0)
-                    return values.Take(numInt);                    
+                if (numInt > 0)
+                    return values.Take(numInt);
             }
-            return Enumerable.Empty<BsonValue>();                          
+            return Enumerable.Empty<BsonValue>();
         }
 
         /// <summary>
