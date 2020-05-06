@@ -256,7 +256,7 @@
 <p>When comparing documents, the values in the key-value pairs are compared in the order that they appear until a tie is broken.</p>
 </li>
 <li>
-<p>When comparing arrays, every position in the arrays is compeared until a tie is broken.</p>
+<p>When comparing arrays, every position is compeared until a tie is broken.</p>
 </li>
 <li>
 <p>All numeric values are converted to <code>Decimal</code> before comparison.</p>
@@ -265,7 +265,7 @@
 <h3 id="primary-key--auto-id">Primary key (= auto id)</h3>
 <p>By default, an index over <code>_id</code> is created upon the first insertion.</p>
 <h3 id="ensureindex">EnsureIndex()</h3>
-<p>Indexes are created via <code>EnsureIndex</code>. This method create the index if it does not exist and does nothing if already exists.</p>
+<p>Indexes are created via <code>EnsureIndex</code>. This method creates the index if it does not exist and does nothing if already exists.</p>
 <p>An index can be created over any valid <code>BsonExpression.</code></p>
 <div class="highlight"><pre class="chroma"><code class="language-JS" data-lang="JS"><span class="p">{</span>
     <span class="nx">_id</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
@@ -279,7 +279,7 @@
 </code></pre></div><ul>
 <li>You can use <code>EnsureIndex(&quot;Address&quot;)</code> to create an index to all <code>Address</code> embedded document</li>
 <li>Or <code>EnsureIndex(&quot;Address.Street&quot;)</code> to create an index on <code>Street</code> using dotted notation</li>
-<li>Indexes are executed as <code>BsonDocument</code> fields. If you are using a custom <code>ResolvePropertyName</code> or <code>[BsonField]</code> attribute, you must use your document field name and not the property name. See <a href="Object-Mapping">Object Mapping</a>.</li>
+<li>Indexes are executed as <code>BsonDocument</code> fields. If you are using a custom <code>ResolvePropertyName</code> or <code>[BsonField]</code> attribute, you must use your document field name and not the property name. See <a href="/docs/object-mapping/">Object Mapping</a>.</li>
 <li>You can use a lambda expression to define an index field in a strongly typed collection: <code>EnsureIndex(x =&gt; x.Name)</code></li>
 <li>Indexes are identified by an unique name</li>
 </ul>
@@ -307,7 +307,7 @@
 <li><code>collection.EnsureIndex(&quot;Total&quot;, &quot;SUM($.Items[*].Price)&quot;)</code></li>
 <li><code>collection.EnsureIndex(&quot;CheapBooks&quot;, &quot;LOWER($.Books[@.Price &lt; 20].Title)&quot;)</code></li>
 </ul>
-<p>See <a href="Expressions">Expressions</a> for more details about expressions.</p>
+<p>See <a href="/docs/expressions/">Expressions</a> for more details about expressions.</p>
 <h3 id="limitations">Limitations</h3>
 <ul>
 <li>Even if multiple indexed expressions are used on a query, only one of the indexes is used, with the remaining expressions being filtered using a full scan.</li>

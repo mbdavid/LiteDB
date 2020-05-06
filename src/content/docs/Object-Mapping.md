@@ -4,7 +4,7 @@ draft: false
 weight: 3
 ---
 
-LiteDB mapper converts POCO classes to strongly type documents. When you get a `LiteCollection` instance from `LiteDatabase.GetCollection<T>`, `T` will be your document type. If `T` is not a `BsonDocument`, LiteDB internally maps your class to `BsonDocument`. To do this, LiteDB uses the `BsonMapper` class:
+The LiteDB mapper converts POCO classes documents. When you get a `ILiteCollection<T>` instance from `LiteDatabase.GetCollection<T>`, `T` will be your document type. If `T` is not a `BsonDocument`, LiteDB internally maps your class to `BsonDocument`. To do this, LiteDB uses the `BsonMapper` class:
 
 ```C#
 // Simple strongly-typed document
@@ -85,7 +85,7 @@ var typedCustomerCollection = db.GetCollection<Customer>("customer");
 When `GetCollection<T>` is called, it tries to create instances of `T` by searching for a constructor in the following order:
 
 * First, it searches for a constructor with `BsonCtorAttribute`
-* Then, it searches for a parameterless constructor
+* Then, it searches for a parameterless constructor (and assumes all serialized fields are public and all serialized properties have public setters)
 * Finally, it searches for a constructor whose parameters names match with the names of the fields in the document
 
 Please note that all the parameters in the constructor annotated with `BsonCtorAttribute` must be of a simple type, `BsonDocument` or `BsonArray`.

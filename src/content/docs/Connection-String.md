@@ -4,7 +4,7 @@ draft: false
 weight: 7
 ---
 
-LiteDatabase can be initialized using a string connection, with `key1=value1; key2=value2; ...` syntax. If there is no `=` in your connection string, LiteDB assume that your connection string contains only the `Filename`. Keys are case insensitive. Values can be quoted (`"` or `'`) if contains special chars (like `;` or `=`).
+LiteDatabase can be initialized using a string connection, with `key1=value1; key2=value2; ...` syntax. If there is no `=` in your connection string, LiteDB assume that your connection string contains only the `Filename`. Keys are case insensitive. Values can be quoted (`"` or `'`) if they contain special characters (like `;` or `=`).
 
 ### Options
 
@@ -21,7 +21,7 @@ LiteDatabase can be initialized using a string connection, with `key1=value1; ke
 
 LiteDB offers 2 types of connections: `Direct` and `Shared`. This affect how engine will open data file.
 
-- `Direct`: Engine will open the datafoçe in exclusive mode and will keep it open until `Dispose()`. The datafile cannot be opened by another process. This is the recommended mode because it's faster and cachable.
+- `Direct`: Engine will open the datafile in exclusive mode and will keep it open until `Dispose()`. The datafile cannot be opened by another process. This is the recommended mode because it's faster and cachable.
 - `Shared`: Engine will be close the datafile after each operation. Locks are made using `Mutex`. This is more expensive but you can open same file from multiple processes.
 
 

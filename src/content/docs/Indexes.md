@@ -31,7 +31,7 @@ Given that collections are schema-less, it is possible for an expression to retu
 
 - When comparing documents, the values in the key-value pairs are compared in the order that they appear until a tie is broken.
 
-- When comparing arrays, every position in the arrays is compeared until a tie is broken.
+- When comparing arrays, every position is compeared until a tie is broken.
 
 - All numeric values are converted to `Decimal` before comparison.
 
@@ -41,7 +41,7 @@ By default, an index over `_id` is created upon the first insertion.
 
 ### EnsureIndex()
 
-Indexes are created via `EnsureIndex`. This method create the index if it does not exist and does nothing if already exists.
+Indexes are created via `EnsureIndex`. This method creates the index if it does not exist and does nothing if already exists.
 
 An index can be created over any valid `BsonExpression.`
 

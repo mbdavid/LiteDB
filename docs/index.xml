@@ -37,7 +37,7 @@ How to install LiteDB is a serverless database, so there is no installation. Jus
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/docs/object-mapping/</guid>
-      <description>LiteDB mapper converts POCO classes to strongly type documents. When you get a LiteCollection instance from LiteDatabase.GetCollection&amp;lt;T&amp;gt;, T will be your document type. If T is not a BsonDocument, LiteDB internally maps your class to BsonDocument. To do this, LiteDB uses the BsonMapper class:
+      <description>The LiteDB mapper converts POCO classes documents. When you get a ILiteCollection&amp;lt;T&amp;gt; instance from LiteDatabase.GetCollection&amp;lt;T&amp;gt;, T will be your document type. If T is not a BsonDocument, LiteDB internally maps your class to BsonDocument. To do this, LiteDB uses the BsonMapper class:
 // Simple strongly-typed documentpublic class Customer{public ObjectId CustomerId { get; set; }public string Name { get; set; }public DateTime CreateDate { get; set; }public List&amp;lt;Phone&amp;gt; Phones { get; set; }public bool IsActive { get; set; }}var typedCustomerCollection = db.</description>
     </item>
     
@@ -88,7 +88,7 @@ Mapping a reference on database initialization public class Customer{public in
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/docs/connection-string/</guid>
-      <description>LiteDatabase can be initialized using a string connection, with key1=value1; key2=value2; ... syntax. If there is no = in your connection string, LiteDB assume that your connection string contains only the Filename. Keys are case insensitive. Values can be quoted (&amp;quot; or &#39;) if contains special chars (like ; or =).
+      <description>LiteDatabase can be initialized using a string connection, with key1=value1; key2=value2; ... syntax. If there is no = in your connection string, LiteDB assume that your connection string contains only the Filename. Keys are case insensitive. Values can be quoted (&amp;quot; or &#39;) if they contain special characters (like ; or =).
 Options    Key Type Description Default value     Filename string Full or relative path to the datafile.</description>
     </item>
     

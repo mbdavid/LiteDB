@@ -188,7 +188,7 @@
           
 <h1 class="title">Object Mapping</h1>
 <div class="content">
-  <p>LiteDB mapper converts POCO classes to strongly type documents. When you get a <code>LiteCollection</code> instance from <code>LiteDatabase.GetCollection&lt;T&gt;</code>, <code>T</code> will be your document type. If <code>T</code> is not a <code>BsonDocument</code>, LiteDB internally maps your class to <code>BsonDocument</code>. To do this, LiteDB uses the <code>BsonMapper</code> class:</p>
+  <p>The LiteDB mapper converts POCO classes documents. When you get a <code>ILiteCollection&lt;T&gt;</code> instance from <code>LiteDatabase.GetCollection&lt;T&gt;</code>, <code>T</code> will be your document type. If <code>T</code> is not a <code>BsonDocument</code>, LiteDB internally maps your class to <code>BsonDocument</code>. To do this, LiteDB uses the <code>BsonMapper</code> class:</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Simple strongly-typed document
 </span><span class="c1"></span><span class="k">public</span> <span class="k">class</span> <span class="nc">Customer</span>
 <span class="p">{</span>
@@ -291,7 +291,7 @@
 </code></pre></div><p>When <code>GetCollection&lt;T&gt;</code> is called, it tries to create instances of <code>T</code> by searching for a constructor in the following order:</p>
 <ul>
 <li>First, it searches for a constructor with <code>BsonCtorAttribute</code></li>
-<li>Then, it searches for a parameterless constructor</li>
+<li>Then, it searches for a parameterless constructor (and assumes all serialized fields are public and all serialized properties have public setters)</li>
 <li>Finally, it searches for a constructor whose parameters names match with the names of the fields in the document</li>
 </ul>
 <p>Please note that all the parameters in the constructor annotated with <code>BsonCtorAttribute</code> must be of a simple type, <code>BsonDocument</code> or <code>BsonArray</code>.</p>

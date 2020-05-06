@@ -188,7 +188,7 @@
           
 <h1 class="title">Connection String</h1>
 <div class="content">
-  <p>LiteDatabase can be initialized using a string connection, with <code>key1=value1; key2=value2; ...</code> syntax. If there is no <code>=</code> in your connection string, LiteDB assume that your connection string contains only the <code>Filename</code>. Keys are case insensitive. Values can be quoted (<code>&quot;</code> or <code>'</code>) if contains special chars (like <code>;</code> or <code>=</code>).</p>
+  <p>LiteDatabase can be initialized using a string connection, with <code>key1=value1; key2=value2; ...</code> syntax. If there is no <code>=</code> in your connection string, LiteDB assume that your connection string contains only the <code>Filename</code>. Keys are case insensitive. Values can be quoted (<code>&quot;</code> or <code>'</code>) if they contain special characters (like <code>;</code> or <code>=</code>).</p>
 <h3 id="options">Options</h3>
 <table>
 <thead>
@@ -241,7 +241,7 @@
 <h4 id="connection-type">Connection Type</h4>
 <p>LiteDB offers 2 types of connections: <code>Direct</code> and <code>Shared</code>. This affect how engine will open data file.</p>
 <ul>
-<li><code>Direct</code>: Engine will open the datafoçe in exclusive mode and will keep it open until <code>Dispose()</code>. The datafile cannot be opened by another process. This is the recommended mode because it&rsquo;s faster and cachable.</li>
+<li><code>Direct</code>: Engine will open the datafile in exclusive mode and will keep it open until <code>Dispose()</code>. The datafile cannot be opened by another process. This is the recommended mode because it&rsquo;s faster and cachable.</li>
 <li><code>Shared</code>: Engine will be close the datafile after each operation. Locks are made using <code>Mutex</code>. This is more expensive but you can open same file from multiple processes.</li>
 </ul>
 <h3 id="example">Example</h3>

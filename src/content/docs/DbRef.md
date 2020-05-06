@@ -92,7 +92,7 @@ BsonMapper.Global.Entity<Order>()
 
 If the `Products` field is null or an empty list, the value will be preserved when being mapped from a `BsonDocument` to an `Order`. If you do not use `Include` in query, every `Product` in `Products` will be loaded with the id field set and all other fields null or default.
 
-In v4, this include process occurs on BsonDocument engine level. That also support any level of include, just using `Path` syntax:
+In v4, this include process occurs on BsonDocument engine level. It also support any level of include, just using `Path` syntax:
 
 ```C#
 orders.Include(new string[] { "$.Customer", "$.Products[*]" });
