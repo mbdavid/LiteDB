@@ -16,8 +16,6 @@ namespace LiteDB.Engine
         private readonly ICryptoTransform _decryptor;
 
         private readonly Stream _stream;
-        private readonly CryptoStream _reader;
-        private readonly CryptoStream _writer;
 
         /// <summary>
         /// Get plain stream
@@ -40,7 +38,7 @@ namespace LiteDB.Engine
             set => this.Seek(value, SeekOrigin.Begin);
         }
 
-        public AesStream(string password, Stream stream, bool initialize = false)
+        public AesStream(string password, Stream stream, bool initialize = false, CipherMode cipherMode = CipherMode.ECB)
         {
             _stream = stream;
             _stream.Position = 0;
@@ -79,7 +77,7 @@ namespace LiteDB.Engine
 
                 _aes = Aes.Create();
                 _aes.Padding = PaddingMode.None;
-                _aes.Mode = CipherMode.ECB;
+                _aes.Mode = cipherMode;
 
                 var pdb = new Rfc2898DeriveBytes(password, this.Salt);
 
@@ -92,14 +90,6 @@ namespace LiteDB.Engine
                 _encryptor = _aes.CreateEncryptor();
                 _decryptor = _aes.CreateDecryptor();
 
-                _reader = _stream.CanRead ?
-                    new CryptoStream(_stream, _decryptor, CryptoStreamMode.Read) :
-                    null;
-
-                _writer = _stream.CanWrite ?
-                    new CryptoStream(_stream, _encryptor, CryptoStreamMode.Write) :
-                    null;
-
                 // set stream to password checking
                 _stream.Position = 32;
 
@@ -109,14 +99,16 @@ namespace LiteDB.Engine
                 if (isNew)
                 {
                     checkBuffer.Fill(1, 0, checkBuffer.Length);
-
-                    _writer.Write(checkBuffer, 0, checkBuffer.Length);
+                    var encryptedOnes = _encryptor.TransformFinalBlock(checkBuffer, 0, checkBuffer.Length);
+                    _stream.Write(encryptedOnes, 0, encryptedOnes.Length);
                 }
                 else
                 {
-                    _reader.Read(checkBuffer, 0, checkBuffer.Length);
+                    var encryptedOnes = new byte[checkBuffer.Length];
+                    _stream.Read(encryptedOnes, 0, checkBuffer.Length);
+                    var decryptedOnes = _decryptor.TransformFinalBlock(encryptedOnes, 0, encryptedOnes.Length);
 
-                    if (!checkBuffer.All(x => x == 1))
+                    if (!decryptedOnes.All(x => x == 1))
                     {
                         throw new LiteException(0, "Invalid password");
                     }
@@ -141,9 +133,15 @@ namespace LiteDB.Engine
             ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
             ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
 
-            var r = _reader.Read(array, offset, count);
+            var encryptedBuf = new byte[PAGE_SIZE];
+            _stream.Read(encryptedBuf, 0, PAGE_SIZE);
 
-            return r;
+            using (var ms = new MemoryStream(encryptedBuf))
+            using (var reader = new CryptoStream(ms, _decryptor, CryptoStreamMode.Read))
+            {
+                var readBytes = reader.Read(array, offset, count);
+                return readBytes;
+            }
         }
 
         /// <summary>
@@ -154,7 +152,17 @@ namespace LiteDB.Engine
             ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
             ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
 
-            _writer.Write(array, offset, count);
+            var decryptedBuf = new byte[PAGE_SIZE];
+            var encryptedBuf = new byte[PAGE_SIZE];
+            Array.Copy(array, offset, decryptedBuf, 0, PAGE_SIZE);
+
+            using (var ms = new MemoryStream(decryptedBuf))
+            using (var enc = new CryptoStream(ms, _encryptor, CryptoStreamMode.Read))
+            {
+                enc.Read(encryptedBuf, 0, PAGE_SIZE);
+            }
+
+            _stream.Write(encryptedBuf, 0, PAGE_SIZE);
         }
 
         protected override void Dispose(bool disposing)
