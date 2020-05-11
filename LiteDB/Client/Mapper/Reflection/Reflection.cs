@@ -283,16 +283,20 @@ namespace LiteDB
         /// </summary>
         public static string MethodName(MethodInfo method, int skipParameters = 0)
         {
-            if (_cacheName.TryGetValue(method, out var value))
+            lock (_cacheName)
             {
+                if (_cacheName.TryGetValue(method, out var value))
+                {
+                    return value;
+                }
+
+                value = MethodNameInternal(method, skipParameters);
+
+                _cacheName.Add(method, value);
+
+
                 return value;
             }
-
-            value = MethodNameInternal(method, skipParameters);
-
-            _cacheName.Add(method, value);
-
-            return value;
         }
 
         private static string MethodNameInternal(MethodInfo method, int skipParameters = 0)
