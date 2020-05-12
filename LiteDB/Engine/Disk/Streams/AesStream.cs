@@ -12,131 +12,36 @@ namespace LiteDB.Engine
     /// </summary>
     public class AesStream : Stream
     {
-        private readonly Stream _stream;
-        private readonly Xts _xts;
-        private readonly XtsSectorStream _xtsStream;
-
-        /// <summary>
-        /// Get plain stream
-        /// </summary>
-        public Stream BaseStream => _stream;
-
-        public byte[] Salt { get; }
-
-        public override bool CanRead => _stream.CanRead;
-
-        public override bool CanSeek => _stream.CanSeek;
-
-        public override bool CanWrite => _stream.CanWrite;
-
-        public override long Length => _stream.Length - PAGE_SIZE;
-
-        public override long Position
-        {
-            get => _stream.Position - PAGE_SIZE;
-            set => this.Seek(value, SeekOrigin.Begin);
-        }
+        private readonly Stream _baseAesStream;
+        public Stream BaseStream => _baseAesStream is AesXtsStream xts ? xts.BaseStream :
+                                    _baseAesStream is AesEcbStream ecb ? ecb.BaseStream : null;
 
         public AesStream(string password, Stream stream, bool initialize = false)
         {
-            _stream = stream;
-            _stream.Position = 0;
+            var encryption = (EncryptionType)stream.ReadByte();
 
-            var isNew = _stream.Length == 0 || initialize;
-
-            try
+            var isNew = stream.Length == 0 || initialize;
+            if(isNew)
             {
-                // new file? create new salt
-                if (isNew)
-                {
-                    this.Salt = NewSalt();
-
-                    _stream.WriteByte(1);
-                    _stream.Write(this.Salt, 0, ENCRYPTION_SALT_SIZE);
-
-                    // fill all page with 0
-                    var left = PAGE_SIZE - ENCRYPTION_SALT_SIZE - 1;
-
-                    _stream.Write(new byte[left], 0, left);
-                }
-                else
-                {
-                    this.Salt = new byte[ENCRYPTION_SALT_SIZE];
-
-                    // checks if this datafile are encrypted
-                    var isEncrypted = _stream.ReadByte();
-
-                    if (isEncrypted != 1)
-                    {
-                        throw new LiteException(0, "This file is not encrypted");
-                    }
-
-                    _stream.Read(this.Salt, 0, ENCRYPTION_SALT_SIZE);
-                }
-
-                using (var pdb = new Rfc2898DeriveBytes(password, this.Salt))
-                {
-                    _xts = XtsAes128.Create(pdb.GetBytes(32));
-                }
-
-                _xtsStream = new XtsSectorStream(_stream, _xts, PAGE_SIZE, 0);
-
-                if(!isNew)
-                {
-                    //check if password is correct using the HEADER_INFO string;
-                    var header = new byte[PAGE_SIZE];
-                    var headerInfoBytes = new byte[System.Text.Encoding.UTF8.GetByteCount(HeaderPage.HEADER_INFO)];
-
-                    _xtsStream.Position = PAGE_SIZE;
-                    _xtsStream.Read(header, 0, PAGE_SIZE);
-
-                    Array.Copy(header, HeaderPage.P_HEADER_INFO, headerInfoBytes, 0, headerInfoBytes.Length);
-
-                    var headerInfoStr = System.Text.Encoding.UTF8.GetString(headerInfoBytes);
-
-                    if(HeaderPage.HEADER_INFO != headerInfoStr)
-                        throw new LiteException(0, "Invalid password");
-                }
-
-                _xtsStream.Position = PAGE_SIZE;
-
+                _baseAesStream = new AesXtsStream(password, stream, initialize);
+                return;
             }
-            catch
+
+            stream.Seek(0, SeekOrigin.Begin);
+
+            switch (encryption)
             {
-                _stream.Dispose();
-
-                throw;
+                case EncryptionType.None:
+                    throw new LiteException(0, "File is not encrypted.");
+                case EncryptionType.AesEcb:
+                    _baseAesStream = new AesEcbStream(password, stream, initialize);
+                    break;
+                case EncryptionType.AesXts:
+                    _baseAesStream = new AesXtsStream(password, stream, initialize);
+                    break;
+                default:
+                    throw new LiteException(0, "Unsupported encryption mode.");
             }
-        }
-
-        /// <summary>
-        /// Decrypt data from Stream
-        /// </summary>
-        public override int Read(byte[] array, int offset, int count)
-        {
-            ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
-            ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
-
-            return _xtsStream.Read(array, offset, count);
-        }
-
-        /// <summary>
-        /// Encrypt data to Stream
-        /// </summary>
-        public override void Write(byte[] array, int offset, int count)
-        {
-            ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
-            ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
-
-            _xtsStream.Write(array, offset, count);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            _xtsStream?.Dispose();
-            _stream?.Dispose();
         }
 
         /// <summary>
@@ -154,19 +59,36 @@ namespace LiteDB.Engine
             return salt;
         }
 
-        public override void Flush()
-        {
-            _xtsStream.Flush();
+        #region Stream implementations
+        public override bool CanRead => _baseAesStream.CanRead;
+
+        public override bool CanSeek => _baseAesStream.CanSeek;
+
+        public override bool CanWrite => _baseAesStream.CanWrite;
+
+        public override long Length => _baseAesStream.Length - PAGE_SIZE;
+
+        public override long Position 
+        { 
+            get => _baseAesStream.Position - PAGE_SIZE; 
+            set => this.Seek(value, SeekOrigin.Begin); 
         }
 
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            return _xtsStream.Seek(offset + PAGE_SIZE, origin);
-        }
+        public override void Flush() => _baseAesStream.Flush();
 
-        public override void SetLength(long value)
+        public override int Read(byte[] buffer, int offset, int count) => _baseAesStream.Read(buffer, offset, count);
+
+        public override long Seek(long offset, SeekOrigin origin) => _baseAesStream.Seek(offset + PAGE_SIZE, origin);
+
+        public override void SetLength(long value) => _baseAesStream.SetLength(value + PAGE_SIZE);
+
+        public override void Write(byte[] buffer, int offset, int count) => _baseAesStream.Write(buffer, offset, count);
+
+        protected override void Dispose(bool disposing)
         {
-            _xtsStream.SetLength(value + PAGE_SIZE);
+            base.Dispose(disposing);
+            _baseAesStream.Dispose();
         }
+        #endregion
     }
 }
