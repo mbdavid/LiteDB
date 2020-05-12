@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using XTSSharp;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -11,11 +12,9 @@ namespace LiteDB.Engine
     /// </summary>
     public class AesStream : Stream
     {
-        private readonly Aes _aes;
-        private readonly ICryptoTransform _encryptor;
-        private readonly ICryptoTransform _decryptor;
-
         private readonly Stream _stream;
+        private readonly Xts _xts;
+        private readonly XtsSectorStream _xtsStream;
 
         /// <summary>
         /// Get plain stream
@@ -38,7 +37,7 @@ namespace LiteDB.Engine
             set => this.Seek(value, SeekOrigin.Begin);
         }
 
-        public AesStream(string password, Stream stream, bool initialize = false, CipherMode cipherMode = CipherMode.ECB)
+        public AesStream(string password, Stream stream, bool initialize = false)
         {
             _stream = stream;
             _stream.Position = 0;
@@ -75,46 +74,31 @@ namespace LiteDB.Engine
                     _stream.Read(this.Salt, 0, ENCRYPTION_SALT_SIZE);
                 }
 
-                _aes = Aes.Create();
-                _aes.Padding = PaddingMode.None;
-                _aes.Mode = cipherMode;
-
-                var pdb = new Rfc2898DeriveBytes(password, this.Salt);
-
-                using (pdb as IDisposable)
+                using (var pdb = new Rfc2898DeriveBytes(password, this.Salt))
                 {
-                    _aes.Key = pdb.GetBytes(32);
-                    _aes.IV = pdb.GetBytes(16);
+                    _xts = XtsAes128.Create(pdb.GetBytes(32));
                 }
 
-                _encryptor = _aes.CreateEncryptor();
-                _decryptor = _aes.CreateDecryptor();
+                _xtsStream = new XtsSectorStream(_stream, _xts, PAGE_SIZE, 0);
 
-                // set stream to password checking
-                _stream.Position = 32;
-
-                var checkBuffer = new byte[32];
-
-                // fill checkBuffer with encrypted 1 to check when open
-                if (isNew)
+                if(!isNew)
                 {
-                    checkBuffer.Fill(1, 0, checkBuffer.Length);
-                    var encryptedOnes = _encryptor.TransformFinalBlock(checkBuffer, 0, checkBuffer.Length);
-                    _stream.Write(encryptedOnes, 0, encryptedOnes.Length);
-                }
-                else
-                {
-                    var encryptedOnes = new byte[checkBuffer.Length];
-                    _stream.Read(encryptedOnes, 0, checkBuffer.Length);
-                    var decryptedOnes = _decryptor.TransformFinalBlock(encryptedOnes, 0, encryptedOnes.Length);
+                    //check if password is correct using the HEADER_INFO string;
+                    var header = new byte[PAGE_SIZE];
+                    var headerInfoBytes = new byte[System.Text.Encoding.UTF8.GetByteCount(HeaderPage.HEADER_INFO)];
 
-                    if (!decryptedOnes.All(x => x == 1))
-                    {
+                    _xtsStream.Position = PAGE_SIZE;
+                    _xtsStream.Read(header, 0, PAGE_SIZE);
+
+                    Array.Copy(header, HeaderPage.P_HEADER_INFO, headerInfoBytes, 0, headerInfoBytes.Length);
+
+                    var headerInfoStr = System.Text.Encoding.UTF8.GetString(headerInfoBytes);
+
+                    if(HeaderPage.HEADER_INFO != headerInfoStr)
                         throw new LiteException(0, "Invalid password");
-                    }
                 }
 
-                _stream.Position = PAGE_SIZE;
+                _xtsStream.Position = PAGE_SIZE;
 
             }
             catch
@@ -133,15 +117,7 @@ namespace LiteDB.Engine
             ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
             ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
 
-            var encryptedBuf = new byte[PAGE_SIZE];
-            _stream.Read(encryptedBuf, 0, PAGE_SIZE);
-
-            using (var ms = new MemoryStream(encryptedBuf))
-            using (var reader = new CryptoStream(ms, _decryptor, CryptoStreamMode.Read))
-            {
-                var readBytes = reader.Read(array, offset, count);
-                return readBytes;
-            }
+            return _xtsStream.Read(array, offset, count);
         }
 
         /// <summary>
@@ -152,29 +128,15 @@ namespace LiteDB.Engine
             ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
             ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
 
-            var decryptedBuf = new byte[PAGE_SIZE];
-            var encryptedBuf = new byte[PAGE_SIZE];
-            Array.Copy(array, offset, decryptedBuf, 0, PAGE_SIZE);
-
-            using (var ms = new MemoryStream(decryptedBuf))
-            using (var enc = new CryptoStream(ms, _encryptor, CryptoStreamMode.Read))
-            {
-                enc.Read(encryptedBuf, 0, PAGE_SIZE);
-            }
-
-            _stream.Write(encryptedBuf, 0, PAGE_SIZE);
+            _xtsStream.Write(array, offset, count);
         }
 
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
 
+            _xtsStream?.Dispose();
             _stream?.Dispose();
-
-            _encryptor.Dispose();
-            _decryptor.Dispose();
-
-            _aes.Dispose();
         }
 
         /// <summary>
@@ -194,17 +156,17 @@ namespace LiteDB.Engine
 
         public override void Flush()
         {
-            _stream.Flush();
+            _xtsStream.Flush();
         }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            return _stream.Seek(offset + PAGE_SIZE, origin);
+            return _xtsStream.Seek(offset + PAGE_SIZE, origin);
         }
 
         public override void SetLength(long value)
         {
-            _stream.SetLength(value + PAGE_SIZE);
+            _xtsStream.SetLength(value + PAGE_SIZE);
         }
     }
 }
