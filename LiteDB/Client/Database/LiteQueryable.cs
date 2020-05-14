@@ -295,7 +295,7 @@ namespace LiteDB
 
             var reader = _engine.Query(_collection, _query);
 
-            return reader.ToEnumerable().Single().AsDocument;
+            return reader.ToEnumerable().FirstOrDefault()?.AsDocument;
         }
 
         #endregion
