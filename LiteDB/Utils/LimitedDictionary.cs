@@ -48,7 +48,8 @@ namespace LiteDB.Utils
                     contains = dict.Contains(key);
 
                 if (contains)
-                    dict[key] = value;
+                    lock (lockObj)
+                        dict[key] = value;
                 else
                     Add(key, value);
             }
