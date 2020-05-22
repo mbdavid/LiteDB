@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB.Utils;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -280,7 +281,7 @@ namespace LiteDB
         #region Static method
 
         private static ConcurrentDictionary<string, BsonExpressionEnumerableDelegate> _cacheEnumerable = new ConcurrentDictionary<string, BsonExpressionEnumerableDelegate>();
-        private static ConcurrentDictionary<string, BsonExpressionScalarDelegate> _cacheScalar = new ConcurrentDictionary<string, BsonExpressionScalarDelegate>();
+        private static LimitedDictionary<string, BsonExpressionScalarDelegate> _cacheScalar = new LimitedDictionary<string, BsonExpressionScalarDelegate>(2000);
 
         /// <summary>
         /// Parse string and create new instance of BsonExpression - can be cached
