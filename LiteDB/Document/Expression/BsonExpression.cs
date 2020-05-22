@@ -280,7 +280,7 @@ namespace LiteDB
 
         #region Static method
 
-        private static ConcurrentDictionary<string, BsonExpressionEnumerableDelegate> _cacheEnumerable = new ConcurrentDictionary<string, BsonExpressionEnumerableDelegate>();
+        private static LimitedDictionary<string, BsonExpressionEnumerableDelegate> _cacheEnumerable = new LimitedDictionary<string, BsonExpressionEnumerableDelegate>(2000);
         private static LimitedDictionary<string, BsonExpressionScalarDelegate> _cacheScalar = new LimitedDictionary<string, BsonExpressionScalarDelegate>(2000);
 
         /// <summary>

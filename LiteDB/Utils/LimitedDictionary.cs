@@ -13,7 +13,7 @@ namespace LiteDB.Utils
 {
     [DebuggerTypeProxy(typeof(IDictionaryDebugView<,>))]
     [DebuggerDisplay("Count = {Count}")]
-    public class LimitedDictionary<TKey, TValue> : IDictionary<TKey, TValue>
+    internal class LimitedDictionary<TKey, TValue> : IDictionary<TKey, TValue>
     {
 
         private readonly OrderedDictionary dict;
