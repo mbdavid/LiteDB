@@ -65,7 +65,7 @@ namespace LiteDB
                         if (typeInfo.IsGenericType)
                         {
                             var typeDef = type.GetGenericTypeDefinition();
-                            
+
                             if (typeDef == typeof(ISet<>))
                             {
                                 return CreateInstance(GetGenericSetOfType(UnderlyingTypeOf(type)));
@@ -242,8 +242,18 @@ namespace LiteDB
         /// </summary>
         public static bool IsCollection(Type type)
         {
-            return type.GetInterfaces().Any(x => x == typeof(ICollection) || 
+            try
+            {
+                return type.GetGenericTypeDefinition().Equals(typeof(ICollection<>)) ||
+                    type.GetInterfaces().Any(x => x == typeof(ICollection) ||
                 (x.GetTypeInfo().IsGenericType ? x.GetGenericTypeDefinition() == typeof(ICollection<>) : false));
+                // this is awful, type.IsGeneric is the ideal solution, but .NET Standard 1.3 doesn't implement it
+            }
+            catch (InvalidOperationException)
+            {
+                return type.GetInterfaces().Any(x => x == typeof(ICollection) ||
+                (x.GetTypeInfo().IsGenericType ? x.GetGenericTypeDefinition() == typeof(ICollection<>) : false));
+            }
         }
 
         /// <summary>
