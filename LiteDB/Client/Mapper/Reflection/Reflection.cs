@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -195,7 +196,7 @@ namespace LiteDB
         /// </summary>
         public static bool IsEnumerable(Type type)
         {
-            if (type.IsArray) return true;
+            if (type == typeof(IEnumerable) || type.IsArray) return true;
             if (type == typeof(string)) return false; // do not define "String" as IEnumerable<char>
 
             foreach (var @interface in type.GetInterfaces())
@@ -252,7 +253,9 @@ namespace LiteDB
         /// </summary>
         public static bool IsDictionary(Type type)
         {
-            return type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>);
+            return type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(IDictionary<,>)) ||
+                type.GetInterfaces().Any(x => x == typeof(IDictionary) ||
+                (x.GetTypeInfo().IsGenericType ? x.GetGenericTypeDefinition().Equals(typeof(IDictionary<,>)) : false));
         }
 
         /// <summary>
