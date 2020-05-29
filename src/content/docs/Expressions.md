@@ -24,11 +24,6 @@ Examples:
 - `$.Price + 100`
 - `SUM($.Items[*].Price)`
 
-```C#
-var expr = new BsonExpression("SUM($.Items[*].Unity * $.Items[*].Price)");
-var total = expr.Execute(doc, true).First().AsDecimal;
-```
-
 Expressions can be used in many ways:
 
 - Creating an index based on an expression:
@@ -45,10 +40,10 @@ Expressions can be used in many ways:
 
 # Path 
 
-- `$` - Root
-- `$.Name` - `Name` field
-- `$.Name.First` - `First` field from `Name` subdocument  
-- `$.Books` - Returns an array of books 
+- `$` - Root document
+- `$.Name` - Field `Name`
+- `$.Name.First` - Field `First` from `Name` subdocument  
+- `$.Books` - Returns the array of books
 - `$.Books[0]` - Returns the first book inside Books array
 - `$.Books[*]` - Returns every book inside Books
 - `$.Books[*].Title` Returns the title from every book in Books
@@ -66,14 +61,14 @@ Inside an array, `@` acts as a sub-iterator, pointing to the current sub-documen
 
 #### Difference between `$` and `*`
 
-In SQL query (at `SELECT` segment) is possible use both `$` and `*`. But they represent different things. 
+In SQL query, it is possible use both `$` and `*`. They have different functionalities: 
 
-- `$` represent current document root. When use `$` (or ommited, because this symbol are optional and are default) you are referencing about root current document.
+- `$` represents current root document. When `$` is used, you are referencing the root document. If neither `$` nor `*` are present, `$` is assumed.
 
-- `*` represent all grouped documents. It's not more about a single document but all documents in group (or in query result). Used when `GROUP BY` are present or when you want return a single value in query (like `SELECT COUNT(*) FROM customers`). 
+- `*` represent a group of documents. Used when `GROUP BY` is present or when you want to return a single value in a query (`SELECT COUNT(*) FROM customers`). 
 
-If you use `SELECT $ FROM customers` you will get `IEnumerable<BsonDocument>` result (`N` documents).
-If you use `SELECT * FROM customers` you will get a single value, a `BsonArray` with all documents result inside. Be carful because if your resultset are big you are creating a very large single array in memory. 
+`SELECT $ FROM customers` returns `IEnumerable<BsonDocument>` result (`N` documents).
+`SELECT * FROM customers` returns a single value, a `BsonArray` with all documents result inside.
 
 # Functions
 
@@ -115,7 +110,7 @@ DataType functions provide explicit data type conversion.
 
 #### High-Order Functions
 
-High-Order functions take an array and a lambda expression that is applied to every document in the array. Use `@` symbol to represent inner looped value.
+High-Order functions take an array and a lambda expression that is applied to every document in the array. Use the `@` symbol to represent inner looped value.
 
 - `MAP(arr => expr)` returns a new array with the map expression applied to each element
 	- `MAP([1,2,3] => @*2)` returns `[2,4,6]`
@@ -135,6 +130,6 @@ High-Order functions take an array and a lambda expression that is applied to ev
 
 #### Misc Functions
 
-- `JSON(str)` - Takes a string representation of a JSON and returns a parsed `BsonValue` containing the document
+- `JSON(str)` - Takes a string representation of a JSON and returns a `BsonValue` containing the parsed document
 - `CONCAT(arr1, arr2)` - Returns a new array containg the concatenation between arrays `arr1` and `arr2`
 - `RANDOM(min, max)` - Returns a random `Int32` between `min` and `max`

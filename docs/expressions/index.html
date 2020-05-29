@@ -207,9 +207,7 @@
 <li><code>$.Price + 100</code></li>
 <li><code>SUM($.Items[*].Price)</code></li>
 </ul>
-<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="kt">var</span> <span class="n">expr</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonExpression</span><span class="p">(</span><span class="s">&#34;SUM($.Items[*].Unity * $.Items[*].Price)&#34;</span><span class="p">);</span>
-<span class="kt">var</span> <span class="n">total</span> <span class="p">=</span> <span class="n">expr</span><span class="p">.</span><span class="n">Execute</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="k">true</span><span class="p">).</span><span class="n">First</span><span class="p">().</span><span class="n">AsDecimal</span><span class="p">;</span>
-</code></pre></div><p>Expressions can be used in many ways:</p>
+<p>Expressions can be used in many ways:</p>
 <ul>
 <li>Creating an index based on an expression:
 <ul>
@@ -240,10 +238,10 @@
 </ul>
 <h1 id="path">Path</h1>
 <ul>
-<li><code>$</code> - Root</li>
-<li><code>$.Name</code> - <code>Name</code> field</li>
-<li><code>$.Name.First</code> - <code>First</code> field from <code>Name</code> subdocument</li>
-<li><code>$.Books</code> - Returns an array of books</li>
+<li><code>$</code> - Root document</li>
+<li><code>$.Name</code> - Field <code>Name</code></li>
+<li><code>$.Name.First</code> - Field <code>First</code> from <code>Name</code> subdocument</li>
+<li><code>$.Books</code> - Returns the array of books</li>
 <li><code>$.Books[0]</code> - Returns the first book inside Books array</li>
 <li><code>$.Books[*]</code> - Returns every book inside Books</li>
 <li><code>$.Books[*].Title</code> Returns the title from every book in Books</li>
@@ -263,17 +261,17 @@
 <li><code>$.Books[SUBSTRING(LOWER(@.Title), 0, 1) = 't']</code> - Returns all books whose <code>Title</code> starts with <code>'T'</code> or <code>'t'</code>.</li>
 </ul>
 <h4 id="difference-between--and-">Difference between <code>$</code> and <code>*</code></h4>
-<p>In SQL query (at <code>SELECT</code> segment) is possible use both <code>$</code> and <code>*</code>. But they represent different things.</p>
+<p>In SQL query, it is possible use both <code>$</code> and <code>*</code>. They have different functionalities:</p>
 <ul>
 <li>
-<p><code>$</code> represent current document root. When use <code>$</code> (or ommited, because this symbol are optional and are default) you are referencing about root current document.</p>
+<p><code>$</code> represents current root document. When <code>$</code> is used, you are referencing the root document. If neither <code>$</code> nor <code>*</code> are present, <code>$</code> is assumed.</p>
 </li>
 <li>
-<p><code>*</code> represent all grouped documents. It&rsquo;s not more about a single document but all documents in group (or in query result). Used when <code>GROUP BY</code> are present or when you want return a single value in query (like <code>SELECT COUNT(*) FROM customers</code>).</p>
+<p><code>*</code> represent a group of documents. Used when <code>GROUP BY</code> is present or when you want to return a single value in a query (<code>SELECT COUNT(*) FROM customers</code>).</p>
 </li>
 </ul>
-<p>If you use <code>SELECT $ FROM customers</code> you will get <code>IEnumerable&lt;BsonDocument&gt;</code> result (<code>N</code> documents).
-If you use <code>SELECT * FROM customers</code> you will get a single value, a <code>BsonArray</code> with all documents result inside. Be carful because if your resultset are big you are creating a very large single array in memory.</p>
+<p><code>SELECT $ FROM customers</code> returns <code>IEnumerable&lt;BsonDocument&gt;</code> result (<code>N</code> documents).
+<code>SELECT * FROM customers</code> returns a single value, a <code>BsonArray</code> with all documents result inside.</p>
 <h1 id="functions">Functions</h1>
 <p>Functions are used to manipulate data in expressions. A few examples will be provided for each category of functions. For a complete list of functions, check the API documentation.</p>
 <h4 id="aggregate-functions">Aggregate Functions</h4>
@@ -309,7 +307,7 @@ If you use <code>SELECT * FROM customers</code> you will get a single value, a <
 <li><code>REPLACE(str, old, new)</code> - Returns a new string with every ocurrence of <code>old</code> in <code>str</code> replaced by <code>new</code></li>
 </ul>
 <h4 id="high-order-functions">High-Order Functions</h4>
-<p>High-Order functions take an array and a lambda expression that is applied to every document in the array. Use <code>@</code> symbol to represent inner looped value.</p>
+<p>High-Order functions take an array and a lambda expression that is applied to every document in the array. Use the <code>@</code> symbol to represent inner looped value.</p>
 <ul>
 <li>
 <p><code>MAP(arr =&gt; expr)</code> returns a new array with the map expression applied to each element</p>
@@ -338,7 +336,7 @@ If you use <code>SELECT * FROM customers</code> you will get a single value, a <
 </ul>
 <h4 id="misc-functions">Misc Functions</h4>
 <ul>
-<li><code>JSON(str)</code> - Takes a string representation of a JSON and returns a parsed <code>BsonValue</code> containing the document</li>
+<li><code>JSON(str)</code> - Takes a string representation of a JSON and returns a <code>BsonValue</code> containing the parsed document</li>
 <li><code>CONCAT(arr1, arr2)</code> - Returns a new array containg the concatenation between arrays <code>arr1</code> and <code>arr2</code></li>
 <li><code>RANDOM(min, max)</code> - Returns a random <code>Int32</code> between <code>min</code> and <code>max</code></li>
 </ul>
