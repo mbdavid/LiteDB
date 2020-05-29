@@ -313,7 +313,7 @@ namespace LiteDB.Engine
 
             if (crop)
             {
-                FileHelper.SetLength(_streamPool.Writer, _logStartPosition);
+                FileHelper.TrySetLength(_streamPool.Writer, _logStartPosition);
             }
         }
 

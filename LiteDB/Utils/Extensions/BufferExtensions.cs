@@ -182,6 +182,30 @@ namespace LiteDB
             //}
         }
 
+        public static bool GetBit(this byte b, byte position)
+        {
+            if (position > 7) throw new ArgumentOutOfRangeException(nameof(position));
+
+            return ((b >> position) & 1) == 1;
+        }
+
+        public static byte SetBit(this byte b, byte position, bool value)
+        {
+            if (position > 7) throw new ArgumentOutOfRangeException(nameof(position));
+
+            byte maskClear = (byte)~(1 << position);
+            byte maskSet = (byte)~maskClear;
+
+            if (value)
+            {
+                return (byte)(b | maskSet);
+            }
+            else
+            {
+                return (byte)(b & maskClear);
+            }
+        }
+
         #endregion
     }
 }

@@ -37,9 +37,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Set length to a Stream - keep tring if get any error (during 1 minute)
+        /// Try set length to a Stream - keep tring if get any error (during 1 minute)
         /// </summary>
-        public static void SetLength(Stream stream, long length)
+        public static void TrySetLength(Stream stream, long length)
         {
             var sw = Stopwatch.StartNew();
 
@@ -55,6 +55,64 @@ namespace LiteDB
                 {
                     Task.Delay(100).Wait();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Try lock file during timeout. Returns false if not possible
+        /// </summary>
+        public static bool TryLock(FileStream stream, TimeSpan timeout)
+        {
+            var sw = Stopwatch.StartNew();
+
+            while (sw.Elapsed < timeout)
+            {
+                try
+                {
+                    stream.Lock(0, stream.Length);
+
+                    return true;
+                }
+                catch (IOException ex)
+                {
+                    ex.WaitIfLocked(100);
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Try unlock file during timeout. Returns false if not possible
+        /// </summary>
+        public static bool TryUnlock(FileStream stream)
+        {
+            try
+            {
+                stream.Unlock(0, stream.Length);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Try lock delete file - returns true if file exists and are not opened by another process
+        /// </summary>
+        public static bool TryDelete(string filename)
+        {
+            try
+            {
+                File.Delete(filename);
+
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
