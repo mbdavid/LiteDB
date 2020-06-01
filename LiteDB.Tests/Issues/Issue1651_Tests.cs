@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Xunit;
 using System.Linq;
 
-namespace LiteDB.Issue1651
+namespace LiteDB.Tests.Issues
 {
     public class Order : BaseEntity
     {
@@ -19,7 +19,7 @@ namespace LiteDB.Issue1651
     {
         public Guid Id { get; set; }
     }
-    public class CustomerRelationshipsTests
+    public class Issue1651_Tests
     {
         [Fact]
         public void Find_ByRelationId_Success()

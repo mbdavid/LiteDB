@@ -129,7 +129,7 @@ namespace LiteDB.Engine
         /// </summary>
         public CollectionIndex[] GetCollectionIndexesSlots()
         {
-            var indexes = new CollectionIndex[_indexes.Count];
+            var indexes = new CollectionIndex[_indexes.Max(x => x.Value.Slot) + 1];
 
             foreach (var index in _indexes.Values)
             {

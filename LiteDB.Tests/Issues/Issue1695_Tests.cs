@@ -6,7 +6,7 @@ using FluentAssertions;
 using LiteDB.Engine;
 using Xunit;
 
-namespace LiteDB.Issue1695
+namespace LiteDB.Tests.Issues
 {
     public class Issue1695_Tests
     {

@@ -5,7 +5,7 @@ using FluentAssertions;
 using LiteDB.Engine;
 using Xunit;
 
-namespace LiteDB.Issue1585
+namespace LiteDB.Tests.Issues
 {
     public class PlayerDto
     {
