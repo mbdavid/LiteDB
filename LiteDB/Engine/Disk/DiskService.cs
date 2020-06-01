@@ -106,6 +106,7 @@ namespace LiteDB.Engine
 
             if (initialSize > 0)
             {
+                if (stream is AesStream) throw LiteException.InitialSizeCryptoNotSupported();
                 stream.SetLength(initialSize);
             }
 
