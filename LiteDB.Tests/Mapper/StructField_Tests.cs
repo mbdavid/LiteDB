@@ -22,7 +22,7 @@ namespace LiteDB.Tests.Mapper
 
             m.IncludeFields = true;
 
-            using (var db = new LiteDatabase(new MemoryStream(), m))
+            using (var db = new LiteDatabase(new MemoryStream(), m, new MemoryStream()))
             {
                 var col = db.GetCollection<Point2D>("mytable");
 

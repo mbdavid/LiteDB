@@ -17,12 +17,12 @@ namespace LiteDB.Engine
     public class EngineSettings
     {
         /// <summary>
-        /// Get/Set custom stream to be used as datafile (can be MemoryStrem or TempStream). Do not use FileStream - to use physical file, use "filename" attribute (and keep DataStrem/WalStream null)
+        /// Get/Set custom stream to be used as datafile (can be MemoryStream or TempStream). Do not use FileStream - to use physical file, use "filename" attribute (and keep DataStream/WalStream null)
         /// </summary>
         public Stream DataStream { get; set; } = null;
 
         /// <summary>
-        /// Get/Set custom stream to be used as log file. If is null, use a new TempStream (for TempStrem datafile) or MemoryStream (for MemoryStream datafile)
+        /// Get/Set custom stream to be used as log file. If is null, use a new TempStream (for TempStream datafile) or MemoryStream (for MemoryStream datafile)
         /// </summary>
         public Stream LogStream { get; set; } = null;
 
