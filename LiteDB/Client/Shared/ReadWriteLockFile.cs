@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,7 +50,7 @@ namespace LiteDB
             ENSURE(_slot == byte.MaxValue, "current process already locked");
 
             // get full lock file
-            FileHelper.TryLock(_stream, _timeout);
+            FileHelper.TryLock(_stream, _timeout, true);
 
             // read all file into local array
             this.ReadBuffer();
@@ -66,81 +67,102 @@ namespace LiteDB
                 // write buffer
                 this.WriteBuffer();
 
-                // and then unlock file
-                FileHelper.TryUnlock(_stream);
+                try
+                {
+                    // run action
+                    action();
+                }
+                finally
+                {
+                    // and then unlock file
+                    FileHelper.TryUnlock(_stream);
+                }
+
+                return;
             }
             else
             {
-                // create item on list (waiting)
+                // create item on list (queue)
                 this.SetRunning(_slot, mode, false);
 
                 // write buffer into disk
                 this.WriteBuffer();
 
-                // unlock file and get mani looping to wait for my turn
+                // unlock file and get main looping to wait for my turn
                 FileHelper.TryUnlock(_stream);
+            }
 
-                var sw = Stopwatch.StartNew();
+            var sw = Stopwatch.StartNew();
 
-                while(sw.Elapsed < _timeout)
+            // main loop (waiting for queue)
+            while(sw.Elapsed < _timeout)
+            {
+                Task.Delay(250).Wait();
+
+                var running = false;
+
+                // need lock file for this process (even if for read only)
+                FileHelper.TryLock(_stream, _timeout, true);
+
+                // update local array
+                this.ReadBuffer();
+
+                // checks if my slot are emtpy (control was taken from first timeout instance)
+                if (_buffer[_slot + P_OFFSET] == 0)
                 {
-                    Task.Delay(250).Wait();
+                    // add me again in end of list (get new slot)
+                    _slot = this.GetFreeSlot();
 
-                    var running = false;
+                    this.SetRunning(_slot, mode, false);
 
-                    // need lock file for this process (even if for read only)
-                    FileHelper.TryLock(_stream, _timeout);
+                    this.WriteBuffer();
+                }
+                // check if is possible run now
+                else if (this.CanRun(_slot, mode))
+                {
+                    this.SetRunning(_slot, mode, true);
 
-                    // update local array
-                    this.ReadBuffer();
+                    this.WriteBuffer();
 
-                    // checks if my slot are emtpy (was rebuild)
-                    if (_buffer[_slot + P_OFFSET] == 0)
-                    {
-                        // if current slot was rebuild, add me again in end of list (get new slot)
-                        _slot = this.GetFreeSlot();
+                    running = true;
+                }
 
-                        this.SetRunning(_slot, mode, false);
-
-                        this.WriteBuffer();
-                    }
-                    // check if is possible run now
-                    else if (this.CanRun(_slot, mode))
-                    {
-                        this.SetRunning(_slot, mode, true);
-
-                        this.WriteBuffer();
-
-                        running = true;
-                    }
-
-                    // if current instance are running, 
-                    if (running)
+                // if current instance are running, 
+                if (running)
+                {
+                    try
                     {
                         // run command
                         action();
-
+                    }
+                    finally
+                    {
                         // close lock and exit
                         FileHelper.TryUnlock(_stream);
-                        return;
                     }
 
-                    FileHelper.TryUnlock(_stream);
+                    return;
                 }
 
-                // in timeout
-                if (this.TryRebuild(mode, action) == false)
+                FileHelper.TryUnlock(_stream);
+            }
+
+            // getting timeout here
+
+            // try take control for this instance
+            FileHelper.TryLock(_stream, _timeout, true);
+
+            try
+            {
+                if (this.TryTakeControl(mode, action) == false)
                 {
                     throw LiteException.LockTimeout("shared", _timeout);
                 }
-                else
-                {
-                    return;
-                }
             }
-
-            // run action after lock complete
-            action();
+            finally
+            {
+                FileHelper.TryUnlock(_stream);
+            }
         }
 
         /// <summary>
@@ -150,36 +172,42 @@ namespace LiteDB
         {
             ENSURE(_slot != byte.MaxValue, "must run AcquireLock before release lock");
 
-            FileHelper.TryLock(_stream, _timeout);
+            FileHelper.TryLock(_stream, _timeout, true);
 
-            this.ReadBuffer();
-
-            // clear current slot position
-            _buffer[_slot + P_OFFSET] = 0;
-
-            // get new start index
-            var start = this.GetNewStartIndex();
-
-            if (start != byte.MaxValue)
+            try
             {
-                _buffer[P_START] = start;
+                this.ReadBuffer();
+
+                // clear current slot position
+                _buffer[_slot + P_OFFSET] = 0;
+
+                // get new start index
+                var start = this.GetNewStartIndex();
+
+                if (start != byte.MaxValue)
+                {
+                    _buffer[P_START] = start;
+                }
+
+                // write buffer into disk
+                this.WriteBuffer();
             }
-
-            // write buffer into disk
-            this.WriteBuffer();
-
-            // unlock file
-            FileHelper.TryUnlock(_stream);
+            finally
+            {
+                // unlock file
+                FileHelper.TryUnlock(_stream);
+            }
 
             _slot = byte.MaxValue;
         }
 
+        /// <summary>
+        /// Initialize lock file with full 0 and no start/end positions
+        /// </summary>
         private void Initialize()
         {
             _buffer[P_START] = byte.MaxValue;
             _buffer[P_END] = byte.MaxValue;
-
-            // must lock?
 
             _stream.Position = 0;
             _stream.Write(_buffer, 0, FILE_SIZE);
@@ -312,18 +340,14 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// When throw timeout, try rebuild lockfile to check if still running
+        /// When throw timeout, try run action to take for this instance all control (and clean list)
         /// </summary>
-        private bool TryRebuild(LockMode mode, Action action)
+        private bool TryTakeControl(LockMode mode, Action action)
         {
-            FileHelper.TryLock(_stream, _timeout);
-
             this.ReadBuffer();
 
             if (_buffer[_slot + P_OFFSET] == 0)
             {
-                FileHelper.TryUnlock(_stream);
-
                 return false;
             }
             else
@@ -347,8 +371,6 @@ namespace LiteDB
 
                     this.WriteBuffer();
 
-                    FileHelper.TryUnlock(_stream);
-
                     return true;
                 }
                 catch
@@ -359,8 +381,6 @@ namespace LiteDB
                     _slot = byte.MaxValue;
 
                     this.WriteBuffer();
-
-                    FileHelper.TryUnlock(_stream);
 
                     return false;
                 }

@@ -61,7 +61,7 @@ namespace LiteDB
         /// <summary>
         /// Try lock file during timeout. Returns false if not possible
         /// </summary>
-        public static bool TryLock(FileStream stream, TimeSpan timeout)
+        public static bool TryLock(FileStream stream, TimeSpan timeout, bool throwError)
         {
             var sw = Stopwatch.StartNew();
 
@@ -79,7 +79,14 @@ namespace LiteDB
                 }
             }
 
-            return false;
+            if (throwError)
+            {
+                throw LiteException.LockTimeout("file lock", timeout);
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
