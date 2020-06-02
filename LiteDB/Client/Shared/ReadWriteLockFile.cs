@@ -44,7 +44,7 @@ namespace LiteDB
             }
         }
 
-        public void AcquireLock(LockMode mode)
+        public void AcquireLock(LockMode mode, Action action)
         {
             ENSURE(_slot == byte.MaxValue, "current process already locked");
 
@@ -94,8 +94,18 @@ namespace LiteDB
                     // update local array
                     this.ReadBuffer();
 
+                    // checks if my slot are emtpy (was rebuild)
+                    if (_buffer[_slot + P_OFFSET] == 0)
+                    {
+                        // if current slot was rebuild, add me again in end of list (get new slot)
+                        _slot = this.GetFreeSlot();
+
+                        this.SetRunning(_slot, mode, false);
+
+                        this.WriteBuffer();
+                    }
                     // check if is possible run now
-                    if (this.CanRun(_slot, mode))
+                    else if (this.CanRun(_slot, mode))
                     {
                         this.SetRunning(_slot, mode, true);
 
@@ -104,18 +114,33 @@ namespace LiteDB
                         running = true;
                     }
 
-                    FileHelper.TryUnlock(_stream);
+                    // if current instance are running, 
+                    if (running)
+                    {
+                        // run command
+                        action();
 
-                    if (running) return;
+                        // close lock and exit
+                        FileHelper.TryUnlock(_stream);
+                        return;
+                    }
+
+                    FileHelper.TryUnlock(_stream);
                 }
 
-                // nesse ponto tenho que implementar o "rebuild" do arquivo, pois pode ser que o processo em execução
-                // ou o processo que está aguardando execução (antes desse) tenha caido e o resto os processo não saibam
-                // ou seja, preciso tentar "assumir" o controle com esse processo.... 
-                // porem, pode ser um timeout "normal", ou seja, realmente tem uma thread que esta a 1 minuto com o processo
-                // e não deve ocorrer "rebuild".
-                throw new LiteException(0, "timeout");
+                // in timeout
+                if (this.TryRebuild(mode, action) == false)
+                {
+                    throw LiteException.LockTimeout("shared", _timeout);
+                }
+                else
+                {
+                    return;
+                }
             }
+
+            // run action after lock complete
+            action();
         }
 
         /// <summary>
@@ -284,6 +309,62 @@ namespace LiteDB
             _stream.Position = 0;
             _stream.Write(_buffer, 0, FILE_SIZE);
             _stream.FlushToDisk();
+        }
+
+        /// <summary>
+        /// When throw timeout, try rebuild lockfile to check if still running
+        /// </summary>
+        private bool TryRebuild(LockMode mode, Action action)
+        {
+            FileHelper.TryLock(_stream, _timeout);
+
+            this.ReadBuffer();
+
+            if (_buffer[_slot + P_OFFSET] == 0)
+            {
+                FileHelper.TryUnlock(_stream);
+
+                return false;
+            }
+            else
+            {
+                try
+                {
+                    // try execute action
+                    action();
+
+                    // add running instance in list (at last position)
+                    _slot = this.GetFreeSlot();
+
+                    // clear all buffer
+                    _buffer.Fill(0, 0, _buffer.Length);
+
+                    // and crop list 
+                    _buffer[P_START] = _buffer[P_END] = _slot;
+
+                    // this this instance as running
+                    this.SetRunning(_slot, mode, true);
+
+                    this.WriteBuffer();
+
+                    FileHelper.TryUnlock(_stream);
+
+                    return true;
+                }
+                catch
+                {
+                    // clear buffer position
+                    _buffer[_slot + P_OFFSET] = 0;
+
+                    _slot = byte.MaxValue;
+
+                    this.WriteBuffer();
+
+                    FileHelper.TryUnlock(_stream);
+
+                    return false;
+                }
+            }
         }
 
         public string Debug

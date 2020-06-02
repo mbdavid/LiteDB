@@ -14,9 +14,9 @@ namespace LiteDB.Internals
     public class LockFile_Tests
     {
         [Fact]
-        public void MultiRead_LockFile()
+        public void LockFile_MultiRead()
         {
-            using(var l = new LockTest())
+            using(var l = new LockTest(TimeSpan.FromSeconds(60)))
             {
                 l.Lock(LockMode.Read, 1000);
                 l.Lock(LockMode.Read, 700);
@@ -25,51 +25,95 @@ namespace LiteDB.Internals
                 l.Lock(LockMode.Read, 1500);
                 l.Lock(LockMode.Write, 1000);
 
-                l.Wait();
-
+                l.Wait(); // all queue executed - delete lock-file
+                
                 l.Lock(LockMode.Read, 1000);
-                //l.Lock(LockMode.Read, 100);
-                //l.Lock(LockMode.Read, 2000);
-                //l.Lock(LockMode.Write, 2000);
-                //l.Lock(LockMode.Write, 500);
-
-
+                l.Lock(LockMode.Read, 100);
+                l.Lock(LockMode.Read, 2000);
+                l.Lock(LockMode.Write, 2000);
+                l.Lock(LockMode.Write, 500);
             }
+        }
 
+        [Fact]
+        public void LockFile_RebuildTimeout()
+        {
+            using (var l = new LockTest(TimeSpan.FromSeconds(5)))
+            {
+                l.Lock(LockMode.Read, 1000);
+                l.Lock(LockMode.Read, 500, true);
+                l.Lock(LockMode.Write, 1000);
 
+                Task.Delay(4000).Wait();
+
+                l.Lock(LockMode.Write, 2500);
+            }
         }
 
         class LockTest : IDisposable
         {
-            private TimeSpan _timeout = TimeSpan.FromSeconds(60);
-            private List<Task> _tasks = new List<Task>();
-            private TempFile _file = new TempFile();
+            private readonly TimeSpan _timeout;
+            private readonly List<Task> _tasks = new List<Task>();
+            private readonly TempFile _lock = new TempFile();
+            private readonly TempFile _db = new TempFile();
             private int _id = 0;
 
-            public void Lock(LockMode mode, int delay)
+            public LockTest(TimeSpan timeout)
+            {
+                _timeout = timeout;
+
+                // create emtpy engine
+                new LiteEngine(_db.Filename).Dispose();
+            }
+
+            public void Lock(LockMode mode, int delay, bool forceExit = false)
             {
                 var id = ++_id;
 
                 var task = Task.Run(() =>
                 {
-                    using (var l = new ReadWriteLockFile(_file.Filename, _timeout))
+                    LiteEngine engine = null;
+
+                    var locker = new ReadWriteLockFile(_lock.Filename, _timeout);
+
+                    Debug.Print($"--> Task {id} entering {mode}");
+
+                    locker.AcquireLock(mode, () =>
                     {
-                        Debug.Print($"--> Task {id} entering {mode}");
+                        // start engine
+                        engine = new LiteEngine(new EngineSettings
+                        {
+                            Filename = _db.Filename,
+                            ReadOnly = mode == LockMode.Read
+                        });
+                    });
 
-                        l.AcquireLock(mode);
+                    Debug.Print($">>> Task {id} entered {mode} (wait {delay} ms)");
 
-                        Debug.Print($">>> Task {id} entered {mode} (wait {delay} ms)");
+                    Debug.Print($"--- Task {id} = {locker.Debug}");
 
-                        Debug.Print($"--- Task {id} = {l.Debug}");
+                    Task.Delay(delay).Wait();
 
-                        Task.Delay(delay).Wait();
+                    // dispose engine before release lock
+                    engine.Dispose();
 
-                        l.ReleaseLock();
-
-                        Debug.Print($"==> Task {id} release {mode}");
-
-                        Debug.Print($"--- Task {id} = {l.Debug}");
+                    // for an exit when running (for testing)
+                    // I dispose engine before to simulate closing another process
+                    if (forceExit)
+                    {
+                        // dispose lock file too
+                        locker.Dispose();
+                        Debug.Print($"==> Task {id} aborting...");
+                        return;
                     }
+
+                    locker.ReleaseLock();
+
+                    Debug.Print($"==> Task {id} release {mode}");
+
+                    Debug.Print($"--- Task {id} = {locker.Debug}");
+
+                    locker.Dispose();
                 });
 
                 Task.Delay(100).Wait();
@@ -87,7 +131,8 @@ namespace LiteDB.Internals
             {
                 Task.WaitAll(_tasks.ToArray());
 
-                _file.Dispose();
+                _lock.Dispose();
+                _db.Dispose();
             }
         }
     }
