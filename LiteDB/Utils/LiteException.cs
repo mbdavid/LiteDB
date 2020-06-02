@@ -48,6 +48,7 @@ namespace LiteDB
         public const int INVALID_TYPED_NAME = 207;
         public const int PROPERTY_READ_WRITE = 209;
         public const int INITIALSIZE_CRYPTO_NOT_SUPPORTED = 210;
+        public const int INVALID_INITIALSIZE = 211;
 
         #endregion
 
@@ -272,7 +273,12 @@ namespace LiteDB
 
         internal static LiteException InitialSizeCryptoNotSupported()
         {
-            return new LiteException(INITIALSIZE_CRYPTO_NOT_SUPPORTED, "InitialSize option is not supported for encrypted datafiles");
+            return new LiteException(INITIALSIZE_CRYPTO_NOT_SUPPORTED, "Initial Size option is not supported for encrypted datafiles.");
+        }
+
+        internal static LiteException InvalidInitialSize()
+        {
+            return new LiteException(INVALID_INITIALSIZE, "Initial Size must be a multiple of page size ({0} bytes).", PAGE_SIZE);
         }
 
         internal static LiteException InvalidPageType(PageType pageType, BasePage page)

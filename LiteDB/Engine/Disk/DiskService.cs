@@ -107,6 +107,7 @@ namespace LiteDB.Engine
             if (initialSize > 0)
             {
                 if (stream is AesStream) throw LiteException.InitialSizeCryptoNotSupported();
+                if (initialSize % PAGE_SIZE != 0) throw LiteException.InvalidInitialSize();
                 stream.SetLength(initialSize);
             }
 
@@ -217,7 +218,7 @@ namespace LiteDB.Engine
 
             // close all streams
             _dataPool.Dispose();
-            
+
             // delete data file
             _dataFactory.Delete();
 
@@ -230,7 +231,7 @@ namespace LiteDB.Engine
             _dataPool = new StreamPool(_dataFactory, false);
 
             // get initial data file length
-            _dataLength = - PAGE_SIZE;
+            _dataLength = -PAGE_SIZE;
         }
 
         #region Sync Read/Write operations
