@@ -48,7 +48,7 @@ namespace LiteDB.Tests.Database
         {
             var mapper = new BsonMapper();
 
-            using (var db = new LiteDatabase(new MemoryStream(), mapper))
+            using (var db = new LiteDatabase(new MemoryStream(), mapper, new MemoryStream()))
             {
                 var cs_int = db.GetCollection<EntityInt>("int");
                 var cs_long = db.GetCollection<EntityLong>("long");
