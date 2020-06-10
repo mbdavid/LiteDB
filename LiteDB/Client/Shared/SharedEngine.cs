@@ -1,6 +1,7 @@
 ﻿using LiteDB.Engine;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -11,7 +12,7 @@ namespace LiteDB
     public class SharedEngine : ILiteEngine
     {
         private readonly EngineSettings _settings;
-        private readonly Mutex _mutex;
+        private readonly ReadWriteLockFile _locker;
         private LiteEngine _engine;
         private int _stack = 0;
 
@@ -21,32 +22,68 @@ namespace LiteDB
 
             var name = settings.Filename.ToLower().Sha1();
 
-            _mutex = new Mutex(false, name + ".Mutex");
+            var lockfile = FileHelper.GetSufixFile(settings.Filename, "-lock", false);
+
+            _locker = new ReadWriteLockFile(lockfile, TimeSpan.FromSeconds(60));
+
+            // create empty database if not exists
+            if (File.Exists(settings.Filename) == false)
+            {
+                try
+                {
+                    _locker.AcquireLock(LockMode.Write, () =>
+                    {
+                        using (var e = new LiteEngine(settings)) { }
+                    });
+                }
+                finally
+                {
+                    _locker.ReleaseLock();
+                }
+            }
         }
 
         /// <summary>
         /// Open database in safe mode
         /// </summary>
-        private void OpenDatabase()
+        private void OpenDatabase(bool @readonly)
         {
-            lock (_mutex)
+            lock (_locker)
             {
                 _stack++;
 
                 if (_stack == 1)
                 {
-                    _mutex.WaitOne();
+                    open();
+                }
+                // change from read-only to read-write
+                else if (_settings.ReadOnly == true && @readonly == false && _engine != null)
+                {
+                    _engine.Dispose();
+                    open();
+                }
+            }
 
-                    try
+            void open()
+            {
+                try
+                {
+                    _locker.AcquireLock(@readonly ? LockMode.Read : LockMode.Write, () =>
                     {
+                        _settings.ReadOnly = @readonly;
+
                         _engine = new LiteEngine(_settings);
-                    }
-                    catch
+                    });
+                }
+                catch
+                {
+                    if (_locker.IsLocked)
                     {
-                        _mutex.ReleaseMutex();
-                        _stack = 0;
-                        throw;
+                        _locker.ReleaseLock();
                     }
+
+                    _stack = 0;
+                    throw;
                 }
             }
         }
@@ -56,7 +93,7 @@ namespace LiteDB
         /// </summary>
         private void CloseDatabase()
         {
-            lock(_mutex)
+            lock(_locker)
             {
                 _stack--;
 
@@ -65,7 +102,7 @@ namespace LiteDB
                     _engine.Dispose();
                     _engine = null;
 
-                    _mutex.ReleaseMutex();
+                    _locker.ReleaseLock();
                 }
             }
         }
@@ -74,7 +111,7 @@ namespace LiteDB
 
         public bool BeginTrans()
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -128,7 +165,7 @@ namespace LiteDB
 
         public IBsonDataReader Query(string collection, Query query)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(true);
 
             var reader = _engine.Query(collection, query);
 
@@ -137,7 +174,7 @@ namespace LiteDB
 
         public BsonValue Pragma(string name)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(true);
 
             try
             {
@@ -151,7 +188,7 @@ namespace LiteDB
 
         public bool Pragma(string name, BsonValue value)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -169,7 +206,7 @@ namespace LiteDB
 
         public int Checkpoint()
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -183,7 +220,7 @@ namespace LiteDB
 
         public long Rebuild(RebuildOptions options)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -197,7 +234,7 @@ namespace LiteDB
 
         public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -211,7 +248,7 @@ namespace LiteDB
 
         public int Update(string collection, IEnumerable<BsonDocument> docs)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -225,7 +262,7 @@ namespace LiteDB
 
         public int UpdateMany(string collection, BsonExpression extend, BsonExpression predicate)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -239,7 +276,7 @@ namespace LiteDB
 
         public int Upsert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -253,7 +290,7 @@ namespace LiteDB
 
         public int Delete(string collection, IEnumerable<BsonValue> ids)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -267,7 +304,7 @@ namespace LiteDB
 
         public int DeleteMany(string collection, BsonExpression predicate)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -281,7 +318,7 @@ namespace LiteDB
 
         public bool DropCollection(string name)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -295,7 +332,7 @@ namespace LiteDB
 
         public bool RenameCollection(string name, string newName)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -309,7 +346,7 @@ namespace LiteDB
 
         public bool DropIndex(string collection, string name)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -323,7 +360,7 @@ namespace LiteDB
 
         public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
         {
-            this.OpenDatabase();
+            this.OpenDatabase(false);
 
             try
             {
@@ -355,9 +392,9 @@ namespace LiteDB
                 if (_engine != null)
                 {
                     _engine.Dispose();
-
-                    _mutex.ReleaseMutex();
                 }
+
+                _locker.Dispose();
             }
         }
     }

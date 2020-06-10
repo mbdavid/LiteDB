@@ -17,8 +17,8 @@ namespace LiteDB
 {
     internal class ReadWriteLockFile : IDisposable
     {
-        private const int P_START = 0;
-        private const int P_END = 1;
+        private const int P_POSITION = 0;
+        private const int P_LENGTH = 1;
         private const int P_OFFSET = 2;
         private const int P_BIT_ITEM = 0;
         private const int P_BIT_RUNNING = 1;
@@ -44,6 +44,11 @@ namespace LiteDB
                 this.Initialize();
             }
         }
+
+        /// <summary>
+        /// Get if current instance contains lock
+        /// </summary>
+        public bool IsLocked => _slot != byte.MaxValue;
 
         public void AcquireLock(LockMode mode, Action action)
         {
@@ -82,7 +87,7 @@ namespace LiteDB
             }
             else
             {
-                // create item on list (queue)
+                // create item on queue
                 this.SetRunning(_slot, mode, false);
 
                 // write buffer into disk
@@ -110,7 +115,7 @@ namespace LiteDB
                 // checks if my slot are emtpy (control was taken from first timeout instance)
                 if (_buffer[_slot + P_OFFSET] == 0)
                 {
-                    // add me again in end of list (get new slot)
+                    // add me again in end of queue (get new slot)
                     _slot = this.GetFreeSlot();
 
                     this.SetRunning(_slot, mode, false);
@@ -181,13 +186,8 @@ namespace LiteDB
                 // clear current slot position
                 _buffer[_slot + P_OFFSET] = 0;
 
-                // get new start index
-                var start = this.GetNewStartIndex();
-
-                if (start != byte.MaxValue)
-                {
-                    _buffer[P_START] = start;
-                }
+                // update start (and length) of queue
+                this.UpdateStartPosition();
 
                 // write buffer into disk
                 this.WriteBuffer();
@@ -206,41 +206,41 @@ namespace LiteDB
         /// </summary>
         private void Initialize()
         {
-            _buffer[P_START] = byte.MaxValue;
-            _buffer[P_END] = byte.MaxValue;
-
+            // write empty buffer
             _stream.Position = 0;
             _stream.Write(_buffer, 0, FILE_SIZE);
         }
 
         /// <summary>
-        /// Check on list current position to get new start index (checks for empty)
+        /// Update start/length on queue to remove unused slots
         /// </summary>
-        private byte GetNewStartIndex()
+        private void UpdateStartPosition()
         {
-            var last = byte.MaxValue;
-            var current = _buffer[P_START];
+            var length = _buffer[P_LENGTH];
+            var current = _buffer[P_POSITION];
 
+            // remove all first items that are empty (==0)
             while(_buffer[current + P_OFFSET] == 0)
             {
                 current = (byte)((current + 1) % 255);
 
-                last = current;
+                length--;
 
-                if (current == _buffer[P_END]) break;
+                if (length == 0) break;
             }
 
-            return last;
+            _buffer[P_POSITION] = current;
+            _buffer[P_LENGTH] = length;
         }
 
         /// <summary>
-        /// Return prev index based on current position. Returns byte.MaxValue if there is no more index
+        /// Return prev index based on passed position. Returns byte.MaxValue if are first of list
         /// </summary>
         private byte GetPrevIndex(byte current)
         {
             var prev = current - 1;
 
-            if (prev < _buffer[P_START]) return byte.MaxValue;
+            if (prev < _buffer[P_POSITION]) return byte.MaxValue;
 
             return (byte)((byte)prev % 255);
         }
@@ -250,8 +250,8 @@ namespace LiteDB
         /// </summary>
         private bool CanRun(byte slot, LockMode mode)
         {
-            // if slot is first position in list
-            if (_buffer[P_START] == slot) return true;
+            // if slot is first position in queue
+            if (_buffer[P_POSITION] == slot) return true;
 
             if (mode == LockMode.Read)
             {
@@ -297,24 +297,17 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get next free slot space in list. Throw exception if get more than 255
+        /// Get next free slot space in queue. Throw exception if get more than 255
         /// </summary>
         private byte GetFreeSlot()
         {
-            // first use
-            if (_buffer[P_START] == byte.MaxValue)
-            {
-                _buffer[P_START] = _buffer[P_END] = 0;
+            var length = _buffer[P_LENGTH] + 1;
+            
+            if (length >= 255) throw new LiteException(0, "There is more than 255 concurrent connection in datafile at shared mode");
 
-                return 0;
-            }
+            var next = (byte)((_buffer[P_POSITION] + length - 1) % 255);
 
-            // get next position
-            var next = (byte)((_buffer[P_END] + 1) % 255);
-
-            if (next == _buffer[P_START]) throw new LiteException(0, "There is more than 255 concurrent connection in datafile at shared mode");
-
-            _buffer[P_END] = next;
+            _buffer[P_LENGTH] = (byte)length;
 
             return next;
         }
@@ -340,7 +333,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// When throw timeout, try run action to take for this instance all control (and clean list)
+        /// When throw timeout, try run action to take for this instance all control (and clean queue)
         /// </summary>
         private bool TryTakeControl(LockMode mode, Action action)
         {
@@ -357,14 +350,15 @@ namespace LiteDB
                     // try execute action
                     action();
 
-                    // add running instance in list (at last position)
+                    // add running instance in queue (at last position)
                     _slot = this.GetFreeSlot();
 
                     // clear all buffer
                     _buffer.Fill(0, 0, _buffer.Length);
 
-                    // and crop list 
-                    _buffer[P_START] = _buffer[P_END] = _slot;
+                    // and crop queue 
+                    _buffer[P_POSITION] = _slot;
+                    _buffer[P_LENGTH] = 1;
 
                     // this this instance as running
                     this.SetRunning(_slot, mode, true);
@@ -392,6 +386,8 @@ namespace LiteDB
             get
             {
                 var sb = new StringBuilder();
+                var inside = false;
+                var length = -1;
 
                 for(var i = 0; i < 255; i++)
                 {
@@ -405,11 +401,27 @@ namespace LiteDB
                         running ? (mode == LockMode.Read ? 'R' : 'W') :
                         (mode == LockMode.Read ? 'r' : 'w');
 
-                    if (_buffer[P_START] == i) sb.Append("[");
+                    if (_buffer[P_POSITION] == i)
+                    {
+                        sb.Append("[");
+                        inside = true;
+                        length++;
+                    }
+
+                    if (_buffer[P_LENGTH] == length)
+                    {
+                        sb.Append("]");
+                        inside = false;
+                        length = -1;
+                    }
+
+                    if (inside)
+                    {
+                        length++;
+                    }
 
                     sb.Append(c);
 
-                    if (_buffer[P_END] == i) sb.Append("]");
                 }
 
                 return sb.ToString();
