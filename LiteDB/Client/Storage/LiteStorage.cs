@@ -48,14 +48,11 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<LiteFileInfo<TFileId>> Find(BsonExpression predicate)
         {
-            var query = _files.Query();
+            var files = _files.Query()
+                .Where(predicate)
+                .ToEnumerable();
 
-            if (predicate != null)
-            {
-                query = query.Where(predicate);
-            }
-
-            foreach (var file in query.ToEnumerable())
+            foreach (var file in files)
             {
                 var fileId = _db.Mapper.Serialize(typeof(TFileId), file.Id);
 

@@ -12,28 +12,22 @@ namespace LiteDB.Engine
         /// </summary>
         public long Rebuild(RebuildOptions options)
         {
-            // enter database in exclusive mode
-            var mustExit = _locker.EnterExclusive();
+            _walIndex.Checkpoint(false);
 
-            // get a header backup/savepoint before change
-            PageBuffer savepoint = null;
+            if (_disk.GetLength(FileOrigin.Log) > 0) throw new LiteException(0, "Rebuild operation requires no log file - run Checkpoint before continue");
+
+            _locker.EnterReserved(true);
+
+            var originalLength = _disk.GetLength(FileOrigin.Data);
+
+            // create a savepoint in header page - restore if any error occurs
+            var savepoint = _header.Savepoint();
+
+            // must clear all cache pages because all of them will change
+            _disk.Cache.Clear();
 
             try
             {
-                // do a checkpoint before starts
-                _walIndex.Checkpoint();
-
-                var originalLength = _disk.GetLength(FileOrigin.Data);
-
-                // create a savepoint in header page - restore if any error occurs
-                savepoint = _header.Savepoint();
-
-                // must clear all cache pages because all of them will change
-                _disk.Cache.Clear();
-
-                // must check if there is no data log
-                if (_disk.GetLength(FileOrigin.Log) > 0) throw new LiteException(0, "Rebuild operation requires no log file - run Checkpoint before continue");
-
                 // initialize V8 file reader
                 var reader = new FileReaderV8(_header, _disk);
 
@@ -57,11 +51,11 @@ namespace LiteDB.Engine
                     _disk.ChangePassword(options.Password, _settings);
                 }
 
-                // do checkpoint
-                _walIndex.Checkpoint();
+                // exit reserved before checkpoint
+                _locker.ExitReserved(true);
 
-                // override header page
-                _disk.Write(new[] { _header.UpdateBuffer() }, FileOrigin.Data);
+                // do checkpoint
+                _walIndex.Checkpoint(false);
 
                 // set new fileLength
                 _disk.SetLength((_header.LastPageID + 1) * PAGE_SIZE, FileOrigin.Data);
@@ -73,19 +67,11 @@ namespace LiteDB.Engine
             }
             catch
             {
-                if (savepoint != null)
-                {
-                    _header.Restore(savepoint);
-                }
+                _header.Restore(savepoint);
+
+                _locker.ExitReserved(true);
 
                 throw;
-            }
-            finally
-            {
-                if (mustExit)
-                {
-                    _locker.ExitExclusive();
-                }
             }
         }
 
@@ -95,10 +81,12 @@ namespace LiteDB.Engine
         internal void RebuildContent(IFileReader reader)
         {
             // begin transaction and get TransactionID
-            var transaction = _monitor.GetTransaction(true, false, out _);
+            var transaction = _monitor.GetTransaction(true, out var isNew);
 
             try
             {
+                var transactionID = transaction.TransactionID;
+
                 foreach (var collection in reader.GetCollections())
                 {
                     // first create all user indexes (exclude _id index)
@@ -113,31 +101,19 @@ namespace LiteDB.Engine
                     // get all documents from current collection
                     var docs = reader.GetDocuments(collection);
 
-                    // get snapshot, indexer and data services
-                    var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
-                    var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
-                    var data = new DataService(snapshot);
-
-                    // insert one-by-one
-                    foreach (var doc in docs)
-                    {
-                        transaction.Safepoint();
-
-                        this.InsertDocument(snapshot, doc, BsonAutoId.ObjectId, indexer, data);
-                    }
+                    // and insert into 
+                    this.Insert(collection, docs, BsonAutoId.ObjectId);
                 }
 
-                transaction.Commit();
+                this.Commit();
             }
             catch (Exception)
             {
+                this.Rollback();
+
                 _walIndex.Clear();
 
                 throw;
-            }
-            finally
-            {
-                _monitor.ReleaseTransaction(transaction);
             }
         }
     }

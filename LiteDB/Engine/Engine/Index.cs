@@ -21,9 +21,8 @@ namespace LiteDB.Engine
             if (name.Length > INDEX_NAME_MAX_LENGTH) throw LiteException.InvalidIndexName(name, collection, "MaxLength = " + INDEX_NAME_MAX_LENGTH);
             if (!name.IsWord()) throw LiteException.InvalidIndexName(name, collection, "Use only [a-Z$_]");
             if (name.StartsWith("$")) throw LiteException.InvalidIndexName(name, collection, "Index name can't starts with `$`");
-            if (expression.IsScalar == false && unique) throw new LiteException(0, "Multikey index expression do not support unique option");
 
-            if (expression.Source == "$._id") return false; // always exists
+            if (name == "_id") return false; // always exists
 
             return this.AutoTransaction(transaction =>
             {
@@ -62,19 +61,40 @@ namespace LiteDB.Engine
                         IndexNode first = null;
 
                         // get values from expression in document
-                        var keys = expression.GetIndexKeys(doc, _header.Pragmas.Collation);
+                        var keys = expression.Execute(doc, _header.Pragmas.Collation);
 
                         // adding index node for each value
                         foreach (var key in keys)
                         {
-                            // insert new index node
-                            var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
+                            // when index key is an array, get items inside array.
+                            // valid only for first level (if this items are another array, this arrays will be indexed as array)
+                            if (key.IsArray)
+                            {
+                                var arr = key.AsArray;
 
-                            if (first == null) first = node;
+                                foreach(var itemKey in arr)
+                                {
+                                    // insert new index node
+                                    var node = indexer.AddNode(index, itemKey, pkNode.DataBlock, last);
 
-                            last = node;
+                                    if (first == null) first = node;
 
-                            count++;
+                                    last = node;
+
+                                    count++;
+                                }
+                            }
+                            else
+                            {
+                                // insert new index node
+                                var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
+
+                                if (first == null) first = node;
+
+                                last = node;
+
+                                count++;
+                            }
                         }
 
                         // fix single linked-list in pkNode

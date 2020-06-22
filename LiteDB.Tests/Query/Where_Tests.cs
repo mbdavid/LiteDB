@@ -1,17 +1,10 @@
-﻿using FluentAssertions;
-using System.Linq;
+﻿using System.Linq;
 using Xunit;
 
 namespace LiteDB.Tests.QueryTest
 {
     public class Where_Tests : Person_Tests
     {
-        class Entity
-        {
-            public string Name { get; set; }
-            public int Size { get; set; }
-        }
-
         [Fact]
         public void Query_Where_With_Parameter()
         {
@@ -73,22 +66,6 @@ namespace LiteDB.Tests.QueryTest
 
             AssertEx.ArrayEqual(r0, r1, true);
             AssertEx.ArrayEqual(r1, r2, true);
-        }
-
-        [Fact]
-        public void Query_With_Array_Ids()
-        {
-            var ids = new int[] { 1, 2, 3 };
-
-            var r0 = local
-                .Where(x => ids.Contains(x.Id))
-                .ToArray();
-
-            var r1 = collection.Query()
-                .Where(x => ids.Contains(x.Id))
-                .ToArray();
-
-            AssertEx.ArrayEqual(r0, r1, true);
         }
     }
 }

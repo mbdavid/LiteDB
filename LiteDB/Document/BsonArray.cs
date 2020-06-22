@@ -21,7 +21,7 @@ namespace LiteDB
             this.AddRange(array);
         }
 
-        public BsonArray(params BsonValue[] array)
+        public BsonArray(BsonValue[] array)
             : this()
         {
             if (array == null) throw new ArgumentNullException(nameof(array));
@@ -37,7 +37,7 @@ namespace LiteDB
             this.AddRange(items);
         }
 
-        public new IList<BsonValue> RawValue => (IList<BsonValue>)base.RawValue;
+        internal new IList<BsonValue> RawValue => (List<BsonValue>)base.RawValue;
 
         public override BsonValue this[int index]
         {

@@ -19,7 +19,7 @@ namespace LiteDB
         /// <summary>
         /// Get database instance
         /// </summary>
-        public ILiteDatabase Database => _db;
+        public ILiteDatabase Database { get { return _db; } }
 
         #endregion
 
@@ -28,7 +28,7 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database an existing Database instance
         /// </summary>
-        public LiteRepository(ILiteDatabase database)
+        public LiteRepository(LiteDatabase database)
         {
             _db = database;
         }
@@ -52,9 +52,9 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database using a Stream disk
         /// </summary>
-        public LiteRepository(Stream stream, BsonMapper mapper = null, Stream logStream = null)
+        public LiteRepository(Stream stream, BsonMapper mapper = null)
         {
-            _db = new LiteDatabase(stream, mapper, logStream);
+            _db = new LiteDatabase(stream, mapper);
         }
 
         #endregion

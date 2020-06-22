@@ -135,6 +135,12 @@ namespace LiteDB
                 return custom(value);
             }
 
+            // if type is anonymous use special handler
+            else if(type.IsAnonymousType() && value.IsDocument)
+            {
+                return this.DeserializeAnonymousType(type, value.AsDocument);
+            }
+
             // if value is array, deserialize as array
             else if (value.IsArray)
             {
@@ -156,12 +162,6 @@ namespace LiteDB
             // if value is document, deserialize as document
             else if (value.IsDocument)
             {
-                // if type is anonymous use special handler
-                if (type.IsAnonymousType())
-                {
-                    return this.DeserializeAnonymousType(type, value.AsDocument);
-                }
-
                 var doc = value.AsDocument;
 
                 // test if value is object and has _type
@@ -189,19 +189,12 @@ namespace LiteDB
 
                 var o = _typeInstantiator(type) ?? entity.CreateInstance(doc);
 
-                if (o is IDictionary dict)
+                if (o is IDictionary && typeInfo.IsGenericType)
                 {
-                    if (o.GetType().GetTypeInfo().IsGenericType)
-                    {
-                        var k = type.GetGenericArguments()[0];
-                        var t = type.GetGenericArguments()[1];
+                    var k = type.GetGenericArguments()[0];
+                    var t = type.GetGenericArguments()[1];
 
-                        this.DeserializeDictionary(k, t, dict, value.AsDocument);
-                    }
-                    else
-                    {
-                        this.DeserializeDictionary(typeof(object), typeof(object), dict, value.AsDocument);
-                    }
+                    this.DeserializeDictionary(k, t, (IDictionary)o, value.AsDocument);
                 }
                 else
                 {
@@ -259,7 +252,7 @@ namespace LiteDB
             var isKEnum = K.GetTypeInfo().IsEnum;
             foreach (var el in value.GetElements())
             {
-                var k = isKEnum ? Enum.Parse(K, el.Key) : K == typeof(Uri) ? new Uri(el.Key) : Convert.ChangeType(el.Key, K);
+                var k = isKEnum ? Enum.Parse(K, el.Key) : Convert.ChangeType(el.Key, K);
                 var v = this.Deserialize(T, el.Value);
 
                 dict.Add(k, v);

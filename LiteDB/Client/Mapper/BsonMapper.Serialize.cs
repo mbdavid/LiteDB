@@ -48,7 +48,7 @@ namespace LiteDB
 
         internal BsonValue Serialize(Type type, object obj, int depth)
         {
-            if (++depth > MaxDepth) throw LiteException.DocumentMaxDepth(MaxDepth, type);
+            if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH, type);
 
             if (obj == null) return BsonValue.Null;
 
@@ -120,7 +120,7 @@ namespace LiteDB
                 return custom(obj);
             }
             // for dictionary
-            else if (obj is IDictionary dict)
+            else if (obj is IDictionary)
             {
                 // when you are converting Dictionary<string, object>
                 if (type == typeof(object))
@@ -128,9 +128,9 @@ namespace LiteDB
                     type = obj.GetType();
                 }
 
-                var itemType = type.GetTypeInfo().IsGenericType ? type.GetGenericArguments()[1] : typeof(object);
+                var itemType = type.GetGenericArguments()[1];
 
-                return this.SerializeDictionary(itemType, dict, depth);
+                return this.SerializeDictionary(itemType, obj as IDictionary, depth);
             }
             // check if is a list or array
             else if (obj is IEnumerable)
