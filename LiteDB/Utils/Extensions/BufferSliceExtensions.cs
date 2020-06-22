@@ -104,7 +104,7 @@ namespace LiteDB
         /// </summary>
         public static BsonValue ReadIndexKey(this BufferSlice buffer, int offset)
         {
-            var type = (BsonType)buffer[offset++];
+            ExtendedLengthHelper.ReadLength(buffer[offset++], buffer[offset], out var type, out var len);
 
             switch (type)
             {
@@ -116,8 +116,8 @@ namespace LiteDB
                 case BsonType.Decimal: return buffer.ReadDecimal(offset);
 
                 case BsonType.String:
-                    var strLength = buffer[offset++];
-                    return buffer.ReadString(offset, strLength);
+                    offset++; // for byte length
+                    return buffer.ReadString(offset, len);
 
                 case BsonType.Document:
                     using (var r = new BufferReader(buffer))
@@ -133,8 +133,8 @@ namespace LiteDB
                     }
 
                 case BsonType.Binary:
-                    var arrLength = buffer[offset++];
-                    return buffer.ReadBytes(offset, arrLength);
+                    offset++; // for byte length
+                    return buffer.ReadBytes(offset, len);
                 case BsonType.ObjectId: return buffer.ReadObjectId(offset);
                 case BsonType.Guid: return buffer.ReadGuid(offset);
 
@@ -238,56 +238,68 @@ namespace LiteDB
         /// </summary>
         public static void WriteIndexKey(this BufferSlice buffer, BsonValue value, int offset)
         {
-            ENSURE(value.GetBytesCount(false) < 255, "index key must have less than 255 bytes");
+            ENSURE(IndexNode.GetKeyLength(value, true) <= MAX_INDEX_KEY_LENGTH, $"index key must have less than {MAX_INDEX_KEY_LENGTH} bytes");
 
-            buffer[offset++] = (byte)value.Type;
-
-            switch (value.Type)
+            if (value.IsString)
             {
-                case BsonType.Null:
-                case BsonType.MinValue:
-                case BsonType.MaxValue:
-                    break;
+                var str = value.AsString;
+                var strLength = (ushort)Encoding.UTF8.GetByteCount(str);
 
-                case BsonType.Int32: buffer.Write(value.AsInt32, offset); break;
-                case BsonType.Int64: buffer.Write(value.AsInt64, offset); break;
-                case BsonType.Double: buffer.Write(value.AsDouble, offset); break;
-                case BsonType.Decimal: buffer.Write(value.AsDecimal, offset); break;
+                ExtendedLengthHelper.WriteLength(BsonType.String, strLength, out var typeByte, out var lengthByte);
 
-                case BsonType.String:
-                    var str = value.AsString;
-                    var strLength = (byte)Encoding.UTF8.GetByteCount(str);
-                    buffer[offset++] = strLength;
-                    buffer.Write(str, offset);
-                    break;
+                buffer[offset++] = typeByte;
+                buffer[offset++] = lengthByte;
+                buffer.Write(str, offset);
+            }
+            else if(value.IsBinary)
+            {
+                var arr = value.AsBinary;
 
-                case BsonType.Document:
-                    using (var w = new BufferWriter(buffer))
-                    {
-                        w.Skip(offset); // skip offset from buffer
-                        w.WriteDocument(value.AsDocument, true);
-                    }
-                    break;  
-                case BsonType.Array:
-                    using (var w = new BufferWriter(buffer))
-                    {
-                        w.Skip(offset); // skip offset from buffer
-                        w.WriteArray(value.AsArray, true);
-                    }
-                    break;
+                ExtendedLengthHelper.WriteLength(BsonType.Binary, (ushort)arr.Length, out var typeByte, out var lengthByte);
 
-                case BsonType.Binary:
-                    var arr = value.AsBinary;
-                    buffer[offset++] = (byte)arr.Length;
-                    buffer.Write(arr, offset);
-                    break;
-                case BsonType.ObjectId: buffer.Write(value.AsObjectId, offset); break;
-                case BsonType.Guid: buffer.Write(value.AsGuid, offset); break;
+                buffer[offset++] = typeByte;
+                buffer[offset++] = lengthByte;
+                buffer.Write(arr, offset);
+            }
+            else
+            {
+                buffer[offset++] = (byte)value.Type;
 
-                case BsonType.Boolean: buffer[offset] = (value.AsBoolean) ? (byte)1 : (byte)0; break;
-                case BsonType.DateTime: buffer.Write(value.AsDateTime, offset); break;
+                switch (value.Type)
+                {
+                    case BsonType.Null:
+                    case BsonType.MinValue:
+                    case BsonType.MaxValue:
+                        break;
 
-                default: throw new NotImplementedException();
+                    case BsonType.Int32: buffer.Write(value.AsInt32, offset); break;
+                    case BsonType.Int64: buffer.Write(value.AsInt64, offset); break;
+                    case BsonType.Double: buffer.Write(value.AsDouble, offset); break;
+                    case BsonType.Decimal: buffer.Write(value.AsDecimal, offset); break;
+
+                    case BsonType.Document:
+                        using (var w = new BufferWriter(buffer))
+                        {
+                            w.Skip(offset); // skip offset from buffer
+                            w.WriteDocument(value.AsDocument, true);
+                        }
+                        break;
+                    case BsonType.Array:
+                        using (var w = new BufferWriter(buffer))
+                        {
+                            w.Skip(offset); // skip offset from buffer
+                            w.WriteArray(value.AsArray, true);
+                        }
+                        break;
+
+                    case BsonType.ObjectId: buffer.Write(value.AsObjectId, offset); break;
+                    case BsonType.Guid: buffer.Write(value.AsGuid, offset); break;
+
+                    case BsonType.Boolean: buffer[offset] = (value.AsBoolean) ? (byte)1 : (byte)0; break;
+                    case BsonType.DateTime: buffer.Write(value.AsDateTime, offset); break;
+
+                    default: throw new NotImplementedException();
+                }
             }
         }
 

@@ -63,7 +63,7 @@ namespace LiteDB.Engine
             {
                 buffer.WriteIndexKey(item.Key, offset);
 
-                var keyLength = GetKeyLength(item.Key);
+                var keyLength = IndexNode.GetKeyLength(item.Key, false);
 
                 if (keyLength > MAX_INDEX_KEY_LENGTH) throw LiteException.InvalidIndexKey($"Sort key must be less than {MAX_INDEX_KEY_LENGTH} bytes.");
 
@@ -134,13 +134,6 @@ namespace LiteDB.Engine
             }
 
             BufferPool.Return(bytes);
-        }
-
-        public static int GetKeyLength(BsonValue key)
-        {
-            return 1 + // DataType
-                key.GetBytesCount(false) + // BsonValue
-                (key.IsString || key.IsBinary ? 1 : 0); // Key Length
         }
 
         public void Dispose()

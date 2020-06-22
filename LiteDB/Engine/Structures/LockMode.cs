@@ -3,7 +3,7 @@
     /// <summary>
     /// Represents a snapshot lock mode
     /// </summary>
-    public enum LockMode
+    internal enum LockMode
     {
         /// <summary>
         /// Read only snap with read lock

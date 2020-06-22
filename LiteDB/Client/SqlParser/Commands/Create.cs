@@ -37,7 +37,7 @@ namespace LiteDB
             _tokenizer.ReadToken().Expect(TokenType.OpenParenthesis);
 
             // read index expression
-            var expr = BsonExpression.Create(_tokenizer, null, BsonExpressionParserMode.Full);
+            var expr = BsonExpression.Create(_tokenizer, BsonExpressionParserMode.Full, new BsonDocument());
 
             // read )
             _tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);

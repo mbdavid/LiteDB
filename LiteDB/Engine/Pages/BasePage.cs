@@ -7,7 +7,7 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
-    public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4 }
+    internal enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4 }
 
     internal class BasePage
     {
@@ -34,7 +34,7 @@ namespace LiteDB.Engine
         public const int P_USED_BYTES = 24; // 24-25 [ushort]
         public const int P_FRAGMENTED_BYTES = 26; // 26-27 [ushort]
         public const int P_NEXT_FREE_POSITION = 28; // 28-29 [ushort]
-        public const int P_HIGHEST_INDEX = 30; // 39-30 [byte]
+        public const int P_HIGHEST_INDEX = 30; // 30-30 [byte]
 
         #endregion
 
@@ -62,7 +62,7 @@ namespace LiteDB.Engine
         /// Get/Set where this page are in free list slot [1 byte]
         /// Used only in DataPage (0-4) and IndexPage (0-1) - when new or not used: 255
         /// DataPage: 0 (7344 - 8160 free space) - 1 (6120 - 7343) - 2 (4896 - 6119) - 3 (2448 - 4895) - 4 (0 - 2447)
-        /// IndexPage 0 (600 - 8160 free bytes) - 1 (0 - 599 bytes free)
+        /// IndexPage 0 (1400 - 8160 free bytes) - 1 (0 - 1399 bytes free)
         /// </summary>
         public byte PageListSlot { get; set; }
 

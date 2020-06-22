@@ -49,5 +49,12 @@ namespace LiteDB.Tests.Document
             doc["_id"].AsInt32.Should().Be(123);
             doc["_id"].AsInt64.Should().Be(o["_id"].AsInt64);
         }
+
+        [Fact]
+        public void JsonWriterTest()
+        {
+            var specialChars = "ÁÀÃÂÄÉÈÊËÉÍÌÎÏÓÒÕÔÖÚÙÛÜÇáàãâäéèêëéíìîïóòõôöúùûüç";
+            JsonSerializer.Serialize(specialChars).Should().Be('\"' + specialChars + '\"');
+        }
     }
 }
