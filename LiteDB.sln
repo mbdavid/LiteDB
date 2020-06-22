@@ -9,9 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Tests", "LiteDB.Test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Shell", "LiteDB.Shell\LiteDB.Shell.csproj", "{99887C89-CAE4-4A8D-AC4B-87E28B9B1F87}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Benchmarks", "LiteDB.Benchmarks\LiteDB.Benchmarks.csproj", "{DF9C82C1-446F-458A-AA50-78E58BA17273}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Stress", "LiteDB.Stress\LiteDB.Stress.csproj", "{FFBC5669-DA32-4907-8793-7B414279DA3B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Benchmarks", "LiteDB.Benchmarks\LiteDB.Benchmarks.csproj", "{DF9C82C1-446F-458A-AA50-78E58BA17273}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,10 +32,6 @@ Global
 		{DF9C82C1-446F-458A-AA50-78E58BA17273}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF9C82C1-446F-458A-AA50-78E58BA17273}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF9C82C1-446F-458A-AA50-78E58BA17273}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FFBC5669-DA32-4907-8793-7B414279DA3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FFBC5669-DA32-4907-8793-7B414279DA3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FFBC5669-DA32-4907-8793-7B414279DA3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FFBC5669-DA32-4907-8793-7B414279DA3B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -12,11 +12,6 @@ namespace LiteDB
         string Name { get; }
 
         /// <summary>
-        /// Get collection auto id type
-        /// </summary>
-        BsonAutoId AutoId { get; }
-
-        /// <summary>
         /// Getting entity mapper from current collection. Returns null if collection are BsonDocument type
         /// </summary>
         EntityMapper EntityMapper { get; }
@@ -189,11 +184,6 @@ namespace LiteDB
         /// Delete a single document on collection based on _id index. Returns true if document was deleted
         /// </summary>
         bool Delete(BsonValue id);
-
-        /// <summary>
-        /// Delete all documents inside collection. Returns how many documents was deleted. Run inside current transaction
-        /// </summary>
-        int DeleteAll();
 
         /// <summary>
         /// Delete all documents based on predicate expression. Returns how many documents was deleted

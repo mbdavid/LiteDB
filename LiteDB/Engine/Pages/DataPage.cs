@@ -18,7 +18,7 @@ namespace LiteDB.Engine
         {
             ENSURE(this.PageType == PageType.Data, "page type must be data page");
 
-            if (this.PageType != PageType.Data) throw LiteException.InvalidPageType(PageType.Data, this);
+            if (this.PageType != PageType.Data) throw new LiteException(0, $"Invalid DataPage buffer on {PageID}");
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get all block positions inside this page that are not extend blocks (initial data block)
         /// </summary>
-        public IEnumerable<PageAddress> GetBlocks()
+        public IEnumerable<PageAddress> GetBlocks(bool onlyDataBlock)
         {
             foreach(var index in base.GetUsedIndexs())
             {
@@ -79,7 +79,7 @@ namespace LiteDB.Engine
 
                 var extend = _buffer.ReadBool(position + DataBlock.P_EXTEND);
 
-                if (extend == false)
+                if (onlyDataBlock == false || extend == false)
                 {
                     yield return new PageAddress(this.PageID, index);
                 }

@@ -12,18 +12,16 @@ namespace LiteDB
     {
         public static bool IsAnonymousType(this Type type)
         {
-            bool isAnonymousType = 
-                type.FullName.Contains("AnonymousType") &&
-                type.GetTypeInfo().GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Any();
+            var hasCompilerGeneratedAttribute = type.GetTypeInfo().GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Any();
+            var nameContainsAnonymousType = type.FullName.Contains("AnonymousType");
+            var isAnonymousType = hasCompilerGeneratedAttribute && nameContainsAnonymousType;
 
             return isAnonymousType;
         }
 
         public static bool IsEnumerable(this Type type)
         {
-            return 
-                type != typeof(String) &&
-                typeof(IEnumerable).IsAssignableFrom(type);
+            return typeof(IEnumerable).IsAssignableFrom(type);
         }
     }
 }

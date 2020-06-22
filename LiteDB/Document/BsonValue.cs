@@ -43,7 +43,7 @@ namespace LiteDB
         /// <summary>
         /// Get internal .NET value object
         /// </summary>
-        public virtual object RawValue { get; }
+        internal virtual object RawValue { get; }
 
         #region Constructor
 
@@ -117,71 +117,6 @@ namespace LiteDB
         {
             this.Type = type;
             this.RawValue = rawValue;
-        }
-
-        public BsonValue(object value)
-        {
-            this.RawValue = value;
-
-            if (value == null) this.Type = BsonType.Null;
-            else if (value is Int32) this.Type = BsonType.Int32;
-            else if (value is Int64) this.Type = BsonType.Int64;
-            else if (value is Double) this.Type = BsonType.Double;
-            else if (value is Decimal) this.Type = BsonType.Decimal;
-            else if (value is String) this.Type = BsonType.String;
-            else if (value is IDictionary<string, BsonValue>) this.Type = BsonType.Document;
-            else if (value is IList<BsonValue>) this.Type = BsonType.Array;
-            else if (value is Byte[]) this.Type = BsonType.Binary;
-            else if (value is ObjectId) this.Type = BsonType.ObjectId;
-            else if (value is Guid) this.Type = BsonType.Guid;
-            else if (value is Boolean) this.Type = BsonType.Boolean;
-            else if (value is DateTime)
-            {
-                this.Type = BsonType.DateTime;
-                this.RawValue = ((DateTime)value).Truncate();
-            }
-            else if (value is BsonValue)
-            {
-                var v = (BsonValue)value;
-                this.Type = v.Type;
-                this.RawValue = v.RawValue;
-            }
-            else
-            {
-                // test for array or dictionary (document)
-                var enumerable = value as System.Collections.IEnumerable;
-                var dictionary = value as System.Collections.IDictionary;
-
-                // test first for dictionary (because IDictionary implements IEnumerable)
-                if (dictionary != null)
-                {
-                    var dict = new Dictionary<string, BsonValue>();
-
-                    foreach (var key in dictionary.Keys)
-                    {
-                        dict.Add(key.ToString(), new BsonValue(dictionary[key]));
-                    }
-
-                    this.Type = BsonType.Document;
-                    this.RawValue = dict;
-                }
-                else if (enumerable != null)
-                {
-                    var list = new List<BsonValue>();
-
-                    foreach (var x in enumerable)
-                    {
-                        list.Add(new BsonValue(x));
-                    }
-
-                    this.Type = BsonType.Array;
-                    this.RawValue = list;
-                }
-                else
-                {
-                    throw new InvalidCastException("Value is not a valid BSON data type - Use Mapper.ToDocument for more complex types converts");
-                }
-            }
         }
 
         #endregion
@@ -528,8 +463,7 @@ namespace LiteDB
                 // if not, order by sort type order
                 else
                 {
-                    var result = this.Type.CompareTo(other.Type);
-                    return result < 0 ? -1 : result > 0 ? +1 : 0;
+                    return this.Type.CompareTo(other.Type);
                 }
             }
 
@@ -623,7 +557,7 @@ namespace LiteDB
         {
             var hash = 17;
             hash = 37 * hash + this.Type.GetHashCode();
-            hash = 37 * hash + (this.RawValue?.GetHashCode() ?? 0);
+            hash = 37 * hash + this.RawValue.GetHashCode();
             return hash;
         }
 

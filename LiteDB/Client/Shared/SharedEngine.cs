@@ -1,14 +1,9 @@
 ﻿using LiteDB.Engine;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
-#if NETFRAMEWORK
-using System.Security.AccessControl;
-using System.Security.Principal;
-#endif
 
 namespace LiteDB
 {
@@ -23,26 +18,9 @@ namespace LiteDB
         {
             _settings = settings;
 
-            var name = Path.GetFullPath(settings.Filename).ToLower().Sha1();
+            var name = settings.Filename.ToLower().Sha1();
 
-            try
-            {
-#if NETFRAMEWORK
-                var allowEveryoneRule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null),
-                           MutexRights.FullControl, AccessControlType.Allow);
-
-                var securitySettings = new MutexSecurity();
-                securitySettings.AddAccessRule(allowEveryoneRule);
-
-                _mutex = new Mutex(false, "Global\\" + name + ".Mutex", out _, securitySettings);
-#else
-                _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
-#endif
-            }
-            catch (NotSupportedException ex)
-            {
-                throw new PlatformNotSupportedException("Shared mode is not supported in platforms that do not implement named mutex.", ex);
-            }
+            _mutex = new Mutex(false, name + ".Mutex");
         }
 
         /// <summary>
@@ -56,11 +34,7 @@ namespace LiteDB
 
                 if (_stack == 1)
                 {
-                    try
-                    {
-                        _mutex.WaitOne();
-                    }
-                    catch (AbandonedMutexException) { }
+                    _mutex.WaitOne();
 
                     try
                     {
@@ -81,7 +55,7 @@ namespace LiteDB
         /// </summary>
         private void CloseDatabase()
         {
-            lock (_mutex)
+            lock(_mutex)
             {
                 _stack--;
 
@@ -192,13 +166,13 @@ namespace LiteDB
 
         #region Write Operations
 
-        public int Checkpoint()
+        public void Checkpoint()
         {
             this.OpenDatabase();
 
             try
             {
-                return _engine.Checkpoint();
+                _engine.Checkpoint();
             }
             finally
             {
@@ -356,7 +330,7 @@ namespace LiteDB
             }
             finally
             {
-                this.CloseDatabase();
+                this.OpenDatabase();
             }
         }
 

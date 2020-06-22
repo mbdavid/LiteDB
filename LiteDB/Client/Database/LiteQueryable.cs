@@ -293,9 +293,10 @@ namespace LiteDB
         {
             _query.ExplainPlan = true;
 
-            var reader = _engine.Query(_collection, _query);
-
-            return reader.ToEnumerable().FirstOrDefault()?.AsDocument;
+            using (var reader = _engine.Query(_collection, _query))
+            {
+                return reader.Current.AsDocument;
+            }
         }
 
         #endregion
@@ -343,19 +344,9 @@ namespace LiteDB
         /// </summary>
         public int Count()
         {
-            var oldSelect = _query.Select;
+            this.Select($"{{ count: COUNT(*) }}");
 
-            try
-            {
-                this.Select($"{{ count: COUNT(*._id) }}");
-                var ret = this.ToDocuments().Single()["count"].AsInt32;
-
-                return ret;
-            }
-            finally
-            {
-                _query.Select = oldSelect;
-            }
+            return this.ToDocuments().Single()["count"].AsInt32;
         }
 
         /// <summary>
@@ -363,19 +354,9 @@ namespace LiteDB
         /// </summary>
         public long LongCount()
         {
-            var oldSelect = _query.Select;
+            this.Select($"{{ count: COUNT(*) }}");
 
-            try
-            {
-                this.Select($"{{ count: COUNT(*._id) }}");
-                var ret = this.ToDocuments().Single()["count"].AsInt64;
-
-                return ret;
-            }
-            finally
-            {
-                _query.Select = oldSelect;
-            }
+            return this.ToDocuments().Single()["count"].AsInt64;
         }
 
         /// <summary>
@@ -383,19 +364,9 @@ namespace LiteDB
         /// </summary>
         public bool Exists()
         {
-            var oldSelect = _query.Select;
+            this.Select($"{{ exists: ANY(*) }}");
 
-            try
-            {
-                this.Select($"{{ exists: ANY(*._id) }}");
-                var ret = this.ToDocuments().Single()["exists"].AsBoolean;
-
-                return ret;
-            }
-            finally
-            {
-                _query.Select = oldSelect;
-            }
+            return this.ToDocuments().Single()["exists"].AsBoolean;
         }
 
         #endregion

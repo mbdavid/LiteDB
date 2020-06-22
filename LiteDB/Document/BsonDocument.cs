@@ -38,7 +38,7 @@ namespace LiteDB
             }
         }
 
-        public new IDictionary<string, BsonValue> RawValue => base.RawValue as IDictionary<string, BsonValue>;
+        internal new Dictionary<string, BsonValue> RawValue => base.RawValue as Dictionary<string, BsonValue>;
 
         /// <summary>
         /// Get/Set position of this document inside database. It's filled when used in Find operation.

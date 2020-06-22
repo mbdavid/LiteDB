@@ -43,86 +43,78 @@ namespace LiteDB.Engine
 
             var isNew = _stream.Length == 0;
 
-            try
+            // new file? create new salt
+            if (isNew)
             {
-                // new file? create new salt
-                if (isNew)
-                {
-                    this.Salt = NewSalt();
+                this.Salt = NewSalt();
 
-                    // first byte =1 means this datafile is encrypted
-                    _stream.WriteByte(1);
-                    _stream.Write(this.Salt, 0, ENCRYPTION_SALT_SIZE);
-                }
-                else
-                {
-                    this.Salt = new byte[ENCRYPTION_SALT_SIZE];
-
-                    // checks if this datafile are encrypted
-                    var isEncrypted = _stream.ReadByte();
-
-                    if (isEncrypted != 1)
-                    {
-                        throw new LiteException(0, "This file is not encrypted");
-                    }
-
-                    _stream.Read(this.Salt, 0, ENCRYPTION_SALT_SIZE);
-                }
-
-                _aes = Aes.Create();
-                _aes.Padding = PaddingMode.None;
-                _aes.Mode = CipherMode.ECB;
-
-                var pdb = new Rfc2898DeriveBytes(password, this.Salt);
-
-                using (pdb as IDisposable)
-                {
-                    _aes.Key = pdb.GetBytes(32);
-                    _aes.IV = pdb.GetBytes(16);
-                }
-
-                _encryptor = _aes.CreateEncryptor();
-                _decryptor = _aes.CreateDecryptor();
-
-                _reader = _stream.CanRead ?
-                    new CryptoStream(_stream, _decryptor, CryptoStreamMode.Read) :
-                    null;
-
-                _writer = _stream.CanWrite ?
-                    new CryptoStream(_stream, _encryptor, CryptoStreamMode.Write) :
-                    null;
-
-                // set stream to password checking
-                _stream.Position = 32;
-
-                var checkBuffer = new byte[32];
-
-                // fill checkBuffer with encrypted 1 to check when open
-                if (isNew)
-                {
-                    checkBuffer.Fill(1, 0, checkBuffer.Length);
-
-                    _writer.Write(checkBuffer, 0, checkBuffer.Length);
-                }
-                else
-                {
-                    _reader.Read(checkBuffer, 0, checkBuffer.Length);
-
-                    if (!checkBuffer.All(x => x == 1))
-                    {
-                        throw new LiteException(0, "Invalid password");
-                    }
-                }
-
-                _stream.Position = PAGE_SIZE;
-
+                // first byte =1 means this datafile is encrypted
+                _stream.WriteByte(1);
+                _stream.Write(this.Salt, 0, ENCRYPTION_SALT_SIZE);
             }
-            catch
+            else
             {
-                _stream.Dispose();
+                this.Salt = new byte[ENCRYPTION_SALT_SIZE];
 
-                throw;
+                // checks if this datafile are encrypted
+                var isEncrypted = _stream.ReadByte();
+
+                if (isEncrypted != 1)
+                {
+                    stream.Dispose();
+
+                    throw new LiteException(0, "This file is not encrypted");
+                }
+
+                _stream.Read(this.Salt, 0, ENCRYPTION_SALT_SIZE);
             }
+
+            _aes = Aes.Create();
+            _aes.Padding = PaddingMode.None;
+            _aes.Mode = CipherMode.ECB;
+
+            var pdb = new Rfc2898DeriveBytes(password, this.Salt);
+
+            using (pdb as IDisposable)
+            {
+                _aes.Key = pdb.GetBytes(32);
+                _aes.IV = pdb.GetBytes(16);
+            }
+
+            _encryptor = _aes.CreateEncryptor();
+            _decryptor = _aes.CreateDecryptor();
+
+            _reader = _stream.CanRead ?
+                new CryptoStream(_stream, _decryptor, CryptoStreamMode.Read) :
+                null;
+
+            _writer = _stream.CanWrite ?
+                new CryptoStream(_stream, _encryptor, CryptoStreamMode.Write) :
+                null;
+
+            // set stream to password checking
+            _stream.Position = 32;
+
+            var checkBuffer = new byte[32];
+
+            // fill checkBuffer with encrypted 1 to check when open
+            if (isNew)
+            {
+                checkBuffer.Fill(1, 0, checkBuffer.Length);
+
+                _writer.Write(checkBuffer, 0, checkBuffer.Length);
+            }
+            else
+            { 
+                _reader.Read(checkBuffer, 0, checkBuffer.Length);
+
+                if (!checkBuffer.All(x => x == 1))
+                {
+                    throw new LiteException(0, "Invalid password");
+                }
+            }
+
+            _stream.Position = PAGE_SIZE;
         }
 
         /// <summary>

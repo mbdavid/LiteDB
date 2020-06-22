@@ -34,7 +34,7 @@ namespace LiteDB
         /// </summary>
         public static Query All(int order = Ascending)
         {
-            return new Query { OrderBy = "_id", Order = order };
+            return new Query { Order = order };
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} = {value ?? BsonValue.Null}");
+            return BsonExpression.Create($"{field} = {value}");
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} < {value ?? BsonValue.Null}");
+            return BsonExpression.Create($"{field} < {value}");
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} <= {value ?? BsonValue.Null}");
+            return BsonExpression.Create($"{field} <= {value}");
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} > {value ?? BsonValue.Null}");
+            return BsonExpression.Create($"{field} > {value}");
 
         }
 
@@ -93,7 +93,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} >= {value ?? BsonValue.Null}");
+            return BsonExpression.Create($"{field} >= {value}");
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} BETWEEN {start ?? BsonValue.Null} AND {end ?? BsonValue.Null}");
+            return BsonExpression.Create($"{field} BETWEEN {start} AND {end}");
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all documents that contains value (CONTAINS) - string Contains
+        /// Returns all documents that contains value (CONTAINS)
         /// </summary>
         public static BsonExpression Contains(string field, string value)
         {
@@ -135,7 +135,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return BsonExpression.Create($"{field} != {value ?? BsonValue.Null}");
+            return BsonExpression.Create($"{field} != {value}");
         }
 
         /// <summary>
@@ -166,11 +166,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get all operands to works with array or enumerable values
-        /// </summary>
-        public static QueryAny Any() => new QueryAny();
-
-        /// <summary>
         /// Returns document that exists in BOTH queries results. If both queries has indexes, left query has index preference (other side will be run in full scan)
         /// </summary>
         public static BsonExpression And(BsonExpression left, BsonExpression right)
@@ -178,7 +173,7 @@ namespace LiteDB
             if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
 
-            return $"({left.Source} AND {right.Source})";
+            return BsonExpressionParser.CreateLogicExpression(BsonExpressionType.And, left, right);
         }
 
         /// <summary>
@@ -206,7 +201,7 @@ namespace LiteDB
             if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
 
-            return $"({left.Source} OR {right.Source})";
+            return BsonExpressionParser.CreateLogicExpression(BsonExpressionType.Or, left, right);
         }
 
         /// <summary>

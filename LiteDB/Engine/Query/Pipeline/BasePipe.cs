@@ -114,14 +114,10 @@ namespace LiteDB.Engine
                         // load document based on dataBlock position
                         var refDoc = lookup.Load(node);
 
-                        //do not remove $id
+                        value.Remove("$id");
                         value.Remove("$ref");
 
-                        // copy values from refDocument into current documet (except _id - will keep $id)
-                        foreach (var element in refDoc.Where(x => x.Key != "_id"))
-                        {
-                            value[element.Key] = element.Value;
-                        }
+                        refDoc.CopyTo(value);
                     }
                     else
                     {

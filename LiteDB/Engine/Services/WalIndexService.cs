@@ -10,7 +10,7 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Do all WAL index services based on LOG file - has only single instance per engine
-    /// [Singleton - ThreadSafe]
+    /// [ThreadSafe]
     /// </summary>
     internal class WalIndexService
     {
@@ -233,64 +233,32 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Do checkpoint operation to copy log pages into data file. Return how many transactions was commited inside data file
-        /// Checkpoint requires exclusive lock database
+        /// If soft = true, just try enter in exclusive mode - if not possible, just exit
         /// </summary>
-        public int Checkpoint()
+        public void Checkpoint(bool soft)
         {
+            // get original log length
+            var logLength = _disk.GetLength(FileOrigin.Log);
+
             // no log file or no confirmed transaction, just exit
-            if (_disk.GetLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
+            if (logLength == 0 || _confirmTransactions.Count == 0) return;
 
-            var mustExit = _locker.EnterExclusive();
-
-            try
+            // for safe, lock all database (read/write) before run checkpoint operation
+            // future versions can be smarter and avoid lock (be more like SQLite checkpoint)
+            if (soft)
             {
-                return this.CheckpointInternal();
+                // shutdown mode only try enter in exclusive mode... if not possible, exit without checkpoint
+                if (_locker.TryEnterExclusive() == false) return;
             }
-            finally
+            else
             {
-                if (mustExit)
-                {
-                    _locker.ExitExclusive();
-                }
+                _locker.EnterReserved(true);
             }
-        }
 
-        /// <summary>
-        /// Run checkpoint only if there is no open transactions
-        /// </summary>
-        public int TryCheckpoint()
-        {
-            // no log file or no confirmed transaction, just exit
-            if (_disk.GetLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
-
-            if (_locker.TryEnterExclusive(out var mustExit) == false) return 0;
-
-            try
-            {
-                return this.CheckpointInternal();
-            }
-            finally
-            {
-                if (mustExit)
-                {
-                    _locker.ExitExclusive();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Do checkpoint operation to copy log pages into data file. Return how many transactions was commited inside data file
-        /// Checkpoint requires exclusive lock database
-        /// If soft = true, just try enter in exclusive mode - if not possible, just exit (don't execute checkpoint)
-        /// </summary>
-        private int CheckpointInternal()
-        {
             LOG($"checkpoint", "WAL");
 
             // wait all pages write on disk
             _disk.Queue.Wait();
-
-            var counter = 0;
 
             ENSURE(_disk.Queue.Length == 0, "no pages on queue when checkpoint");
 
@@ -313,8 +281,6 @@ namespace LiteDB.Engine
 
                         buffer.Position = BasePage.GetPagePosition(pageID);
 
-                        counter++;
-
                         yield return buffer;
                     }
                 }
@@ -326,7 +292,8 @@ namespace LiteDB.Engine
             // clear log file, clear wal index, memory cache,
             this.Clear();
 
-            return counter;
+            // remove exclusive lock
+            _locker.ExitReserved(true);
         }
     }
 }

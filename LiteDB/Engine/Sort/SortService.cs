@@ -196,13 +196,13 @@ namespace LiteDB.Engine
         /// </summary>
         private IEnumerable<KeyValuePair<BsonValue, PageAddress>> YieldValues(IEnumerator<KeyValuePair<BsonValue, PageAddress>> source, Done done)
         {
-            var size = IndexNode.GetKeyLength(source.Current.Key, false) + PageAddress.SIZE;
+            var size = SortContainer.GetKeyLength(source.Current.Key) + PageAddress.SIZE;
 
             yield return source.Current;
 
             while (source.MoveNext())
             {
-                var length = IndexNode.GetKeyLength(source.Current.Key, false) + PageAddress.SIZE;
+                var length = SortContainer.GetKeyLength(source.Current.Key) + PageAddress.SIZE;
 
                 done.Count++;
 

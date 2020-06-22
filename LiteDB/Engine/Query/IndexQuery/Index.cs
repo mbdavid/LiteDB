@@ -49,8 +49,7 @@ namespace LiteDB.Engine
             if (index == null) throw LiteException.IndexNotFound(this.Name);
 
             // execute query to get all IndexNodes
-            return this.Execute(indexer, index)
-                .DistinctBy(x => x.DataBlock, null);
+            return this.Execute(indexer, index);
         }
 
         #endregion

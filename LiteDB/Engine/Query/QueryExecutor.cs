@@ -53,13 +53,25 @@ namespace LiteDB.Engine
         /// </summary>
         internal BsonDataReader ExecuteQuery(bool executionPlan)
         {
-            // get current transaction (if contains a explicit transaction) or a query-only transaction
-            var transaction = _monitor.GetTransaction(true, true, out var isNew);
+            var transaction = _monitor.GetTransaction(true, out var isNew);
 
             transaction.OpenCursors.Add(_cursor);
 
-            // return new BsonDataReader with IEnumerable source
-            return new BsonDataReader(RunQuery(), _collection);
+            try
+            {
+                // encapsulate all execution to catch any error
+                return new BsonDataReader(RunQuery(), _collection);
+            }
+            catch
+            {
+                // if any error, rollback transaction
+                transaction.Rollback();
+
+                // remove cursor
+                transaction.OpenCursors.Remove(_cursor);
+
+                throw;
+            }
 
             IEnumerable<BsonDocument> RunQuery()
             {
@@ -76,9 +88,9 @@ namespace LiteDB.Engine
 
                     transaction.OpenCursors.Remove(_cursor);
 
-                    if (isNew)
+                    if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
                     {
-                        _monitor.ReleaseTransaction(transaction);
+                        transaction.Commit();
                     }
 
                     yield break;
@@ -96,9 +108,9 @@ namespace LiteDB.Engine
 
                     transaction.OpenCursors.Remove(_cursor);
 
-                    if (isNew)
+                    if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
                     {
-                        _monitor.ReleaseTransaction(transaction);
+                        transaction.Commit();
                     }
 
                     yield break;
@@ -123,8 +135,6 @@ namespace LiteDB.Engine
 
                         yield return doc;
 
-                        if (transaction.State != TransactionState.Active) throw new LiteException(0, $"There is no more active transaction for this cursor: {_cursor.Query.ToSQL(_cursor.Collection)}");
-
                         _cursor.Elapsed.Start();
                     }
                 }
@@ -135,9 +145,9 @@ namespace LiteDB.Engine
 
                     transaction.OpenCursors.Remove(_cursor);
 
-                    if (isNew)
+                    if (transaction.OpenCursors.Count == 0 && transaction.ExplicitTransaction == false)
                     {
-                        _monitor.ReleaseTransaction(transaction);
+                        transaction.Commit();
                     }
                 }
             };
@@ -159,7 +169,7 @@ namespace LiteDB.Engine
                 }
             }
 
-            int result;
+            var result = 0;
 
             // if collection starts with $ it's system collection
             if (into.StartsWith("$"))
