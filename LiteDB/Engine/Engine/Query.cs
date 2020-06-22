@@ -9,7 +9,8 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Run query over collection using a query definition
+        /// Run query over collection using a query definition. 
+        /// Returns a new IBsonDataReader that run and return first document result (open transaction)
         /// </summary>
         public IBsonDataReader Query(string collection, Query query)
         {

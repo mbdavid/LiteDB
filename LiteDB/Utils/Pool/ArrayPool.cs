@@ -4,7 +4,7 @@ using static LiteDB.Constants;
 
 namespace LiteDB
 {
-    public class ArrayPool<T>
+    internal class ArrayPool<T>
     {
         private static readonly T[] Emptry = new T[0];
 

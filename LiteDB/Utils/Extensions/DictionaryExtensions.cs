@@ -100,7 +100,7 @@ namespace LiteDB
 
                             EatWhitespace();
 
-                            if (connectionString[position] == ';') position++;
+                            if (position < connectionString.Length && connectionString[position] == ';') position++;
 
                             return sb.ToString();
                         }

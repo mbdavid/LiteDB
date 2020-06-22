@@ -77,8 +77,8 @@ namespace LiteDB.Tests.Expressions
 
             // fields when using source (do simplify, when use * is same as $)
             F("*").ExpectValues("$");
-            F("*._id").ExpectValues("$");
-            F("FIRST(MAP(* => (@._id + $.name))) + _id").ExpectValues("$", "name", "_id");
+            F("*._id").ExpectValues("_id");
+            F("FIRST(MAP(* => (@.abc + $.name))) + _id").ExpectValues("$", "abc", "name", "_id");
         }
 
         [Fact]
@@ -171,7 +171,7 @@ namespace LiteDB.Tests.Expressions
             // Expression format
             F("_id").ExpectValue("$._id");
             F("a.b").ExpectValue("$.a.b");
-            F("a[ @ + 1 = @ + 2].b").ExpectValue("($.a[@+1=@+2]=>@.b)");
+            F("a[ @ + 1 = @ + 2].b").ExpectValue("MAP($.a[@+1=@+2]=>@.b)");
             F("a.['a-b']").ExpectValue("$.a.[\"a-b\"]");
             F("'single \"quote\\\' string'").ExpectValue("\"single \\\"quote' string\"");
             F("\"double 'quote\\\" string\"").ExpectValue("\"double 'quote\\\" string\"");
@@ -197,13 +197,13 @@ namespace LiteDB.Tests.Expressions
             F("MAP(names[length(@) > 10] => upper(@))").ExpectValue("MAP($.names[LENGTH(@)>10]=>UPPER(@))");
 
             // Path/Source-Map
-            F("items[*].id").ExpectValue("($.items[*]=>@.id)");
-            F("items[*].products[*].price").ExpectValue("($.items[*]=>(@.products[*]=>@.price))");
-            F("sum(items[*].price  ) + 3").ExpectValue("SUM(($.items[*]=>@.price))+3");
+            F("items[*].id").ExpectValue("MAP($.items[*]=>@.id)");
+            F("items[*].products[*].price").ExpectValue("MAP($.items[*]=>MAP(@.products[*]=>@.price))");
+            F("sum(items[*].price  ) + 3").ExpectValue("SUM(MAP($.items[*]=>@.price))+3");
 
             // any/all
-            F("items[*].id any=5").ExpectValue("($.items[*]=>@.id) ANY=5");
-            F("items[id > 99].id all between 5 and  'go'").ExpectValue("($.items[@.id>99]=>@.id) ALL BETWEEN 5 AND \"go\"");
+            F("items[*].id any=5").ExpectValue("MAP($.items[*]=>@.id) ANY=5");
+            F("items[id > 99].id all between 5 and  'go'").ExpectValue("MAP($.items[@.id>99]=>@.id) ALL BETWEEN 5 AND \"go\"");
 
             // parameters
             F("items[ @0 ].price = 9").ExpectValue("$.items[@0].price=9");
@@ -217,37 +217,23 @@ namespace LiteDB.Tests.Expressions
         }
 
         [Fact]
-        public void Expression_AndAlso_OrElse()
+        public void Invalid_Expressions()
         {
-            var ex1 = BsonExpression.Create("LENGTH($.x) >= 5 AND SUBSTRING($.x, 0, 5) = \"12345\"");
-            var doc1 = new BsonDocument();
+            void Err(string s)
+            {
+                Assert.Throws<LiteException>(() =>
+                {
+                    var expr = BsonExpression.Create(s);
+                });
+            }
 
-            // OK (true)
-            doc1["x"] = "12345";
-            var r1 = ex1.ExecuteScalar(doc1);
-
-            // KO (expected: false, actual: exception)
-            doc1["x"] = "123";
-            var r2 = ex1.ExecuteScalar(doc1);
-        }
-
-        [Fact]
-        public void Expression_Conditional_IIF()
-        {
-            var ex1 = BsonExpression.Create("IIF(LENGTH($.x) >= 5, SUBSTRING($.x, 0, 5), \"too-short\")");
-            var doc1 = new BsonDocument();
-
-            // OK ("12345")
-            doc1["x"] = "123456789";
-            var r1 = ex1.ExecuteScalar(doc1);
-
-            r1.AsString.Should().Be("12345");
-
-            // KO (expected: "too-short", actual: System.ArgumentOutOfRangeException: Index and length must refer to a location within the string.)
-            doc1["x"] = "123";
-            var r2 = ex1.ExecuteScalar(doc1);
-
-            r2.AsString.Should().Be("too-short");
+            Err("5 FOO < 1");
+            Err("8 ++ 9");
+            Err("10 + 5)");
+            Err("10 + 5 -");
+            Err("MAP(A => +)");
+            Err("(25 + 15");
+            Err("10 + 5 -.");
         }
     }
 }
