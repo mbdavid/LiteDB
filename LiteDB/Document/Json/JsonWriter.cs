@@ -195,15 +195,33 @@ namespace LiteDB
                         break;
 
                     default:
-                        int i = (int)c;
-                        if (i < 32 || i > 127)
+                        switch (CharUnicodeInfo.GetUnicodeCategory(c))
                         {
-                            _writer.Write("\\u");
-                            _writer.Write(i.ToString("x04"));
-                        }
-                        else
-                        {
-                            _writer.Write(c);
+                            case UnicodeCategory.UppercaseLetter:
+                            case UnicodeCategory.LowercaseLetter:
+                            case UnicodeCategory.TitlecaseLetter:
+                            case UnicodeCategory.OtherLetter:
+                            case UnicodeCategory.DecimalDigitNumber:
+                            case UnicodeCategory.LetterNumber:
+                            case UnicodeCategory.OtherNumber:
+                            case UnicodeCategory.SpaceSeparator:
+                            case UnicodeCategory.ConnectorPunctuation:
+                            case UnicodeCategory.DashPunctuation:
+                            case UnicodeCategory.OpenPunctuation:
+                            case UnicodeCategory.ClosePunctuation:
+                            case UnicodeCategory.InitialQuotePunctuation:
+                            case UnicodeCategory.FinalQuotePunctuation:
+                            case UnicodeCategory.OtherPunctuation:
+                            case UnicodeCategory.MathSymbol:
+                            case UnicodeCategory.CurrencySymbol:
+                            case UnicodeCategory.ModifierSymbol:
+                            case UnicodeCategory.OtherSymbol:
+                                _writer.Write(c);
+                                break;
+                            default:
+                                _writer.Write("\\u");
+                                _writer.Write(((int)c).ToString("x04"));
+                                break;
                         }
                         break;
                 }

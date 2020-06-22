@@ -12,9 +12,6 @@ namespace LiteDB
     {
         public static IEnumerable<BsonValue> MAP(BsonDocument root, Collation collation, BsonDocument parameters, IEnumerable<BsonValue> input, BsonExpression mapExpr)
         {
-            // update parameters in expression
-            parameters.CopyTo(mapExpr.Parameters);
-
             foreach (var item in input)
             {
                 // execute for each child value and except a first bool value (returns if true)
@@ -29,9 +26,6 @@ namespace LiteDB
 
         public static IEnumerable<BsonValue> FILTER(BsonDocument root, Collation collation, BsonDocument parameters, IEnumerable<BsonValue> input, BsonExpression filterExpr)
         {
-            // update parameters in expression
-            parameters.CopyTo(filterExpr.Parameters);
-
             foreach (var item in input)
             {
                 // execute for each child value and except a first bool value (returns if true)
@@ -46,9 +40,6 @@ namespace LiteDB
 
         public static IEnumerable<BsonValue> SORT(BsonDocument root, Collation collation, BsonDocument parameters, IEnumerable<BsonValue> input, BsonExpression sortExpr, BsonValue order)
         {
-            // update parameters in expression
-            parameters.CopyTo(sortExpr.Parameters);
-
             IEnumerable<Tuple<BsonValue, BsonValue>> source()
             {
                 foreach (var item in input)

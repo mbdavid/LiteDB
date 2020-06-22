@@ -48,12 +48,12 @@ namespace LiteDB
         /// <summary>
         /// Max size of a index entry - usde for string, binary, array and documents. Need fit in 1 byte length
         /// </summary>
-        public const int MAX_INDEX_KEY_LENGTH = 255;
+        public const int MAX_INDEX_KEY_LENGTH = 1023;
 
         /// <summary>
         /// Get max length of 1 single index node
         /// </summary>
-        public const int MAX_INDEX_LENGTH = 600;
+        public const int MAX_INDEX_LENGTH = 1400;
 
         /// <summary>
         /// Get how many slots collection pages will have for free list page (data/index)
@@ -61,9 +61,10 @@ namespace LiteDB
         public const int PAGE_FREE_LIST_SLOTS = 5;
 
         /// <summary>
-        /// Document limit size - must use max 250 pages [1 byte] => 250 * 8149 = ~2MiB
+        /// Document limit size - 2048 data pages limit (about 16Mb - same size as MongoDB)
+        /// Using 2047 because first/last page can contain less than 8150 bytes.
         /// </summary>
-        public const int MAX_DOCUMENT_SIZE = 250 * (DataService.MAX_DATA_BYTES_PER_PAGE);
+        public const int MAX_DOCUMENT_SIZE = 2047 * DataService.MAX_DATA_BYTES_PER_PAGE;
 
         /// <summary>
         /// Define how many transactions can be open simultaneously
@@ -77,9 +78,12 @@ namespace LiteDB
         public const int MAX_TRANSACTION_SIZE = 100_000; // 100_000 (default) - 1000 (for tests)
 
         /// <summary>
-        /// Size, in PAGES, for each buffer array (used in MemoryStore) - Each byte array will be created with this size * PAGE_SIZE
+        /// Size, in PAGES, for each buffer array (used in MemoryStore)
+        /// It's an array to increase after each extend - limited in heighest value
+        /// Each byte array will be created with this size * PAGE_SIZE
+        /// Use minimal 12 to allocate at least 85Kb per segment (will use LOH)
         /// </summary>
-        public const int MEMORY_SEGMENT_SIZE = 1000; // 8Mb per extend
+        public static int[] MEMORY_SEGMENT_SIZES = new int[] { 12, 50, 100, 500, 1000 }; // 8Mb per extend
 
         /// <summary>
         /// Define how many documents will be keep in memory until clear cache and remove support to orderby/groupby
@@ -98,9 +102,9 @@ namespace LiteDB
         [Conditional("DEBUG")]
         public static void LOG(string message, string category)
         {
-            var threadID = Environment.CurrentManagedThreadId;
-
-            Debug.WriteLine(message, threadID + "|" + category);
+            //var threadID = Environment.CurrentManagedThreadId;
+            //
+            //Debug.WriteLine(message, threadID + "|" + category);
         }
 
         /// <summary>

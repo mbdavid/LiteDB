@@ -18,6 +18,7 @@ namespace LiteDB
 
         private readonly ILiteEngine _engine;
         private readonly BsonMapper _mapper;
+        private readonly bool _disposeOnClose;
 
         /// <summary>
         /// Get current instance of BsonMapper used in this database instance (can be BsonMapper.Global)
@@ -43,7 +44,7 @@ namespace LiteDB
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-            if (connectionString.Upgrade)
+            if (connectionString.Upgrade == true)
             {
                 // try upgrade if need
                 LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
@@ -51,23 +52,36 @@ namespace LiteDB
 
             _engine = connectionString.CreateEngine();
             _mapper = mapper ?? BsonMapper.Global;
+            _disposeOnClose = true;
         }
 
         /// <summary>
-        /// Starts LiteDB database using a generic Stream implementation (mostly MemoryStrem).
-        /// Use another MemoryStrem as LOG file.
+        /// Starts LiteDB database using a generic Stream implementation (mostly MemoryStream).
         /// </summary>
-        public LiteDatabase(Stream stream, BsonMapper mapper = null)
+        /// <param name="stream">DataStream reference </param>
+        /// <param name="mapper">BsonMapper mapper reference</param>
+        /// <param name="logStream">LogStream reference </param>
+        public LiteDatabase(Stream stream, BsonMapper mapper = null, Stream logStream = null)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
-
             var settings = new EngineSettings
             {
-                DataStream = stream
+                DataStream = stream ?? throw new ArgumentNullException(nameof(stream)),
+                LogStream = logStream
             };
 
             _engine = new LiteEngine(settings);
             _mapper = mapper ?? BsonMapper.Global;
+            _disposeOnClose = true;
+        }
+
+        /// <summary>
+        /// Start LiteDB database using a pre-exiting engine. When LiteDatabase instance dispose engine instance will be disposed too
+        /// </summary>
+        public LiteDatabase(ILiteEngine engine, BsonMapper mapper = null, bool disposeOnClose = true)
+        {
+            _engine = engine ?? throw new ArgumentNullException(nameof(engine));
+            _mapper = mapper ?? BsonMapper.Global;
+            _disposeOnClose = disposeOnClose;
         }
 
         #endregion
@@ -78,9 +92,10 @@ namespace LiteDB
         /// Get a collection using a entity class as strong typed document. If collection does not exits, create a new one.
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
-        public ILiteCollection<T> GetCollection<T>(string name)
+        /// <param name="autoId">Define autoId data type (when object contains no id field)</param>
+        public ILiteCollection<T> GetCollection<T>(string name, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
-            return new LiteCollection<T>(name, BsonAutoId.ObjectId, _engine, _mapper);
+            return new LiteCollection<T>(name, autoId, _engine, _mapper);
         }
 
         /// <summary>
@@ -96,7 +111,7 @@ namespace LiteDB
         /// </summary>
         public ILiteCollection<T> GetCollection<T>(BsonAutoId autoId)
         {
-            return this.GetCollection<T>(null);
+            return this.GetCollection<T>(null, autoId);
         }
 
         /// <summary>
@@ -255,7 +270,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Analyze/Checkpoint/Shrink/UserVersion
+        #region Checkpoint/Rebuild
 
         /// <summary>
         /// Do database checkpoint. Copy all commited transaction from log file into datafile.
@@ -272,6 +287,10 @@ namespace LiteDB
         {
             return _engine.Rebuild(options);
         }
+
+        #endregion
+
+        #region Pragmas
 
         /// <summary>
         /// Get value from internal engine variables
@@ -298,6 +317,51 @@ namespace LiteDB
             set => _engine.Pragma(Pragmas.USER_VERSION, value);
         }
 
+        /// <summary>
+        /// Get/Set database timeout - this timeout is used to wait for unlock using transactions
+        /// </summary>
+        public TimeSpan Timeout
+        {
+            get => TimeSpan.FromSeconds(_engine.Pragma(Pragmas.TIMEOUT).AsInt32);
+            set => _engine.Pragma(Pragmas.TIMEOUT, (int)value.TotalSeconds);
+        }
+
+        /// <summary>
+        /// Get/Set if database will deserialize dates in UTC timezone or Local timezone (default: Local)
+        /// </summary>
+        public bool UtcDate
+        {
+            get => _engine.Pragma(Pragmas.UTC_DATE);
+            set => _engine.Pragma(Pragmas.UTC_DATE, value);
+        }
+
+        /// <summary>
+        /// Get/Set database limit size (in bytes). New value must be equals or larger than current database size
+        /// </summary>
+        public long LimitSize
+        {
+            get => _engine.Pragma(Pragmas.LIMIT_SIZE);
+            set => _engine.Pragma(Pragmas.LIMIT_SIZE, value);
+        }
+
+        /// <summary>
+        /// Get/Set in how many pages (8 Kb each page) log file will auto checkpoint (copy from log file to data file). Use 0 to manual-only checkpoint (and no checkpoint on dispose)
+        /// Default: 1000 pages
+        /// </summary>
+        public int CheckpointSize
+        {
+            get => _engine.Pragma(Pragmas.CHECKPOINT);
+            set => _engine.Pragma(Pragmas.CHECKPOINT, value);
+        }
+
+        /// <summary>
+        /// Get database collection (this options can be changed only in rebuild proces)
+        /// </summary>
+        public Collation Collation
+        {
+            get => new Collation(_engine.Pragma(Pragmas.COLLATION).AsString);
+        }
+
         #endregion
 
         public void Dispose()
@@ -313,7 +377,7 @@ namespace LiteDB
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && _disposeOnClose)
             {
                 _engine.Dispose();
             }

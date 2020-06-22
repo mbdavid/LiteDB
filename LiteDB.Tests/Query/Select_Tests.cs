@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using FluentAssertions;
 using Xunit;
 
@@ -43,6 +44,23 @@ namespace LiteDB.Tests.QueryTest
                 r.right.phone0.Should().Be(r.left.phone0);
                 r.right.address.Street.Should().Be(r.left.address.Street);
             }
+        }
+
+        [Fact]
+        public void Query_Or_With_Null()
+        {
+            var r = collection.Find(Query.Or(
+                Query.GTE("Date", new DateTime(2001, 1, 1)),
+                Query.EQ("Date", null)
+            ));
+        }
+
+        [Fact]
+        public void Query_Find_All_Predicate()
+        {
+            var r = collection.Find(x => true).ToArray();
+
+            r.Should().HaveCount(1000);
         }
     }
 }

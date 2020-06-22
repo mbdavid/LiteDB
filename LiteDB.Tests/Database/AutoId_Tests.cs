@@ -48,7 +48,7 @@ namespace LiteDB.Tests.Database
         {
             var mapper = new BsonMapper();
 
-            using (var db = new LiteDatabase(new MemoryStream(), mapper))
+            using (var db = new LiteDatabase(new MemoryStream(), mapper, new MemoryStream()))
             {
                 var cs_int = db.GetCollection<EntityInt>("int");
                 var cs_long = db.GetCollection<EntityLong>("long");
@@ -262,6 +262,32 @@ namespace LiteDB.Tests.Database
 
                 three["_id"].AsInt32.Should().Be(3);
                 four["_id"].AsInt32.Should().Be(4);
+            }
+        }
+
+        [Fact]
+        public void AutoId_Zero_Int()
+        {
+            using (var db = new LiteDatabase(":memory:"))
+            {
+                var test = db.GetCollection("Test", BsonAutoId.Int32);
+                var doc = new BsonDocument() { ["_id"] = 0, ["p1"] = 1 };
+                test.Insert(doc); // -> NullReferenceException
+            }
+        }
+
+        [Fact]
+        public void AutoId_property()
+        {
+            using (var db = new LiteDatabase(new MemoryStream()))
+            {
+                // default auto id
+                var col1 = db.GetCollection("Col1");
+                col1.AutoId.Should().Be(BsonAutoId.ObjectId);
+
+                // specified auto id
+                var col2 = db.GetCollection("Col2", BsonAutoId.Int32);
+                col2.AutoId.Should().Be(BsonAutoId.Int32);
             }
         }
     }

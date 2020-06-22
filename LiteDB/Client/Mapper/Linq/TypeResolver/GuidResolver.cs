@@ -22,6 +22,7 @@ namespace LiteDB
                 case "NewGuid": return "GUID()";
                 case "Parse": return "GUID(@0)";
                 case "TryParse": throw new NotSupportedException("There is no TryParse translate. Use Guid.Parse()");
+                case "Equals": return "# = @0";
             }
 
             return null;

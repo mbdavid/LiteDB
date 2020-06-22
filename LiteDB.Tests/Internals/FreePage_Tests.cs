@@ -22,7 +22,7 @@ namespace LiteDB.Internals
                 e.BeginTrans();
 
                 // get transaction/snapshot "col1"
-                var t = e.GetMonitor().GetTransaction(false, out var isNew);
+                var t = e.GetMonitor().GetTransaction(false, false, out var isNew);
                 var s = t.CreateSnapshot(LockMode.Write, "col1", true);
 
                 e.Insert("col1", new BsonDocument[] {new BsonDocument {["n"] = new byte[200]}}, BsonAutoId.Int32);
@@ -96,7 +96,7 @@ namespace LiteDB.Internals
                 e.BeginTrans();
 
                 // get transaction/snapshot "col1"
-                var t = e.GetMonitor().GetTransaction(false, out var isNew);
+                var t = e.GetMonitor().GetTransaction(false, false, out var isNew);
                 var s = t.CreateSnapshot(LockMode.Write, "col1", true);
 
                 // first page

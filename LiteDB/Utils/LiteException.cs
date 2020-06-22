@@ -1,6 +1,7 @@
 ﻿using LiteDB.Engine;
 using System;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using static LiteDB.Constants;
 
@@ -46,6 +47,9 @@ namespace LiteDB
         public const int PROPERTY_NOT_MAPPED = 206;
         public const int INVALID_TYPED_NAME = 207;
         public const int PROPERTY_READ_WRITE = 209;
+        public const int INITIALSIZE_CRYPTO_NOT_SUPPORTED = 210;
+        public const int INVALID_INITIALSIZE = 211;
+        public const int INVALID_NULL_CHAR_STRING = 212;
 
         #endregion
 
@@ -266,6 +270,34 @@ namespace LiteDB
         internal static LiteException InvalidTypedName(string type)
         {
             return new LiteException(INVALID_TYPED_NAME, "Type '{0}' not found in current domain (_type format is 'Type.FullName, AssemblyName').", type);
+        }
+
+        internal static LiteException InitialSizeCryptoNotSupported()
+        {
+            return new LiteException(INITIALSIZE_CRYPTO_NOT_SUPPORTED, "Initial Size option is not supported for encrypted datafiles.");
+        }
+
+        internal static LiteException InvalidInitialSize()
+        {
+            return new LiteException(INVALID_INITIALSIZE, "Initial Size must be a multiple of page size ({0} bytes).", PAGE_SIZE);
+        }
+
+        internal static LiteException InvalidNullCharInString()
+        {
+            return new LiteException(INVALID_NULL_CHAR_STRING, "Invalid null character (\\0) was found in the string");
+        }
+
+        internal static LiteException InvalidPageType(PageType pageType, BasePage page)
+        {
+            var sb = new StringBuilder($"Invalid {pageType} on {page.PageID}. ");
+
+            sb.Append($"Full zero: {page.Buffer.All(0)}. ");
+            sb.Append($"Page Type: {page.PageType}. ");
+            sb.Append($"Prev/Next: {page.PrevPageID}/{page.NextPageID}. ");
+            sb.Append($"UniqueID: {page.Buffer.UniqueID}. ");
+            sb.Append($"ShareCounter: {page.Buffer.ShareCounter}. ");
+
+            return new LiteException(0, sb.ToString());
         }
 
         #endregion

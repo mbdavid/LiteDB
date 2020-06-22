@@ -13,7 +13,7 @@ namespace LiteDB.Benchmarks
         static void Main(string[] args)
         {
             BenchmarkRunner.Run(typeof(Program).Assembly, DefaultConfig.Instance
-                .With(new BenchmarkDotNet.Filters.AnyCategoriesFilter(new[] {Benchmarks.Constants.Categories.DATA_GEN}))
+                //.With(new BenchmarkDotNet.Filters.AnyCategoriesFilter(new[] {Benchmarks.Constants.Categories.DATA_GEN}))
                 .With(Job.Default.With(CoreRuntime.Core31)
                     .With(Jit.RyuJit)
                     .With(CsProjCoreToolchain.NetCoreApp31)
