@@ -8,7 +8,7 @@ namespace LiteDB.Engine
     /// Implement internal thread-safe Stream using lock control - A single instance of ConcurrentStream are not multi thread,
     /// but multiples ConcurrentStream instances using same stream base will support concurrency
     /// </summary>
-    internal class ConcurrentStream : Stream
+    public class ConcurrentStream : Stream
     {
         private readonly Stream _stream;
         private readonly bool _canWrite;

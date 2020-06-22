@@ -68,8 +68,6 @@ namespace LiteDB.Tests.Database
 
                 var ids = new int[] { 1, 2, 3 };
 
-                var docs = users.Query().Where(x => ids.Contains(x.Id)).ToArray();
-
                 users.DeleteMany(x => ids.Contains(x.Id));
 
                 users.Count().Should().Be(0);

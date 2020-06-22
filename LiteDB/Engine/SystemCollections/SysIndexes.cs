@@ -10,23 +10,42 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysIndexes()
         {
-            // get any transaction from current thread ID
-            var transaction = _monitor.GetThreadTransaction();
+            var transaction = _monitor.GetTransaction(true, out var isNew);
 
-            foreach (var collection in _header.GetCollections())
+            try
             {
-                var snapshot = transaction.CreateSnapshot(LockMode.Read, collection.Key, false);
+                // encapsulate all execution to catch any error
+                return GetIndexes();
+            }
+            catch
+            {
+                // if any error, rollback transaction
+                transaction.Rollback();
+                throw;
+            }
 
-                foreach(var index in snapshot.CollectionPage.GetCollectionIndexes())
+            IEnumerable<BsonDocument> GetIndexes()
+            {
+                foreach (var collection in _header.GetCollections())
                 {
-                    yield return new BsonDocument
+                    var snapshot = transaction.CreateSnapshot(LockMode.Read, collection.Key, false);
+
+                    foreach(var index in snapshot.CollectionPage.GetCollectionIndexes())
                     {
-                        ["collection"] = collection.Key,
-                        ["name"] = index.Name,
-                        ["expression"] = index.Expression,
-                        ["unique"] = index.Unique,
-                        ["maxLevel"] = (int)index.MaxLevel
-                    };
+                        yield return new BsonDocument
+                        {
+                            ["collection"] = collection.Key,
+                            ["name"] = index.Name,
+                            ["expression"] = index.Expression,
+                            ["unique"] = index.Unique,
+                            ["maxLevel"] = (int)index.MaxLevel
+                        };
+                    }
+                }
+
+                if (isNew)
+                {
+                    transaction.Commit();
                 }
             }
         }

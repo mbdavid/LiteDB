@@ -32,7 +32,6 @@ namespace LiteDB
                 case "Contains": return "# LIKE ('%' + @0 + '%')";
                 case "EndsWith": return "# LIKE ('%' + @0)";
                 case "ToString": return "#";
-                case "Equals": return "# = @0";
 
                 // static methods
                 case "IsNullOrEmpty": return "(LENGTH(@0) = 0)";

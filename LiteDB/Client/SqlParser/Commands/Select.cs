@@ -37,7 +37,7 @@ namespace LiteDB
             token.Expect("SELECT");
 
             // read required SELECT <expr> and convert into single expression
-            query.Select = BsonExpression.Create(_tokenizer, BsonExpressionParserMode.SelectDocument, _parameters);
+            query.Select = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.SelectDocument);
 
             // read FROM|INTO
             var from = _tokenizer.ReadToken();
@@ -87,7 +87,7 @@ namespace LiteDB
                 // read WHERE keyword
                 _tokenizer.ReadToken();
 
-                var where = BsonExpression.Create(_tokenizer, BsonExpressionParserMode.Full, _parameters);
+                var where = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                 query.Where.Add(where);
             }
@@ -100,7 +100,7 @@ namespace LiteDB
                 _tokenizer.ReadToken();
                 _tokenizer.ReadToken().Expect("BY");
 
-                var groupBy = BsonExpression.Create(_tokenizer, BsonExpressionParserMode.Full, _parameters);
+                var groupBy = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                 query.GroupBy = groupBy;
 
@@ -111,7 +111,7 @@ namespace LiteDB
                     // read HAVING keyword
                     _tokenizer.ReadToken();
 
-                    var having = BsonExpression.Create(_tokenizer, BsonExpressionParserMode.Full, _parameters);
+                    var having = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                     query.Having = having;
                 }
@@ -125,7 +125,7 @@ namespace LiteDB
                 _tokenizer.ReadToken();
                 _tokenizer.ReadToken().Expect("BY");
 
-                var orderBy = BsonExpression.Create(_tokenizer, BsonExpressionParserMode.Full, _parameters);
+                var orderBy = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
 
                 var orderByOrder = Query.Ascending;
                 var orderByToken = _tokenizer.LookAhead();

@@ -23,6 +23,8 @@ namespace LiteDB
     /// </summary>
     public partial class BsonMapper
     {
+        private const int MAX_DEPTH = 20;
+
         #region Properties
 
         /// <summary>
@@ -89,11 +91,6 @@ namespace LiteDB
         public bool IncludeNonPublic { get; set; }
 
         /// <summary>
-        /// Get/Set maximum depth for nested object (default 20)
-        /// </summary>
-        public int MaxDepth { get; set; }
-
-        /// <summary>
         /// A custom callback to change MemberInfo behavior when converting to MemberMapper.
         /// Use mapper.ResolveMember(Type entity, MemberInfo property, MemberMapper documentMappedField)
         /// Set FieldName to null if you want remove from mapped document
@@ -117,7 +114,6 @@ namespace LiteDB
             this.ResolveMember = (t, mi, mm) => { };
             this.ResolveCollectionName = (t) => Reflection.IsEnumerable(t) ? Reflection.GetListItemType(t).Name : t.Name;
             this.IncludeFields = false;
-            this.MaxDepth = 20;
 
             _typeInstantiator = customTypeInstantiator ?? ((Type t) => null);
             _typeNameBinder = typeNameBinder ?? DefaultTypeNameBinder.Instance;
@@ -460,30 +456,17 @@ namespace LiteDB
 
             member.Deserialize = (bson, m) =>
             {
-                // if not a document (maybe BsonValue.null) returns null
-                if (bson == null || bson.IsDocument == false) return null;
-
-                var doc = bson.AsDocument;
-                var idRef = doc["$id"];
-                var missing = doc["$missing"] == true;
-                var included = doc.ContainsKey("$ref") == false;
-
+                var idRef = bson.IsDocument ? bson["$id"] : BsonValue.Null;
+                var missing = bson.IsDocument ? (bson["$missing"] == true) : false;
+                
                 if (missing) return null;
 
-                if (included)
-                {
-                    doc["_id"] = idRef;
-
-                    return m.Deserialize(entity.ForType, doc);
-                }
-                else
-                {
-                    return m.Deserialize(entity.ForType,
-                        doc.ContainsKey("$type") ?
-                            new BsonDocument { ["_id"] = idRef, ["_type"] = bson["$type"] } :
-                            new BsonDocument { ["_id"] = idRef }); // if has $id, deserialize object using only _id object
-                }
-
+                return m.Deserialize(entity.ForType,
+                    idRef.IsNull ?
+                    bson : // if has no $id object was full loaded (via Include) - so deserialize using normal function
+                    bson.AsDocument.ContainsKey("$type") ?
+                        new BsonDocument { ["_id"] = idRef, ["_type"] = bson["$type"] } :
+                        new BsonDocument { ["_id"] = idRef }); // if has $id, deserialize object using only _id object
             };
         }
 
@@ -539,26 +522,20 @@ namespace LiteDB
 
                 foreach (var item in array)
                 {
-                    if (item.IsDocument == false) continue;
-
-                    var doc = item.AsDocument;
-                    var idRef = doc["$id"];
-                    var missing = doc["$missing"] == true;
-                    var included = doc.ContainsKey("$ref") == false;
+                    var refId = item["$id"];
+                    var missing = item["$missing"] == true;
                     
                     // if referece document are missing, do not inlcude on output list
                     if (missing) continue;
 
                     // if refId is null was included by "include" query, so "item" is full filled document
-                    if (included)
+                    if (refId.IsNull)
                     {
-                        item["_id"] = idRef;
-
                         result.Add(item);
                     }
                     else
                     {
-                        var bsonDocument = new BsonDocument { ["_id"] = idRef };
+                        var bsonDocument = new BsonDocument { ["_id"] = refId };
 
                         if (item.AsDocument.ContainsKey("$type"))
                         {

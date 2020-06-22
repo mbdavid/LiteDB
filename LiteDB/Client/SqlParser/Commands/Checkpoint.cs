@@ -18,9 +18,9 @@ namespace LiteDB
             // read <eol> or ;
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            var result = _engine.Checkpoint();
+            _engine.Checkpoint();
 
-            return new BsonDataReader(result);
+            return new BsonDataReader();
         }
     }
 }

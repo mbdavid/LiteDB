@@ -17,16 +17,13 @@ namespace LiteDB.Engine
     /// </summary>
     internal class EnginePragmas
     {
-        // pragma reserved area: 76-191
-
         private const int P_USER_VERSION = 76; // 76-79 (4 bytes)
         private const int P_COLLATION_LCID = 80; // 80-83 (4 bytes)
         private const int P_COLLATION_SORT = 84; // 84-87 (4 bytes)
         private const int P_TIMEOUT = 88; // 88-91 (4 bytes)
-        // reserved 92-95 (4 bytes)
+        private const int P_LIMIT_SIZE = 92; // 92-95 (4 bytes)
         private const int P_UTC_DATE = 96; // 96-96 (1 byte)
         private const int P_CHECKPOINT = 97; // 97-100 (4 bytes)
-        private const int P_LIMIT_SIZE = 101; // 92-95 (8 bytes)
 
         /// <summary>
         /// Internal user version control to detect database changes
@@ -81,7 +78,7 @@ namespace LiteDB.Engine
                     Set = (v) => this.UserVersion = v.AsInt32,
                     Read = (b) => this.UserVersion = b.ReadInt32(P_USER_VERSION),
                     Validate = (v, h) => { },
-                    Write = (b) => b.Write(this.UserVersion, P_USER_VERSION)
+                    Write =  (b) => b.Write(this.UserVersion, P_USER_VERSION)
                 },
                 [Engine.Pragmas.COLLATION] = new Pragma
                 {
@@ -90,8 +87,8 @@ namespace LiteDB.Engine
                     Set = (v) => this.Collation = new Collation(v.AsString),
                     Read = (b) => this.Collation = new Collation(b.ReadInt32(P_COLLATION_LCID), (CompareOptions)b.ReadInt32(P_COLLATION_SORT)),
                     Validate = (v, h) => { throw new LiteException(0, "Pragma COLLATION is read only. Use Rebuild options."); },
-                    Write = (b) =>
-                    {
+                    Write = (b) => 
+                    { 
                         b.Write(this.Collation.LCID, P_COLLATION_LCID);
                         b.Write((int)this.Collation.SortOptions, P_COLLATION_SORT);
                     }
@@ -102,7 +99,7 @@ namespace LiteDB.Engine
                     Get = () => (int)this.Timeout.TotalSeconds,
                     Set = (v) => this.Timeout = TimeSpan.FromSeconds(v.AsInt32),
                     Read = (b) => this.Timeout = TimeSpan.FromSeconds(b.ReadInt32(P_TIMEOUT)),
-                    Validate = (v, h) => { if (v <= 0) throw new LiteException(0, "Pragma TIMEOUT must be greater than zero"); },
+                    Validate = (v, h) => { if(v <= 0) throw new LiteException(0, "Pragma TIMEOUT must be greater than zero"); },
                     Write = (b) => b.Write((int)this.Timeout.TotalSeconds, P_TIMEOUT)
                 },
                 [Engine.Pragmas.LIMIT_SIZE] = new Pragma
@@ -110,11 +107,7 @@ namespace LiteDB.Engine
                     Name = Engine.Pragmas.LIMIT_SIZE,
                     Get = () => this.LimitSize,
                     Set = (v) => this.LimitSize = v.AsInt64,
-                    Read = (b) =>
-                    {
-                        var limit = b.ReadInt64(P_LIMIT_SIZE);
-                        this.LimitSize = limit == 0 ? long.MaxValue : limit;
-                    },
+                    Read = (b) => this.LimitSize = b.ReadInt64(P_LIMIT_SIZE),
                     Validate = (v, h) =>
                     {
                         if (v < 4 * PAGE_SIZE) throw new LiteException(0, "Pragma LIMIT_SIZE must be at least 4 pages (32768 bytes)");

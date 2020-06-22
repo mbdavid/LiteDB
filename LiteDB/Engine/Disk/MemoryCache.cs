@@ -43,13 +43,13 @@ namespace LiteDB.Engine
         private int _extends = 0;
 
         /// <summary>
-        /// Get memory segment sizes
+        /// Get memory segment size
         /// </summary>
-        private readonly int[] _segmentSizes;
+        private readonly int _segmentSize;
 
-        public MemoryCache(int[] memorySegmentSizes)
+        public MemoryCache(int cacheSize)
         {
-            _segmentSizes = memorySegmentSizes;
+            _segmentSize = cacheSize;
 
             this.Extend();
         }
@@ -301,11 +301,8 @@ namespace LiteDB.Engine
             // count how many pages in cache are avaiable to be re-used (is not in use at this time)
             var emptyShareCounter = _readable.Values.Count(x => x.ShareCounter == 0);
 
-            // get segmentSize
-            var segmentSize = _segmentSizes[Math.Min(_segmentSizes.Length - 1, _extends)];
-
             // if this count are larger than MEMORY_SEGMENT_SIZE, re-use all this pages
-            if (emptyShareCounter > segmentSize)
+            if (emptyShareCounter > _segmentSize)
             {
                 // get all readable pages that can return to _free (slow way)
                 // sort by timestamp used (set as free oldest first)
@@ -313,7 +310,7 @@ namespace LiteDB.Engine
                     .Where(x => x.Value.ShareCounter == 0)
                     .OrderBy(x => x.Value.Timestamp)
                     .Select(x => x.Key)
-                    .Take(segmentSize)
+                    .Take(_segmentSize)
                     .ToArray();
 
                 // move pages from readable list to free list
@@ -349,20 +346,20 @@ namespace LiteDB.Engine
             }
             else
             {
-                // create big linear array in heap memory (LOH => 85Kb)
-                var buffer = new byte[PAGE_SIZE * segmentSize];
+                // create big linear array in heap memory (G2 -> 85Kb)
+                var buffer = new byte[PAGE_SIZE * _segmentSize];
 
                 // slit linear array into many array slices
-                for (var i = 0; i < segmentSize; i++)
+                for (var i = 0; i < _segmentSize; i++)
                 {
-                    var uniqueID = (_extends * segmentSize) + i + 1;
+                    var uniqueID = (_extends * _segmentSize) + i + 1;
 
                     _free.Enqueue(new PageBuffer(buffer, i * PAGE_SIZE, uniqueID));
                 }
 
                 _extends++;
 
-                LOG($"extending memory usage: (segments: {_extends})", "CACHE");
+                LOG($"extending memory usage: (segments: {_extends} - used: {FileHelper.FormatFileSize(_extends * _segmentSize * PAGE_SIZE)})", "CACHE");
             }
         }
 
@@ -382,14 +379,9 @@ namespace LiteDB.Engine
         public int ExtendSegments => _extends;
 
         /// <summary>
-        /// Get how many pages this cache extends in memory
-        /// </summary>
-        public int ExtendPages => Enumerable.Range(0, _extends).Select(x => _segmentSizes[Math.Min(_segmentSizes.Length - 1, x)]).Sum();
-
-        /// <summary>
         /// Get how many pages are used as Writable at this moment
         /// </summary>
-        public int WritablePages => this.ExtendPages - // total memory
+        public int WritablePages => (_extends * _segmentSize) - // total memory size
             _free.Count - _readable.Count; // allocated pages
 
         /// <summary>

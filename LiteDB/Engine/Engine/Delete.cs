@@ -57,48 +57,50 @@ namespace LiteDB.Engine
         public int DeleteMany(string collection, BsonExpression predicate)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            // do optimization for when using "_id = value" key
-            if (predicate != null &&
-                predicate.Type == BsonExpressionType.Equal && 
-                predicate.Left.Type == BsonExpressionType.Path && 
-                predicate.Left.Source == "$._id" && 
-                predicate.Right.IsValue)
+            return this.AutoTransaction(transaction =>
             {
-                var id = predicate.Right.Execute(_header.Pragmas.Collation).First();
-
-                return this.Delete(collection, new BsonValue[] { id });
-            }
-            else
-            {
-                IEnumerable<BsonValue> getIds()
+                // do optimization for when using "_id = value" key
+                if (predicate.Type == BsonExpressionType.Equal && 
+                    predicate.Left.Type == BsonExpressionType.Path && 
+                    predicate.Left.Source == "$._id" && 
+                    predicate.Right.IsValue)
                 {
-                    // this is intresting: if _id returns an document (like in FileStorage) you can't run direct _id
-                    // field because "reader.Current" will return _id document - but not - { _id: [document] }
-                    // create inner document to ensure _id will be a document
-                    var query = new Query { Select = "{ i: _id }", ForUpdate = true };
+                    predicate.Parameters.CopyTo(predicate.Right.Parameters);
 
-                    if(predicate != null)
+                    var id = predicate.Right.Execute(_header.Pragmas.Collation).First();
+
+                    return this.Delete(collection, new BsonValue[] { id });
+                }
+                else
+                {
+                    IEnumerable<BsonValue> getIds()
                     {
+                        // this is intresting: if _id returns an document (like in FileStorage) you can't run direct _id
+                        // field because "reader.Current" will return _id document - but not - { _id: [document] }
+                        // create inner document to ensure _id will be a document
+                        var query = new Query { Select = "{ i: _id }", ForUpdate = true };
+
                         query.Where.Add(predicate);
-                    }
 
-                    using (var reader = this.Query(collection, query))
-                    {
-                        while (reader.Read())
+                        using (var reader = this.Query(collection, query))
                         {
-                            var value = reader.Current["i"];
-
-                            if (value != BsonValue.Null)
+                            while (reader.Read())
                             {
-                                yield return value;
+                                var value = reader.Current["i"];
+
+                                if (value != BsonValue.Null)
+                                {
+                                    yield return value;
+                                }
                             }
                         }
                     }
-                }
 
-                return this.Delete(collection, getIds());
-            }
+                    return this.Delete(collection, getIds());
+                }
+            });
         }
     }
 }

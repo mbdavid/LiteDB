@@ -28,7 +28,8 @@ namespace LiteDB.Tests.Database
         [Fact]
         public void MultiKey_Mapper()
         {
-            using (var db = new LiteDatabase(":memory:"))
+            using (var file = new TempFile())
+            using (var db = new LiteDatabase(file.Filename))
             {
                 var col = db.GetCollection<MultiKeyDoc>("col");
 
@@ -40,8 +41,7 @@ namespace LiteDB.Tests.Database
                     {
                         new Customer { Name = "John" },
                         new Customer { Name = "Ana" },
-                        new Customer { Name = "Doe" },
-                        new Customer { Name = "Dante" }
+                        new Customer { Name = "Doe" }
                     }
                 });
 
@@ -57,16 +57,13 @@ namespace LiteDB.Tests.Database
 
                 col.EnsureIndex(x => x.Keys);
                 col.EnsureIndex(x => x.Customers.Select(z => z.Name));
-
+                
                 // Query.EQ("Keys", 2)
-                col.Count(Query.Any().EQ("Keys", 2)).Should().Be(2);
                 col.Count(x => x.Keys.Contains(2)).Should().Be(2);
 
-                col.Count(Query.Any().StartsWith("Customers[*].Name", "Ana")).Should().Be(2);
+                // Query.StartsWith("Customers.Name", "Ana");
                 col.Count(x => x.Customers.Select(z => z.Name).Any(z => z.StartsWith("Ana"))).Should().Be(2);
 
-                col.Count(Query.Any().StartsWith("Customers[*].Name", "D")).Should().Be(1);
-                col.Count(x => x.Customers.Select(z => z.Name).Any(z => z.StartsWith("D"))).Should().Be(1);
             }
         }
     }

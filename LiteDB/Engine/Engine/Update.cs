@@ -49,44 +49,47 @@ namespace LiteDB.Engine
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (transform == null) throw new ArgumentNullException(nameof(transform));
 
-            return this.Update(collection, transformDocs());
-
-            IEnumerable<BsonDocument> transformDocs()
+            return this.AutoTransaction(transaction =>
             {
-                var q = new Query { Select = "$", ForUpdate = true };
+                return this.Update(collection, transformDocs());
 
-                if (predicate != null)
+                IEnumerable<BsonDocument> transformDocs()
                 {
-                    q.Where.Add(predicate);
-                }
+                    var q = new Query { Select = "$", ForUpdate = true };
 
-                using (var reader = this.Query(collection, q))
-                {
-                    while (reader.Read())
+                    if (predicate != null)
                     {
-                        var doc = reader.Current.AsDocument;
+                        q.Where.Add(predicate);
+                    }
 
-                        var id = doc["_id"];
-                        var value = transform.ExecuteScalar(doc, _header.Pragmas.Collation);
-
-                        if (!value.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(transform));
-
-                        var result = BsonExpressionMethods.EXTEND(doc, value.AsDocument).AsDocument;
-
-                        // be sure result document will contain same _id as current doc
-                        if (result.TryGetValue("_id", out var newId))
+                    using (var reader = this.Query(collection, q))
+                    {
+                        while (reader.Read())
                         {
-                            if (newId != id) throw LiteException.InvalidUpdateField("_id");
-                        }
-                        else
-                        {
-                            result["_id"] = id;
-                        }
+                            var doc = reader.Current.AsDocument;
 
-                        yield return result;
+                            var id = doc["_id"];
+                            var value = transform.ExecuteScalar(doc, _header.Pragmas.Collation);
+
+                            if (!value.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(transform));
+
+                            var result = BsonExpressionMethods.EXTEND(doc, value.AsDocument).AsDocument;
+
+                            // be sure result document will contain same _id as current doc
+                            if (result.TryGetValue("_id", out var newId))
+                            {
+                                if (newId != id) throw LiteException.InvalidUpdateField("_id");
+                            }
+                            else
+                            {
+                                result["_id"] = id;
+                            }
+
+                            yield return result;
+                        }
                     }
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -123,7 +126,7 @@ namespace LiteDB.Engine
             foreach (var index in col.GetCollectionIndexes().Where(x => x.Name != "_id"))
             {
                 // getting all keys from expression over document
-                var keys = index.BsonExpr.GetIndexKeys(doc, _header.Pragmas.Collation);
+                var keys = index.BsonExpr.Execute(doc, _header.Pragmas.Collation);
 
                 foreach (var key in keys)
                 {

@@ -14,7 +14,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool BeginTrans()
         {
-            var transacion = _monitor.GetTransaction(true, false, out var isNew);
+            var transacion = _monitor.GetTransaction(true, out var isNew);
 
             transacion.ExplicitTransaction = true;
 
@@ -30,24 +30,19 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Commit()
         {
-            var transaction = _monitor.GetTransaction(false, false, out _);
+            var transaction = _monitor.GetTransaction(false, out var isNew);
 
             if (transaction != null)
             {
                 // do not accept explicit commit transaction when contains open cursors running
-                if (transaction.OpenCursors.Count > 0) throw new LiteException(0, "Current transaction contains open cursors. Close cursors before run Commit()");
+                if (transaction.OpenCursors.Count > 0) throw new LiteException(0, "This thread contains an open query/cursor. Close cursors before run Commit()");
 
-                if (transaction.State == TransactionState.Active)
-                {
-                    transaction.Commit();
-
-                    _monitor.ReleaseTransaction(transaction);
-
-                    return true;
-                }
+                return transaction.Commit();
             }
-
-            return false;
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -55,18 +50,16 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Rollback()
         {
-            var transaction = _monitor.GetTransaction(false, false, out _);
+            var transaction = _monitor.GetTransaction(false, out var isNew);
 
-            if (transaction != null && transaction.State == TransactionState.Active)
+            if (transaction != null)
             {
-                transaction.Rollback();
-
-                _monitor.ReleaseTransaction(transaction);
-
-                return true;
+                return transaction.Rollback();
             }
-
-            return false;
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -74,18 +67,16 @@ namespace LiteDB.Engine
         /// </summary>
         private T AutoTransaction<T>(Func<TransactionService, T> fn)
         {
-            var transaction = _monitor.GetTransaction(true, false, out var isNew);
+            var transaction = _monitor.GetTransaction(true, out var isNew);
 
             try
             {
                 var result = fn(transaction);
 
                 // if this transaction was auto-created for this operation, commit & dispose now
-                if (isNew)
+                if (isNew && transaction.OpenCursors.Count == 0)
                 {
                     transaction.Commit();
-
-                    _monitor.ReleaseTransaction(transaction);
                 }
 
                 return result;
@@ -96,19 +87,14 @@ namespace LiteDB.Engine
 
                 transaction.Rollback();
 
-                _monitor.ReleaseTransaction(transaction);
-
                 throw;
             }
             finally
             {
-                //TODO: acho que não é este o lugar para fazer o teste - devo capturar o ReleaseTransaction para isso 
-                // (ou seja, faz no final da transacao)
-
                 // do auto-checkpoint if enabled (default: 1000 pages)
                 if (_header.Pragmas.Checkpoint > 0 && _disk.GetLength(FileOrigin.Log) > (_header.Pragmas.Checkpoint * PAGE_SIZE))
                 {
-                    _walIndex.TryCheckpoint();
+                    _walIndex.Checkpoint(true);
                 }
             }
         }

@@ -16,7 +16,6 @@ namespace LiteDB.Engine
         private readonly Dictionary<string, uint> _collections;
         private readonly Stream _stream;
         private readonly byte[] _buffer = new byte[PAGE_SIZE];
-        private BasePage _cachedPage = null;
 
         public FileReaderV8(HeaderPage header, DiskService disk)
         {
@@ -69,7 +68,7 @@ namespace LiteDB.Engine
                 {
                     var page = this.ReadPage<DataPage>(next);
 
-                    foreach (var block in page.GetBlocks().ToArray())
+                    foreach (var block in page.GetBlocks(true))
                     {
                         using (var r = new BufferReader(this.ReadBlocks(block)))
                         {
@@ -92,14 +91,12 @@ namespace LiteDB.Engine
         {
             var position = BasePage.GetPagePosition(pageID);
 
-            if (_cachedPage?.PageID == pageID) return (T)_cachedPage;
-
             _stream.Position = position;
             _stream.Read(_buffer, 0, PAGE_SIZE);
 
             var buffer = new PageBuffer(_buffer, 0, 0);
 
-            return (T)(_cachedPage = BasePage.ReadPage<T>(buffer));
+            return BasePage.ReadPage<T>(buffer);
         }
 
         /// <summary>
