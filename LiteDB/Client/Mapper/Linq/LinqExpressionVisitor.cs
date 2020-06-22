@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -26,6 +27,7 @@ namespace LiteDB
             [typeof(Enumerable)] = new EnumerableResolver(),
             [typeof(Guid)] = new GuidResolver(),
             [typeof(Math)] = new MathResolver(),
+            [typeof(Regex)] = new RegexResolver(),
             [typeof(ObjectId)] = new ObjectIdResolver(),
             [typeof(String)] = new StringResolver(),
             [typeof(Nullable)] = new NullableResolver()
@@ -33,7 +35,7 @@ namespace LiteDB
 
         private readonly BsonMapper _mapper;
         private readonly Expression _expr;
-        private readonly string _rootParameter = null;
+        private readonly ParameterExpression _rootParameter = null;
 
         private readonly BsonDocument _parameters = new BsonDocument();
         private int _paramIndex = 0;
@@ -49,7 +51,7 @@ namespace LiteDB
 
             if (expr is LambdaExpression lambda)
             {
-                _rootParameter = lambda.Parameters.First().Name;
+                _rootParameter = lambda.Parameters.First();
             }
             else
             {
@@ -69,8 +71,8 @@ namespace LiteDB
             {
                 var e = BsonExpression.Create(expression, _parameters);
 
-                // if expression must return an predicate but expression result is Path/Call add `= true`
-                if (predicate && (e.Type == BsonExpressionType.Path || e.Type == BsonExpressionType.Call))
+                // if expression must return an predicate but expression result is Path/Parameter/Call add `= true`
+                if (predicate && (e.Type == BsonExpressionType.Path || e.Type == BsonExpressionType.Call || e.Type == BsonExpressionType.Parameter))
                 {
                     expression = "(" + expression + " = true)";
 
@@ -103,7 +105,7 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            _builder.Append(node.Name == _rootParameter ? "$" : "@");
+            _builder.Append(_rootParameter.Equals(node) ? "$" : "@");
 
             return base.VisitParameter(node);
         }
@@ -245,7 +247,7 @@ namespace LiteDB
             var type = value?.GetType();
 
             // if type is string, use direct BsonValue(string) to avoid rules like TrimWhitespace/EmptyStringToNull in mapper
-            var arg = type == null ? BsonValue.Null : 
+            var arg = type == null ? BsonValue.Null :
                 type == typeof(string) ? new BsonValue((string)value) :
                 _mapper.Serialize(value.GetType(), value);
 
@@ -271,7 +273,9 @@ namespace LiteDB
                 // otherwise, resolve all expression as inner expression = false
                 else
                 {
+                    _builder.Append("(");
                     this.Visit(node.Operand);
+                    _builder.Append(")");
                     _builder.Append(" = false");
                 }
             }
@@ -421,7 +425,18 @@ namespace LiteDB
 
             _builder.Append(op);
 
-            this.VisitAsPredicate(node.Right, andOr);
+            if (!_mapper.EnumAsInteger &&
+                node.Left.NodeType == ExpressionType.Convert &&
+                node.Left is UnaryExpression unex &&
+                unex.Operand.Type.GetTypeInfo().IsEnum &&
+                unex.Type == typeof(Int32))
+            {
+                this.VisitAsPredicate(Expression.Constant(Enum.GetName(unex.Operand.Type, this.Evaluate(node.Right))), andOr);
+            }
+            else
+            {
+                this.VisitAsPredicate(node.Right, andOr);
+            }
 
             _builder.Append(")");
 
@@ -527,7 +542,7 @@ namespace LiteDB
                 this.VisitAsPredicate(bin.Right, false);
             }
             // Visit .Any(x => `x.StartsWith("John")`)
-            else if(expression is MethodCallExpression met)
+            else if (expression is MethodCallExpression met)
             {
                 // requires only parameter in left side
                 if (met.Object.NodeType != ExpressionType.Parameter) throw new NotSupportedException("Any/All requires simple parameter on left side. Eg: `x.Customers.Select(c => c.Name).Any(n => n.StartsWith('J'))`");
@@ -570,7 +585,9 @@ namespace LiteDB
                 case ExpressionType.GreaterThanOrEqual: return " >= ";
                 case ExpressionType.LessThan: return " < ";
                 case ExpressionType.LessThanOrEqual: return " <= ";
+                case ExpressionType.And: return " AND ";
                 case ExpressionType.AndAlso: return " AND ";
+                case ExpressionType.Or: return " OR ";
                 case ExpressionType.OrElse: return " OR ";
             }
 
@@ -585,7 +602,7 @@ namespace LiteDB
             var name = member.Name;
 
             // checks if parent field are not DbRef (checks for same dataType)
-            var isParentDbRef = _dbRefType != null && _dbRefType == member.DeclaringType;
+            var isParentDbRef = _dbRefType != null && member.DeclaringType.IsAssignableFrom(_dbRefType);
 
             // get class entity from mapper
             var entity = _mapper.GetEntityMapper(member.DeclaringType);
@@ -612,7 +629,7 @@ namespace LiteDB
             var pars = method.GetParameters();
 
             // for List/Dictionary [int/string]
-            if (method.Name == "get_Item" && pars.Length == 1 && 
+            if (method.Name == "get_Item" && pars.Length == 1 &&
                 (pars[0].ParameterType == typeof(int) || pars[0].ParameterType == typeof(string)))
             {
                 obj = node.Object;
@@ -647,7 +664,9 @@ namespace LiteDB
             if (ensurePredicate)
             {
                 _builder.Append("(");
+                _builder.Append("(");
                 base.Visit(expr);
+                _builder.Append(")");
                 _builder.Append(" = true)");
             }
             else

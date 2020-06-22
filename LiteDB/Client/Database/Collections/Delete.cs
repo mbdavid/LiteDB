@@ -17,6 +17,14 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Delete all documents inside collection. Returns how many documents was deleted. Run inside current transaction
+        /// </summary>
+        public int DeleteAll()
+        {
+            return _engine.DeleteMany(_collection, null);
+        }
+
+        /// <summary>
         /// Delete all documents based on predicate expression. Returns how many documents was deleted
         /// </summary>
         public int DeleteMany(BsonExpression predicate)

@@ -48,6 +48,9 @@ namespace LiteDB.Engine
             // split where expressions into TERMs (splited by AND operator)
             this.SplitWherePredicateInTerms();
 
+            // do terms optimizations
+            this.OptimizeTerms();
+
             // define Fields
             this.DefineQueryFields();
 
@@ -91,9 +94,6 @@ namespace LiteDB.Engine
                     var left = predicate.Left;
                     var right = predicate.Right;
 
-                    predicate.Parameters.CopyTo(left.Parameters);
-                    predicate.Parameters.CopyTo(right.Parameters);
-
                     add(left);
                     add(right);
                 }
@@ -107,6 +107,28 @@ namespace LiteDB.Engine
             foreach(var predicate in _query.Where)
             {
                 add(predicate);
+            }
+        }
+
+        /// <summary>
+        /// Do some pre-defined optimization on terms to convert expensive filter in indexable filter
+        /// </summary>
+        private void OptimizeTerms()
+        {
+            // simple optimization
+            for (var i = 0; i < _terms.Count; i++)
+            {
+                var term = _terms[i];
+
+                // convert: { [Enum] ANY = [Path] } to { [Path] IN ARRAY([Enum]) }
+                // very used in LINQ expressions: `query.Where(x => ids.Contains(x.Id))`
+                if (term.Left?.IsScalar == false &&
+                    term.IsANY &&
+                    term.Type == BsonExpressionType.Equal &&
+                    term.Right?.Type == BsonExpressionType.Path)
+                {
+                    _terms[i] = BsonExpression.Create(term.Right.Source + " IN ARRAY(" + term.Left.Source + ")", term.Parameters);
+                }
             }
         }
 
@@ -215,17 +237,33 @@ namespace LiteDB.Engine
             {
                 ENSURE(expr.Left != null && expr.Right != null, "predicate expression must has left/right expressions");
 
-                // checks if expression are not ANY/ALL (do not use to select index)
-                if (expr.Left.IsScalar == false && expr.Right.IsScalar == true) continue;
+                Tuple<CollectionIndex, BsonExpression> index = null;
+
+                // check if expression is ANY
+                if (expr.Left.IsScalar == false && expr.Right.IsScalar == true)
+                {
+                    // ANY expression support only LEFT (Enum) -> RIGHT (Scalar)
+                    if (expr.IsANY)
+                    {
+                        index = indexes
+                            .Where(x => x.Expression == expr.Left.Source && expr.Right.IsValue)
+                            .Select(x => Tuple.Create(x, expr.Right))
+                            .FirstOrDefault();
+                    }
+                    // ALL are not supported in index
+                }
+                else
+                {
+                    index = indexes
+                        .Where(x => x.Expression == expr.Left.Source && expr.Right.IsValue)
+                        .Select(x => Tuple.Create(x, expr.Right))
+                        .Union(indexes
+                            .Where(x => x.Expression == expr.Right.Source && expr.Left.IsValue)
+                            .Select(x => Tuple.Create(x, expr.Left))
+                        ).FirstOrDefault();
+                }
 
                 // get index that match with expression left/right side 
-                var index = indexes
-                    .Where(x => x.Expression == expr.Left.Source && expr.Right.IsValue)
-                    .Select(x => Tuple.Create(x, expr.Right))
-                    .Union(indexes
-                        .Where(x => x.Expression == expr.Right.Source && expr.Left.IsValue)
-                        .Select(x => Tuple.Create(x, expr.Left))
-                    ).FirstOrDefault();
 
                 if (index == null) continue;
 

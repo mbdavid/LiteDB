@@ -293,10 +293,9 @@ namespace LiteDB
         {
             _query.ExplainPlan = true;
 
-            using (var reader = _engine.Query(_collection, _query))
-            {
-                return reader.Current.AsDocument;
-            }
+            var reader = _engine.Query(_collection, _query);
+
+            return reader.ToEnumerable().FirstOrDefault()?.AsDocument;
         }
 
         #endregion
@@ -344,9 +343,19 @@ namespace LiteDB
         /// </summary>
         public int Count()
         {
-            this.Select($"{{ count: COUNT(*) }}");
+            var oldSelect = _query.Select;
 
-            return this.ToDocuments().Single()["count"].AsInt32;
+            try
+            {
+                this.Select($"{{ count: COUNT(*._id) }}");
+                var ret = this.ToDocuments().Single()["count"].AsInt32;
+
+                return ret;
+            }
+            finally
+            {
+                _query.Select = oldSelect;
+            }
         }
 
         /// <summary>
@@ -354,9 +363,19 @@ namespace LiteDB
         /// </summary>
         public long LongCount()
         {
-            this.Select($"{{ count: COUNT(*) }}");
+            var oldSelect = _query.Select;
 
-            return this.ToDocuments().Single()["count"].AsInt64;
+            try
+            {
+                this.Select($"{{ count: COUNT(*._id) }}");
+                var ret = this.ToDocuments().Single()["count"].AsInt64;
+
+                return ret;
+            }
+            finally
+            {
+                _query.Select = oldSelect;
+            }
         }
 
         /// <summary>
@@ -364,9 +383,19 @@ namespace LiteDB
         /// </summary>
         public bool Exists()
         {
-            this.Select($"{{ exists: ANY(*) }}");
+            var oldSelect = _query.Select;
 
-            return this.ToDocuments().Single()["exists"].AsBoolean;
+            try
+            {
+                this.Select($"{{ exists: ANY(*._id) }}");
+                var ret = this.ToDocuments().Single()["exists"].AsBoolean;
+
+                return ret;
+            }
+            finally
+            {
+                _query.Select = oldSelect;
+            }
         }
 
         #endregion

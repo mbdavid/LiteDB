@@ -28,9 +28,9 @@ namespace LiteDB.Engine
         private long _dataLength;
         private long _logLength;
 
-        public DiskService(EngineSettings settings, int memorySegmentSize)
+        public DiskService(EngineSettings settings, int[] memorySegmentSizes)
         {
-            _cache = new MemoryCache(memorySegmentSize);
+            _cache = new MemoryCache(memorySegmentSizes);
 
             // get new stream factory based on settings
             _dataFactory = settings.CreateDataFactory();
@@ -50,7 +50,7 @@ namespace LiteDB.Engine
             {
                 LOG($"creating new database: '{Path.GetFileName(_dataFactory.Name)}'", "DISK");
 
-                this.Initialize(_dataPool.Writer, settings.InitialSize);
+                this.Initialize(_dataPool.Writer, settings.Collation, settings.InitialSize);
             }
 
             // if not readonly, force open writable datafile
@@ -91,10 +91,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create a new empty database (use synced mode)
         /// </summary>
-        private void Initialize(Stream stream, long initialSize)
+        private void Initialize(Stream stream, Collation collation, long initialSize)
         {
             var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
             var header = new HeaderPage(buffer, 0);
+
+            // update collation
+            header.Pragmas.Set(Pragmas.COLLATION, (collation ?? Collation.Default).ToString(), false);
 
             // update buffer
             header.UpdateBuffer();
@@ -103,6 +106,8 @@ namespace LiteDB.Engine
 
             if (initialSize > 0)
             {
+                if (stream is AesStream) throw LiteException.InitialSizeCryptoNotSupported();
+                if (initialSize % PAGE_SIZE != 0) throw LiteException.InvalidInitialSize();
                 stream.SetLength(initialSize);
             }
 
@@ -120,26 +125,27 @@ namespace LiteDB.Engine
         /// <summary>
         /// When a page are requested as Writable but not saved in disk, must be discard before release
         /// </summary>
-        public void DiscardPages(IEnumerable<PageBuffer> pages, bool isDirty)
+        public void DiscardDirtyPages(IEnumerable<PageBuffer> pages)
         {
-            if (isDirty == false)
+            // only for ROLLBACK action
+            foreach (var page in pages)
             {
-                foreach (var page in pages)
-                {
-                    // if page was not modified, try move to readable list
-                    if (_cache.TryMoveToReadable(page) == false)
-                    {
-                        // if already in readable list, just discard
-                        _cache.DiscardPage(page);
-                    }
-                }
+                // complete discard page and content
+                _cache.DiscardPage(page);
             }
-            else
+        }
+
+        /// <summary>
+        /// Discard pages that contains valid data and was not modified
+        /// </summary>
+        public void DiscardCleanPages(IEnumerable<PageBuffer> pages)
+        {
+            foreach (var page in pages)
             {
-                // only for ROLLBACK action
-                foreach (var page in pages)
+                // if page was not modified, try move to readable list
+                if (_cache.TryMoveToReadable(page) == false)
                 {
-                    // complete discard page and content
+                    // if already in readable list, just discard
                     _cache.DiscardPage(page);
                 }
             }
@@ -201,7 +207,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Change password from all data stream
+        /// Clear data file, close any data stream pool, change password and re-create data factory
         /// </summary>
         public void ChangePassword(string password, EngineSettings settings)
         {
@@ -212,7 +218,7 @@ namespace LiteDB.Engine
 
             // close all streams
             _dataPool.Dispose();
-            
+
             // delete data file
             _dataFactory.Delete();
 
@@ -225,7 +231,7 @@ namespace LiteDB.Engine
             _dataPool = new StreamPool(_dataFactory, false);
 
             // get initial data file length
-            _dataLength = - PAGE_SIZE;
+            _dataLength = -PAGE_SIZE;
         }
 
         #region Sync Read/Write operations

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using FluentAssertions;
 using LiteDB.Engine;
 using Xunit;
+using System.Threading.Tasks;
+using System.Threading;
+using static LiteDB.Constants;
 
 namespace LiteDB.Internals
 {
@@ -17,7 +20,7 @@ namespace LiteDB.Internals
                 LogStream = new MemoryStream()
             };
 
-            var disk = new DiskService(settings, 10);
+            var disk = new DiskService(settings, new int[] { 10 });
             var pages = new List<PageBuffer>();
 
             // let's create 100 pages with 0-99 full data
@@ -57,5 +60,10 @@ namespace LiteDB.Internals
             // wait all async threads
             disk.Dispose();
         }
+
+        [Fact]
+        public Task Disk_ExclusiveScheduler_Write() => Task.Factory.StartNew(Disk_Read_Write,
+            CancellationToken.None, TaskCreationOptions.DenyChildAttach,
+            new ConcurrentExclusiveSchedulerPair().ExclusiveScheduler);
     }
 }

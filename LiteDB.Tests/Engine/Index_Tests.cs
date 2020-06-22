@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using FluentAssertions;
 using Xunit;
 
@@ -14,8 +15,8 @@ namespace LiteDB.Tests.Engine
                 var users = db.GetCollection("users");
                 var indexes = db.GetCollection("$indexes");
 
-                users.Insert(new BsonDocument {["name"] = new BsonDocument {["first"] = "John", ["last"] = "Doe"}});
-                users.Insert(new BsonDocument {["name"] = new BsonDocument {["first"] = "Marco", ["last"] = "Pollo"}});
+                users.Insert(new BsonDocument { ["name"] = new BsonDocument { ["first"] = "John", ["last"] = "Doe" } });
+                users.Insert(new BsonDocument { ["name"] = new BsonDocument { ["first"] = "Marco", ["last"] = "Pollo" } });
 
                 // no index name defined
                 users.EnsureIndex("name.last");
@@ -35,11 +36,11 @@ namespace LiteDB.Tests.Engine
                 var col = db.GetCollection("col");
                 var indexes = db.GetCollection("$indexes");
 
-                col.Insert(new BsonDocument {{"text", "D"}});
-                col.Insert(new BsonDocument {{"text", "A"}});
-                col.Insert(new BsonDocument {{"text", "E"}});
-                col.Insert(new BsonDocument {{"text", "C"}});
-                col.Insert(new BsonDocument {{"text", "B"}});
+                col.Insert(new BsonDocument { { "text", "D" } });
+                col.Insert(new BsonDocument { { "text", "A" } });
+                col.Insert(new BsonDocument { { "text", "E" } });
+                col.Insert(new BsonDocument { { "text", "C" } });
+                col.Insert(new BsonDocument { { "text", "B" } });
 
                 col.EnsureIndex("text");
 
@@ -112,6 +113,89 @@ namespace LiteDB.Tests.Engine
 
                 r6.Length.Should().Be(1);
             }
+        }
+
+        [Fact]
+        public void EnsureIndex_Invalid_Arguments()
+        {
+            using var db = new LiteDatabase("filename=:memory:");
+            var test = db.GetCollection("test");
+
+            // null name
+            {
+                var exn = Assert.Throws<ArgumentNullException>(() => test.EnsureIndex(null, "x", false));
+                Assert.Equal("name", exn.ParamName);
+            }
+
+            // null expression 1
+            {
+                var exn = Assert.Throws<ArgumentNullException>(() => test.EnsureIndex(null, false));
+                Assert.Equal("expression", exn.ParamName);
+            }
+
+            // null expression 2
+            {
+                var exn = Assert.Throws<ArgumentNullException>(() => test.EnsureIndex("x", null, false));
+                Assert.Equal("expression", exn.ParamName);
+            }
+        }
+
+        [Fact]
+        public void MultiKey_Index_Test()
+        {
+            using var db = new LiteDatabase("filename=:memory:");
+            var col = db.GetCollection("customers", BsonAutoId.Int32);
+            col.EnsureIndex("$.Phones[*].Type");
+
+            var doc1 = new BsonDocument
+            {
+                ["Name"] = "John Doe",
+                ["Phones"] = new BsonArray
+                (
+                    new BsonDocument 
+                    {
+                        ["Type"] = "Mobile",
+                        ["Number"] = "9876-5432"
+                    },
+                    new BsonDocument
+                    {
+                        ["Type"] = "Fixed",
+                        ["Number"] = "3333-3333"
+                    }
+                )
+            };
+
+            var doc2 = new BsonDocument
+            {
+                ["Name"] = "Jane Doe",
+                ["Phones"] = new BsonArray
+                (
+                    new BsonDocument
+                    {
+                        ["Type"] = "Fixed",
+                        ["Number"] = "3000-0000"
+                    }
+                )
+            };
+
+            col.Insert(doc1);
+            col.Insert(doc2);
+
+            var query1 = "select $ from customers where $.Phones[*].Type any = 'Mobile'";
+            var query2 = "select $ from customers where $.Phones[*].Type any = 'Fixed'";
+
+            var explain1 = db.Execute("explain " + query1).First();
+            Assert.True(!explain1["index"]["mode"].AsString.Contains("_id"));
+
+            var explain2 = db.Execute("explain " + query2).First();
+            Assert.True(!explain2["index"]["mode"].AsString.Contains("_id"));
+
+
+            var result1 = db.Execute(query1).ToArray();
+            Assert.True(result1.Length == 1);
+
+            var result2 = db.Execute(query2).ToArray();
+            Assert.True(result2.Length == 2);
         }
     }
 }

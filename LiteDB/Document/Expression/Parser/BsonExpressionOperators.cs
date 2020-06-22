@@ -122,14 +122,14 @@ namespace LiteDB
         /// </summary>
         public static BsonValue GT(BsonValue left, BsonValue right) => left > right;
         public static BsonValue GT_ANY(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => collation.Compare(x, right) > 0);
-        public static BsonValue GT_ALL(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => collation.Compare(x, right) > 0);
+        public static BsonValue GT_ALL(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.All(x => collation.Compare(x, right) > 0);
 
         /// <summary>
         /// Test if left is greater or equals than right value. Returns true or false
         /// </summary>
         public static BsonValue GTE(BsonValue left, BsonValue right) => left >= right;
         public static BsonValue GTE_ANY(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => collation.Compare(x, right) >= 0);
-        public static BsonValue GTE_ALL(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => collation.Compare(x, right) >= 0);
+        public static BsonValue GTE_ALL(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.All(x => collation.Compare(x, right) >= 0);
 
 
         /// <summary>
@@ -137,21 +137,21 @@ namespace LiteDB
         /// </summary>
         public static BsonValue LT(BsonValue left, BsonValue right) => left < right;
         public static BsonValue LT_ANY(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => collation.Compare(x, right) < 0);
-        public static BsonValue LT_ALL(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => collation.Compare(x, right) < 0);
+        public static BsonValue LT_ALL(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.All(x => collation.Compare(x, right) < 0);
 
         /// <summary>
         /// Test if left is less or equals than right value. Returns true or false
         /// </summary>
         public static BsonValue LTE(Collation collation, BsonValue left, BsonValue right) => left <= right;
         public static BsonValue LTE_ANY(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => collation.Compare(x, right) <= 0);
-        public static BsonValue LTE_ALL(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => collation.Compare(x, right) <= 0);
+        public static BsonValue LTE_ALL(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.All(x => collation.Compare(x, right) <= 0);
 
         /// <summary>
         /// Test if left and right are not same value. Returns true or false
         /// </summary>
         public static BsonValue NEQ(Collation collation, BsonValue left, BsonValue right) => !collation.Equals(left, right);
         public static BsonValue NEQ_ANY(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => !collation.Equals(x, right));
-        public static BsonValue NEQ_ALL(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.Any(x => !collation.Equals(x, right));
+        public static BsonValue NEQ_ALL(Collation collation, IEnumerable<BsonValue> left, BsonValue right) => left.All(x => !collation.Equals(x, right));
 
         /// <summary>
         /// Test if left is "SQL LIKE" with right. Returns true or false. Works only when left and right are string
@@ -279,9 +279,6 @@ namespace LiteDB
             // for expr.Type = parameter, just get value as index (fixed position)
             if (expr.Type == BsonExpressionType.Parameter)
             {
-                // update parameters in expression
-                parameters.CopyTo(expr.Parameters);
-
                 // get fixed position based on parameter value (must return int value)
                 var indexValue = expr.ExecuteScalar(root, collation);
 
@@ -320,9 +317,6 @@ namespace LiteDB
             // [<expr>] - index are an expression
             else
             {
-                // update parameters in expression
-                parameters.CopyTo(filterExpr.Parameters);
-
                 foreach (var item in arr)
                 {
                     // execute for each child value and except a first bool value (returns if true)

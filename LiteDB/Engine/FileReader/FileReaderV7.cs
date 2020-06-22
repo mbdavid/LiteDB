@@ -338,6 +338,8 @@ namespace LiteDB.Engine
             return page;
         }
 
+        public int UserVersion => (int)_header["userVersion"];
+
         /// <summary>
         /// Read extend data block
         /// </summary>

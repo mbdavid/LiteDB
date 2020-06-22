@@ -17,11 +17,19 @@ namespace LiteDB
 
             var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
 
-            _tokenizer.ReadToken().Expect("WHERE");
+            BsonExpression where = null;
 
-            var where = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
+            if (_tokenizer.LookAhead().Is("WHERE"))
+            {
+                // read WHERE
+                _tokenizer.ReadToken();
+
+                where = BsonExpression.Create(_tokenizer, BsonExpressionParserMode.Full, _parameters);
+            }
 
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+
+            _tokenizer.ReadToken();
 
             var result = _engine.DeleteMany(collection, where);
 

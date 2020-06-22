@@ -21,6 +21,11 @@ namespace LiteDB
         public string Name => _collection;
 
         /// <summary>
+        /// Get collection auto id type
+        /// </summary>
+        public BsonAutoId AutoId => _autoId;
+
+        /// <summary>
         /// Getting entity mapper from current collection. Returns null if collection are BsonDocument type
         /// </summary>
         public EntityMapper EntityMapper => _entity;
@@ -54,7 +59,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    _autoId = BsonAutoId.ObjectId;
+                    _autoId = autoId;
                 }
             }
         }

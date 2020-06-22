@@ -151,6 +151,8 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 - Lucene.NET directory: https://github.com/sheryever/LiteDBDirectory
 - LINQPad support: https://github.com/adospace/litedbpad
 - F# Support: https://github.com/Zaid-Ajaj/LiteDB.FSharp
+- UltraLiteDB (for Unity or IOT): https://github.com/rejemy/UltraLiteDB
+
 
 ## Changelog
 
@@ -161,7 +163,7 @@ Change details for each release are documented in the [release notes](https://gi
 LiteDB is digitally signed courtesy of [SignPath](https://www.signpath.io)
 
 <a href="https://www.signpath.io">
-    <img src="https://about.signpath.io/wp-content/uploads/2018/11/logo_signpath_500.png" width="150">
+    <img src="https://about.signpath.io/assets/logo_signpath_500.png" width="150">
 </a>
 
 ## License

@@ -18,6 +18,7 @@ namespace LiteDB.Tests.Mapper
             public string Name { get; set; }
             public DateTime Date { get; set; }
             public bool Active { get; set; }
+            public Guid Ticket { get; set; }
 
             public Address Address { get; set; }
             public List<Phone> Phones { get; set; }
@@ -151,7 +152,6 @@ namespace LiteDB.Tests.Mapper
             //** Eval(u, x => x.Phones.Items(-1).Number, 3);
             //** Eval(u, x => x.Phones.Items(z => z.Prefix >= 20).Number, 2, 3);
         }
-
 
         /// <summary>
         /// Eval expression and check with expected

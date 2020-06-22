@@ -17,6 +17,7 @@ namespace LiteDB
             {
                 // instance methods
                 case "ToString": return "STRING(#)";
+                case "Equals": return "# = @0";
             };
 
             return null;

@@ -16,7 +16,7 @@ namespace LiteDB
         {
             while(true)
             {
-                var expr = BsonExpression.Create(_tokenizer, _parameters, BsonExpressionParserMode.Full);
+                var expr = BsonExpression.Create(_tokenizer, BsonExpressionParserMode.Full, _parameters);
 
                 yield return expr;
 

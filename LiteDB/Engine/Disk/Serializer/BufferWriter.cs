@@ -150,6 +150,8 @@ namespace LiteDB.Engine
         /// </summary>
         public void WriteCString(string value)
         {
+            if (value.IndexOf('\0') > -1) throw LiteException.InvalidNullCharInString();
+
             var bytesCount = Encoding.UTF8.GetByteCount(value);
             var available = _current.Count - _currentPosition; // avaiable in current segment
 

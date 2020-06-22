@@ -22,23 +22,13 @@ namespace LiteDB.Engine
         private readonly Stream _stream;
 
         // async thread controls
-        private readonly Task _task;
-        private readonly ManualResetEventSlim _waiter;
-        private readonly ManualResetEventSlim _writing;
-
-        private bool _running = true;
+        private Task _task;
 
         private ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
 
         public DiskWriterQueue(Stream stream)
         {
             _stream = stream;
-
-            // prepare async thread writer
-            _waiter = new ManualResetEventSlim(false);
-            _writing = new ManualResetEventSlim(false);
-
-            _task = Task.Factory.StartNew(this.CreateThread, TaskCreationOptions.LongRunning);
         }
 
         /// <summary>
@@ -53,7 +43,6 @@ namespace LiteDB.Engine
         public void EnqueuePage(PageBuffer page)
         {
             ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
-            ENSURE(_running, "should not add new page in shutdown process [to-review]"); //TODO: review this
 
             _queue.Enqueue(page);
         }
@@ -63,9 +52,13 @@ namespace LiteDB.Engine
         /// </summary>
         public void Run()
         {
-            if (_queue.Count > 0)
+            lock (_queue)
             {
-                _waiter.Set();
+                if (_queue.Count > 0 && (_task == null || _task.IsCompleted))
+                {
+                    // https://blog.stephencleary.com/2013/08/startnew-is-dangerous.html
+                    _task = Task.Run(this.ExecuteQueue);
+                }
             }
         }
 
@@ -74,45 +67,20 @@ namespace LiteDB.Engine
         /// </summary>
         public void Wait()
         {
-            if (_writing.IsSet == false)
+            lock (_queue)
             {
-                _waiter.Set();
-                _writing.Wait();
+                if (_task != null)
+                {
+                    _task.Wait();
+                }
+
+                if (_queue.Count > 0)
+                {
+                    this.ExecuteQueue();
+                }
             }
 
-            if (_queue.Count > 0)
-            {
-                _writing.Reset();
-                _waiter.Set();
-                _writing.Wait();
-            }
-
-            // here, there is no more item in queue
-            // BUT, before call this Wait() you should do a full lock database
-            // otherwise just after exit this method new data can be enqueue by another thread
             ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
-        }
-
-        private void CreateThread()
-        {
-            while(_running)
-            {
-                // wait next `_waiter.Set()`
-                _waiter.Wait();
-
-                if (_running == false) return;
-
-                // lock `_writing` in next wait
-                _writing.Reset();
-
-                this.ExecuteQueue();
-
-                // release `_writing` lock
-                _writing.Set();
-
-                // lock `_waiter` in next wait
-                _waiter.Reset();
-            }
         }
 
         /// <summary>
@@ -124,43 +92,38 @@ namespace LiteDB.Engine
 
             var count = 0;
 
-            while (_queue.TryDequeue(out var page) /*&& _running*/)
+            try
             {
-                ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
+                while (_queue.TryDequeue(out var page))
+                {
+                    ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
 
-                // set stream position according to page
-                _stream.Position = page.Position;
+                    // set stream position according to page
+                    _stream.Position = page.Position;
 
-                _stream.Write(page.Array, page.Offset, PAGE_SIZE);
+                    _stream.Write(page.Array, page.Offset, PAGE_SIZE);
 
-                // release page here (no page use after this)
-                page.Release();
+                    // release page here (no page use after this)
+                    page.Release();
 
-                count++;
+                    count++;
+                }
+
+                // after this I will have 100% sure data are safe on log file
+                _stream.FlushToDisk();
             }
-
-            // after this I will have 100% sure data are safe on log file
-            _stream.FlushToDisk();
+            catch (IOException)
+            {
+                //TODO: notify database to stop working (throw error in all operations)
+            }
         }
 
         public void Dispose()
         {
             LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
 
-            // stop running async task in next while check
-            _running = false;
-
-            _waiter.Set();
-
-            // wait async task finish before dispose
-            _task.Wait();
-
-            _waiter.Dispose();
-            _writing.Dispose();
-
-            this.ExecuteQueue();
-
-            ENSURE(_queue.Count == 0, "must have no pages in queue before Dispose");
+            // run all items in queue before dispose
+            this.Wait();
         }
     }
 }

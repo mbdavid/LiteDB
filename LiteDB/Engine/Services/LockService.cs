@@ -15,23 +15,20 @@ namespace LiteDB.Engine
     /// </summary>
     internal class LockService : IDisposable
     {
-        private readonly EnginePragmas _variables;
-        private readonly bool _readonly;
+        private readonly EnginePragmas _pragmas;
 
         private readonly ReaderWriterLockSlim _transaction = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-        private readonly ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
-        private readonly ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private readonly ConcurrentDictionary<string, object> _collections = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
-        internal LockService(EnginePragmas variables, bool @readonly)
+        internal LockService(EnginePragmas pragmas)
         {
-            _variables = variables;
-            _readonly = @readonly;
+            _pragmas = pragmas;
         }
 
         /// <summary>
         /// Return if current thread have open transaction
         /// </summary>
-        public bool IsInTransaction => _transaction.IsReadLockHeld;
+        public bool IsInTransaction => _transaction.IsReadLockHeld || _transaction.IsWriteLockHeld;
 
         /// <summary>
         /// Return how many transactions are opened
@@ -39,21 +36,14 @@ namespace LiteDB.Engine
         public int TransactionsCount => _transaction.CurrentReadCount;
 
         /// <summary>
-        /// Enter transaction read lock
+        /// Enter transaction read lock - should be called just before enter a new transaction
         /// </summary>
         public void EnterTransaction()
         {
-            // if current thread are in reserved mode, do not enter in transaction
+            // if current thread already in exclusive mode, just exit
             if (_transaction.IsWriteLockHeld) return;
 
-            try
-            {
-                if (_transaction.TryEnterReadLock(_variables.Timeout) == false) throw LiteException.LockTimeout("transaction", _variables.Timeout);
-            }
-            catch (LockRecursionException)
-            {
-                throw LiteException.AlreadyExistsTransaction();
-            }
+            if (_transaction.TryEnterReadLock(_pragmas.Timeout) == false) throw LiteException.LockTimeout("transaction", _pragmas.Timeout);
         }
 
         /// <summary>
@@ -61,181 +51,97 @@ namespace LiteDB.Engine
         /// </summary>
         public void ExitTransaction()
         {
-            // if current thread are in reserved mode, do not exit transaction (will be exit reserved lock)
+            // if current thread are in reserved mode, do not exit transaction (will be exit from ExitExclusive)
             if (_transaction.IsWriteLockHeld) return;
 
             _transaction.ExitReadLock();
         }
 
         /// <summary>
-        /// Enter collection in read lock
+        /// Enter collection write lock mode (only 1 collection per time can have this lock)
         /// </summary>
-        public void EnterRead(string collectionName)
+        public void EnterLock(string collectionName)
         {
-            ENSURE(_transaction.IsReadLockHeld || _transaction.IsWriteLockHeld, "Use EnterTransaction() before EnterRead(name)");
+            ENSURE(_transaction.IsReadLockHeld || _transaction.IsWriteLockHeld, "Use EnterTransaction() before EnterLock(name)");
 
-            // get collection locker from dictionary (or create new if doesnt exists)
-            var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
+            // get collection object lock from dictionary (or create new if doesnt exists)
+            var collection = _collections.GetOrAdd(collectionName, (s) => new object());
 
-            // try enter in read lock in collection
-            if (collection.TryEnterReadLock(_variables.Timeout) == false) throw LiteException.LockTimeout("read", collectionName, _variables.Timeout);
+            if (Monitor.TryEnter(collection, _pragmas.Timeout) == false) throw LiteException.LockTimeout("write", collectionName, _pragmas.Timeout);
         }
 
         /// <summary>
-        /// Exit collection read lock
+        /// Exit collection in reserved lock
         /// </summary>
-        public void ExitRead(string collectionName)
+        public void ExitLock(string collectionName)
         {
             if (_collections.TryGetValue(collectionName, out var collection) == false) throw LiteException.CollectionLockerNotFound(collectionName);
 
-            collection.ExitReadLock();
+            Monitor.Exit(collection);
         }
 
         /// <summary>
-        /// Enter collection reserved lock mode (only 1 collection per time can have this lock)
+        /// Enter all database in exclusive lock. Wait for all transactions finish. In exclusive mode no one can enter in new transaction (for read/write)
+        /// If current thread already in exclusive mode, returns false
         /// </summary>
-        public void EnterReserved(string collectionName)
+        public bool EnterExclusive()
         {
-            ENSURE(_transaction.IsReadLockHeld || _transaction.IsWriteLockHeld, "Use EnterTransaction() before EnterReserved(name)");
-
-            // checks if engine was open in readonly mode
-            if (_readonly) throw new LiteException(0, "This operation are not support because engine was open in reaodnly mode");
-
-            // if thread are in full reserved, don't try lock
-            if (_reserved.IsWriteLockHeld) return;
-
-            // reserved locker in read lock (if not already reserved in this thread be another snapshot)
-            if (_reserved.IsReadLockHeld == false && _reserved.TryEnterReadLock(_variables.Timeout) == false) throw LiteException.LockTimeout("reserved", collectionName, _variables.Timeout);
-
-            // get collection locker from dictionary (or create new if doesnt exists)
-            var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
-
-            // try enter in reserved lock in collection
-            if (collection.TryEnterUpgradeableReadLock(_variables.Timeout) == false)
-            {
-                // if get timeout, release first reserved lock
-                _reserved.ExitReadLock();
-                throw LiteException.LockTimeout("reserved", collectionName, _variables.Timeout);
-            }
-        }
-
-        /// <summary>
-        /// Exit collection reserved lock
-        /// </summary>
-        public void ExitReserved(string collectionName)
-        {
-            // if thread are in full reserved just exit
-            if (_reserved.IsWriteLockHeld) return;
-
-            if (_collections.TryGetValue(collectionName, out var collection) == false) throw LiteException.CollectionLockerNotFound(collectionName);
-
-            collection.ExitUpgradeableReadLock();
-
-            // in global reserved case, you can have same thread tring read-lock twice on different snapshot - exit once
-            if (_reserved.IsReadLockHeld)
-            {
-                _reserved.ExitReadLock();
-            }
-        }
-
-        /// <summary>
-        /// Enter all database in reserved lock. Wait for all reader/writers. 
-        /// If exclusive = false, new readers can read but no writers can write. If exclusive = true, no new readers/writers
-        /// </summary>
-        public void EnterReserved(bool exclusive)
-        {
-            // checks if engine was open in readonly mode
-            if (_readonly) throw new LiteException(0, "This operation are not support because engine was open in reaodnly mode");
+            // if current thread already in exclusive mode
+            if (_transaction.IsWriteLockHeld) return false;
 
             // wait finish all transactions before enter in reserved mode
-            if (_transaction.TryEnterWriteLock(_variables.Timeout) == false) throw LiteException.LockTimeout("reserved", _variables.Timeout);
-
-            ENSURE(_transaction.RecursiveReadCount == 0, "must have no other transaction here");
-
-            try
-            {
-                // reserved locker in write lock
-                if (_reserved.TryEnterWriteLock(_variables.Timeout) == false)
-                {
-                    // exit transaction write lock
-                    _transaction.ExitWriteLock();
-
-                    throw LiteException.LockTimeout("reserved", _variables.Timeout);
-                }
-            }
-            finally
-            {
-                if (exclusive == false)
-                {
-                    // exit exclusive and allow new readers
-                    _transaction.ExitWriteLock();
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// Try enter in exclusive mode (same as ReservedMode) - if not possible, just exit with false (do not wait and no exceptions)
-        /// Use ExitReserved(true) to exit
-        /// </summary>
-        public bool TryEnterExclusive()
-        {
-            // if is readonly or already in a transaction
-            if (_readonly || _transaction.IsReadLockHeld) return false;
-
-            // wait finish all transactions before enter in reserved mode
-            if (_transaction.TryEnterWriteLock(10) == false) return false;
-
-            ENSURE(_transaction.RecursiveReadCount == 0, "must have no other transaction here");
-
-            // reserved locker in write lock
-            if (_reserved.TryEnterWriteLock(10) == false)
-            {
-                // exit transaction write lock
-                _transaction.ExitWriteLock();
-
-                return false;
-            }
+            if (_transaction.TryEnterWriteLock(_pragmas.Timeout) == false) throw LiteException.LockTimeout("exclusive", _pragmas.Timeout);
 
             return true;
         }
 
         /// <summary>
-        /// Exit reserved/exclusive lock
+        /// Try enter in exclusive mode - if not possible, just exit with false (do not wait and no exceptions)
+        /// If mustExit returns true, must call ExitExclusive after use
         /// </summary>
-        public void ExitReserved(bool exclusive)
+        public bool TryEnterExclusive(out bool mustExit)
         {
-            if (_reserved.IsWriteLockHeld)
+            // if already in exclusive mode return true but "enter" indicator must be false (do not exit)
+            if (_transaction.IsWriteLockHeld)
             {
-                _reserved.ExitWriteLock();
+                mustExit = false;
+                return true;
             }
 
-            // if in reserved exclusive - unlock transactions
-            if (exclusive == true)
+            // if there is any open transaction, exit with false
+            if (_transaction.IsReadLockHeld || _transaction.CurrentReadCount > 0)
             {
-                _transaction.ExitWriteLock();
+                mustExit = false;
+                return false;
             }
+
+            // try enter in exclusive mode - but if not possible, just exit with false
+            if (_transaction.TryEnterWriteLock(10) == false)
+            {
+                mustExit = false;
+                return false;
+            }
+
+            ENSURE(_transaction.RecursiveReadCount == 0, "must have no other transaction here");
+
+            // now, current thread are in exclusive mode (must run ExitExclusive to exit)
+            mustExit = true;
+            return true;
+        }
+
+        /// <summary>
+        /// Exit exclusive lock
+        /// </summary>
+        public void ExitExclusive()
+        {
+            _transaction.ExitWriteLock();
         }
 
         public void Dispose()
         {
-            this.SafeDispose(_transaction);
-            this.SafeDispose(_reserved);
-
-            foreach(var collections in _collections.Values)
-            {
-                this.SafeDispose(collections);
-            }
-        }
-
-        /// <summary>
-        /// Dispose class testing for lock synchronization
-        /// </summary>
-        private void SafeDispose(IDisposable obj)
-        {
             try
             {
-                obj.Dispose();
+                _transaction.Dispose();
             }
             catch (SynchronizationLockException)
             {

@@ -119,6 +119,22 @@ namespace LiteDB.Tests.Engine
             }
         }
 
+        [Fact]
+        public void Collaction_New_Database()
+        {
+            var s = new EngineSettings
+            {
+                DataStream = new MemoryStream(),
+                Collation = new Collation("en-US/None")
+            };
+
+            using (var db = new LiteDatabase(new LiteEngine(s)))
+            {
+                db.Collation.Culture.Name.Should().Be("en-US");
+                db.Collation.SortOptions.Should().Be(CompareOptions.None);
+            }
+        }
+
         private string[] data = new string[]
         {
             "r6pfkr.4keQyr", "r6pfjI.31qrGW", "r6pfjy.1ryYCW", "r6pfjs.1iCqiD", "r6pfjm.2xXoUr", "r6pfj9.sYaWO", "r6pfgj.1aguPU", "r6pfgd.kKEyS",

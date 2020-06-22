@@ -51,13 +51,9 @@ namespace LiteDB.Engine
             _reader = reader;
 
             // enter in lock mode according initial mode
-            if (mode == LockMode.Read)
+            if (mode == LockMode.Write)
             {
-                _locker.EnterRead(_collectionName);
-            }
-            else
-            {
-                _locker.EnterReserved(_collectionName);
+                _locker.EnterLock(_collectionName);
             }
 
             // get lastest read version from wal-index
@@ -129,13 +125,9 @@ namespace LiteDB.Engine
                 _collectionPage.Buffer.Release();
             }
 
-            if (_mode == LockMode.Read)
+            if(_mode == LockMode.Write)
             {
-                _locker.ExitRead(_collectionName);
-            }
-            else if(_mode == LockMode.Write)
-            {
-                _locker.ExitReserved(_collectionName);
+                _locker.ExitLock(_collectionName);
             }
         }
 
@@ -159,6 +151,7 @@ namespace LiteDB.Engine
             ENSURE(pageID <= _header.LastPageID, "request page must be less or equals lastest page in data file");
 
             // check for header page (return header single instance)
+            //TODO: remove this
             if (pageID == 0)
             {
                 origin = FileOrigin.None;
@@ -578,6 +571,9 @@ namespace LiteDB.Engine
             // getting all indexes pages from all indexes
             foreach(var index in _collectionPage.GetCollectionIndexes())
             {
+                // add head/tail (same page) to be deleted
+                indexPages.Add(index.Head.PageID);
+
                 foreach (var node in indexer.FindAll(index, Query.Ascending))
                 {
                     indexPages.Add(node.Page.PageID);
