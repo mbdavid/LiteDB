@@ -79,6 +79,12 @@ namespace LiteDB
             this.Filename = _values.GetValue("filename", this.Filename).Trim();
 
             this.Password = _values.GetValue("password", this.Password);
+
+            if(this.Password == string.Empty)
+            {
+                this.Password = null;
+            }
+
             this.InitialSize = _values.GetFileSize(@"initial size", this.InitialSize);
             this.ReadOnly = _values.GetValue("readonly", this.ReadOnly);
 
