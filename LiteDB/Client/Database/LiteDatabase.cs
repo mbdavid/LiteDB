@@ -47,7 +47,7 @@ namespace LiteDB
             if (connectionString.Upgrade == true)
             {
                 // try upgrade if need
-                LiteEngine.Upgrade(connectionString.Filename, connectionString.Password);
+                LiteEngine.Upgrade(connectionString.Filename, connectionString.Password, connectionString.Collation);
             }
 
             _engine = connectionString.CreateEngine();
