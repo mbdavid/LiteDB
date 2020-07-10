@@ -34,29 +34,5 @@ namespace LiteDB.Tests.Mapper
             user.Key.Should().Be(10); //     Expected user.Key to be 10, but found 0.
             user.Name.Should().Be("John");
         }
-
-        public interface IInterface
-        {
-            string CustomId { get; set; }
-        }
-
-        public class ConcreteClass : IInterface
-        {
-            public string CustomId { get; set; }
-        }
-
-        [Fact]
-        public void Custom_Id_In_Interface()
-        {
-            var mapper = new BsonMapper();
-
-            mapper.Entity<IInterface>().Id(x => x.CustomId, false);
-
-            var obj = new ConcreteClass { CustomId = "myid" };
-            var doc = mapper.Serialize(obj) as BsonDocument;
-            doc["_id"].Should().NotBeNull();
-            doc["_id"].Should().Be("myid");
-            doc.Keys.ExpectCount(1);
-        }
     }
 }

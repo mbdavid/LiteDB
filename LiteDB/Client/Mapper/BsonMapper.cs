@@ -319,39 +319,6 @@ namespace LiteDB
                 }
             }
 
-            var baseTypes = new Stack<Type>();
-
-            for (var i = type.GetTypeInfo().BaseType; i != null && i != typeof(object); i = i.GetTypeInfo().BaseType)
-            {
-                baseTypes.Push(i);
-            }
-
-            foreach (var interf in type.GetInterfaces())
-            {
-                baseTypes.Push(interf);
-            }
-
-            lock (_entities)
-            {
-                while (baseTypes.Count > 0)
-                {
-                    var i = baseTypes.Pop();
-
-                    if (_entities.TryGetValue(i, out EntityMapper baseMapper))
-                    {
-                        foreach (var baseMember in baseMapper.Members)
-                        {
-                            var member = mapper.Members.FirstOrDefault(x => x.MemberName.Equals(baseMember.MemberName, StringComparison.OrdinalIgnoreCase));
-                            if (member != null)
-                            {
-                                mapper.Members.Remove(member);
-                            }
-                            mapper.Members.Add(baseMember);
-                        }
-                    }
-                }
-            }
-
             return mapper;
         }
 
@@ -381,7 +348,7 @@ namespace LiteDB
                 .Where(x => x.CanRead && x.GetIndexParameters().Length == 0)
                 .Select(x => x as MemberInfo));
 
-            if (this.IncludeFields)
+            if(this.IncludeFields)
             {
                 members.AddRange(type.GetFields(flags).Where(x => !x.Name.EndsWith("k__BackingField") && x.IsStatic == false).Select(x => x as MemberInfo));
             }
@@ -399,7 +366,7 @@ namespace LiteDB
         {
             var ctors = mapper.ForType.GetConstructors();
 
-            var ctor =
+            var ctor = 
                 ctors.FirstOrDefault(x => x.GetCustomAttribute<BsonCtorAttribute>() != null && x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType))) ??
                 ctors.FirstOrDefault(x => x.GetParameters().Length == 0) ??
                 ctors.FirstOrDefault(x => x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType)));
@@ -429,7 +396,7 @@ namespace LiteDB
             var newExpr = Expression.New(ctor, pars.ToArray());
 
             // get lambda expression
-            var fn = mapper.ForType.GetTypeInfo().IsClass ?
+            var fn = mapper.ForType.GetTypeInfo().IsClass ? 
                 Expression.Lambda<CreateObject>(newExpr, pDoc).Compile() : // Class
                 Expression.Lambda<CreateObject>(Expression.Convert(newExpr, typeof(object)), pDoc).Compile(); // Struct
 
@@ -578,7 +545,7 @@ namespace LiteDB
                     var idRef = doc["$id"];
                     var missing = doc["$missing"] == true;
                     var included = doc.ContainsKey("$ref") == false;
-
+                    
                     // if referece document are missing, do not inlcude on output list
                     if (missing) continue;
 
