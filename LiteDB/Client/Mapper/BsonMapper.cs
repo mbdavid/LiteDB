@@ -253,13 +253,13 @@ namespace LiteDB
             foreach (var memberInfo in members)
             {
                 // checks [BsonIgnore]
-                if (memberInfo.IsDefined(ignoreAttr, true)) continue;
+                if (CustomAttributeExtensions.IsDefined(memberInfo, ignoreAttr, true)) continue;
 
                 // checks field name conversion
                 var name = this.ResolveFieldName(memberInfo.Name);
 
                 // check if property has [BsonField]
-                var field = (BsonFieldAttribute)memberInfo.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
+                var field = (BsonFieldAttribute)CustomAttributeExtensions.GetCustomAttributes(memberInfo, fieldAttr, true).FirstOrDefault();
 
                 // check if property has [BsonField] with a custom field name
                 if (field != null && field.Name != null)
@@ -278,7 +278,7 @@ namespace LiteDB
                 var setter = Reflection.CreateGenericSetter(type, memberInfo);
 
                 // check if property has [BsonId] to get with was setted AutoId = true
-                var autoId = (BsonIdAttribute)memberInfo.GetCustomAttributes(idAttr, false).FirstOrDefault();
+                var autoId = (BsonIdAttribute)CustomAttributeExtensions.GetCustomAttributes(memberInfo, idAttr, true).FirstOrDefault();
 
                 // get data type
                 var dataType = memberInfo is PropertyInfo ?
@@ -302,7 +302,7 @@ namespace LiteDB
                 };
 
                 // check if property has [BsonRef]
-                var dbRef = (BsonRefAttribute)memberInfo.GetCustomAttributes(dbrefAttr, false).FirstOrDefault();
+                var dbRef = (BsonRefAttribute)CustomAttributeExtensions.GetCustomAttributes(memberInfo, dbrefAttr, false).FirstOrDefault();
 
                 if (dbRef != null && memberInfo is PropertyInfo)
                 {
@@ -328,7 +328,7 @@ namespace LiteDB
         protected virtual MemberInfo GetIdMember(IEnumerable<MemberInfo> members)
         {
             return Reflection.SelectMember(members,
-                x => x.IsDefined(typeof(BsonIdAttribute), true),
+                x => CustomAttributeExtensions.IsDefined(x, typeof(BsonIdAttribute), true),
                 x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
                 x => x.Name.Equals(x.DeclaringType.Name + "Id", StringComparison.OrdinalIgnoreCase));
         }
@@ -348,7 +348,7 @@ namespace LiteDB
                 .Where(x => x.CanRead && x.GetIndexParameters().Length == 0)
                 .Select(x => x as MemberInfo));
 
-            if(this.IncludeFields)
+            if (this.IncludeFields)
             {
                 members.AddRange(type.GetFields(flags).Where(x => !x.Name.EndsWith("k__BackingField") && x.IsStatic == false).Select(x => x as MemberInfo));
             }
@@ -366,7 +366,7 @@ namespace LiteDB
         {
             var ctors = mapper.ForType.GetConstructors();
 
-            var ctor = 
+            var ctor =
                 ctors.FirstOrDefault(x => x.GetCustomAttribute<BsonCtorAttribute>() != null && x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType))) ??
                 ctors.FirstOrDefault(x => x.GetParameters().Length == 0) ??
                 ctors.FirstOrDefault(x => x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType)));
@@ -396,7 +396,7 @@ namespace LiteDB
             var newExpr = Expression.New(ctor, pars.ToArray());
 
             // get lambda expression
-            var fn = mapper.ForType.GetTypeInfo().IsClass ? 
+            var fn = mapper.ForType.GetTypeInfo().IsClass ?
                 Expression.Lambda<CreateObject>(newExpr, pDoc).Compile() : // Class
                 Expression.Lambda<CreateObject>(Expression.Convert(newExpr, typeof(object)), pDoc).Compile(); // Struct
 
@@ -545,7 +545,7 @@ namespace LiteDB
                     var idRef = doc["$id"];
                     var missing = doc["$missing"] == true;
                     var included = doc.ContainsKey("$ref") == false;
-                    
+
                     // if referece document are missing, do not inlcude on output list
                     if (missing) continue;
 

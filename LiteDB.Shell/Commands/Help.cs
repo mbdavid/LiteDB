@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace LiteDB.Shell.Commands
@@ -27,7 +28,7 @@ namespace LiteDB.Shell.Commands
             // getting all HelpAttributes inside assemblies
             var helps = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x => x.GetTypes())
-                .Select(x => x.GetCustomAttributes(typeof(HelpAttribute), true).FirstOrDefault())
+                .Select(x => CustomAttributeExtensions.GetCustomAttributes(typeof(HelpAttribute), true).FirstOrDefault())
                 .Where(x => x != null)
                 .Select(x => x as HelpAttribute)
                 .ToArray();
