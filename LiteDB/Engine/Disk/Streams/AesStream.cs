@@ -2,6 +2,8 @@
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
+using XTSSharp;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -11,192 +13,117 @@ namespace LiteDB.Engine
     /// </summary>
     public class AesStream : Stream
     {
-        private readonly Aes _aes;
-        private readonly ICryptoTransform _encryptor;
-        private readonly ICryptoTransform _decryptor;
+        private readonly Stream _baseStream;
 
-        private readonly Stream _stream;
-        private readonly CryptoStream _reader;
-        private readonly CryptoStream _writer;
+        private readonly Stream _aesStream;
 
-        /// <summary>
-        /// Get plain stream
-        /// </summary>
-        public Stream BaseStream => _stream;
-
-        public byte[] Salt { get; }
-
-        public override bool CanRead => _stream.CanRead;
-
-        public override bool CanSeek => _stream.CanSeek;
-
-        public override bool CanWrite => _stream.CanWrite;
-
-        public override long Length => _stream.Length - PAGE_SIZE;
-
-        public override long Position
-        {
-            get => _stream.Position - PAGE_SIZE;
-            set => this.Seek(value, SeekOrigin.Begin);
-        }
+        public Stream BaseStream => _baseStream;
 
         public AesStream(string password, Stream stream, bool initialize = false)
         {
-            _stream = stream;
-            _stream.Position = 0;
+            var isNew = stream.Length == 0 || initialize;
+            var encryption = EncryptionType.AesXts;
+            var salt = new byte[ENCRYPTION_SALT_SIZE];
 
-            var isNew = _stream.Length == 0 || initialize;
+            _baseStream = stream;
+            _baseStream.Position = 0;
 
             try
             {
-                // new file? create new salt
                 if (isNew)
                 {
-                    this.Salt = NewSalt();
+                    // create new SALT
+                    using (var rng = RandomNumberGenerator.Create())
+                    {
+                        rng.GetBytes(salt);
+                    }
 
-                    _stream.WriteByte(1);
-                    _stream.Write(this.Salt, 0, ENCRYPTION_SALT_SIZE);
+                    // store encryption type + salt
+                    _baseStream.WriteByte((byte)encryption);
+                    _baseStream.Write(salt, 0, ENCRYPTION_SALT_SIZE);
 
                     // fill all page with 0
                     var left = PAGE_SIZE - ENCRYPTION_SALT_SIZE - 1;
 
-                    _stream.Write(new byte[left], 0, left);
+                    _baseStream.Write(new byte[left], 0, left);
                 }
                 else
                 {
-                    this.Salt = new byte[ENCRYPTION_SALT_SIZE];
+                    // read EncryptionMode byte
+                    encryption = (EncryptionType)_baseStream.ReadByte();
 
-                    // checks if this datafile are encrypted
-                    var isEncrypted = _stream.ReadByte();
-
-                    if (isEncrypted != 1)
-                    {
-                        throw new LiteException(0, "This file is not encrypted");
-                    }
-
-                    _stream.Read(this.Salt, 0, ENCRYPTION_SALT_SIZE);
+                    // read salt
+                    _baseStream.Read(salt, 0, ENCRYPTION_SALT_SIZE);
                 }
 
-                _aes = Aes.Create();
-                _aes.Padding = PaddingMode.None;
-                _aes.Mode = CipherMode.ECB;
-
-                var pdb = new Rfc2898DeriveBytes(password, this.Salt);
-
-                using (pdb as IDisposable)
+                // initialize encryption stream (xts/ecb)
+                switch (encryption)
                 {
-                    _aes.Key = pdb.GetBytes(32);
-                    _aes.IV = pdb.GetBytes(16);
+                    case EncryptionType.None:
+                        throw new LiteException(0, "File is not encrypted.");
+                    case EncryptionType.AesEcb:
+                        _aesStream = new AesEcbStream(password, _baseStream, salt);
+                        break;
+                    case EncryptionType.AesXts:
+                        _aesStream = CreateXtsStream(password, _baseStream, salt);
+                        break;
+                    default:
+                        throw new LiteException(0, "Unsupported encryption mode.");
                 }
-
-                _encryptor = _aes.CreateEncryptor();
-                _decryptor = _aes.CreateDecryptor();
-
-                _reader = _stream.CanRead ?
-                    new CryptoStream(_stream, _decryptor, CryptoStreamMode.Read) :
-                    null;
-
-                _writer = _stream.CanWrite ?
-                    new CryptoStream(_stream, _encryptor, CryptoStreamMode.Write) :
-                    null;
-
-                // set stream to password checking
-                _stream.Position = 32;
-
-                var checkBuffer = new byte[32];
-
-                // fill checkBuffer with encrypted 1 to check when open
-                if (isNew)
-                {
-                    checkBuffer.Fill(1, 0, checkBuffer.Length);
-
-                    _writer.Write(checkBuffer, 0, checkBuffer.Length);
-                }
-                else
-                {
-                    _reader.Read(checkBuffer, 0, checkBuffer.Length);
-
-                    if (!checkBuffer.All(x => x == 1))
-                    {
-                        throw new LiteException(0, "Invalid password");
-                    }
-                }
-
-                _stream.Position = PAGE_SIZE;
-
             }
             catch
             {
-                _stream.Dispose();
-
+                _aesStream?.Dispose();
+                _baseStream.Dispose();
                 throw;
             }
         }
 
-        /// <summary>
-        /// Decrypt data from Stream
-        /// </summary>
-        public override int Read(byte[] array, int offset, int count)
-        {
-            ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
-            ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
+        #region Stream implementations
 
-            var r = _reader.Read(array, offset, count);
+        public override bool CanRead => _aesStream.CanRead;
 
-            return r;
+        public override bool CanSeek => _aesStream.CanSeek;
+
+        public override bool CanWrite => _aesStream.CanWrite;
+
+        public override long Length => _aesStream.Length - PAGE_SIZE;
+
+        public override long Position 
+        { 
+            get => _aesStream.Position - PAGE_SIZE; 
+            set => this.Seek(value, SeekOrigin.Begin); 
         }
 
-        /// <summary>
-        /// Encrypt data to Stream
-        /// </summary>
-        public override void Write(byte[] array, int offset, int count)
-        {
-            ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
-            ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
+        public override void Flush() => _aesStream.Flush();
 
-            _writer.Write(array, offset, count);
+        public override long Seek(long offset, SeekOrigin origin) => _aesStream.Seek(offset + PAGE_SIZE, origin);
+
+        public override void SetLength(long value) => _aesStream.SetLength(value + PAGE_SIZE);
+
+        public override int Read(byte[] buffer, int offset, int count) => _aesStream.Read(buffer, offset, count);
+
+        public override void Write(byte[] buffer, int offset, int count) => _aesStream.Write(buffer, offset, count);
+
+        #endregion
+
+        /// <summary>
+        /// Create a new instance of XtsStream using PAGE_SIZE sector size
+        /// </summary>
+        public static XtsSectorStream CreateXtsStream(string password, Stream baseStream, byte[] salt)
+        {
+            using (var pdb = new Rfc2898DeriveBytes(password, salt))
+            {
+                var xts = XtsAes128.Create(pdb.GetBytes(32));
+                return new XtsSectorStream(baseStream, xts, PAGE_SIZE, 0);
+            }
         }
 
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-
-            _stream?.Dispose();
-
-            _encryptor.Dispose();
-            _decryptor.Dispose();
-
-            _aes.Dispose();
-        }
-
-        /// <summary>
-        /// Get new salt for encryption
-        /// </summary>
-        public static byte[] NewSalt()
-        {
-            var salt = new byte[ENCRYPTION_SALT_SIZE];
-
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(salt);
-            }
-
-            return salt;
-        }
-
-        public override void Flush()
-        {
-            _stream.Flush();
-        }
-
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            return _stream.Seek(offset + PAGE_SIZE, origin);
-        }
-
-        public override void SetLength(long value)
-        {
-            _stream.SetLength(value + PAGE_SIZE);
+            _aesStream.Dispose();
+            _baseStream.Dispose();
         }
     }
 }

@@ -44,6 +44,10 @@
     <Reference Include="System" />
     <Reference Include="System.Runtime" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utils\Xts\" />
+  </ItemGroup>
   
   <!-- End References -->
 
