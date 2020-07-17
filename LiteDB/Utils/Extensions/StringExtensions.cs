@@ -20,7 +20,7 @@ namespace LiteDB
         {
             if (string.IsNullOrWhiteSpace(str)) return false;
 
-            for(var i = 0; i < str.Length; i++)
+            for (var i = 0; i < str.Length; i++)
             {
                 if (!Tokenizer.IsWordChar(str[i], i == 0)) return false;
             }
@@ -39,11 +39,7 @@ namespace LiteDB
         {
             var data = Encoding.UTF8.GetBytes(value);
 
-#if HAVE_SHA1_MANAGED
-            using (var sha = new SHA1Managed())
-#else
             using (var sha = SHA1.Create())
-#endif
             {
                 var hashData = sha.ComputeHash(data);
                 var hash = new StringBuilder();
@@ -193,7 +189,7 @@ namespace LiteDB
             var len = str.Length;
             var c = '\0';
 
-            while(i < len)
+            while (i < len)
             {
                 c = str[i];
 
