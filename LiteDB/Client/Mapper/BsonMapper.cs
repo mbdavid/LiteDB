@@ -388,9 +388,9 @@ namespace LiteDB
                     Reflection.DocumentItemProperty,
                     new[] { Expression.Constant(name) });
 
-                if (Reflection.ConvertType.ContainsKey(p.ParameterType))
+                if (Reflection.ConvertType.TryGetValue(p.ParameterType, out var propInfo))
                 {
-                    var prop = Expression.Property(expr, Reflection.ConvertType[p.ParameterType]);
+                    var prop = Expression.Property(expr, propInfo);
                     pars.Add(prop);
                 }
                 else
