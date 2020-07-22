@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -33,9 +34,9 @@ namespace LiteDB
         /// <summary>
         /// Map serializer/deserialize for custom types
         /// </summary>
-        private Dictionary<Type, Func<object, BsonValue>> _customSerializer = new Dictionary<Type, Func<object, BsonValue>>();
+        private ConcurrentDictionary<Type, Func<object, BsonValue>> _customSerializer = new ConcurrentDictionary<Type, Func<object, BsonValue>>();
 
-        private Dictionary<Type, Func<BsonValue, object>> _customDeserializer = new Dictionary<Type, Func<BsonValue, object>>();
+        private ConcurrentDictionary<Type, Func<BsonValue, object>> _customDeserializer = new ConcurrentDictionary<Type, Func<BsonValue, object>>();
 
         /// <summary>
         /// Type instantiator function to support IoC
@@ -369,7 +370,7 @@ namespace LiteDB
             var ctor =
                 ctors.FirstOrDefault(x => x.GetCustomAttribute<BsonCtorAttribute>() != null && x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType))) ??
                 ctors.FirstOrDefault(x => x.GetParameters().Length == 0) ??
-                ctors.FirstOrDefault(x => x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType)));
+                ctors.FirstOrDefault(x => x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType) || _customDeserializer.ContainsKey(p.ParameterType)));
 
             if (ctor == null) return null;
 
@@ -387,9 +388,18 @@ namespace LiteDB
                     Reflection.DocumentItemProperty,
                     new[] { Expression.Constant(name) });
 
-                var prop = Expression.Property(expr, Reflection.ConvertType[p.ParameterType]);
-
-                pars.Add(prop);
+                if (Reflection.ConvertType.ContainsKey(p.ParameterType))
+                {
+                    var prop = Expression.Property(expr, Reflection.ConvertType[p.ParameterType]);
+                    pars.Add(prop);
+                }
+                else
+                {
+                    var deserializer = Expression.Constant(_customDeserializer[p.ParameterType]);
+                    var call = Expression.Invoke(deserializer, expr);
+                    var cast = Expression.Convert(call, p.ParameterType);
+                    pars.Add(cast);
+                }
             }
 
             // get `new MyClass([params])` expression
