@@ -55,6 +55,11 @@ namespace LiteDB
             // if is already a bson value
             if (obj is BsonValue bsonValue) return bsonValue;
 
+            // check if is a custom type
+            else if (_customSerializer.TryGetValue(type, out var custom) || _customSerializer.TryGetValue(obj.GetType(), out custom))
+            {
+                return custom(obj);
+            }
             // test string - mapper has some special options
             else if (obj is String)
             {
@@ -113,11 +118,6 @@ namespace LiteDB
                 {
                     return new BsonValue(obj.ToString());
                 }
-            }
-            // check if is a custom type
-            else if (_customSerializer.TryGetValue(type, out var custom) || _customSerializer.TryGetValue(obj.GetType(), out custom))
-            {
-                return custom(obj);
             }
             // for dictionary
             else if (obj is IDictionary dict)

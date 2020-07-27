@@ -81,6 +81,12 @@ namespace LiteDB
             // null value - null returns
             if (value.IsNull) return null;
 
+            // test if has a custom type implementation
+            else if (_customDeserializer.TryGetValue(type, out Func<BsonValue, object> custom))
+            {
+                return custom(value);
+            }
+
             // if is nullable, get underlying type
             else if (Reflection.IsNullable(type))
             {
@@ -127,12 +133,6 @@ namespace LiteDB
                 if (value.IsString) return Enum.Parse(type, value.AsString);
 
                 if (value.IsNumber) return value.AsInt32;
-            }
-
-            // test if has a custom type implementation
-            else if (_customDeserializer.TryGetValue(type, out Func<BsonValue, object> custom))
-            {
-                return custom(value);
             }
 
             // if value is array, deserialize as array
