@@ -126,7 +126,7 @@ namespace LiteDB.Engine
                     else
                     {
                         // set in ref document that was not found
-                        value.Add("$missing", true);
+                        value["$missing"] = true;
                     }
                 }
             }
