@@ -81,16 +81,16 @@ namespace LiteDB
             // null value - null returns
             if (value.IsNull) return null;
 
-            // test if has a custom type implementation
-            else if (_customDeserializer.TryGetValue(type, out Func<BsonValue, object> custom))
-            {
-                return custom(value);
-            }
-
             // if is nullable, get underlying type
-            else if (Reflection.IsNullable(type))
+            if (Reflection.IsNullable(type))
             {
                 type = Reflection.UnderlyingTypeOf(type);
+            }
+
+            // test if has a custom type implementation
+            if (_customDeserializer.TryGetValue(type, out Func<BsonValue, object> custom))
+            {
+                return custom(value);
             }
 
             var typeInfo = type.GetTypeInfo();
@@ -182,8 +182,8 @@ namespace LiteDB
                 // initialize CreateInstance
                 if (entity.CreateInstance == null)
                 {
-                    entity.CreateInstance = 
-                        this.GetTypeCtor(entity) ?? 
+                    entity.CreateInstance =
+                        this.GetTypeCtor(entity) ??
                         ((BsonDocument v) => Reflection.CreateInstance(entity.ForType));
                 }
 
@@ -290,7 +290,7 @@ namespace LiteDB
             var args = new List<object>();
             var ctor = type.GetConstructors()[0];
 
-            foreach(var par in ctor.GetParameters())
+            foreach (var par in ctor.GetParameters())
             {
                 var arg = this.Deserialize(par.ParameterType, value[par.Name]);
 
