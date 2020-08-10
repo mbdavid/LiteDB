@@ -388,17 +388,18 @@ namespace LiteDB
                     Reflection.DocumentItemProperty,
                     new[] { Expression.Constant(name) });
 
-                if (Reflection.ConvertType.TryGetValue(p.ParameterType, out var propInfo))
+                if (_customDeserializer.TryGetValue(p.ParameterType, out var func))
                 {
-                    var prop = Expression.Property(expr, propInfo);
-                    pars.Add(prop);
-                }
-                else
-                {
-                    var deserializer = Expression.Constant(_customDeserializer[p.ParameterType]);
+                    var deserializer = Expression.Constant(func);
                     var call = Expression.Invoke(deserializer, expr);
                     var cast = Expression.Convert(call, p.ParameterType);
                     pars.Add(cast);
+                }
+                else
+                {
+                    var propInfo = Reflection.ConvertType[p.ParameterType];
+                    var prop = Expression.Property(expr, propInfo);
+                    pars.Add(prop);
                 }
             }
 
