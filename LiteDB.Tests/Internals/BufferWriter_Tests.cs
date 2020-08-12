@@ -156,7 +156,7 @@ namespace LiteDB.Internals
             p += 8;
             source.ReadDateTime(p).Should().Be(DateTime.MaxValue);
             p += 8;
-            source.ReadDateTime(p).Should().Be(d);
+            source.ReadDateTime(p).ToLocalTime().Should().Be(d);
             p += 8;
             source.ReadGuid(p).Should().Be(Guid.Empty);
             p += 16;

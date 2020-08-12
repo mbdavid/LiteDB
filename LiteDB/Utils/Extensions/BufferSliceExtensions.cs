@@ -85,7 +85,7 @@ namespace LiteDB
             if (ticks == 0) return DateTime.MinValue;
             if (ticks == 3155378975999999999) return DateTime.MaxValue;
 
-            return new DateTime(buffer.ReadInt64(offset), DateTimeKind.Utc).ToLocalTime();
+            return new DateTime(ticks, DateTimeKind.Utc);
         }
 
         public static PageAddress ReadPageAddress(this BufferSlice buffer, int offset)
