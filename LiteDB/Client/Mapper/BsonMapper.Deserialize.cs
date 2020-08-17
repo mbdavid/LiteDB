@@ -132,7 +132,7 @@ namespace LiteDB
             {
                 if (value.IsString) return Enum.Parse(type, value.AsString);
 
-                if (value.IsNumber) return value.AsInt32;
+                if (value.IsNumber) return Enum.ToObject(type, value.AsInt32);
             }
 
             // if value is array, deserialize as array
