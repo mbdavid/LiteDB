@@ -103,6 +103,10 @@ namespace LiteDB.Engine
                     checkBuffer.Fill(1, 0, checkBuffer.Length);
 
                     _writer.Write(checkBuffer, 0, checkBuffer.Length);
+
+                    //ensure that the "hidden" page in encrypted files is created correctly
+                    _stream.Position = PAGE_SIZE - 1;
+                    _stream.WriteByte(0);
                 }
                 else
                 {
@@ -115,6 +119,7 @@ namespace LiteDB.Engine
                 }
 
                 _stream.Position = PAGE_SIZE;
+                _stream.FlushToDisk();
 
             }
             catch
