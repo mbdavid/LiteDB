@@ -1224,8 +1224,6 @@ namespace LiteDB
                 var right = BsonExpression.ParseAndCompile(tokenizer, BsonExpressionParserMode.Full, parameters,
                     left.Type == BsonExpressionType.Source ? DocumentScope.Source : DocumentScope.Current);
 
-                if (right.IsScalar == false) throw new LiteException(0, $"Right parameter must be a scalar expression in function.");
-
                 src.Append("=>" + right.Source);
                 args.Add(Expression.Constant(right));
                 fields.AddRange(right.Fields);
