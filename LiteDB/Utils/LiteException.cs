@@ -50,6 +50,7 @@ namespace LiteDB
         public const int INITIALSIZE_CRYPTO_NOT_SUPPORTED = 210;
         public const int INVALID_INITIALSIZE = 211;
         public const int INVALID_NULL_CHAR_STRING = 212;
+        public const int INVALID_FREE_SPACE_PAGE = 213;
 
         #endregion
 
@@ -298,6 +299,11 @@ namespace LiteDB
             sb.Append($"ShareCounter: {page.Buffer.ShareCounter}. ");
 
             return new LiteException(0, sb.ToString());
+        }
+
+        internal static LiteException InvalidFreeSpacePage(uint pageID, int freeBytes, int length)
+        {
+            return new LiteException(INVALID_FREE_SPACE_PAGE, $"An operation that would corrupt page {pageID} was prevented. The operation required {length} free bytes, but the page had only {freeBytes} available.");
         }
 
         #endregion

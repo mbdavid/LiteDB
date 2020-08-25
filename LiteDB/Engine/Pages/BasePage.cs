@@ -312,6 +312,11 @@ namespace LiteDB.Engine
             ENSURE(this.ItemsCount < byte.MaxValue, "page full");
             ENSURE(this.FreeBytes >= this.FragmentedBytes, "fragmented bytes must be at most free bytes");
 
+            if(!(this.FreeBytes >= bytesLength + (isNewInsert ? SLOT_SIZE : 0)))
+            {
+                throw LiteException.InvalidFreeSpacePage(this.PageID, this.FreeBytes, bytesLength + (isNewInsert ? SLOT_SIZE : 0));
+            }
+
             // calculate how many continuous bytes are avaiable in this page
             var continuousBlocks = this.FreeBytes - this.FragmentedBytes - (isNewInsert ? SLOT_SIZE : 0);
 
