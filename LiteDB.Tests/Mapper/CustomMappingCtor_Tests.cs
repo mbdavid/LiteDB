@@ -63,6 +63,17 @@ namespace LiteDB.Tests.Mapper
             }
         }
 
+        public class ClassByte
+        {
+            public byte MyByte { get; }
+
+            [BsonCtor]
+            public ClassByte(byte myByte)
+            {
+                MyByte = myByte;
+            }
+        }
+
         private BsonMapper _mapper = new BsonMapper();
 
         [Fact]
@@ -108,6 +119,16 @@ namespace LiteDB.Tests.Mapper
             obj.Id.Should().Be(1);
             obj.Name.Should().Be("myName");
             obj.DateTimeOffset.Should().Be(new DateTimeOffset(new DateTime(2020, 01, 01)));
+        }
+
+        [Fact]
+        public void Custom_Ctor_Byte_Property()
+        {
+            var obj1 = new ClassByte(150);
+            var doc = _mapper.ToDocument(obj1);
+            var obj2 = _mapper.ToObject<ClassByte>(doc);
+
+            obj2.MyByte.Should().Be(obj1.MyByte);
         }
     }
 }
