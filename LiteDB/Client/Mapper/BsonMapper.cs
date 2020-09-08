@@ -370,7 +370,7 @@ namespace LiteDB
             var ctor =
                 ctors.FirstOrDefault(x => x.GetCustomAttribute<BsonCtorAttribute>() != null && x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType) || _basicTypes.Contains(p.ParameterType))) ??
                 ctors.FirstOrDefault(x => x.GetParameters().Length == 0) ??
-                ctors.FirstOrDefault(x => x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType) || _customDeserializer.ContainsKey(p.ParameterType)));
+                ctors.FirstOrDefault(x => x.GetParameters().All(p => Reflection.ConvertType.ContainsKey(p.ParameterType) || _customDeserializer.ContainsKey(p.ParameterType) || _basicTypes.Contains(p.ParameterType)));
 
             if (ctor == null) return null;
 
