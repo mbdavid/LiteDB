@@ -101,6 +101,19 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Visit lambda invocation
+        /// </summary>
+        protected override Expression VisitInvocation(InvocationExpression node)
+        {
+            var l = base.VisitInvocation(node);
+
+            // remove last parameter $ (or @)
+            _builder.Length--;
+
+            return l;
+        }
+
+        /// <summary>
         /// Visit :: x => `x`.Customer.Name
         /// </summary>
         protected override Expression VisitParameter(ParameterExpression node)
