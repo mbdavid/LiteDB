@@ -672,7 +672,7 @@ namespace LiteDB
         {
             // apppend `= true` only if expression is path (MemberAccess), method call or constant
             ensurePredicate = ensurePredicate &&
-                (expr.NodeType == ExpressionType.MemberAccess || expr.NodeType == ExpressionType.Call || expr.NodeType == ExpressionType.Constant);
+                (expr.NodeType == ExpressionType.MemberAccess || expr.NodeType == ExpressionType.Call || expr.NodeType == ExpressionType.Invoke || expr.NodeType == ExpressionType.Constant);
 
             if (ensurePredicate)
             {
