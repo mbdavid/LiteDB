@@ -517,7 +517,7 @@ namespace LiteDB.Tests.Mapper
                   (Expression.AndAlso(exprLeft.Body, invokedExprRight), exprLeft.Parameters);
 
             Test<User, bool>(expr, "(($._id>=@p0) AND ($._id<=@p1))", 1, 10);
-            Test<User, bool>(exprMerged, "(($._id>=@p0) AND (@._id<=@p1))", 1, 10);
+            Test<User, bool>(exprMerged, "(($._id>=@p0) AND (((@._id<=@p1))=true))", 1, 10);
             //the right expr of exprMerged uses @ (instead of $) because the rootParameter is different for exprLeft and exprRight
         }
 
