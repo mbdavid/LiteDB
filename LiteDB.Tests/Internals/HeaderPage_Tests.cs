@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using FluentAssertions;
 using LiteDB.Engine;
 using Xunit;
@@ -25,7 +25,7 @@ namespace LiteDB.Internals
             header.GetCollections().Count().Should().Be(2);
             ((int) header.GetCollectionPageID("my-col1")).Should().Be(1);
             ((int) header.GetCollectionPageID("my-col2")).Should().Be(2);
-            header.GetAvaiableCollectionSpace().Should().Be(7981);
+            header.GetAvailableCollectionSpace().Should().Be(7981);
 
             header.UpdateBuffer();
 
@@ -35,7 +35,7 @@ namespace LiteDB.Internals
             h2.GetCollections().Count().Should().Be(2);
             ((int) h2.GetCollectionPageID("my-col1")).Should().Be(1);
             ((int) h2.GetCollectionPageID("my-col2")).Should().Be(2);
-            h2.GetAvaiableCollectionSpace().Should().Be(7981);
+            h2.GetAvailableCollectionSpace().Should().Be(7981);
 
             buffer.ShareCounter = 0;
         }
