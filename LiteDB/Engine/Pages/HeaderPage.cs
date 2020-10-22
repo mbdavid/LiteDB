@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -55,9 +55,9 @@ namespace LiteDB.Engine
         /// </summary>
         public DateTime CreationTime { get; }
 
-        /// <summary>	
+        /// <summary>
         /// Get database pragmas instance class
-        /// </summary>	
+        /// </summary>
         public EnginePragmas Pragmas { get; set; }
 
         /// <summary>
@@ -243,9 +243,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get how many bytes are avaiable in collection to store new collections
+        /// Get how many bytes are available in collection to store new collections
         /// </summary>
-        public int GetAvaiableCollectionSpace()
+        public int GetAvailableCollectionSpace()
         {
             return COLLECTIONS_SIZE -
                 _collections.GetBytesCount(true) -
