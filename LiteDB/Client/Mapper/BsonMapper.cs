@@ -492,8 +492,13 @@ namespace LiteDB
                 if (included)
                 {
                     doc["_id"] = idRef;
+                    if (doc.ContainsKey("$type"))
+                    {
+                        doc["_type"] = bson["$type"];
+                    }
 
                     return m.Deserialize(entity.ForType, doc);
+                    
                 }
                 else
                 {
