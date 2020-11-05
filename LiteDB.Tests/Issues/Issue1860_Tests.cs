@@ -78,8 +78,7 @@ namespace LiteDB.Tests.Issues
         [Fact]
         public void Constructor_has_enum_asint()
         {
-            BsonMapper.Global.EnumAsInteger = true;
-            using var db = new LiteDatabase(":memory:");
+            using var db = new LiteDatabase(":memory:", new BsonMapper { EnumAsInteger = true });
 
             // Get a collection (or create, if doesn't exist)
             var col1 = db.GetCollection<C1>("c1");
