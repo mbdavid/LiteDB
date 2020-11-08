@@ -577,6 +577,10 @@ namespace LiteDB
                     if (included)
                     {
                         item["_id"] = idRef;
+                        if (item.AsDocument.ContainsKey("$type"))
+                        {
+                            item["_type"] = item["$type"];
+                        }
 
                         result.Add(item);
                     }

@@ -5,22 +5,24 @@ using System.Linq;
 
 namespace LiteDB.Tests.Issues
 {
-    public class Order : BaseEntity
-    {
-        public Customer Customer { get; set; }
-    }
-
-    public class Customer : BaseEntity
-    {
-        public string Name { get; set; }
-    }
-
-    public class BaseEntity
-    {
-        public Guid Id { get; set; }
-    }
+    
     public class Issue1651_Tests
     {
+        public class Order : BaseEntity
+        {
+            public Customer Customer { get; set; }
+        }
+
+        public class Customer : BaseEntity
+        {
+            public string Name { get; set; }
+        }
+
+        public class BaseEntity
+        {
+            public Guid Id { get; set; }
+        }
+
         [Fact]
         public void Find_ByRelationId_Success()
         {
