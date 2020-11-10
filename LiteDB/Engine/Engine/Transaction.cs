@@ -39,9 +39,7 @@ namespace LiteDB.Engine
 
                 if (transaction.State == TransactionState.Active)
                 {
-                    transaction.Commit();
-
-                    _monitor.ReleaseTransaction(transaction);
+                    this.CommitAndReleaseTransaction(transaction);
 
                     return true;
                 }
@@ -82,11 +80,7 @@ namespace LiteDB.Engine
 
                 // if this transaction was auto-created for this operation, commit & dispose now
                 if (isNew)
-                {
-                    transaction.Commit();
-
-                    _monitor.ReleaseTransaction(transaction);
-                }
+                    this.CommitAndReleaseTransaction(transaction);
 
                 return result;
             }
@@ -100,17 +94,14 @@ namespace LiteDB.Engine
 
                 throw;
             }
-            finally
-            {
-                //TODO: acho que não é este o lugar para fazer o teste - devo capturar o ReleaseTransaction para isso 
-                // (ou seja, faz no final da transacao)
+        }
 
-                // do auto-checkpoint if enabled (default: 1000 pages)
-                if (_header.Pragmas.Checkpoint > 0 && _disk.GetLength(FileOrigin.Log) > (_header.Pragmas.Checkpoint * PAGE_SIZE))
-                {
-                    _walIndex.TryCheckpoint();
-                }
-            }
+        private void CommitAndReleaseTransaction(TransactionService transaction)
+        {
+            transaction.Commit();
+            _monitor.ReleaseTransaction(transaction);
+            if (_header.Pragmas.Checkpoint > 0 && _disk.GetLength(FileOrigin.Log) > (_header.Pragmas.Checkpoint * PAGE_SIZE))
+                _walIndex.TryCheckpoint();
         }
     }
 }
