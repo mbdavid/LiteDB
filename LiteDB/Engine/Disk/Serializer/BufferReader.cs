@@ -195,27 +195,14 @@ namespace LiteDB.Engine
                     this.MoveFordward(initialCount);
 
                     // and go to next segment
-                    if (!_isEOF)
+                    while (_current[_currentPosition] != 0x00 && _isEOF == false)
                     {
-                        while (_current[_currentPosition] != 0x00)
-                        {
-                            if (this.MoveFordward(1))
-                            {
-                                // write all segment into strem (did not found \0 yet)
-                                mem.Write(_current.Array, _current.Offset, _current.Count);
-                            }
+                        mem.WriteByte(_current[_currentPosition]);
 
-                            if (_isEOF) break;
-                        }
-
-                        // add last segment (if eof already added in while)
-                        if (!_isEOF)
-                        {
-                            mem.Write(_current.Array, _current.Offset, _currentPosition);
-                        }
-
-                        this.MoveFordward(1); // +1 to '\0'
+                        this.MoveFordward(1);
                     }
+
+                    this.MoveFordward(1); // +1 to '\0'
 
                     return Encoding.UTF8.GetString(mem.ToArray());
                 }
