@@ -75,6 +75,14 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Finalizer: Will be called once a thread is closed. The TransactionMonitor._slot releases the used TransactionService.
+        /// </summary>
+        ~TransactionService()
+        {
+            Dispose(false);
+        }
+
+        /// <summary>
         /// Create (or get from transaction-cache) snapshot and return
         /// </summary>
         public Snapshot CreateSnapshot(LockMode mode, string collection, bool addIfNotExists)
@@ -375,10 +383,22 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Dispose
+        /// Public implementation of Dispose pattern.
         /// </summary>
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        // Protected implementation of Dispose pattern.
+        protected virtual void Dispose(bool dispose)
+        {
+            if (_state == TransactionState.Disposed)
+            {
+                return;
+            }
+
             ENSURE(_state != TransactionState.Disposed, "transaction must be active before call Done");
 
             // clean snapshots if there is no commit/rollback
@@ -409,6 +429,12 @@ namespace LiteDB.Engine
             _reader.Dispose();
 
             _state = TransactionState.Disposed;
+
+            if (!dispose)
+            {
+                // Remove transaction monitor's dictionary
+                _monitor.ReleaseTransaction(this);
+            }
         }
     }
 }
