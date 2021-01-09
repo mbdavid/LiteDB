@@ -131,7 +131,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    throw new Exception("LiteDB contract violation: " + message);
+                    throw new Exception("LiteDB ENSURE: " + message);
                 }
             }
         }
@@ -150,13 +150,13 @@ namespace LiteDB
                 }
                 else
                 {
-                    throw new Exception("LiteDB contract violation: " + message);
+                    throw new Exception("LiteDB ENSURE: " + message);
                 }
             }
         }
 
         /// <summary>
-        /// Ensure condition is true, otherwise throw exception (check contract)
+        /// Ensure condition is true, otherwise throw exception (runs only in DEBUG mode)
         /// </summary>
         [DebuggerHidden]
         [Conditional("DEBUG")]
@@ -170,7 +170,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    throw new Exception("LiteDB contract violation: " + message);
+                    throw new Exception("LiteDB DEBUG: " + message);
                 }
             }
         }
