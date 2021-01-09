@@ -238,7 +238,7 @@ namespace LiteDB
         /// </summary>
         public static void WriteIndexKey(this BufferSlice buffer, BsonValue value, int offset)
         {
-            ENSURE(IndexNode.GetKeyLength(value, true) <= MAX_INDEX_KEY_LENGTH, $"index key must have less than {MAX_INDEX_KEY_LENGTH} bytes");
+            DEBUG(IndexNode.GetKeyLength(value, true) <= MAX_INDEX_KEY_LENGTH, $"index key must have less than {MAX_INDEX_KEY_LENGTH} bytes");
 
             if (value.IsString)
             {

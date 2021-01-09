@@ -141,7 +141,7 @@ namespace LiteDB.Engine
         {
             _buffer = buffer;
 
-            ENSURE(buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE - 1).All(0), "new page buffer must be empty before use in a new page");
+            DEBUG(buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE - 1).All(0), "new page buffer must be empty before use in a new page");
 
             // page information
             this.PageID = pageID;
@@ -426,8 +426,8 @@ namespace LiteDB.Engine
             if (this.ItemsCount == 0)
             {
                 ENSURE(this.HighestIndex == byte.MaxValue, "if there is no items, HighestIndex must be clear");
-                ENSURE(_buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE - 1).All(0), "all content area must be 0");
                 ENSURE(this.UsedBytes == 0, "should be no bytes used in clean page");
+                DEBUG(_buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE - 1).All(0), "all content area must be 0");
 
                 this.NextFreePosition = PAGE_HEADER_SIZE;
                 this.FragmentedBytes = 0;

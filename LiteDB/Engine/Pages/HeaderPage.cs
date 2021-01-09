@@ -249,9 +249,9 @@ namespace LiteDB.Engine
         {
             return COLLECTIONS_SIZE -
                 _collections.GetBytesCount(true) -
-                1 + // for int32 type (0x10)
-                1 + // for new CString ('\0')
-                4 + // for PageID (int32)
+                1 - // for int32 type (0x10)
+                1 - // for new CString ('\0')
+                4 - // for PageID (int32)
                 8; // reserved
         }
     }

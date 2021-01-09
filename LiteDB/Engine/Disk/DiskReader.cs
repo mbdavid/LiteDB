@@ -63,7 +63,7 @@ namespace LiteDB.Engine
 
             stream.Read(buffer.Array, buffer.Offset, buffer.Count);
 
-            ENSURE(buffer.All(0) == false, "check if are not reading out of file length");
+            DEBUG(buffer.All(0) == false, "check if are not reading out of file length");
         }
 
         /// <summary>
