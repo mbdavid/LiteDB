@@ -298,13 +298,13 @@ namespace LiteDB.Engine
         /// </summary>
         private void Extend()
         {
-            // count how many pages in cache are avaiable to be re-used (is not in use at this time)
+            // count how many pages in cache are available to be re-used (is not in use at this time)
             var emptyShareCounter = _readable.Values.Count(x => x.ShareCounter == 0);
 
             // get segmentSize
             var segmentSize = _segmentSizes[Math.Min(_segmentSizes.Length - 1, _extends)];
 
-            // if this count are larger than MEMORY_SEGMENT_SIZE, re-use all this pages
+            // if this count is larger than MEMORY_SEGMENT_SIZE, re-use all this pages
             if (emptyShareCounter > segmentSize)
             {
                 // get all readable pages that can return to _free (slow way)
@@ -352,7 +352,7 @@ namespace LiteDB.Engine
                 // create big linear array in heap memory (LOH => 85Kb)
                 var buffer = new byte[PAGE_SIZE * segmentSize];
 
-                // slit linear array into many array slices
+                // split linear array into many array slices
                 for (var i = 0; i < segmentSize; i++)
                 {
                     var uniqueID = (_extends * segmentSize) + i + 1;

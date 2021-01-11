@@ -79,7 +79,7 @@ namespace LiteDB
 
         /// <summary>
         /// Size, in PAGES, for each buffer array (used in MemoryStore)
-        /// It's an array to increase after each extend - limited in heighest value
+        /// It's an array to increase after each extend - limited in highest value
         /// Each byte array will be created with this size * PAGE_SIZE
         /// Use minimal 12 to allocate at least 85Kb per segment (will use LOH)
         /// </summary>

@@ -188,7 +188,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Gets all node list from passed nodeAddress (fordward only)
+        /// Gets all node list from passed nodeAddress (forward only)
         /// </summary>
         public IEnumerable<IndexNode> GetNodeList(PageAddress nodeAddress)
         {
