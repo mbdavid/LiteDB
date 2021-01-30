@@ -474,8 +474,26 @@ namespace LiteDB
 
             if (value != null)
             {
-                var number = Convert.ToInt32(value, CultureInfo.InvariantCulture.NumberFormat);
-                var constant = Expression.Constant(new BsonValue(number));
+                var isInt32 = Int32.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var i32);
+                if (isInt32)
+                {
+                    var constant32 = Expression.Constant(new BsonValue(i32));
+
+                    return new BsonExpression
+                    {
+                        Type = BsonExpressionType.Int,
+                        Parameters = parameters,
+                        IsImmutable = true,
+                        UseSource = false,
+                        IsScalar = true,
+                        Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+                        Expression = constant32,
+                        Source = i32.ToString(CultureInfo.InvariantCulture.NumberFormat)
+                    };
+                }
+
+                var i64 = Int64.Parse(value, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat);
+                var constant64 = Expression.Constant(new BsonValue(i64));
 
                 return new BsonExpression
                 {
@@ -485,8 +503,8 @@ namespace LiteDB
                     UseSource = false,
                     IsScalar = true,
                     Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-                    Expression = constant,
-                    Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
+                    Expression = constant64,
+                    Source = i64.ToString(CultureInfo.InvariantCulture.NumberFormat)
                 };
             }
 
@@ -770,7 +788,7 @@ namespace LiteDB
 
                     src.Append(next.Value);
 
-                    if (next.Type == TokenType.Comma) continue; 
+                    if (next.Type == TokenType.Comma) continue;
                     break;
                 }
             }
@@ -901,7 +919,7 @@ namespace LiteDB
 
                     src.Append(next.Value);
 
-                    if (next.Type == TokenType.Comma) continue; 
+                    if (next.Type == TokenType.Comma) continue;
                     break;
                 }
             }
@@ -930,7 +948,7 @@ namespace LiteDB
                 if (item.parameter.ParameterType.IsEnumerable() == false && item.expr.IsScalar == false)
                 {
                     // convert enumerable expresion into scalar expression
-                    args.Add(ConvertToArray(item.expr).Expression); 
+                    args.Add(ConvertToArray(item.expr).Expression);
                 }
                 else if (item.parameter.ParameterType.IsEnumerable() && item.expr.IsScalar)
                 {
@@ -975,7 +993,7 @@ namespace LiteDB
 
                 var ahead = tokenizer.LookAhead(false);
 
-                if(ahead.Type == TokenType.Period)
+                if (ahead.Type == TokenType.Period)
                 {
                     tokenizer.ReadToken(); // read .
                     tokenizer.ReadToken(); // read word or [
@@ -1154,7 +1172,7 @@ namespace LiteDB
 
             var token = tokenizer.Current.Value.ToUpper();
 
-            switch(token)
+            switch (token)
             {
                 case "MAP": return ParseFunction(token, BsonExpressionType.Map, tokenizer, context, parameters, scope);
                 case "FILTER": return ParseFunction(token, BsonExpressionType.Filter, tokenizer, context, parameters, scope);
@@ -1203,10 +1221,8 @@ namespace LiteDB
                 tokenizer.ReadToken().Expect(TokenType.Equals);
                 tokenizer.ReadToken().Expect(TokenType.Greater);
 
-                var right = BsonExpression.ParseAndCompile(tokenizer, BsonExpressionParserMode.Full, parameters, 
+                var right = BsonExpression.ParseAndCompile(tokenizer, BsonExpressionParserMode.Full, parameters,
                     left.Type == BsonExpressionType.Source ? DocumentScope.Source : DocumentScope.Current);
-
-                if (right.IsScalar == false) throw new LiteException(0, $"Right parameter must be a scalar expression in function.");
 
                 src.Append("=>" + right.Source);
                 args.Add(Expression.Constant(right));
@@ -1458,7 +1474,7 @@ namespace LiteDB
                 Expression = Expression.New(ctor, expr),
                 Left = left,
                 Right = right,
-                Source = left.Source + " " + (type.ToString().ToUpper()) +  " " + right.Source
+                Source = left.Source + " " + (type.ToString().ToUpper()) + " " + right.Source
             };
 
             return result;

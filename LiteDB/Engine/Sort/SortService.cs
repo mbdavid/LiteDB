@@ -196,7 +196,7 @@ namespace LiteDB.Engine
         /// </summary>
         private IEnumerable<KeyValuePair<BsonValue, PageAddress>> YieldValues(IEnumerator<KeyValuePair<BsonValue, PageAddress>> source, Done done)
         {
-            var size = SortContainer.GetKeyLength(source.Current.Key) + PageAddress.SIZE;
+            var size = IndexNode.GetKeyLength(source.Current.Key, false) + PageAddress.SIZE;
 
             if (size > MAX_INDEX_KEY_LENGTH) throw new LiteException(0, $"Current value are larger than {MAX_INDEX_KEY_LENGTH} bytes and can't be sorted.");
 
@@ -204,7 +204,7 @@ namespace LiteDB.Engine
 
             while (source.MoveNext())
             {
-                var length = SortContainer.GetKeyLength(source.Current.Key) + PageAddress.SIZE;
+                var length = IndexNode.GetKeyLength(source.Current.Key, false) + PageAddress.SIZE;
 
                 done.Count++;
 

@@ -33,8 +33,32 @@ namespace LiteDB.Engine
             this.IndexExpression = index.Expression;
             this.Expression = expr;
 
+            var exprType = expr.Type;
+
+            // if the expression constant is in the left, invert expression type to "normalize" it
+            if(expr.Left.IsValue)
+            {
+                switch (expr.Type)
+                {
+                    case BsonExpressionType.GreaterThan:
+                        exprType = BsonExpressionType.LessThan;
+                        break;
+                    case BsonExpressionType.GreaterThanOrEqual:
+                        exprType = BsonExpressionType.LessThanOrEqual;
+                        break;
+                    case BsonExpressionType.LessThan:
+                        exprType = BsonExpressionType.GreaterThan;
+                        break;
+                    case BsonExpressionType.LessThanOrEqual:
+                        exprType = BsonExpressionType.GreaterThanOrEqual;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
             // create index instance
-            this.Index = value.Execute(collation).Select(x => this.CreateIndex(expr.Type, index.Name, x)).FirstOrDefault();
+            this.Index = value.Execute(collation).Select(x => this.CreateIndex(exprType, index.Name, x)).FirstOrDefault();
 
             ENSURE(this.Index != null, "index must be not null");
 

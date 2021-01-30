@@ -75,7 +75,7 @@ namespace LiteDB.Engine
                 node = indexer.GetNode(node.GetNextPrev(0, -this.Order));
             }
 
-            // move fordward
+            // move forward
             node = indexer.GetNode(first.GetNextPrev(0, this.Order));
 
             while (node != null)

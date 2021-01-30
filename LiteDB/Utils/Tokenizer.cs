@@ -602,6 +602,7 @@ namespace LiteDB
                     if (canE == false) break;
                     canE = false;
                     canSign = true;
+                    dbl = true;
                 }
                 else if (_char == '-' || _char == '+')
                 {

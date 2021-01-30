@@ -60,6 +60,18 @@ namespace LiteDB.Engine
                     _disk.ChangePassword(options.Password, _settings);
                 }
 
+// <<<<<<< HEAD
+// =======
+//                 // do checkpoint
+//                 _walIndex.Checkpoint();
+// 
+//                 // override header page
+//                 _disk.Write(new[] { _header.UpdateBuffer() }, FileOrigin.Data);
+// 
+//                 // set new fileLength
+//                 _disk.SetLength((_header.LastPageID + 1) * PAGE_SIZE, FileOrigin.Data);
+// 
+// >>>>>>> master
                 // get new filelength to compare
                 var newLength = (_header.LastPageID + 1) * PAGE_SIZE;
 

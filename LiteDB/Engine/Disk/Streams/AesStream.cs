@@ -75,6 +75,7 @@ namespace LiteDB.Engine
             {
                 _aesStream?.Dispose();
                 _baseStream.Dispose();
+
                 throw;
             }
         }

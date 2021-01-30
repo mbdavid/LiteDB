@@ -293,10 +293,9 @@ namespace LiteDB
         {
             _query.ExplainPlan = true;
 
-            using (var reader = _engine.Query(_collection, _query))
-            {
-                return reader.Current.AsDocument;
-            }
+            var reader = _engine.Query(_collection, _query);
+
+            return reader.ToEnumerable().FirstOrDefault()?.AsDocument;
         }
 
         #endregion

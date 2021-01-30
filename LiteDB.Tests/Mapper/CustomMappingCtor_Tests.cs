@@ -49,6 +49,31 @@ namespace LiteDB.Tests.Mapper
             }
         }
 
+        public class MyClass
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public DateTimeOffset DateTimeOffset { get; set; }
+
+            public MyClass(int id, string name, DateTimeOffset dateTimeOffset)
+            {
+                Id = id;
+                Name = name;
+                DateTimeOffset = dateTimeOffset;
+            }
+        }
+
+        public class ClassByte
+        {
+            public byte MyByte { get; }
+
+            [BsonCtor]
+            public ClassByte(byte myByte)
+            {
+                MyByte = myByte;
+            }
+        }
+
         private BsonMapper _mapper = new BsonMapper();
 
         [Fact]
@@ -83,6 +108,27 @@ namespace LiteDB.Tests.Mapper
             obj.Id.Should().Be(25);
             obj.Name.Should().Be("value-name");
             obj.DefinedOnlyInInt32.Should().Be("changed");
+        }
+
+        [Fact]
+        public void Custom_Ctor_Non_Simple_Types()
+        {
+            var doc = new BsonDocument { ["_id"] = 1, ["Name"] = "myName", ["DateTimeOffset"] = new DateTime(2020, 01, 01).ToUniversalTime() };
+            var obj = _mapper.ToObject<MyClass>(doc);
+
+            obj.Id.Should().Be(1);
+            obj.Name.Should().Be("myName");
+            obj.DateTimeOffset.Should().Be(new DateTimeOffset(new DateTime(2020, 01, 01)));
+        }
+
+        [Fact]
+        public void Custom_Ctor_Byte_Property()
+        {
+            var obj1 = new ClassByte(150);
+            var doc = _mapper.ToDocument(obj1);
+            var obj2 = _mapper.ToObject<ClassByte>(doc);
+
+            obj2.MyByte.Should().Be(obj1.MyByte);
         }
     }
 }

@@ -214,6 +214,10 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.PhoneNumbers.Contains(1234), "PhoneNumbers ANY = @p0", 1234);
             TestExpr<User>(x => x.Phones2.Contains(new Phone { Number = 1 }), "Phones2 ANY = { Number: @p0 }", 1);
 
+            // negated contains
+            TestExpr<User>(x => !x.PhoneNumbers.Contains(1234), "(PhoneNumbers ANY = @p0) = false", 1234);
+            TestExpr<User>(x => !x.Phones2.Contains(new Phone { Number = 1 }), "(Phones2 ANY = { Number: @p0 }) = false", 1);
+
             // fixed position with filter expression
             TestExpr<User>(x => x.Phones.First(p => p.Number == 1), "FIRST(FILTER($.Phones=>(@.Number=@p0)))", 1);
 
@@ -232,15 +236,18 @@ namespace LiteDB.Tests.Mapper
             TestPredicate<User>(x => x.Salary != 50, "(Salary != @p0)", 50);
             TestPredicate<User>(x => x.Salary == x.Id, "(Salary = _id)");
             TestPredicate<User>(x => x.Salary > 50 && x.Name == "John", "((Salary > @p0) AND (Name = @p1))", 50, "John");
+            TestPredicate<User>(x => x.Salary > 50 & x.Name == "John", "((Salary > @p0) AND (Name = @p1))", 50, "John");
+            TestPredicate<User>(x => x.Salary > 50 || x.Name == "John", "((Salary > @p0) OR (Name = @p1))", 50, "John");
+            TestPredicate<User>(x => x.Salary > 50 | x.Name == "John", "((Salary > @p0) OR (Name = @p1))", 50, "John");
 
             // unary expressions
             TestPredicate<User>(x => x.Active, "(Active = true)");
-            TestPredicate<User>(x => x.Active && x.Active, "((Active = true) AND (Active = true))");
-            TestPredicate<User>(x => x.Active && x.Active && x.Active, "((($.Active=true) AND ($.Active=true)) AND ($.Active=true))");
-            TestPredicate<User>(x => x.Active && !x.Active, "((Active = true) AND (Active = false))");
+            TestPredicate<User>(x => x.Active && x.Active, "(((Active) = true) AND ((Active) = true))");
+            TestPredicate<User>(x => x.Active && x.Active && x.Active, "(((($.Active)=true) AND (($.Active)=true)) AND (($.Active)=true))");
+            TestPredicate<User>(x => x.Active && !x.Active, "(((Active) = true) AND (Active = false))");
             TestPredicate<User>(x => !x.Active, "(Active = false)");
             TestPredicate<User>(x => !x.Active == true, "((Active = false) = @p0)", true);
-            TestPredicate<User>(x => !(x.Salary == 50), "(Salary = @p0) = false", 50);
+            TestPredicate<User>(x => !(x.Salary == 50), "((Salary = @p0)) = false", 50);
 
             // test for precedence order
             TestPredicate<User>(x => x.Name.StartsWith("J") == false, "(Name LIKE (@p0 + '%') = @p1)", "J", false);
@@ -271,7 +278,7 @@ namespace LiteDB.Tests.Mapper
             TestPredicate<User>(x => x.Latitude > 0, "(Latitude > @p0)", 0);
 
             TestPredicate<User>(x => x.Latitude != null && x.Latitude > 0, "((Latitude != @p0) AND (Latitude > @p1))", BsonValue.Null, 0);
-            TestPredicate<User>(x => x.Latitude.HasValue && x.Latitude > 0, "(((IS_NULL(Latitude) = false) = true) AND (Latitude > @p0))", 0);
+            TestPredicate<User>(x => x.Latitude.HasValue && x.Latitude > 0, "((((IS_NULL(Latitude) = false)) = true) AND (Latitude > @p0))", 0);
         }
 
         [Fact]
@@ -495,6 +502,23 @@ namespace LiteDB.Tests.Mapper
         public void Linq_Array_Any()
         {
             TestExpr<User>(x => x.Phones.Any(), "COUNT($.Phones) > 0");
+        }
+
+        [Fact]
+        public void Linq_InvocationExpression()
+        {
+            Expression<Func<User, bool>> expr = x => x.Id >= 1 && x.Id <= 10;
+            Expression<Func<User, bool>> exprLeft = x => x.Id >= 1;
+            Expression<Func<User, bool>> exprRight = x => x.Id <= 10;
+
+            var invokedExprRight = Expression.Invoke(exprRight, exprRight.Parameters.Cast<Expression>());
+
+            Expression<Func<User, bool>> exprMerged = Expression.Lambda<Func<User, bool>>
+                  (Expression.AndAlso(exprLeft.Body, invokedExprRight), exprLeft.Parameters);
+
+            Test<User, bool>(expr, "(($._id>=@p0) AND ($._id<=@p1))", 1, 10);
+            Test<User, bool>(exprMerged, "(($._id>=@p0) AND (((@._id<=@p1))=true))", 1, 10);
+            //the right expr of exprMerged uses @ (instead of $) because the rootParameter is different for exprLeft and exprRight
         }
 
         #region Test helper

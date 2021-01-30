@@ -38,7 +38,7 @@ namespace LiteDB.Engine
                 // navigate in both sides to return all nodes found
                 var first = node;
 
-                // first go fordward
+                // first go forward
                 while (!node.Next[0].IsEmpty && ((node = indexer.GetNode(node.Next[0])).Key.CompareTo(_value, indexer.Collation) == 0))
                 {
                     if (node.Key.IsMinValue || node.Key.IsMaxValue) break;

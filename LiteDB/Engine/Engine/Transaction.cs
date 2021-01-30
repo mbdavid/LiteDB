@@ -40,9 +40,7 @@ namespace LiteDB.Engine
 
                 if (transaction.State == TransactionState.Active)
                 {
-                    transaction.Commit();
-
-                    _monitor.ReleaseTransaction(transaction);
+                    this.CommitAndReleaseTransaction(transaction);
 
                     return true;
                 }
@@ -83,11 +81,7 @@ namespace LiteDB.Engine
 
                 // if this transaction was auto-created for this operation, commit & dispose now
                 if (isNew)
-                {
-                    transaction.Commit();
-
-                    _monitor.ReleaseTransaction(transaction);
-                }
+                    this.CommitAndReleaseTransaction(transaction);
 
                 return result;
             }
@@ -101,15 +95,19 @@ namespace LiteDB.Engine
 
                 throw;
             }
-            finally
+        }
+
+        private void CommitAndReleaseTransaction(TransactionService transaction)
+        {
+            transaction.Commit();
+
+            _monitor.ReleaseTransaction(transaction);
+
+            if (_header.Pragmas.Checkpoint > 0 && 
+                transaction.Mode == LockMode.Write &&
+                _disk.LogLength > (_header.Pragmas.Checkpoint * PAGE_SIZE))
             {
-                // do auto-checkpoint if enabled and write transaction (default: 1000 pages)
-                if (_header.Pragmas.Checkpoint > 0 && 
-                    transaction.Mode == LockMode.Write &&
-                    _disk.LogLength > (_header.Pragmas.Checkpoint * PAGE_SIZE))
-                {
-                    _walIndex.Checkpoint(true, false);
-                }
+                _walIndex.Checkpoint(true, false);
             }
         }
     }

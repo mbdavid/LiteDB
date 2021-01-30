@@ -47,6 +47,10 @@ namespace LiteDB
         public const int PROPERTY_NOT_MAPPED = 206;
         public const int INVALID_TYPED_NAME = 207;
         public const int PROPERTY_READ_WRITE = 209;
+        public const int INITIALSIZE_CRYPTO_NOT_SUPPORTED = 210;
+        public const int INVALID_INITIALSIZE = 211;
+        public const int INVALID_NULL_CHAR_STRING = 212;
+        public const int INVALID_FREE_SPACE_PAGE = 213;
 
         #endregion
 
@@ -269,6 +273,21 @@ namespace LiteDB
             return new LiteException(INVALID_TYPED_NAME, "Type '{0}' not found in current domain (_type format is 'Type.FullName, AssemblyName').", type);
         }
 
+        internal static LiteException InitialSizeCryptoNotSupported()
+        {
+            return new LiteException(INITIALSIZE_CRYPTO_NOT_SUPPORTED, "Initial Size option is not supported for encrypted datafiles.");
+        }
+
+        internal static LiteException InvalidInitialSize()
+        {
+            return new LiteException(INVALID_INITIALSIZE, "Initial Size must be a multiple of page size ({0} bytes).", PAGE_SIZE);
+        }
+
+        internal static LiteException InvalidNullCharInString()
+        {
+            return new LiteException(INVALID_NULL_CHAR_STRING, "Invalid null character (\\0) was found in the string");
+        }
+
         internal static LiteException InvalidPageType(PageType pageType, BasePage page)
         {
             var sb = new StringBuilder($"Invalid {pageType} on {page.PageID}. ");
@@ -280,6 +299,11 @@ namespace LiteDB
             sb.Append($"ShareCounter: {page.Buffer.ShareCounter}. ");
 
             return new LiteException(0, sb.ToString());
+        }
+
+        internal static LiteException InvalidFreeSpacePage(uint pageID, int freeBytes, int length)
+        {
+            return new LiteException(INVALID_FREE_SPACE_PAGE, $"An operation that would corrupt page {pageID} was prevented. The operation required {length} free bytes, but the page had only {freeBytes} available.");
         }
 
         #endregion

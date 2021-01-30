@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using FluentAssertions;
 using Xunit;
 
@@ -55,6 +56,24 @@ namespace LiteDB.Tests.Document
         {
             var specialChars = "ÁÀÃÂÄÉÈÊËÉÍÌÎÏÓÒÕÔÖÚÙÛÜÇáàãâäéèêëéíìîïóòõôöúùûüç";
             JsonSerializer.Serialize(specialChars).Should().Be('\"' + specialChars + '\"');
+        }
+
+        [Fact]
+        public void Json_Number_Deserialize_Test()
+        {
+            int positiveInt32 = 5000000;
+            int negativeInt32 = -5000000;
+            long positiveInt64 = 210000000000L;
+            long negativeInt64 = -210000000000L;
+            double positiveDouble = 210000000000D;
+            double negativeDouble = -210000000000D;
+
+            JsonSerializer.Deserialize(positiveInt32.ToString()).Should().Be(positiveInt32);
+            JsonSerializer.Deserialize(negativeInt32.ToString()).Should().Be(negativeInt32);
+            JsonSerializer.Deserialize(positiveInt64.ToString()).Should().Be(positiveInt64);
+            JsonSerializer.Deserialize(negativeInt64.ToString()).Should().Be(negativeInt64);
+            JsonSerializer.Deserialize(positiveDouble.ToString("F1", CultureInfo.InvariantCulture)).Should().Be(positiveDouble);
+            JsonSerializer.Deserialize(negativeDouble.ToString("F1", CultureInfo.InvariantCulture)).Should().Be(negativeDouble);
         }
     }
 }

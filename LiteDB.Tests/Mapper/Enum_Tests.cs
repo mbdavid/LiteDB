@@ -62,5 +62,25 @@ namespace LiteDB.Tests.Mapper
             expr2.Parameters["p0"].AsInt32.Should().Be(2);
 
         }
+
+        [Fact]
+        public void Enum_Array_Test()
+        {
+            var mapper = new BsonMapper();
+
+            mapper.EnumAsInteger = false;
+
+            var array = new CustomerType[] { CustomerType.Potential, CustomerType.Loyal };
+
+            var serialized1 = mapper.Serialize(array);
+            var deserialized1 = mapper.Deserialize<CustomerType[]>(serialized1);
+            deserialized1.Should().Equal(array);
+
+            mapper.EnumAsInteger = true;
+
+            var serialized2 = mapper.Serialize(array);
+            var deserialized2 = mapper.Deserialize<CustomerType[]>(serialized1);
+            deserialized2.Should().Equal(array);
+        }
     }
 }

@@ -14,7 +14,7 @@ namespace LiteDB
         /// </summary>
         public ILiteQueryable<T> Query()
         {
-            return new LiteQueryable<T>(_engine, _mapper, _collection, new Query());
+            return new LiteQueryable<T>(_engine, _mapper, _collection, new Query()).Include(_includes);
         }
 
         #region Find

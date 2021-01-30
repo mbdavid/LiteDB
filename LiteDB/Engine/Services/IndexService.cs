@@ -90,7 +90,7 @@ namespace LiteDB.Engine
             // get a free index page for head note
             var bytesLength = IndexNode.GetNodeLength(level, key, out var keyLength);
 
-            // test for index key maxlength (length must fit in 1 byte)
+            // test for index key maxlength
             if (keyLength > MAX_INDEX_KEY_LENGTH) throw LiteException.InvalidIndexKey($"Index key must be less than {MAX_INDEX_KEY_LENGTH} bytes.");
 
             var indexPage = _snapshot.GetFreeIndexPage(bytesLength, ref index.FreeIndexPageList);
@@ -188,7 +188,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Gets all node list from passed nodeAddress (fordward only)
+        /// Gets all node list from passed nodeAddress (forward only)
         /// </summary>
         public IEnumerable<IndexNode> GetNodeList(PageAddress nodeAddress)
         {

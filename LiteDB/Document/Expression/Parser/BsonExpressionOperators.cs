@@ -31,11 +31,11 @@ namespace LiteDB
             // if any side are DateTime and another is number, add days in date
             else if (left.IsDateTime && right.IsNumber)
             {
-                return left.AsDateTime.AddDays(right.AsDouble);
+                return left.AsDateTime.AddTicks(right.AsInt64);
             }
             else if (left.IsNumber && right.IsDateTime)
             {
-                return right.AsDateTime.AddDays(left.AsDouble);
+                return right.AsDateTime.AddTicks(left.AsInt64);
             }
             // if both sides are number, add as math
             else if (left.IsNumber && right.IsNumber)
@@ -53,17 +53,16 @@ namespace LiteDB
         {
             if (left.IsDateTime && right.IsNumber)
             {
-                return left.AsDateTime.AddDays(-right.AsDouble);
+                return left.AsDateTime.AddTicks(-right.AsInt64);
             }
             else if (left.IsNumber && right.IsDateTime)
             {
-                return right.AsDateTime.AddDays(-left.AsDouble);
+                return right.AsDateTime.AddTicks(-left.AsInt64);
             }
             else if (left.IsNumber && right.IsNumber)
             {
                 return left - right;
             }
-
             return BsonValue.Null;
         }
 
@@ -359,7 +358,7 @@ namespace LiteDB
 
             var doc = new BsonDocument();
 
-            for(var i = 0; i < keys.Length; i++)
+            for (var i = 0; i < keys.Length; i++)
             {
                 doc[keys[i]] = values[i];
             }

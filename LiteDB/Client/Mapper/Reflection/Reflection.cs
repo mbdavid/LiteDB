@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,13 +65,7 @@ namespace LiteDB
                         {
                             var typeDef = type.GetGenericTypeDefinition();
 
-                            if (typeDef == typeof(IList<>) ||
-                                typeDef == typeof(ICollection<>) ||
-                                typeDef == typeof(IEnumerable<>))
-                            {
-                                return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
-                            }
-                            else if (typeDef == typeof(ISet<>))
+                            if (typeDef == typeof(ISet<>))
                             {
                                 return CreateInstance(GetGenericSetOfType(UnderlyingTypeOf(type)));
                             }
@@ -80,6 +75,13 @@ namespace LiteDB
                                 var v = type.GetGenericArguments()[1];
 
                                 return CreateInstance(GetGenericDictionaryOfType(k, v));
+                            }
+                            else if (typeDef == typeof(IList<>) ||
+                                     typeDef == typeof(ICollection<>) ||
+                                     typeDef == typeof(IEnumerable<>) ||
+                                     typeof(IEnumerable).IsAssignableFrom(typeDef))
+                            {
+                                return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
                             }
                         }
 
@@ -192,7 +194,7 @@ namespace LiteDB
         /// </summary>
         public static bool IsEnumerable(Type type)
         {
-            if (type.IsArray) return true;
+            if (type == typeof(IEnumerable) || type.IsArray) return true;
             if (type == typeof(string)) return false; // do not define "String" as IEnumerable<char>
 
             foreach (var @interface in type.GetInterfaces())
@@ -239,8 +241,11 @@ namespace LiteDB
         /// </summary>
         public static bool IsCollection(Type type)
         {
-            return type.GetInterfaces().Any(x => x == typeof(ICollection) || 
-                (x.IsGenericType ? x.GetGenericTypeDefinition() == typeof(ICollection<>) : false));
+            return 
+                type.GetTypeInfo().IsGenericType && 
+                type.GetGenericTypeDefinition().Equals(typeof(ICollection<>)) ||
+                type.GetInterfaces().Any(x => x == typeof(ICollection) ||
+                (x.GetTypeInfo().IsGenericType ? x.GetGenericTypeDefinition() == typeof(ICollection<>) : false));
         }
 
         /// <summary>
@@ -248,7 +253,11 @@ namespace LiteDB
         /// </summary>
         public static bool IsDictionary(Type type)
         {
-            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>);
+            return 
+                type.GetTypeInfo().IsGenericType && 
+                type.GetGenericTypeDefinition().Equals(typeof(IDictionary<,>)) ||
+                type.GetInterfaces().Any(x => x == typeof(IDictionary) ||
+                (x.GetTypeInfo().IsGenericType ? x.GetGenericTypeDefinition().Equals(typeof(IDictionary<,>)) : false));
         }
 
         /// <summary>
@@ -280,16 +289,20 @@ namespace LiteDB
         /// </summary>
         public static string MethodName(MethodInfo method, int skipParameters = 0)
         {
-            if (_cacheName.TryGetValue(method, out var value))
+            lock (_cacheName)
             {
+                if (_cacheName.TryGetValue(method, out var value))
+                {
+                    return value;
+                }
+
+                value = MethodNameInternal(method, skipParameters);
+
+                _cacheName.Add(method, value);
+
+
                 return value;
             }
-
-            value = MethodNameInternal(method, skipParameters);
-
-            _cacheName.Add(method, value);
-
-            return value;
         }
 
         private static string MethodNameInternal(MethodInfo method, int skipParameters = 0)

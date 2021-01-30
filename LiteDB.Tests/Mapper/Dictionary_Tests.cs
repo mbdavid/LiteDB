@@ -69,5 +69,17 @@ namespace LiteDB.Tests.Mapper
             Assert.Single(result);
             Assert.Equal(1, result["x"].AsInt32);
         }
+
+        [Fact]
+        public void Deserialize_Uri()
+        {
+            var dict = new Dictionary<Uri, string>();
+            dict.Add(new Uri("http://www.litedb.org/"), "LiteDB website");
+            var doc = _mapper.Serialize(dict).AsDocument;
+            var dict2 = _mapper.Deserialize<Dictionary<Uri, string>>(doc);
+
+            Assert.Single(dict2);
+            Assert.Equal(dict.Keys.Single(), dict2.Keys.Single());
+        }
     }
 }

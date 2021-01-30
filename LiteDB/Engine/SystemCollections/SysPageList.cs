@@ -30,21 +30,13 @@ namespace LiteDB.Engine
 
             _collections = _header.GetCollections().ToDictionary(x => x.Value, x => x.Key);
 
-            try
-            {
-                var result = pageID != null ?
-                    this.GetList((uint)pageID.AsInt32, null, transaction, snapshot) :
-                    this.GetAllList(transaction, snapshot);
+            var result = pageID != null ?
+                this.GetList((uint)pageID.AsInt32, null, transaction, snapshot) :
+                this.GetAllList(transaction, snapshot);
 
-                foreach(var page in result)
-                {
-                    yield return page;
-                }
-
-            }
-            finally
+            foreach (var page in result)
             {
-                transaction.Commit();
+                yield return page;
             }
         }
 
@@ -57,7 +49,7 @@ namespace LiteDB.Engine
             }
 
             // get lists from data pages/index list
-            foreach(var collection in _collections)
+            foreach (var collection in _collections)
             {
                 var snap = transaction.CreateSnapshot(LockMode.Read, collection.Value, false);
 
@@ -65,7 +57,7 @@ namespace LiteDB.Engine
                 {
                     var result = this.GetList(snap.CollectionPage.FreeDataPageList[slot], null, transaction, snap);
 
-                    foreach(var page in result)
+                    foreach (var page in result)
                     {
                         yield return page;
                     }
@@ -73,7 +65,7 @@ namespace LiteDB.Engine
 
                 var indexes = snap.CollectionPage.GetCollectionIndexes().ToArray();
 
-                foreach(var index in indexes)
+                foreach (var index in indexes)
                 {
                     var result = this.GetList(index.FreeIndexPageList, index.Name, transaction, snap);
 

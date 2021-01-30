@@ -82,9 +82,15 @@ namespace LiteDB
             if (value.IsNull) return null;
 
             // if is nullable, get underlying type
-            else if (Reflection.IsNullable(type))
+            if (Reflection.IsNullable(type))
             {
                 type = Reflection.UnderlyingTypeOf(type);
+            }
+
+            // test if has a custom type implementation
+            if (_customDeserializer.TryGetValue(type, out Func<BsonValue, object> custom))
+            {
+                return custom(value);
             }
 
             // check if your type is already a BsonValue/BsonDocument/BsonArray
@@ -124,13 +130,7 @@ namespace LiteDB
             {
                 if (value.IsString) return Enum.Parse(type, value.AsString);
 
-                if (value.IsNumber) return value.AsInt32;
-            }
-
-            // test if has a custom type implementation
-            else if (_customDeserializer.TryGetValue(type, out Func<BsonValue, object> custom))
-            {
-                return custom(value);
+                if (value.IsNumber) return Enum.ToObject(type, value.AsInt32);
             }
 
             // if value is array, deserialize as array
@@ -180,8 +180,8 @@ namespace LiteDB
                 // initialize CreateInstance
                 if (entity.CreateInstance == null)
                 {
-                    entity.CreateInstance = 
-                        this.GetTypeCtor(entity) ?? 
+                    entity.CreateInstance =
+                        this.GetTypeCtor(entity) ??
                         ((BsonDocument v) => Reflection.CreateInstance(entity.ForType));
                 }
 
@@ -257,7 +257,7 @@ namespace LiteDB
             var isKEnum = K.IsEnum;
             foreach (var el in value.GetElements())
             {
-                var k = isKEnum ? Enum.Parse(K, el.Key) : Convert.ChangeType(el.Key, K);
+                var k = isKEnum ? Enum.Parse(K, el.Key) : K == typeof(Uri) ? new Uri(el.Key) : Convert.ChangeType(el.Key, K);
                 var v = this.Deserialize(T, el.Value);
 
                 dict.Add(k, v);
@@ -288,7 +288,7 @@ namespace LiteDB
             var args = new List<object>();
             var ctor = type.GetConstructors()[0];
 
-            foreach(var par in ctor.GetParameters())
+            foreach (var par in ctor.GetParameters())
             {
                 var arg = this.Deserialize(par.ParameterType, value[par.Name]);
 

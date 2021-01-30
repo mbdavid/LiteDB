@@ -69,21 +69,30 @@ namespace LiteDB
 
         internal BsonValue ReadValue(Token token)
         {
+            var value = token.Value;
             switch (token.Type)
             {
-                case TokenType.String: return token.Value;
+                case TokenType.String: return value;
                 case TokenType.OpenBrace: return this.ReadObject();
                 case TokenType.OpenBracket: return this.ReadArray();
                 case TokenType.Minus:
                     // read next token (must be a number)
                     var number = _tokenizer.ReadToken(false).Expect(TokenType.Int, TokenType.Double);
-                    return number.Type == TokenType.Double ?
-                        new BsonValue(-Convert.ToDouble(number.Value, _numberFormat)) :
-                        new BsonValue(-Convert.ToInt32(number.Value, _numberFormat));
-                case TokenType.Int: return new BsonValue(Convert.ToInt32(token.Value, _numberFormat));
-                case TokenType.Double: return new BsonValue(Convert.ToDouble(token.Value, _numberFormat));
+                    value = '-' + number.Value;
+                    if (number.Type == TokenType.Int)
+                        goto case TokenType.Int;
+                    else if (number.Type == TokenType.Double)
+                        goto case TokenType.Double;
+                    else
+                        break;
+                case TokenType.Int:
+                    if (Int32.TryParse(value, NumberStyles.Any, _numberFormat, out int result))
+                        return new BsonValue(result);
+                    else
+                        return new BsonValue(Int64.Parse(value, NumberStyles.Any, _numberFormat));
+                case TokenType.Double: return new BsonValue(Convert.ToDouble(value, _numberFormat));
                 case TokenType.Word:
-                    switch (token.Value.ToLower())
+                    switch (value.ToLower())
                     {
                         case "null": return BsonValue.Null;
                         case "true": return true;

@@ -20,7 +20,7 @@ namespace LiteDB
         {
             _settings = settings;
 
-            var name = settings.Filename.ToLower().Sha1();
+            var name = Path.GetFullPath(settings.Filename).ToLower().Sha1();
 
             var lockfile = FileHelper.GetSufixFile(settings.Filename, "-lock", false);
 

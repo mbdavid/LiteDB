@@ -79,7 +79,7 @@ namespace LiteDB
 
         /// <summary>
         /// Size, in PAGES, for each buffer array (used in MemoryStore)
-        /// It's an array to increase after each extend - limited in heighest value
+        /// It's an array to increase after each extend - limited in highest value
         /// Each byte array will be created with this size * PAGE_SIZE
         /// Use minimal 12 to allocate at least 85Kb per segment (will use LOH)
         /// </summary>
@@ -102,8 +102,8 @@ namespace LiteDB
         [Conditional("DEBUG")]
         public static void LOG(string message, string category)
         {
+            //Debug.WriteLine is too slow in multi-threads
             //var threadID = Environment.CurrentManagedThreadId;
-            //
             //Debug.WriteLine(message, threadID + "|" + category);
         }
 
@@ -118,10 +118,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Ensure condition is true, otherwise stop execution (for Debug proposes only)
+        /// Ensure condition is true, otherwise throw exception (check contract)
         /// </summary>
         [DebuggerHidden]
-        [Conditional("DEBUG")]
         public static void ENSURE(bool conditional, string message = null)
         {
             if (conditional == false)
@@ -132,16 +131,15 @@ namespace LiteDB
                 }
                 else
                 {
-                    throw new Exception("ENSURE: " + message);
+                    throw new Exception("LiteDB ENSURE: " + message);
                 }
             }
         }
 
         /// <summary>
-        /// If ifTest are true, ensure condition is true, otherwise stop execution (for Debug proposes only)
+        /// If ifTest are true, ensure condition is true, otherwise throw ensure exception (check contract)
         /// </summary>
         [DebuggerHidden]
-        [Conditional("DEBUG")]
         public static void ENSURE(bool ifTest, bool conditional, string message = null)
         {
             if (ifTest && conditional == false)
@@ -152,7 +150,27 @@ namespace LiteDB
                 }
                 else
                 {
-                    throw new Exception("ENSURE: " + message);
+                    throw new Exception("LiteDB ENSURE: " + message);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ensure condition is true, otherwise throw exception (runs only in DEBUG mode)
+        /// </summary>
+        [DebuggerHidden]
+        [Conditional("DEBUG")]
+        public static void DEBUG(bool conditional, string message = null)
+        {
+            if (conditional == false)
+            {
+                if (Debugger.IsAttached)
+                {
+                    Debug.Fail(message);
+                }
+                else
+                {
+                    throw new Exception("LiteDB DEBUG: " + message);
                 }
             }
         }
