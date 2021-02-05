@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <Authors>Maurício David</Authors>
+    <Product>LiteDB</Product>
+    <Copyright>MIT</Copyright>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <LangVersion>9</LangVersion>
+  </PropertyGroup>
+</Project>

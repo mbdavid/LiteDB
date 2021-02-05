@@ -2,12 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>LiteDB.Tests</AssemblyName>
-    <RootNamespace>LiteDB.Tests</RootNamespace>
-    <Authors>Maurício David</Authors>
-    <Copyright>MIT</Copyright>
-    <NeutralLanguage>en-US</NeutralLanguage>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>1701;1702;1705;1591;0618</NoWarn>
   </PropertyGroup>
 
