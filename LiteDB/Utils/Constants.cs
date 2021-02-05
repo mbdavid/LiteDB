@@ -2,11 +2,8 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
-#if DEBUG
-[assembly: InternalsVisibleTo("LiteDB.Tests")]
-#endif
+[assembly: InternalsVisibleTo("LiteDB.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010029e66990e22110ce40a7197e37f8f82df3332c399e696df7f27d09e14ee590ac2dda735d4777fe554c427540bde93b14d3d26c04731c963383dcaa18859c8cbcd4a1a9c394d1204f474c2ab6f23a2eaadf81eb8a7a3d3cc73658868b0302163b92a2614ca050ab703be33c3e1d76f55b11f4f87cb73558f3aa69c1ce726d9ee8")]
 
 namespace LiteDB
 {
@@ -94,7 +91,7 @@ namespace LiteDB
         /// Define how many bytes each merge sort container will be created
         /// </summary>
         public const int CONTAINER_SORT_SIZE = 100 * PAGE_SIZE;
-        
+
         /// <summary>
         /// Log a message using Debug.WriteLine
         /// </summary>
