@@ -72,10 +72,16 @@ namespace LiteDB.Engine
 
             foreach(var index in page["indexes"].AsArray)
             {
+                string name = Regex.Replace(index["name"].AsString, @"[^a-z0-9]", "", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                if(name.Length > INDEX_NAME_MAX_LENGTH)
+                {
+                    name = name.Substring(0, INDEX_NAME_MAX_LENGTH);
+                }
+
                 yield return new IndexInfo
                 {
                     Collection = collection,
-                    Name = Regex.Replace(index["name"].AsString, @"[^a-z0-9]", "", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                    Name = name,
                     Expression = index["expression"].AsString,
                     Unique = index["unique"].AsBoolean
                 };
