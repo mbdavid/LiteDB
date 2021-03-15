@@ -40,7 +40,7 @@ namespace LiteDB.Engine
             _dataPool = new StreamPool(_dataFactory, false);
             _logPool = new StreamPool(_logFactory, true);
 
-            var isNew = _dataFactory.Exists() == false;
+            var isNew = !_dataFactory.Exists() || _dataFactory.GetLength() == 0L;
 
             // create lazy async writer queue for log file
             _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer));
