@@ -20,10 +20,10 @@ namespace LiteDB.Engine
         private readonly Lazy<DiskWriterQueue> _queue;
 
         private IStreamFactory _dataFactory;
-        private readonly IStreamFactory _logFactory;
+        private IStreamFactory _logFactory;
 
         private StreamPool _dataPool;
-        private readonly StreamPool _logPool;
+        private StreamPool _logPool;
 
         private long _dataLength;
         private long _logLength;
@@ -59,18 +59,8 @@ namespace LiteDB.Engine
                 var dummy = _dataPool.Writer.CanRead;
             }
 
-            // get initial data file length
-            _dataLength = _dataFactory.GetLength() - PAGE_SIZE;
-
-            // get initial log file length
-            if (_logFactory.Exists())
-            {
-                _logLength = _logFactory.GetLength() - PAGE_SIZE;
-            }
-            else
-            {
-                _logLength = -PAGE_SIZE;
-            }
+            GetInitialDataFileLength();
+            GetInitialLogFileLength();
         }
 
         /// <summary>
@@ -209,9 +199,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Clear data file, close any data stream pool, change password and re-create data factory
         /// </summary>
-        public void ChangePassword(string password, EngineSettings settings)
+        public bool ChangeDataFilePassword(string password, EngineSettings settings)
         {
-            if (settings.Password == password) return;
+            if (settings.Password == password) return false;
 
             // empty data file
             this.SetLength(0, FileOrigin.Data);
@@ -230,8 +220,56 @@ namespace LiteDB.Engine
             // create stream pool
             _dataPool = new StreamPool(_dataFactory, false);
 
-            // get initial data file length
-            _dataLength = -PAGE_SIZE;
+            GetInitialDataFileLength();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Clear log file, close any data stream pool and re-create data factory with new password
+        /// </summary>
+        public void ChangeLogFilePassword(string password, EngineSettings settings)
+        {
+            // empty log file
+            this.SetLength(0, FileOrigin.Log);
+
+            // close all streams
+            _logPool.Dispose();
+
+            // delete data file
+            _logFactory.Delete();
+
+            // new logfile will be created with new password
+            _logFactory = settings.CreateLogFactory();
+
+            // create stream pool
+            _logPool = new StreamPool(_logFactory, true);
+
+            GetInitialLogFileLength();
+        }
+
+        private void GetInitialDataFileLength()
+        {
+            if (_dataFactory.Exists())
+            {
+                _dataLength = _dataFactory.GetLength() - PAGE_SIZE;
+            }
+            else
+            {
+                _dataLength = -PAGE_SIZE;
+            }
+        }
+
+        private void GetInitialLogFileLength()
+        {
+            if (_logFactory.Exists())
+            {
+                _logLength = _logFactory.GetLength() - PAGE_SIZE;
+            }
+            else
+            {
+                _logLength = -PAGE_SIZE;
+            }
         }
 
         #region Sync Read/Write operations

@@ -52,13 +52,19 @@ namespace LiteDB.Engine
                 this.RebuildContent(reader);
 
                 // change password (can be a problem if any error occurs after here)
+                bool isPasswordChanged = false;
                 if (options != null)
                 {
-                    _disk.ChangePassword(options.Password, _settings);
+                    isPasswordChanged = _disk.ChangeDataFilePassword(options.Password, _settings);
                 }
 
                 // do checkpoint
                 _walIndex.Checkpoint();
+
+                if (isPasswordChanged)
+                {
+                    _disk.ChangeLogFilePassword(options.Password, _settings);
+                }
 
                 // override header page
                 _disk.Write(new[] { _header.UpdateBuffer() }, FileOrigin.Data);
