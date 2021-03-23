@@ -10,10 +10,12 @@ namespace LiteDB.Benchmarks
 {
     class Program
     {
+        // sudo dotnet run -c Release -f netcoreapp3.1 -p LiteDB.Benchmarks/ -v d
+
         static void Main(string[] args)
         {
             BenchmarkRunner.Run(typeof(Program).Assembly, DefaultConfig.Instance
-                //.With(new BenchmarkDotNet.Filters.AnyCategoriesFilter(new[] {Benchmarks.Constants.Categories.DATA_GEN}))
+                //.With(new BenchmarkDotNet.Filters.AnyCategoriesFilter(new[] {Benchmarks.Constants.Categories.INSERTION}))
                 .With(Job.Default.With(CoreRuntime.Core31)
                     .With(Jit.RyuJit)
                     .With(CsProjCoreToolchain.NetCoreApp31)
