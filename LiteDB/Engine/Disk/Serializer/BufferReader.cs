@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -161,13 +162,13 @@ namespace LiteDB.Engine
             else
             {
                 // rent a buffer to be re-usable
-                var buffer = BufferPool.Rent(count);
+                var buffer = ArrayPool<byte>.Shared.Rent(count);
 
                 this.Read(buffer, 0, count);
 
                 value = Encoding.UTF8.GetString(buffer, 0, count);
 
-                BufferPool.Return(buffer);
+                ArrayPool<byte>.Shared.Return(buffer);
             }
 
             return value;
@@ -251,13 +252,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = BufferPool.Rent(size);
+                var buffer = ArrayPool<byte>.Shared.Rent(size);
 
                 this.Read(buffer, 0, size);
 
                 value = convert(buffer, 0);
 
-                BufferPool.Return(buffer);
+                ArrayPool<byte>.Shared.Return(buffer);
             }
 
             return value;
@@ -328,13 +329,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = BufferPool.Rent(12);
+                var buffer = ArrayPool<byte>.Shared.Rent(12);
 
                 this.Read(buffer, 0, 12);
 
                 value = new ObjectId(buffer, 0);
 
-                BufferPool.Return(buffer);
+                ArrayPool<byte>.Shared.Return(buffer);
             }
 
             return value;

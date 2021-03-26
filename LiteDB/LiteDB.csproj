@@ -37,16 +37,18 @@
   <ItemGroup>
     <Compile Remove="Client\**" />
     <Compile Remove="Engine\**" />
+    <Compile Remove="Utils\Pool\**" />
     <EmbeddedResource Remove="Client\**" />
     <EmbeddedResource Remove="Engine\**" />
+    <EmbeddedResource Remove="Utils\Pool\**" />
     <None Remove="Client\**" />
     <None Remove="Engine\**" />
+    <None Remove="Utils\Pool\**" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="Engine\Disk\Serializer\Async\BufferReaderAsync.cs" />
     <Compile Include="Engine\Disk\Serializer\Async\BufferWriterAsync.cs" />
-    <Compile Include="Engine\Disk\Serializer\BufferPool.cs" />
     <Compile Include="Engine\Disk\Serializer\BufferReader.cs" />
     <Compile Include="Engine\Disk\Serializer\BufferWriter.cs" />
     <Compile Include="Engine\ILiteEngine.cs" />
@@ -57,6 +59,9 @@
   <ItemGroup>
     <None Include="..\LICENSE" Pack="true" PackagePath="" />
     <None Include="..\icon_64x64.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Buffers" Version="4.5.1" />
   </ItemGroup>
   
   <!-- End References -->

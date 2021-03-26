@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -171,7 +172,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = BufferPool.Rent(bytesCount);
+                var buffer = ArrayPool<byte>.Shared.Rent(bytesCount);
 
                 Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
 
@@ -181,7 +182,7 @@ namespace LiteDB.Engine
 
                 await this.MoveForwardAsync(1);
 
-                BufferPool.Return(buffer);
+                ArrayPool<byte>.Shared.Return(buffer);
             }
         }
 
@@ -207,13 +208,13 @@ namespace LiteDB.Engine
             else
             {
                 // rent a buffer to be re-usable
-                var buffer = BufferPool.Rent(count);
+                var buffer = ArrayPool<byte>.Shared.Rent(count);
 
                 Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
 
                 await this.WriteAsync(buffer, 0, count);
 
-                BufferPool.Return(buffer);
+                ArrayPool<byte>.Shared.Return(buffer);
             }
 
             if (specs)
@@ -236,13 +237,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = BufferPool.Rent(size);
+                var buffer = ArrayPool<byte>.Shared.Rent(size);
 
                 toBytes(value, buffer, 0);
 
                 await this.WriteAsync(buffer, 0, size);
 
-                BufferPool.Return(buffer);
+                ArrayPool<byte>.Shared.Return(buffer);
             }
         }
 
@@ -298,13 +299,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = BufferPool.Rent(12);
+                var buffer = ArrayPool<byte>.Shared.Rent(12);
 
                 value.ToByteArray(buffer, 0);
 
                 await this.WriteAsync(buffer, 0, 12);
 
-                BufferPool.Return(buffer);
+                ArrayPool<byte>.Shared.Return(buffer);
             }
         }
 
