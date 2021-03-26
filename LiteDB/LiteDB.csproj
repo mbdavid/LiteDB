@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
-    <AssemblyVersion>5.1.0</AssemblyVersion>
-    <FileVersion>5.1.0</FileVersion>
-    <VersionPrefix>5.1.0</VersionPrefix>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <AssemblyVersion>6.0.0</AssemblyVersion>
+    <FileVersion>6.0.0</FileVersion>
+    <VersionPrefix>6.0.0</VersionPrefix>
     <Authors>Maurício David</Authors>
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
@@ -12,7 +12,7 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <Title>LiteDB</Title>
     <PackageId>LiteDB</PackageId>
-    <PackageVersion>5.1.0</PackageVersion>
+    <PackageVersion>6.0.0</PackageVersion>
     <PackageTags>database nosql embedded</PackageTags>
     <PackageIcon>icon_64x64.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -34,19 +34,26 @@
     <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Client\**" />
+    <Compile Remove="Engine\**" />
+    <EmbeddedResource Remove="Client\**" />
+    <EmbeddedResource Remove="Engine\**" />
+    <None Remove="Client\**" />
+    <None Remove="Engine\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Engine\Disk\Serializer\BufferPool.cs" />
+    <Compile Include="Engine\Disk\Serializer\BufferReader.cs" />
+    <Compile Include="Engine\Disk\Serializer\BufferWriter.cs" />
+    <Compile Include="Engine\Structures\PageAddress.cs" />
+  </ItemGroup>
+
   <!-- Begin References -->
   <ItemGroup>
     <None Include="..\LICENSE" Pack="true" PackagePath="" />
     <None Include="..\icon_64x64.png" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
-    <Reference Include="System" />
-    <Reference Include="System.Runtime" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Utils\Xts\" />
   </ItemGroup>
   
   <!-- End References -->

@@ -1,5 +1,4 @@
-﻿using LiteDB.Engine;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -64,7 +63,7 @@ namespace LiteDB
         /// Document limit size - 2048 data pages limit (about 16Mb - same size as MongoDB)
         /// Using 2047 because first/last page can contain less than 8150 bytes.
         /// </summary>
-        public const int MAX_DOCUMENT_SIZE = 2047 * DataService.MAX_DATA_BYTES_PER_PAGE;
+        public const int MAX_DOCUMENT_SIZE = 2047 * 8150; /* DataService.MAX_DATA_BYTES_PER_PAGE; = 8150 */
 
         /// <summary>
         /// Define how many transactions can be open simultaneously

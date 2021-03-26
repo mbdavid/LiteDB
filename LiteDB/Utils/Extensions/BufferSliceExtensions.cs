@@ -1,4 +1,5 @@
 ﻿using LiteDB.Engine;
+
 using System;
 using System.Linq;
 using System.Text;
@@ -238,7 +239,8 @@ namespace LiteDB
         /// </summary>
         public static void WriteIndexKey(this BufferSlice buffer, BsonValue value, int offset)
         {
-            DEBUG(IndexNode.GetKeyLength(value, true) <= MAX_INDEX_KEY_LENGTH, $"index key must have less than {MAX_INDEX_KEY_LENGTH} bytes");
+            //**  remove this comment before release vNext
+            //DEBUG(IndexNode.GetKeyLength(value, true) <= MAX_INDEX_KEY_LENGTH, $"index key must have less than {MAX_INDEX_KEY_LENGTH} bytes");
 
             if (value.IsString)
             {

@@ -1,5 +1,4 @@
-﻿using LiteDB.Engine;
-using System;
+﻿using System;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -288,6 +287,7 @@ namespace LiteDB
             return new LiteException(INVALID_NULL_CHAR_STRING, "Invalid null character (\\0) was found in the string");
         }
 
+        /*
         internal static LiteException InvalidPageType(PageType pageType, BasePage page)
         {
             var sb = new StringBuilder($"Invalid {pageType} on {page.PageID}. ");
@@ -300,6 +300,7 @@ namespace LiteDB
 
             return new LiteException(0, sb.ToString());
         }
+        */
 
         internal static LiteException InvalidFreeSpacePage(uint pageID, int freeBytes, int length)
         {
