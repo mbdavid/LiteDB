@@ -44,9 +44,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Engine\Disk\Serializer\Async\BufferReaderAsync.cs" />
+    <Compile Include="Engine\Disk\Serializer\Async\BufferWriterAsync.cs" />
     <Compile Include="Engine\Disk\Serializer\BufferPool.cs" />
     <Compile Include="Engine\Disk\Serializer\BufferReader.cs" />
     <Compile Include="Engine\Disk\Serializer\BufferWriter.cs" />
+    <Compile Include="Engine\ILiteEngine.cs" />
     <Compile Include="Engine\Structures\PageAddress.cs" />
   </ItemGroup>
 

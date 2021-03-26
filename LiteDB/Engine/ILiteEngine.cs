@@ -1,33 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace LiteDB.Engine
 {
-    public interface ILiteEngine : IDisposable
+    public interface ILiteEngine : IAsyncDisposable/*: IDisposable or IAsyncDisposable?*/
     {
-        int Checkpoint();
-        long Rebuild(RebuildOptions options);
+        Task OpenAsync();
 
-        bool BeginTrans();
-        bool Commit();
-        bool Rollback();
+        //Task<int> CheckpointAsync();
+        //Task<long> RebuildAsync(RebuildOptions options);
 
-        IBsonDataReader Query(string collection, Query query);
+        //Task<QueryResult> QueryAsync(string collection, Query query);
+        //Task<QueryResult> FetchAsync(string cursorId);
+        //=> QueryResult = { result: [], cursorId: 'vKs4Tk2A' }
 
-        int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId);
-        int Update(string collection, IEnumerable<BsonDocument> docs);
-        int UpdateMany(string collection, BsonExpression transform, BsonExpression predicate);
-        int Upsert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId);
-        int Delete(string collection, IEnumerable<BsonValue> ids);
-        int DeleteMany(string collection, BsonExpression predicate);
+        //Task<int> InsertAsync(string collection, ICollection<BsonDocument> docs, BsonAutoId autoId);
+        //Task<int> UpdateAsync(string collection, ICollection<BsonDocument> docs);
+        //Task<int> UpdateManyAsync(string collection, BsonExpression transform, BsonExpression predicate);
+        //Task<int> UpsertAsync(string collection, ICollection<BsonDocument> docs, BsonAutoId autoId);
+        //Task<int> DeleteAsync(string collection, ICollection<BsonValue> ids);
+        //Task<int> DeleteManyAsync(string collection, BsonExpression predicate);
 
-        bool DropCollection(string name);
-        bool RenameCollection(string name, string newName);
+        //bool DropCollectionAsync(string name);
+        //bool RenameCollectionAsync(string name, string newName);
 
-        bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique);
-        bool DropIndex(string collection, string name);
+        //bool EnsureIndexAsync(string collection, string name, BsonExpression expression, bool unique);
+        //bool DropIndexAsync(string collection, string name);
 
-        BsonValue Pragma(string name);
-        bool Pragma(string name, BsonValue value);
+        //BsonValue Pragma(string name);
+        //bool PragmaAsync(string name, BsonValue value);
     }
 }
