@@ -31,5 +31,27 @@ namespace LiteDB.Tests.Document
             BsonExpression.Create("$.['Last Job This Year']").Execute(doc).First().AsString.Should().Be("admin");
             BsonExpression.Create("$.['Last JOB THIS Year']").Execute(doc).First().AsString.Should().Be("admin");
         }
+
+
+        [Fact]
+        public void Get_Document_Values_Case_Insensitive()
+        {
+            var doc_Values_ProperCase = new BsonDocument
+            {
+                ["_id"] = 10,
+                ["name"] = "John",
+                ["Last Job This Year"] = "Admin"
+            };
+
+            var doc_Values_LowerCase = new BsonDocument
+            {
+                ["_id"] = 10,
+                ["name"] = "john",
+                ["Last Job This Year"] = "admin"
+            };
+
+            doc_Values_ProperCase.CompareTo(doc_Values_LowerCase).Should().Be(0);
+
+        }
     }
 }
