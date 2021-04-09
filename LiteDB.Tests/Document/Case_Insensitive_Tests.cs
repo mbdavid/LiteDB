@@ -50,7 +50,7 @@ namespace LiteDB.Tests.Document
                 ["Last Job This Year"] = "admin"
             };
 
-            doc_Values_ProperCase.CompareTo(doc_Values_LowerCase).Should().Be(0);
+            doc_Values_ProperCase.CompareTo(doc_Values_LowerCase, Collation.Default).Should().Be(0);
 
         }
     }

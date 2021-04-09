@@ -62,7 +62,7 @@ namespace LiteDB
 
         #region CompareTo
 
-        public override int CompareTo(BsonValue other)
+        public override int CompareTo(BsonValue other, Collation collation)
         {
             // if types are different, returns sort type order
             if (other.Type != BsonType.Document) return this.Type.CompareTo(other.Type);
@@ -79,7 +79,7 @@ namespace LiteDB
             var stop = Math.Min(thisLength, otherLength);
 
             for (; 0 == result && i < stop; i++)
-                result = this[thisKeys[i]].CompareTo(otherDoc[thisKeys[i]]);
+                result = this[thisKeys[i]].CompareTo(otherDoc[thisKeys[i]], collation);
 
             // are different
             if (result != 0) return result;
