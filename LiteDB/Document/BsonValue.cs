@@ -548,7 +548,7 @@ namespace LiteDB
 
                 case BsonType.String: return collation.Compare(this.AsString, other.AsString);
 
-                case BsonType.Document: return this.AsDocument.CompareTo(other);
+                case BsonType.Document: return this.AsDocument.CompareTo(other, collation);
                 case BsonType.Array: return this.AsArray.CompareTo(other);
 
                 case BsonType.Binary: return this.AsBinary.BinaryCompareTo(other.AsBinary);
