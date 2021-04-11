@@ -112,7 +112,7 @@ namespace LiteDB
             }
         }
 
-        public override int CompareTo(BsonValue other)
+        public override int CompareTo(BsonValue other, Collation collation)
         {
             // if types are different, returns sort type order
             if (other.Type != BsonType.Array) return this.Type.CompareTo(other.Type);
@@ -125,7 +125,7 @@ namespace LiteDB
 
             // compare each element
             for (; 0 == result && i < stop; i++)
-                result = this[i].CompareTo(otherArray[i]);
+                result = this[i].CompareTo(otherArray[i], collation);
 
             if (result != 0) return result;
             if (i == this.Count) return i == otherArray.Count ? 0 : -1;
