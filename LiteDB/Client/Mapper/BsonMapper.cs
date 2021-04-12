@@ -234,6 +234,69 @@ namespace LiteDB
 
             return mapper;
         }
+        
+                /// <summary>
+        /// Override this function to customize the BsonIgnore attribute.
+        /// </summary>
+        /// <param name="mi">The member info BsonIgnore attribute will be checked on.</param>
+        /// <returns>Returns <see langword="true"/> if the specified ignore attribute is defined on this member, otherwise <see langword="false"/>.</returns>
+        protected virtual bool CheckIgnoreAttribute(MemberInfo mi)
+		{
+            // Check if the ignore attribute is set on the given member.
+            // Use the BsonIgnoreAttribute by default.
+            return CustomAttributeExtensions.IsDefined(mi, typeof(BsonIgnoreAttribute), true);
+        }
+
+        /// <summary>
+        /// Override this function to customize BsonField attribute.
+        /// </summary>
+        /// <param name="mi">The member info BsonField attribute will be checked on.</param>
+        /// <returns>Returns the name of the field if the attribute is set. Otherwise <see langword="null"/>.</returns>
+        protected virtual string CheckFieldAttribute(MemberInfo mi)
+		{
+            // Check if the bson field attribute is set on the given member.
+            // Use the BsonFieldAttribute by default.
+            BsonFieldAttribute field = (BsonFieldAttribute)CustomAttributeExtensions.GetCustomAttributes(mi, typeof(BsonFieldAttribute), true).FirstOrDefault();
+            if (field != null && field.Name != null)
+                return field.Name;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Override this function to customize BsonId attribute.
+        /// </summary>
+        /// <param name="mi">The member info BsonId attribute will be checked on.</param>
+        /// <returns>Returns the value of <seealso cref="BsonIdAttribute.AutoId"/> if set, otherwise <see langword="false"/>.</returns>
+        protected virtual bool CheckIdAttribute(MemberInfo mi)
+		{
+            // Check if the bson id attribute is set on the given member.
+            // Use the BsonIdAttribute by default.
+            return ((BsonIdAttribute)CustomAttributeExtensions.GetCustomAttributes(mi, typeof(BsonIdAttribute), true).FirstOrDefault())?.AutoId ?? true;
+        }
+
+        /// <summary>
+        /// Override this function to customize BsonRef attribute.
+        /// </summary>
+        /// <param name="mi">The member info BsonRef attribute will be checked on.</param>
+        /// <param name="found">Gets whether the attribute was set on <paramref name="mi"/>.</param>
+        /// <returns>Returns the value of <seealso cref="BsonRefAttribute.Collection"/> if set, otherwise <see langword="null"/>.</returns>
+        protected virtual string CheckRefAttribute(MemberInfo mi, out bool found)
+		{
+            // Check if the bson ref attribute is set on the given member.
+            // Use the BsonRefAttribute by default.
+
+            // TODO: Consider wrapping the return value to a specific interface instead of requiring 'out'.
+            BsonRefAttribute attr =((BsonRefAttribute)CustomAttributeExtensions.GetCustomAttributes(mi, typeof(BsonRefAttribute), false).FirstOrDefault());
+            if (attr == null)
+			{
+                found = false;
+                return null;
+			}
+
+            found = true;
+            return attr.Collection;
+        }
 
         /// <summary>
         /// Use this method to override how your class can be, by default, mapped from entity to Bson document.
@@ -253,20 +316,17 @@ namespace LiteDB
 
             foreach (var memberInfo in members)
             {
-                // checks [BsonIgnore]
-                if (CustomAttributeExtensions.IsDefined(memberInfo, ignoreAttr, true)) continue;
+                // Check [BsonIgnore].
+                if (CheckIgnoreAttribute(memberInfo)) continue;
 
                 // checks field name conversion
                 var name = this.ResolveFieldName(memberInfo.Name);
 
                 // check if property has [BsonField]
-                var field = (BsonFieldAttribute)CustomAttributeExtensions.GetCustomAttributes(memberInfo, fieldAttr, true).FirstOrDefault();
-
+                string fn = CheckFieldAttribute(memberInfo);
+                
                 // check if property has [BsonField] with a custom field name
-                if (field != null && field.Name != null)
-                {
-                    name = field.Name;
-                }
+                if (fn != null) name = fn;
 
                 // checks if memberInfo is id field
                 if (memberInfo == id)
@@ -279,7 +339,7 @@ namespace LiteDB
                 var setter = Reflection.CreateGenericSetter(type, memberInfo);
 
                 // check if property has [BsonId] to get with was setted AutoId = true
-                var autoId = (BsonIdAttribute)CustomAttributeExtensions.GetCustomAttributes(memberInfo, idAttr, true).FirstOrDefault();
+                bool autoId = CheckIdAttribute(memberInfo);
 
                 // get data type
                 var dataType = memberInfo is PropertyInfo ?
@@ -292,7 +352,7 @@ namespace LiteDB
                 // create a property mapper
                 var member = new MemberMapper
                 {
-                    AutoId = autoId == null ? true : autoId.AutoId,
+                    AutoId = autoId,
                     FieldName = name,
                     MemberName = memberInfo.Name,
                     DataType = dataType,
@@ -302,12 +362,12 @@ namespace LiteDB
                     Setter = setter
                 };
 
-                // check if property has [BsonRef]
-                var dbRef = (BsonRefAttribute)CustomAttributeExtensions.GetCustomAttributes(memberInfo, dbrefAttr, false).FirstOrDefault();
+                // Check if property has [BsonRef].
+                string dbRef = CheckRefAttribute(memberInfo, out bool dbRefFound);
 
-                if (dbRef != null && memberInfo is PropertyInfo)
+                if (dbRefFound && memberInfo is PropertyInfo)
                 {
-                    BsonMapper.RegisterDbRef(this, member, _typeNameBinder, dbRef.Collection ?? this.ResolveCollectionName((memberInfo as PropertyInfo).PropertyType));
+                    BsonMapper.RegisterDbRef(this, member, _typeNameBinder, dbRef ?? this.ResolveCollectionName((memberInfo as PropertyInfo).PropertyType));
                 }
 
                 // support callback to user modify member mapper
@@ -322,7 +382,7 @@ namespace LiteDB
 
             return mapper;
         }
-
+        
         /// <summary>
         /// Gets MemberInfo that refers to Id from a document object.
         /// </summary>
