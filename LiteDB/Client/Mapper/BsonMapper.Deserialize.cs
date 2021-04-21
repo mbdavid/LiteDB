@@ -147,6 +147,13 @@ namespace LiteDB
                 {
                     return this.DeserializeArray(type.GetElementType(), value.AsArray);
                 }
+                // if generic type has custom collection constructor registered use that
+                if (typeInfo.IsGenericType 
+                    && _customCollectionConstructor.TryGetValue(typeInfo.GetGenericTypeDefinition(), out var constructor))
+                {
+                    var collectionType = Reflection.GetListItemType(type);
+                    return constructor(collectionType, value.AsArray.Select(v => this.Deserialize(collectionType, v)));
+                }
                 else
                 {
                     return this.DeserializeList(type, value.AsArray);
@@ -170,6 +177,18 @@ namespace LiteDB
                     type = _typeNameBinder.GetType(typeField.AsString);
 
                     if (type == null) throw LiteException.InvalidTypedName(typeField.AsString);
+                }
+                // if generic type has custom dictionary constructor registered use that
+                else if (typeInfo.IsGenericType 
+                    && _customDictionaryConstructor.TryGetValue(typeInfo.GetGenericTypeDefinition(), out var constructor))
+                {
+                    var k = type.GetGenericArguments()[0];
+                    var t = type.GetGenericArguments()[1];
+                    var tempDict = (IDictionary)Reflection.CreateInstance(typeof(Dictionary<,>).MakeGenericType(k, t));
+
+                    this.DeserializeDictionary(k, t, tempDict, value.AsDocument);
+
+                    return constructor(k, t, tempDict);
                 }
                 // when complex type has no definition (== typeof(object)) use Dictionary<string, object> to better set values
                 else if (type == typeof(object))

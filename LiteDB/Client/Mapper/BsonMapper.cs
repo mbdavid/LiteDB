@@ -24,7 +24,7 @@ namespace LiteDB
     /// </summary>
     public partial class BsonMapper
     {
-        #region Properties
+#region Properties
 
         /// <summary>
         /// Mapping cache between Class/BsonDocument
@@ -34,9 +34,17 @@ namespace LiteDB
         /// <summary>
         /// Map serializer/deserialize for custom types
         /// </summary>
-        private ConcurrentDictionary<Type, Func<object, BsonValue>> _customSerializer = new ConcurrentDictionary<Type, Func<object, BsonValue>>();
+        private ConcurrentDictionary<Type, Func<object, BsonValue>> _customSerializer =
+            new ConcurrentDictionary<Type, Func<object, BsonValue>>();
 
-        private ConcurrentDictionary<Type, Func<BsonValue, object>> _customDeserializer = new ConcurrentDictionary<Type, Func<BsonValue, object>>();
+        private ConcurrentDictionary<Type, Func<BsonValue, object>> _customDeserializer =
+            new ConcurrentDictionary<Type, Func<BsonValue, object>>();
+
+        private ConcurrentDictionary<Type, Func<Type, IEnumerable, IEnumerable>> _customCollectionConstructor =
+            new ConcurrentDictionary<Type, Func<Type, IEnumerable, IEnumerable>>();
+
+        private ConcurrentDictionary<Type, Func<Type, Type, IDictionary, IDictionary>> _customDictionaryConstructor =
+            new ConcurrentDictionary<Type, Func<Type, Type, IDictionary, IDictionary>>();
 
         /// <summary>
         /// Type instantiator function to support IoC
@@ -106,7 +114,7 @@ namespace LiteDB
         /// </summary>
         public Func<Type, string> ResolveCollectionName;
 
-        #endregion
+#endregion
 
         public BsonMapper(Func<Type, object> customTypeInstantiator = null, ITypeNameBinder typeNameBinder = null)
         {
@@ -116,29 +124,35 @@ namespace LiteDB
             this.EnumAsInteger = false;
             this.ResolveFieldName = (s) => s;
             this.ResolveMember = (t, mi, mm) => { };
-            this.ResolveCollectionName = (t) => Reflection.IsEnumerable(t) ? Reflection.GetListItemType(t).Name : t.Name;
+            this.ResolveCollectionName =
+                (t) => Reflection.IsEnumerable(t) ? Reflection.GetListItemType(t).Name : t.Name;
             this.IncludeFields = false;
             this.MaxDepth = 20;
 
             _typeInstantiator = customTypeInstantiator ?? ((Type t) => null);
             _typeNameBinder = typeNameBinder ?? DefaultTypeNameBinder.Instance;
 
-            #region Register CustomTypes
+#region Register CustomTypes
 
             RegisterType<Uri>(uri => uri.AbsoluteUri, bson => new Uri(bson.AsString));
-            RegisterType<DateTimeOffset>(value => new BsonValue(value.UtcDateTime), bson => bson.AsDateTime.ToUniversalTime());
+            RegisterType<DateTimeOffset>(value => new BsonValue(value.UtcDateTime),
+                bson => bson.AsDateTime.ToUniversalTime());
             RegisterType<TimeSpan>(value => new BsonValue(value.Ticks), bson => new TimeSpan(bson.AsInt64));
             RegisterType<Regex>(
-                r => r.Options == RegexOptions.None ? new BsonValue(r.ToString()) : new BsonDocument { { "p", r.ToString() }, { "o", (int)r.Options } },
-                value => value.IsString ? new Regex(value) : new Regex(value.AsDocument["p"].AsString, (RegexOptions)value.AsDocument["o"].AsInt32)
+                r => r.Options == RegexOptions.None
+                    ? new BsonValue(r.ToString())
+                    : new BsonDocument { { "p", r.ToString() }, { "o", (int)r.Options } },
+                value => value.IsString
+                    ? new Regex(value)
+                    : new Regex(value.AsDocument["p"].AsString, (RegexOptions)value.AsDocument["o"].AsInt32)
             );
 
 
-            #endregion
+#endregion
 
         }
 
-        #region Register CustomType
+#region Register CustomType
 
         /// <summary>
         /// Register a custom type serializer/deserialize function
@@ -156,6 +170,54 @@ namespace LiteDB
         {
             _customSerializer[type] = (o) => serialize(o);
             _customDeserializer[type] = (b) => deserialize(b);
+        }
+
+        /// <summary>
+        /// Register a custom collection constructor function using the open generic type of T
+        /// </summary>
+        public void RegisterCollectionType<T>(Func<Type, IEnumerable, IEnumerable> constructor) where T : IEnumerable
+        {
+            RegisterCollectionType(typeof(T).GetGenericTypeDefinition(), constructor);
+        }
+
+        /// <summary>
+        /// Register a custom collection constructor function
+        /// </summary>
+        public void RegisterCollectionType(Type collectionType, Func<Type, IEnumerable, IEnumerable> constructor)
+        {
+            if (!typeof(IEnumerable).IsAssignableFrom(collectionType))
+                throw new ArgumentException("Type must implement IEnumerable", nameof(collectionType));
+
+            var typeInfo = collectionType.GetTypeInfo();
+
+            if (!typeInfo.IsGenericTypeDefinition || typeInfo.GenericTypeArguments.Length != 0 || typeInfo.GenericTypeParameters.Length != 1)
+                throw new ArgumentException("Type must be an open generic with a single generic parameter", nameof(collectionType));
+
+            _customCollectionConstructor[collectionType] = (t, objs) => constructor(t, objs);
+        }
+
+        /// <summary>
+        /// Register a custom collection constructor function using the open generic type of T
+        /// </summary>
+        public void RegisterDictionaryType<T>(Func<Type, Type, IDictionary, IDictionary> constructor) where T : IDictionary
+        {
+            RegisterDictionaryType(typeof(T).GetGenericTypeDefinition(), constructor);
+        }
+
+        /// <summary>
+        /// Register a custom dictionary constructor function
+        /// </summary>
+        public void RegisterDictionaryType(Type dictionaryType, Func<Type, Type, IDictionary, IDictionary> constructor)
+        {
+            if (!typeof(IEnumerable).IsAssignableFrom(dictionaryType))
+                throw new ArgumentException("Type must implement IDictionary", nameof(dictionaryType));
+
+            var typeInfo = dictionaryType.GetTypeInfo();
+
+            if (!typeInfo.IsGenericTypeDefinition || typeInfo.GenericTypeArguments.Length != 0 || typeInfo.GenericTypeParameters.Length != 2)
+                throw new ArgumentException("Type must be an open generic with two generic parameters (TKey and TValue)", nameof(dictionaryType));
+
+            _customDictionaryConstructor[dictionaryType] = (tkey, tvalue, d) => constructor(tkey, tvalue, d);
         }
 
         #endregion
