@@ -177,7 +177,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Visit :: x => x.Customer.Name.`ToUpper()`
+        /// Visit :: x => x.Customer.Name.`ToUpperInvariant()`
         /// </summary>
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {

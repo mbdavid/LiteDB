@@ -298,14 +298,14 @@ namespace LiteDB.Tests.Mapper
         public void Linq_Methods()
         {
             // string instance methods
-            TestExpr<User>(x => x.Name.ToUpper(), "UPPER(Name)");
+            TestExpr<User>(x => x.Name.ToUpperInvariant(), "UPPER(Name)");
             TestExpr<User>(x => x.Name.Substring(10), "SUBSTRING(Name, @p0)", 10);
             TestExpr<User>(x => x.Name.Substring(10, 20), "SUBSTRING(Name, @p0, @p1)", 10, 20);
             TestExpr<User>(x => x.Name.Replace('+', '-'), "REPLACE(Name, @p0, @p1)", "+", "-");
             TestExpr<User>(x => x.Name.IndexOf("m"), "INDEXOF(Name, @p0)", "m");
             TestExpr<User>(x => x.Name.IndexOf("m", 20), "INDEXOF(Name, @p0, @p1)", "m", 20);
-            TestExpr<User>(x => x.Name.ToUpper().Trim(), "TRIM(UPPER(Name))");
-            TestExpr<User>(x => x.Name.ToUpper().Trim().PadLeft(5, '0'), "LPAD(TRIM(UPPER($.Name)), @p0, @p1)", 5, "0");
+            TestExpr<User>(x => x.Name.ToUpperInvariant().Trim(), "TRIM(UPPER(Name))");
+            TestExpr<User>(x => x.Name.ToUpperInvariant().Trim().PadLeft(5, '0'), "LPAD(TRIM(UPPER($.Name)), @p0, @p1)", 5, "0");
 
             // string LIKE
             TestExpr<User>(x => x.Name.StartsWith("Mauricio"), "Name LIKE (@p0 + '%')", "Mauricio");
@@ -399,7 +399,7 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => new User { Id = 1, Active = false }, "{ _id: @p0, Active: @p1 }", 1, false);
 
             // used in UpdateMany extend document
-            TestExpr<User>(x => new User { Name = x.Name.ToUpper(), Salary = x.Salary * 2 }, "{ Name: UPPER($.Name), Salary: ($.Salary * @p0) }", 2);
+            TestExpr<User>(x => new User { Name = x.Name.ToUpperInvariant(), Salary = x.Salary * 2 }, "{ Name: UPPER($.Name), Salary: ($.Salary * @p0) }", 2);
         }
 
         [Fact]

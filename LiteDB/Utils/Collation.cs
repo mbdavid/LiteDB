@@ -76,7 +76,7 @@ namespace LiteDB
         public int Compare(char left, char right)
         {
             //TODO implementar o compare corretamente
-            return char.ToUpper(left) == char.ToUpper(right) ? 0 : 1;
+            return char.ToUpperInvariant(left) == char.ToUpperInvariant(right) ? 0 : 1;
         }
 
         public int Compare(BsonValue left, BsonValue rigth)

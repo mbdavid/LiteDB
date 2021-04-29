@@ -23,7 +23,7 @@ namespace LiteDB.Stress
 
         public InsertTaskItem(XmlElement el)
         {
-            this.Name = string.IsNullOrEmpty(el.GetAttribute("name")) ? "INSERT_" + el.GetAttribute("collection").ToUpper() : el.GetAttribute("name");
+            this.Name = string.IsNullOrEmpty(el.GetAttribute("name")) ? "INSERT_" + el.GetAttribute("collection").ToUpperInvariant() : el.GetAttribute("name");
             this.Sleep = string.IsNullOrEmpty(el.GetAttribute("sleep")) ? TimeSpan.FromSeconds(1) : TimeSpanEx.Parse(el.GetAttribute("sleep"));
             this.AutoId = string.IsNullOrEmpty(el.GetAttribute("autoId")) ? BsonAutoId.ObjectId : (BsonAutoId)Enum.Parse(typeof(BsonAutoId), el.GetAttribute("autoId"), true);
             this.Collection = el.GetAttribute("collection");

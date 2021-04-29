@@ -108,7 +108,7 @@ namespace LiteDB
 
                 if (isWildCardOn)
                 {
-                    if (char.ToUpper(c) == char.ToUpper(p))
+                    if (char.ToUpperInvariant(c) == char.ToUpperInvariant(p))
                     {
                         isWildCardOn = false;
                         patternIndex++;
@@ -120,7 +120,7 @@ namespace LiteDB
                 }
                 else if (isCharSetOn || isNotCharSetOn)
                 {
-                    //var charMatch = (set.Contains(char.ToUpper(c))); // -- always "false" - remove [abc] support
+                    //var charMatch = (set.Contains(char.ToUpperInvariant(c))); // -- always "false" - remove [abc] support
                     //if ((isNotCharSetOn && charMatch) || (isCharSetOn && !charMatch))
 
                     if (isCharSetOn)
