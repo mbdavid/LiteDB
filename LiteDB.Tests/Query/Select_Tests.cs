@@ -31,11 +31,11 @@ namespace LiteDB.Tests.QueryTest
         public void Query_Select_New_Document()
         {
             var r0 = local
-                .Select(x => new {city = x.Address.City.ToUpper(), phone0 = x.Phones[0], address = new Address {Street = x.Name}})
+                .Select(x => new {city = x.Address.City.ToUpperInvariant(), phone0 = x.Phones[0], address = new Address {Street = x.Name}})
                 .ToArray();
 
             var r1 = collection.Query()
-                .Select(x => new {city = x.Address.City.ToUpper(), phone0 = x.Phones[0], address = new Address {Street = x.Name}})
+                .Select(x => new {city = x.Address.City.ToUpperInvariant(), phone0 = x.Phones[0], address = new Address {Street = x.Name}})
                 .ToArray();
 
             foreach (var r in r0.Zip(r1, (l, r) => new {left = l, right = r}))

@@ -414,14 +414,14 @@ namespace LiteDB
         /// </summary>
         private static Dictionary<string, MethodInfo> _methods =
             typeof(BsonExpressionMethods).GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .ToDictionary(m => m.Name.ToUpper() + "~" + m.GetParameters().Where(p => p.ParameterType != typeof(Collation)).Count());
+            .ToDictionary(m => m.Name.ToUpperInvariant() + "~" + m.GetParameters().Where(p => p.ParameterType != typeof(Collation)).Count());
 
         /// <summary>
         /// Get expression method with same name and same parameter - return null if not found
         /// </summary>
         internal static MethodInfo GetMethod(string name, int parameterCount)
         {
-            var key = name.ToUpper() + "~" + parameterCount;
+            var key = name.ToUpperInvariant() + "~" + parameterCount;
 
             return _methods.GetOrDefault(key);
         }
@@ -440,7 +440,7 @@ namespace LiteDB
         /// </summary>
         private static Dictionary<string, MethodInfo> _functions =
             typeof(BsonExpressionFunctions).GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .ToDictionary(m => m.Name.ToUpper() + "~" + m.GetParameters()
+            .ToDictionary(m => m.Name.ToUpperInvariant() + "~" + m.GetParameters()
             .Skip(5).Count());
 
         /// <summary>
@@ -448,7 +448,7 @@ namespace LiteDB
         /// </summary>
         internal static MethodInfo GetFunction(string name, int parameterCount = 0)
         {
-            var key = name.ToUpper() + "~" + parameterCount;
+            var key = name.ToUpperInvariant() + "~" + parameterCount;
 
             return _functions.GetOrDefault(key);
         }

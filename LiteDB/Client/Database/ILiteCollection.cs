@@ -71,7 +71,7 @@ namespace LiteDB
 
         /// <summary>
         /// Update many document based on merge current document with extend expression. Use your class with initializers. 
-        /// Eg: col.UpdateMany(x => new Customer { Name = x.Name.ToUpper(), Salary: 100 }, x => x.Name == "John")
+        /// Eg: col.UpdateMany(x => new Customer { Name = x.Name.ToUpperInvariant(), Salary: 100 }, x => x.Name == "John")
         /// </summary>
         int UpdateMany(Expression<Func<T, T>> extend, Expression<Func<T, bool>> predicate);
 

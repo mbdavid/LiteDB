@@ -67,7 +67,7 @@ namespace LiteDB
 
         /// <summary>
         /// Update many document based on merge current document with extend expression. Use your class with initializers. 
-        /// Eg: col.UpdateMany(x => new Customer { Name = x.Name.ToUpper(), Salary: 100 }, x => x.Name == "John")
+        /// Eg: col.UpdateMany(x => new Customer { Name = x.Name.ToUpperInvariant(), Salary: 100 }, x => x.Name == "John")
         /// </summary>
         public int UpdateMany(Expression<Func<T, T>> extend, Expression<Func<T, bool>> predicate)
         {
@@ -79,7 +79,7 @@ namespace LiteDB
 
             if (ext.Type != BsonExpressionType.Document)
             {
-                throw new ArgumentException("Extend expression must return an anonymous class to be merge with entities. Eg: `col.UpdateMany(x => new { Name = x.Name.ToUpper() }, x => x.Age > 10)`");
+                throw new ArgumentException("Extend expression must return an anonymous class to be merge with entities. Eg: `col.UpdateMany(x => new { Name = x.Name.ToUpperInvariant() }, x => x.Age > 10)`");
             }
 
             return _engine.UpdateMany(_collection, ext, pred);
