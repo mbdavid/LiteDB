@@ -63,75 +63,65 @@ namespace LiteDB.Engine
 
             IEnumerable<BsonDocument> RunQuery()
             {
-                var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? LockMode.Write : LockMode.Read, _collection, false);
-
-                // no collection, no documents
-                if (snapshot.CollectionPage == null && _source == null)
-                {
-                    // if query use Source (*) need runs with empty data source
-                    if (_query.Select.UseSource)
-                    {
-                        yield return _query.Select.ExecuteScalar(_pragmas.Collation).AsDocument;
-                    }
-
-                    transaction.OpenCursors.Remove(_cursor);
-
-                    if (isNew)
-                    {
-                        _monitor.ReleaseTransaction(transaction);
-                    }
-
-                    yield break;
-                }
-
-                // execute optimization before run query (will fill missing _query properties instance)
-                var optimizer = new QueryOptimization(snapshot, _query, _source, _pragmas.Collation);
-
-                var queryPlan = optimizer.ProcessQuery();
-
-                // if execution is just to get explan plan, return as single document result
-                if (executionPlan)
-                {
-                    yield return queryPlan.GetExecutionPlan();
-
-                    transaction.OpenCursors.Remove(_cursor);
-
-                    if (isNew)
-                    {
-                        _monitor.ReleaseTransaction(transaction);
-                    }
-
-                    yield break;
-                }
-
-                // get node list from query - distinct by dataBlock (avoid duplicate)
-                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot, _pragmas.Collation));
-
-                // get current query pipe: normal or groupby pipe
-                var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas);
-
                 try
                 {
-                    // start cursor elapsed timer
-                    _cursor.Elapsed.Start();
+                    var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? LockMode.Write : LockMode.Read, _collection, false);
 
-                    // call safepoint just before return each document
-                    foreach (var doc in pipe.Pipe(nodes, queryPlan))
+                    // no collection, no documents
+                    if (snapshot.CollectionPage == null && _source == null)
                     {
-                        _cursor.Fetched++;
-                        _cursor.Elapsed.Stop();
+                        // if query use Source (*) need runs with empty data source
+                        if (_query.Select.UseSource)
+                        {
+                            yield return _query.Select.ExecuteScalar(_pragmas.Collation).AsDocument;
+                        }
+                        yield break;
+                    }
 
-                        yield return doc;
+                    // execute optimization before run query (will fill missing _query properties instance)
+                    var optimizer = new QueryOptimization(snapshot, _query, _source, _pragmas.Collation);
 
-                        if (transaction.State != TransactionState.Active) throw new LiteException(0, $"There is no more active transaction for this cursor: {_cursor.Query.ToSQL(_cursor.Collection)}");
+                    var queryPlan = optimizer.ProcessQuery();
 
+                    // if execution is just to get explan plan, return as single document result
+                    if (executionPlan)
+                    {
+                        yield return queryPlan.GetExecutionPlan();
+                        yield break;
+                    }
+
+                    // get node list from query - distinct by dataBlock (avoid duplicate)
+                    var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot, _pragmas.Collation));
+
+                    // get current query pipe: normal or groupby pipe
+                    var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas);
+
+                    try
+                    {
+                        // start cursor elapsed timer
                         _cursor.Elapsed.Start();
+
+                        // call safepoint just before return each document
+                        foreach (var doc in pipe.Pipe(nodes, queryPlan))
+                        {
+                            _cursor.Fetched++;
+                            _cursor.Elapsed.Stop();
+
+                            yield return doc;
+
+                            if (transaction.State != TransactionState.Active) throw new LiteException(0, $"There is no more active transaction for this cursor: {_cursor.Query.ToSQL(_cursor.Collection)}");
+
+                            _cursor.Elapsed.Start();
+                        }
+                    }
+                    finally
+                    {
+                        // stop cursor elapsed
+                        _cursor.Elapsed.Stop();
                     }
                 }
                 finally
                 {
-                    // stop cursor elapsed
-                    _cursor.Elapsed.Stop();
 
                     transaction.OpenCursors.Remove(_cursor);
 
