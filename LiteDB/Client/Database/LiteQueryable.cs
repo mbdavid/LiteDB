@@ -266,7 +266,7 @@ namespace LiteDB
             else
             {
                 return this.ToDocuments()
-                    .Select(x => (T)_mapper.Deserialize(typeof(T), x));
+                    .Select(x => (T)_mapper.ToObject<T>(x));
             }
         }
 
