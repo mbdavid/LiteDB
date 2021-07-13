@@ -184,6 +184,20 @@ namespace LiteDB
             return expr;
         }
 
+        /// <summary>
+        /// Resolve LINQ expression into BsonExpression (for index only)
+        /// </summary>
+        public BsonExpression GetIndexExpression<T, K>(Expression<Func<T, K>> predicate)
+        {
+            var visitor = new LinqExpressionVisitor(this, predicate);
+
+            var expr = visitor.Resolve(false);
+
+            LOG($"`{predicate.ToString()}` -> `{expr.Source}`", "LINQ");
+
+            return expr;
+        }
+
         #endregion
 
         #region Predefinded Property Resolvers
@@ -514,7 +528,7 @@ namespace LiteDB
                     }
 
                     return m.Deserialize(entity.ForType, doc);
-                    
+
                 }
                 else
                 {
