@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard1.3;netstandard2.0</TargetFrameworks>
-    <AssemblyVersion>5.0.10</AssemblyVersion>
-    <FileVersion>5.0.10</FileVersion>
-    <VersionPrefix>5.0.10</VersionPrefix>
+    <TargetFrameworks>net461;netstandard1.3;netstandard2.0</TargetFrameworks>
+    <AssemblyVersion>5.0.11</AssemblyVersion>
+    <FileVersion>5.0.11</FileVersion>
+    <VersionPrefix>5.0.11</VersionPrefix>
     <Authors>Maurício David</Authors>
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
@@ -64,6 +64,11 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.1" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.7.0" />
+    <PackageReference Include="System.Threading.AccessControl" Version="5.0.0" />
   </ItemGroup>
   
   <!-- End References -->
