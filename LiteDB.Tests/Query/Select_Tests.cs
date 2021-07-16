@@ -62,5 +62,33 @@ namespace LiteDB.Tests.QueryTest
 
             r.Should().HaveCount(1000);
         }
+
+        [Fact]
+        public void Query_Select_Array()
+        {
+            var r = collection.Query()
+                .Select(p => p.Phones)
+                .ToArray();
+
+            var expected = local
+                .Select(p => p.Phones)
+                .ToArray();
+
+            r.Should().BeEquivalentTo(expected);
+        }
+
+        [Fact]
+        public void Query_Select_Object()
+        {
+            var r = collection.Query()
+                .Select(p => p.Address)
+                .ToArray();
+
+            var expected = local
+                .Select(p => p.Address)
+                .ToArray();
+
+            r.Should().BeEquivalentTo(expected);
+        }
     }
 }
