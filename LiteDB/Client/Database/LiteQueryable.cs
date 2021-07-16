@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LiteDB
 {
@@ -18,8 +19,9 @@ namespace LiteDB
 
         // indicate that T type are simple and result are inside first document fields (query always return a BsonDocument)
         private readonly bool _isSimpleType = Reflection.IsSimpleType(typeof(T));
-
-        private readonly bool _isEnumerable = Reflection.IsEnumerable(typeof(T));
+        // indicate that T type are enumerable (but not BsonDocument) and result are inside first document fields (query always return a BsonDocument)
+        private readonly bool _isEnumerable = Reflection.IsEnumerable(typeof(T))
+            && !typeof(BsonDocument).IsAssignableFrom(typeof(T));
 
         internal LiteQueryable(ILiteEngine engine, BsonMapper mapper, string collection, Query query)
         {
