@@ -148,10 +148,11 @@ namespace LiteDB.Engine
             ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
 
             var r = _reader.Read(array, offset, count);
-            
+
             // Checks if the first 16 bytes of the page in the original stream are zero
-            // This should never happen, but if it does, return a zeroed page (to be skipped by DiskService.ReadFull(...))
-            if(BufferExtensions.SequenceEqual(array, 0, _decryptedZeroes, 0, 16))
+            // This should never happen, but if it does, return a blank page
+            // The blank page will be skipped by WalIndexService.CheckpointInternal() and WalIndexService.RestoreIndex()
+            if (this.IsBlank(array, offset))
             {
                 array.Fill(0, offset, count);
             }
@@ -210,6 +211,18 @@ namespace LiteDB.Engine
         public override void SetLength(long value)
         {
             _stream.SetLength(value + PAGE_SIZE);
+        }
+
+        private unsafe bool IsBlank(byte[] array, int offset)
+        {
+            fixed (byte* arrayPtr = array)
+            fixed (void* vPtr = this._decryptedZeroes)
+            {
+                ulong* ptr = (ulong*)(arrayPtr + offset);
+                ulong* zeroptr = (ulong*)vPtr;
+
+                return *ptr == *zeroptr && *(ptr + 1) == *(zeroptr + 1);
+            }
         }
     }
 }

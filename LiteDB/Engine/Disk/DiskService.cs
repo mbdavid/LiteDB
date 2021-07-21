@@ -264,13 +264,6 @@ namespace LiteDB.Engine
 
                     stream.Read(buffer, 0, PAGE_SIZE);
 
-                    if(BufferExtensions.SequenceEqual(buffer, 0, _zeroes, 0, 16))
-                    {
-                        // If this happened, it means a zeroed page is present in the file
-                        // Just skip it
-                        continue;
-                    }
-
                     yield return new PageBuffer(buffer, 0, 0)
                     {
                         Position = position,
