@@ -188,8 +188,8 @@ namespace LiteDB.Engine
             {
                 if(buffer.IsBlank())
                 {
-                    // This should not happen, but if it does, it means there's a zeroed page in the file
-                    // Just skip it
+                    // this should not happen, but if it does, it means there's a zeroed page in the file
+                    // just skip it
                     current += PAGE_SIZE;
                     continue;
                 }
@@ -309,8 +309,8 @@ namespace LiteDB.Engine
                 {
                     if (buffer.IsBlank())
                     {
-                        // This should not happen, but if it does, it means there's a zeroed page in the file
-                        // Just skip it
+                        // this should not happen, but if it does, it means there's a zeroed page in the file
+                        // just skip it
                         continue;
                     }
 

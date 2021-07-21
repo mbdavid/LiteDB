@@ -19,7 +19,7 @@ namespace LiteDB.Engine
         private readonly CryptoStream _reader;
         private readonly CryptoStream _writer;
 
-        private readonly byte[] _decryptedZeroes;
+        private readonly byte[] _decryptedZeroes = new byte[16];
 
         public byte[] Salt { get; }
 
@@ -42,8 +42,6 @@ namespace LiteDB.Engine
         public AesStream(string password, Stream stream)
         {
             _stream = stream;
-            var zeroes = new byte[16];
-            _decryptedZeroes = new byte[16];
 
             var isNew = _stream.Length == 0;
 
@@ -125,10 +123,10 @@ namespace LiteDB.Engine
                 _stream.Position = PAGE_SIZE;
                 _stream.FlushToDisk();
 
-                using (var ms = new MemoryStream(zeroes))
+                using (var ms = new MemoryStream(new byte[16]))
                 using (var tempStream = new CryptoStream(ms, _decryptor, CryptoStreamMode.Read))
                 {
-                    tempStream.Read(_decryptedZeroes, 0, 16);
+                    tempStream.Read(_decryptedZeroes, 0, _decryptedZeroes.Length);
                 }
             }
             catch
@@ -149,9 +147,9 @@ namespace LiteDB.Engine
 
             var r = _reader.Read(array, offset, count);
 
-            // Checks if the first 16 bytes of the page in the original stream are zero
-            // This should never happen, but if it does, return a blank page
-            // The blank page will be skipped by WalIndexService.CheckpointInternal() and WalIndexService.RestoreIndex()
+            // checks if the first 16 bytes of the page in the original stream are zero
+            // this should never happen, but if it does, return a blank page
+            // the blank page will be skipped by WalIndexService.CheckpointInternal() and WalIndexService.RestoreIndex()
             if (this.IsBlank(array, offset))
             {
                 array.Fill(0, offset, count);
@@ -216,7 +214,7 @@ namespace LiteDB.Engine
         private unsafe bool IsBlank(byte[] array, int offset)
         {
             fixed (byte* arrayPtr = array)
-            fixed (void* vPtr = this._decryptedZeroes)
+            fixed (void* vPtr = _decryptedZeroes)
             {
                 ulong* ptr = (ulong*)(arrayPtr + offset);
                 ulong* zeroptr = (ulong*)vPtr;
