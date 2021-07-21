@@ -19,6 +19,8 @@ namespace LiteDB.Engine
         private readonly CryptoStream _reader;
         private readonly CryptoStream _writer;
 
+        private readonly byte[] _decryptedZeroes = new byte[16];
+
         public byte[] Salt { get; }
 
         public override bool CanRead => _stream.CanRead;
@@ -121,6 +123,11 @@ namespace LiteDB.Engine
                 _stream.Position = PAGE_SIZE;
                 _stream.FlushToDisk();
 
+                using (var ms = new MemoryStream(new byte[16]))
+                using (var tempStream = new CryptoStream(ms, _decryptor, CryptoStreamMode.Read))
+                {
+                    tempStream.Read(_decryptedZeroes, 0, _decryptedZeroes.Length);
+                }
             }
             catch
             {
@@ -139,6 +146,14 @@ namespace LiteDB.Engine
             ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
 
             var r = _reader.Read(array, offset, count);
+
+            // checks if the first 16 bytes of the page in the original stream are zero
+            // this should never happen, but if it does, return a blank page
+            // the blank page will be skipped by WalIndexService.CheckpointInternal() and WalIndexService.RestoreIndex()
+            if (this.IsBlank(array, offset))
+            {
+                array.Fill(0, offset, count);
+            }
 
             return r;
         }
@@ -194,6 +209,18 @@ namespace LiteDB.Engine
         public override void SetLength(long value)
         {
             _stream.SetLength(value + PAGE_SIZE);
+        }
+
+        private unsafe bool IsBlank(byte[] array, int offset)
+        {
+            fixed (byte* arrayPtr = array)
+            fixed (void* vPtr = _decryptedZeroes)
+            {
+                ulong* ptr = (ulong*)(arrayPtr + offset);
+                ulong* zeroptr = (ulong*)vPtr;
+
+                return *ptr == *zeroptr && *(ptr + 1) == *(zeroptr + 1);
+            }
         }
     }
 }
