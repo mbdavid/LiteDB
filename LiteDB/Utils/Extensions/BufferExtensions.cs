@@ -69,6 +69,20 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Compares two arrays
+        /// </summary>
+        public static bool SequenceEqual(byte[] array1, int offset1, byte[] array2, int offset2, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (array1[offset1 + i] != array2[offset2 + i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Read UTF8 string until found \0
         /// </summary>
         public static string ReadCString(this byte[] bytes, int startIndex, out int bytesCount)

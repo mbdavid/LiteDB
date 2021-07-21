@@ -19,6 +19,8 @@ namespace LiteDB.Engine
         private readonly CryptoStream _reader;
         private readonly CryptoStream _writer;
 
+        private readonly byte[] _decryptedZeroes;
+
         public byte[] Salt { get; }
 
         public override bool CanRead => _stream.CanRead;
@@ -40,6 +42,8 @@ namespace LiteDB.Engine
         public AesStream(string password, Stream stream)
         {
             _stream = stream;
+            var zeroes = new byte[16];
+            _decryptedZeroes = new byte[16];
 
             var isNew = _stream.Length == 0;
 
@@ -121,6 +125,11 @@ namespace LiteDB.Engine
                 _stream.Position = PAGE_SIZE;
                 _stream.FlushToDisk();
 
+                using (var ms = new MemoryStream(zeroes))
+                using (var tempStream = new CryptoStream(ms, _decryptor, CryptoStreamMode.Read))
+                {
+                    tempStream.Read(_decryptedZeroes, 0, 16);
+                }
             }
             catch
             {
@@ -139,6 +148,13 @@ namespace LiteDB.Engine
             ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
 
             var r = _reader.Read(array, offset, count);
+            
+            // Checks if the first 16 bytes of the page in the original stream are zero
+            // This should never happen, but if it does, return a zeroed page (to be skipped by DiskService.ReadFull(...))
+            if(BufferExtensions.SequenceEqual(array, 0, _decryptedZeroes, 0, 16))
+            {
+                array.Fill(0, offset, count);
+            }
 
             return r;
         }
