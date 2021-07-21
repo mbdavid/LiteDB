@@ -17,7 +17,7 @@ namespace LiteDB.Engine
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
-            return this.AutoTransaction(transaction =>
+            var x = this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
                 var count = 0;
@@ -37,6 +37,8 @@ namespace LiteDB.Engine
 
                 return count;
             });
+
+            return x;
         }
 
         /// <summary>
@@ -44,6 +46,7 @@ namespace LiteDB.Engine
         /// </summary>
         private void InsertDocument(Snapshot snapshot, BsonDocument doc, BsonAutoId autoId, IndexService indexer, DataService data)
         {
+
             // if no _id, use AutoId
             if (!doc.TryGetValue("_id", out var id))
             {
@@ -85,6 +88,7 @@ namespace LiteDB.Engine
                     last = node;
                 }
             }
+
         }
     }
 }

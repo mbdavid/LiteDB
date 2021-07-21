@@ -95,6 +95,8 @@ namespace LiteDB.Engine
 
             var indexPage = _snapshot.GetFreeIndexPage(bytesLength, ref index.FreeIndexPageList);
 
+            //LiteEngine.TS.Stop();
+
             // create node in buffer
             var node = indexPage.InsertIndexNode(index.Slot, level, key, dataBlock, bytesLength);
 
@@ -152,8 +154,12 @@ namespace LiteDB.Engine
                 last.SetNextNode(node.Position);
             }
 
+            //LiteEngine.TS.Start();
+
             // fix page position in free list slot
             _snapshot.AddOrRemoveFreeIndexList(node.Page, ref index.FreeIndexPageList);
+
+            //LiteEngine.TS.Stop();
 
             return node;
         }
@@ -175,6 +181,8 @@ namespace LiteDB.Engine
             return level;
         }
 
+        private Dictionary<PageAddress, IndexNode> _cache = new Dictionary<PageAddress, IndexNode>();
+
         /// <summary>
         /// Get a node inside a page using PageAddress - Returns null if address IsEmpty
         /// </summary>
@@ -182,9 +190,31 @@ namespace LiteDB.Engine
         {
             if (address.PageID == uint.MaxValue) return null;
 
-            var indexPage = _snapshot.GetPage<IndexPage>(address.PageID);
+            LiteEngine.GET_NODE_CACHE.StartInc();
 
-            return indexPage.GetIndexNode(address.Index);
+            if (_cache.TryGetValue(address, out var node))
+            {
+                LiteEngine.GET_NODE_CACHE.Stop();
+
+                return node;
+            }
+            else
+            {
+                LiteEngine.GET_NODE_CACHE.Stop();
+
+                LiteEngine.GET_NODE_DISK.StartInc();
+
+                var indexPage = _snapshot.GetPage<IndexPage>(address.PageID);
+
+                node = indexPage.GetIndexNode(address.Index);
+
+                _cache[address] = node;
+
+                LiteEngine.GET_NODE_DISK.Stop();
+
+                return node;
+            }
+
         }
 
         /// <summary>

@@ -42,7 +42,9 @@ namespace LiteDB.Engine
                 while (bytesLeft > 0)
                 {
                     var bytesToCopy = Math.Min(bytesLeft, MAX_DATA_BYTES_PER_PAGE);
+                    //LiteEngine.TS.Start();
                     var dataPage = _snapshot.GetFreeDataPage(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE);
+                    //LiteEngine.TS.Stop();
                     var dataBlock = dataPage.InsertBlock(bytesToCopy, blockIndex++ > 0);
 
                     if (lastBlock != null)
@@ -52,7 +54,9 @@ namespace LiteDB.Engine
 
                     if (firstBlock.IsEmpty) firstBlock = dataBlock.Position;
 
+                    //LiteEngine.TS.Start();
                     _snapshot.AddOrRemoveFreeDataList(dataPage);
+                    //LiteEngine.TS.Stop();
 
                     yield return dataBlock.Buffer;
 

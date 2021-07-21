@@ -16,6 +16,8 @@ namespace LiteDB.Engine
     /// </summary>
     public partial class LiteEngine : ILiteEngine
     {
+        public static int PAGES = 0;
+
         #region Services instances
 
         private readonly LockService _locker;
