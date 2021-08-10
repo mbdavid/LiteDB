@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Overview - LiteDB :: A .NET embedded NoSQL database</title>
+  <title>Interfaces and Classes - LiteDB :: A .NET embedded NoSQL database</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="/favicon.png">
@@ -20,7 +20,7 @@
 
 </head>
 
-<body class='page page-default-list'>
+<body class='page page-default-single'>
 
   <div class="github-fork-ribbon-wrapper right">
       <div class="github-fork-ribbon">
@@ -44,7 +44,7 @@
       </a>
     </li>
     
-    <li class="menu-item-api active">
+    <li class="menu-item-api">
       <a href="/api/">
         <span>API</span>
       </a>
@@ -83,7 +83,7 @@
       </a>
     </li>
     
-    <li class="menu-item-api active">
+    <li class="menu-item-api">
       <a href="/api/">
         <span>API</span>
       </a>
@@ -151,7 +151,7 @@
       <a href="/api/functions/">Functions</a>
     </li>
     
-    <li class="">
+    <li class="active ">
       <a href="/api/interfaces-classes/">Interfaces and Classes</a>
     </li>
     
@@ -162,71 +162,83 @@
         </div>
         <div class="col-12 col-md-9">
           
-
-<span class="overview">Overview</span>
-<h1 class="title">Overview</h1>
+<h1 class="title">Interfaces and Classes</h1>
 <div class="content">
-  <h2 id="litedb-v5---structed-query-language">LiteDB v5 - Structed Query Language</h2>
+  <h2 id="litedatabase">LiteDatabase</h2>
+<h6 id="constuctors">Constuctors</h6>
+<table>
+<thead>
+<tr>
+<th>Signature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LiteDatabase(string connectionString, BsonMapper mapper = null)</code></td>
+<td>Creates a new instance of <code>LiteDatabase</code> based on the provided connection string and mapper.</td>
+</tr>
+<tr>
+<td><code>LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null)</code></td>
+<td>Creates a new instance of <code>LiteDatabase</code> based on the provided parsed connection string and mapper.</td>
+</tr>
+<tr>
+<td><code>LiteDatabase(Stream stream, BsonMapper mapper = null, Stream logStream = null)</code></td>
+<td>Creates a new instance of <code>LiteDatabase</code> based on the provided data and log streams and mapper.</td>
+</tr>
+<tr>
+<td><code>LiteDatabase(ILiteEngine engine, BsonMapper mapper = null, bool disposeOnClose = true)</code></td>
+<td>Creates a new instance of <code>LiteDatabase</code> based on a pre-existing <code>ILiteEngine</code> and a mapper. If <code>disposeOnClose</code> is true, <code>engine</code> will also be disposed when <code>this</code> is disposed.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="fields-and-properties">Fields and Properties</h6>
+<table>
+<thead>
+<tr>
+<th>Signature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BsonMapper Mapper { get; }</code></td>
+<td>Gets the <code>BsonMapper</code> being used by this instance. Read-only (use the <code>mapper</code> parameter in the constructors).</td>
+</tr>
+<tr>
+<td><code>ILiteStorage&lt;string&gt; FileStorage { get; }</code></td>
+<td>Gets an instance of <code>ILiteStorage&lt;string&gt;</code> that uses <code>_chunk</code> and <code>_files</code> collections. For custom names, use <code>GetStorage</code> method.</td>
+</tr>
+<tr>
+<td><code>int UserVersion { get; set; }</code></td>
+<td>Gets or sets the <code>UserVersion</code> pragma for the current datafile.</td>
+</tr>
+<tr>
+<td><code>TimeSpan Timeout { get; set; }</code></td>
+<td>Gets or sets the <code>Timeout</code> pragma for the current datafile.</td>
+</tr>
+<tr>
+<td><code>bool UtcDate { get; set; }</code></td>
+<td>Gets or sets the <code>UtcDate</code> pragma for the current datafile.</td>
+</tr>
+<tr>
+<td><code>long LimitSize { get; set; }</code></td>
+<td>Gets or sets the <code>LimitSize</code> pragma for the current datafile.</td>
+</tr>
+<tr>
+<td><code>int CheckpointSize { get; set; }</code></td>
+<td>Gets or sets the <code>Checkpoint</code> pragma for the current datafile.</td>
+</tr>
+<tr>
+<td><code>Collation Collation { get; }</code></td>
+<td>Gets the <code>Timeout</code> pragma for the current datafile (can only be changed with a rebuild).</td>
+</tr>
+</tbody>
+</table>
+<h6 id="methods">Methods</h6>
 
 </div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="/api/query/">SELECT</a></h2>
-  <p>The following structure defines the SQL query syntax in LiteDB. Keyworks and function names are case-insensitive.
-[ EXPLAIN ] SELECT  [, ] [ …</p>
 </div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="/api/insert/">INSERT</a></h2>
-  <p>The following structure defines the SQL insert syntax in LiteDB. Keyworks are case-insensitive.
-INSERT INTO {collection}[: {autoIdType}] …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="/api/update/">UPDATE</a></h2>
-  <p>The following structure defines the SQL update syntax in LiteDB. Keyworks and function names are case-insensitive.
-UPDATE  SET  =  [, = ] | …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="/api/delete/">DELETE</a></h2>
-  <p>The following structure defines the SQL delete syntax in LiteDB. Keyworks and function names are case-insensitive.
-DELETE  WHERE …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="/api/misc/">MISC</a></h2>
-  <p>Collection Renaming RENAME COLLECTION  TO   collection is the current name of the collection. newName is the new name of the collection. …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="/api/functions/">Functions</a></h2>
-  <p>Aggregate Functions   COUNT(array) - Returns the number of elements in array
-  MIN(array) - Returns the lowest value in array
-  MAX(array) - …</p>
-</div>
-
-
-<div class="summary mb-2">
-  
-  <h2 class="title-summary"><a href="/api/interfaces-classes/">Interfaces and Classes</a></h2>
-  <p>LiteDatabase Constuctors    Signature Description     LiteDatabase(string connectionString, BsonMapper mapper = null) Creates a new instance …</p>
-</div>
-
-
-
 
         </div>
       </div>

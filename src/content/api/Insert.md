@@ -1,7 +1,7 @@
 ---
 title: 'INSERT'
 draft: false
-weight: 20
+weight: 2
 ---
 
 The following structure defines the SQL insert syntax in LiteDB. Keyworks are case-insensitive.

@@ -388,6 +388,7 @@
 </ul>
 <p>AutoId is only used when there is no <code>_id</code> field in the document upon insertion. In strongly-typed documents, <code>BsonMapper</code> removes the <code>_id</code> field for empty values (like <code>0</code> for <code>Int</code> or <code>Guid.Empty</code> for <code>Guid</code>).
 Please note that AutoId requires the id field to have a public setter.</p>
+<p>While the AutoId can be used similarly to a sequence in a relational database, it behaves slightly differently. AutoIds are not persisted and have to be recreated in memory when the file is reopened, so it is possible that an id from a previously deleted document ends up being reused.</p>
 <h3 id="fluent-mapping">Fluent Mapping</h3>
 <p>LiteDB offers a complete fluent API to create custom mappings without using attributes, keeping you domain classes without external references.</p>
 <p>Fluent API uses <code>EntityBuilder</code> to add custom mappings to your classes.</p>

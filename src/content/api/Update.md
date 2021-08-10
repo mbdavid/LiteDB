@@ -1,7 +1,7 @@
 ---
 title: 'UPDATE'
 draft: false
-weight: 20
+weight: 3
 ---
 
 The following structure defines the SQL update syntax in LiteDB. Keyworks and function names are case-insensitive.

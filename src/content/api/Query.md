@@ -1,7 +1,7 @@
 ---
 title: 'SELECT'
 draft: false
-weight: 10
+weight: 1
 ---
 
 The following structure defines the SQL query syntax in LiteDB. Keyworks and function names are case-insensitive.

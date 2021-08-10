@@ -189,7 +189,8 @@
 <h1 class="title">Expressions</h1>
 <div class="content">
   <p>Expressions are path or formulas to access and modify the data inside a document. Based on the concept of JSON path (<a href="http://goessner.net/articles/JsonPath/),">http://goessner.net/articles/JsonPath/),</a> LiteDB supports a similar syntax to navigate inside a document.</p>
-<p><code>BsonExpression</code> is the class that parses a path expression and compiles it into a Linq Expression to be evaluated by LiteDB.</p>
+<p>In previous versons, LiteDB used lambda expressions directly on objects. This was very flexible, but also had poor perfomance. LiteDB v5 uses <code>BsonExpression</code>s, which are expressions that can be directly applied to a <code>BsonDocument</code>.</p>
+<p><code>BsonExpression</code>s can either be used natively (there is an implicit conversion between <code>string</code> and <code>BsonExpression</code>) or by mapping a lambda expression (methods that take a lambda expression do this automatically).</p>
 <ul>
 <li>Path starts with <code>$</code>: <code>$.Address.Street</code>, where <code>$</code> represents the root document. The <code>$</code> symbol are optional and default in document navigation (<code>Address.Street</code> works too)</li>
 <li>Int values are defined by <code>[0-9]*</code>: <code>123</code></li>

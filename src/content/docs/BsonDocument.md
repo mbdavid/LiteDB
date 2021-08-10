@@ -32,9 +32,9 @@ About document field **keys**:
 About document field **values**:
 
 - Values can be any BSON value data type: Null, Int32, Int64, Decimal, Double, String, Embedded Document, Array, Binary, ObjectId, Guid, Boolean, DateTime, MinValue, MaxValue
-- When a field is indexed, the value must be less than 256 bytes after BSON serialization.
+- When a field is indexed, the value must occupy less than 1024 bytes after BSON serialization.
 - `_id` field cannot be: `Null`, `MinValue` or `MaxValue`
-- `_id` is unique indexed field, so value must be less than 256 bytes
+- `_id` is unique indexed field, so value must occupy less than 1024 bytes
 
 About .NET classes
 

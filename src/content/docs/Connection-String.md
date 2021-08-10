@@ -4,7 +4,7 @@ draft: false
 weight: 7
 ---
 
-LiteDatabase can be initialized using a string connection, with `key1=value1; key2=value2; ...` syntax. If there is no `=` in your connection string, LiteDB assume that your connection string contains only the `Filename`. Keys are case insensitive. Values can be quoted (`"` or `'`) if they contain special characters (like `;` or `=`).
+LiteDatabase can be initialized using a string connection, with `key1=value1; key2=value2; ...` syntax. If there is no `=` in your connection string, LiteDB assume that your connection string contains only the `Filename`. Values can be quoted (`"` or `'`) if they contain special characters (like `;` or `=`). **Keys and values are case-insensitive.**
 
 ### Options
 
@@ -19,10 +19,12 @@ LiteDatabase can be initialized using a string connection, with `key1=value1; ke
 
 #### Connection Type
 
-LiteDB offers 2 types of connections: `Direct` and `Shared`. This affect how engine will open data file.
+LiteDB offers 2 types of connections: `Direct` and `Shared`. This affects how the engine opens the data file.
 
-- `Direct`: Engine will open the datafile in exclusive mode and will keep it open until `Dispose()`. The datafile cannot be opened by another process. This is the recommended mode because it's faster and cachable.
-- `Shared`: Engine will be close the datafile after each operation. Locks are made using `Mutex`. This is more expensive but you can open same file from multiple processes.
+- `Direct`: The engine will open the datafile in exclusive mode and will keep it open until `Dispose()`. The datafile cannot be opened by another process. This is the recommended mode because it's faster and cachable.
+- `Shared`: The engine will be close the datafile after each operation. Locks are made using `Mutex`. This is more expensive but you can open same file from multiple processes.
+
+> The Shared mode only works in .NET implementations that provide named mutexes. Its multi-process capabilities will only work in platforms that implement named mutexes as system-wide mutexes.
 
 
 ### Example

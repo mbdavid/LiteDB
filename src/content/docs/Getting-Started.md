@@ -65,6 +65,27 @@ using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
 }
 ```
 
+
+### Custom Mapping
+
+Your class was not serialized how you expected or didn't work properly with the LiteDB mapper? You can use a custom serializer.
+
+
+```C#
+BsonMapper.Global.RegisterType<DateTimeOffset>
+(
+    serialize: obj =>
+    {
+        var doc = new BsonDocument();
+        doc["DateTime"] = obj.DateTime.Ticks;
+        doc["Offset"] = obj.Offset.Ticks;
+        return doc;
+    },
+    deserialize: doc => new DateTimeOffset(doc["DateTime"].AsInt64, new TimeSpan(doc["Offset"].AsInt64))
+);
+
+```
+
 ### Working with files
 
 Need to store files? No problem: use FileStorage.

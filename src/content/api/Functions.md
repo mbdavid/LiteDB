@@ -1,7 +1,7 @@
 ---
 title: 'Functions'
 draft: false
-weight: 21
+weight: 6
 ---
 
 ### Aggregate Functions

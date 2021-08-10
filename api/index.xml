@@ -18,7 +18,27 @@
       
       <guid>/api/query/</guid>
       <description>The following structure defines the SQL query syntax in LiteDB. Keyworks and function names are case-insensitive.
-[ EXPLAIN ]SELECT &amp;lt;selectExpr0&amp;gt; [, &amp;lt;selectExprN&amp;gt;][ INTO &amp;lt;collection&amp;gt;|&amp;lt;$file(param)&amp;gt; [ : &amp;lt;autoIdType&amp;gt; ] ][ FROM &amp;lt;collection&amp;gt;|&amp;lt;$systemCollection&amp;gt; ][ INCLUDE &amp;lt;pathExpr0&amp;gt; [, &amp;lt;pathExprN&amp;gt; ][ WHERE &amp;lt;filterExpr&amp;gt; ][ GROUP BY &amp;lt;groupByExpr&amp;gt;} ][ HAVING &amp;lt;filterExpr&amp;gt; ][ ORDER BY &amp;lt;orderByExpr&amp;gt; [ ASC | DESC ] ][ LIMIT &amp;lt;number&amp;gt; ][ OFFSET &amp;lt;number&amp;gt; ][ FOR UPDATE ]Explain If the keywork EXPLAIN is present before a query, the result is a document that explains how the engine plans to run the query.</description>
+[ EXPLAIN ] SELECT &amp;lt;selectExpr0&amp;gt; [, &amp;lt;selectExprN&amp;gt;] [ INTO &amp;lt;collection&amp;gt;|&amp;lt;$file(param)&amp;gt; [ : &amp;lt;autoIdType&amp;gt; ] ] [ FROM &amp;lt;collection&amp;gt;|&amp;lt;$systemCollection&amp;gt; ] [ INCLUDE &amp;lt;pathExpr0&amp;gt; [, &amp;lt;pathExprN&amp;gt; ] [ WHERE &amp;lt;filterExpr&amp;gt; ] [ GROUP BY &amp;lt;groupByExpr&amp;gt;} ] [ HAVING &amp;lt;filterExpr&amp;gt; ] [ ORDER BY &amp;lt;orderByExpr&amp;gt; [ ASC | DESC ] ] [ LIMIT &amp;lt;number&amp;gt; ] [ OFFSET &amp;lt;number&amp;gt; ] [ FOR UPDATE ] Explain If the keywork EXPLAIN is present before a query, the result is a document that explains how the engine plans to run the query.</description>
+    </item>
+    
+    <item>
+      <title>INSERT</title>
+      <link>/api/insert/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/api/insert/</guid>
+      <description>The following structure defines the SQL insert syntax in LiteDB. Keyworks are case-insensitive.
+INSERT INTO {collection}[: {autoIdType}] VALUES {doc0} [, {docN}]  collection is the name of the collection where the documents will be inserted autoIdType is one of the supported auto id types supported (GUID, INT, LONG, OBJECTID). If this construct is not present, the default value is OBJECTID. Every document after keyword VALUES must be a valid JSON object.</description>
+    </item>
+    
+    <item>
+      <title>UPDATE</title>
+      <link>/api/update/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/api/update/</guid>
+      <description>The following structure defines the SQL update syntax in LiteDB. Keyworks and function names are case-insensitive.
+UPDATE &amp;lt;collection&amp;gt; SET &amp;lt;key0&amp;gt; = &amp;lt;exprValue0&amp;gt; [,&amp;lt;keyN&amp;gt; = &amp;lt;exprValueN&amp;gt;] | &amp;lt;newDoc&amp;gt; [ WHERE &amp;lt;filterExpr&amp;gt; ]  collection is the name of the collection where the documents will be inserted. Every key is the attribute name in the document and the corresponding exprValue is an expression that returns the desired value. For more info, see Expressions.</description>
     </item>
     
     <item>
@@ -33,23 +53,12 @@ DELETE &amp;lt;collection&amp;gt; WHERE &amp;lt;filterExpr&amp;gt;
     </item>
     
     <item>
-      <title>INSERT</title>
-      <link>/api/insert/</link>
+      <title>MISC</title>
+      <link>/api/misc/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>/api/insert/</guid>
-      <description>The following structure defines the SQL insert syntax in LiteDB. Keyworks are case-insensitive.
-INSERT INTO {collection}[: {autoIdType}]VALUES {doc0} [, {docN}] collection is the name of the collection where the documents will be inserted autoIdType is one of the supported auto id types supported (GUID, INT, LONG, OBJECTID). If this construct is not present, the default value is OBJECTID. Every document after keyword VALUES must be a valid JSON object.</description>
-    </item>
-    
-    <item>
-      <title>UPDATE</title>
-      <link>/api/update/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/api/update/</guid>
-      <description>The following structure defines the SQL update syntax in LiteDB. Keyworks and function names are case-insensitive.
-UPDATE &amp;lt;collection&amp;gt;SET &amp;lt;key0&amp;gt; = &amp;lt;exprValue0&amp;gt; [,&amp;lt;keyN&amp;gt; = &amp;lt;exprValueN&amp;gt;] | &amp;lt;newDoc&amp;gt;[ WHERE &amp;lt;filterExpr&amp;gt; ] collection is the name of the collection where the documents will be inserted. Every key is the attribute name in the document and the corresponding exprValue is an expression that returns the desired value. For more info, see Expressions.</description>
+      <guid>/api/misc/</guid>
+      <description>Collection Renaming RENAME COLLECTION &amp;lt;collection&amp;gt; TO &amp;lt;newName&amp;gt;  collection is the current name of the collection. newName is the new name of the collection.  Drop DROP INDEX &amp;lt;collection&amp;gt;.&amp;lt;indexName&amp;gt; DROP COLLECTION &amp;lt;collection&amp;gt;  collection is the name of the collection. indexName is the name of the index to be dropped.  Create CREATE [ UNQIUE ] INDEX {indexName} ON {collection} ({indexExpr})  indexName is the name of the index being created.</description>
     </item>
     
     <item>
@@ -67,12 +76,12 @@ UPDATE &amp;lt;collection&amp;gt;SET &amp;lt;key0&amp;gt; = &amp;lt;exprValue0&
     </item>
     
     <item>
-      <title>Misc</title>
-      <link>/api/misc/</link>
+      <title>Interfaces and Classes</title>
+      <link>/api/interfaces-classes/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>/api/misc/</guid>
-      <description>Collection Renaming RENAME COLLECTION &amp;lt;collection&amp;gt; TO &amp;lt;newName&amp;gt; collection is the current name of the collection. newName is the new name of the collection.  Drop DROP INDEX &amp;lt;collection&amp;gt;.&amp;lt;indexName&amp;gt;DROP COLLECTION &amp;lt;collection&amp;gt; collection is the name of the collection. indexName is the name of the index to be dropped.  Create CREATE [ UNQIUE ] INDEX {indexName} ON {collection} ({indexExpr}) indexName is the name of the index being created.</description>
+      <guid>/api/interfaces-classes/</guid>
+      <description>LiteDatabase Constuctors    Signature Description     LiteDatabase(string connectionString, BsonMapper mapper = null) Creates a new instance of LiteDatabase based on the provided connection string and mapper.   LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null) Creates a new instance of LiteDatabase based on the provided parsed connection string and mapper.   LiteDatabase(Stream stream, BsonMapper mapper = null, Stream logStream = null) Creates a new instance of LiteDatabase based on the provided data and log streams and mapper.</description>
     </item>
     
   </channel>

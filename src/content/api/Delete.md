@@ -1,7 +1,7 @@
 ---
 title: 'DELETE'
 draft: false
-weight: 20
+weight: 4
 ---
 
 The following structure defines the SQL delete syntax in LiteDB. Keyworks and function names are case-insensitive.

@@ -1,7 +1,7 @@
 ---
-title: 'Misc'
+title: 'MISC'
 draft: false
-weight: 999
+weight: 5
 ---
 
 ### Collection Renaming

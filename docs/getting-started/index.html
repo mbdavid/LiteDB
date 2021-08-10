@@ -241,6 +241,20 @@
     <span class="c1">// and now we can query phones
 </span><span class="c1"></span>    <span class="kt">var</span> <span class="n">r</span> <span class="p">=</span> <span class="n">col</span><span class="p">.</span><span class="n">FindOne</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Phones</span><span class="p">.</span><span class="n">Contains</span><span class="p">(</span><span class="s">&#34;8888-5555&#34;</span><span class="p">));</span>
 <span class="p">}</span>
+</code></pre></div><h3 id="custom-mapping">Custom Mapping</h3>
+<p>Your class was not serialized how you expected or didn&rsquo;t work properly with the LiteDB mapper? You can use a custom serializer.</p>
+<div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="n">BsonMapper</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">DateTimeOffset</span><span class="p">&gt;</span>
+<span class="p">(</span>
+    <span class="n">serialize</span><span class="p">:</span> <span class="n">obj</span> <span class="p">=&gt;</span>
+    <span class="p">{</span>
+        <span class="kt">var</span> <span class="n">doc</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonDocument</span><span class="p">();</span>
+        <span class="n">doc</span><span class="p">[</span><span class="s">&#34;DateTime&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="n">obj</span><span class="p">.</span><span class="n">DateTime</span><span class="p">.</span><span class="n">Ticks</span><span class="p">;</span>
+        <span class="n">doc</span><span class="p">[</span><span class="s">&#34;Offset&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="n">obj</span><span class="p">.</span><span class="n">Offset</span><span class="p">.</span><span class="n">Ticks</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">doc</span><span class="p">;</span>
+    <span class="p">},</span>
+    <span class="n">deserialize</span><span class="p">:</span> <span class="n">doc</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">DateTimeOffset</span><span class="p">(</span><span class="n">doc</span><span class="p">[</span><span class="s">&#34;DateTime&#34;</span><span class="p">].</span><span class="n">AsInt64</span><span class="p">,</span> <span class="k">new</span> <span class="n">TimeSpan</span><span class="p">(</span><span class="n">doc</span><span class="p">[</span><span class="s">&#34;Offset&#34;</span><span class="p">].</span><span class="n">AsInt64</span><span class="p">))</span>
+<span class="p">);</span>
+
 </code></pre></div><h3 id="working-with-files">Working with files</h3>
 <p>Need to store files? No problem: use FileStorage.</p>
 <div class="highlight"><pre class="chroma"><code class="language-C#" data-lang="C#"><span class="c1">// Get file storage with Int Id

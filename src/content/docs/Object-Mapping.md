@@ -156,6 +156,8 @@ There are 4 built-in auto-id functions implemented:
 AutoId is only used when there is no `_id` field in the document upon insertion. In strongly-typed documents, `BsonMapper` removes the `_id` field for empty values (like `0` for `Int` or `Guid.Empty` for `Guid`).
 Please note that AutoId requires the id field to have a public setter.
 
+While the AutoId can be used similarly to a sequence in a relational database, it behaves slightly differently. AutoIds are not persisted and have to be recreated in memory when the file is reopened, so it is possible that an id from a previously deleted document ends up being reused.
+
 ### Fluent Mapping
 
 LiteDB offers a complete fluent API to create custom mappings without using attributes, keeping you domain classes without external references.
