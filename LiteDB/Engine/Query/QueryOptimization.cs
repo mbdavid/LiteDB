@@ -104,7 +104,7 @@ namespace LiteDB.Engine
             }
 
             // check all where predicate for AND operators
-            foreach(var predicate in _query.Where)
+            foreach (var predicate in _query.Where)
             {
                 add(predicate);
             }
@@ -115,6 +115,22 @@ namespace LiteDB.Engine
         /// </summary>
         private void OptimizeTerms()
         {
+            if (_terms.Count == 2 &&
+                _terms[0].IsScalar && _terms[1].IsScalar &&
+                _terms[0].Right.IsValue && _terms[1].Right.IsValue &&
+                _terms[0].Type == BsonExpressionType.GreaterThanOrEqual && _terms[1].Type == BsonExpressionType.LessThanOrEqual)
+            {
+                // convert: { [Path] >= Value1 AND [Path] <= Value2 } to { [Path] BETWEEN Value1 AND Value2 }
+                // usually from LINQ expression: `collection.Find(x => x.Id >= 100 && x.Id <= 200)`
+
+                var left = _terms[0];
+                var right = _terms[1];
+
+                var between = BsonExpression.Create(left.Left.Source + " BETWEEN " + left.Right.Source + " AND " + right.Right.Source, left.Parameters);
+                _terms.Clear();
+                _terms.Add(between);
+            }
+
             // simple optimization
             for (var i = 0; i < _terms.Count; i++)
             {
@@ -357,7 +373,7 @@ namespace LiteDB.Engine
         /// </summary>
         private void DefineIncludes()
         {
-            foreach(var include in _query.Includes)
+            foreach (var include in _query.Includes)
             {
                 // includes always has one single field
                 var field = include.Fields.Single();
