@@ -259,7 +259,9 @@ namespace LiteDB.Engine
                 {
                     var position = stream.Position;
 
-                    stream.Read(buffer, 0, PAGE_SIZE);
+                    var bytesRead = stream.Read(buffer, 0, PAGE_SIZE);
+
+                    ENSURE(bytesRead == PAGE_SIZE, $"ReadFull must read PAGE_SIZE bytes [{bytesRead}]");
 
                     yield return new PageBuffer(buffer, 0, 0)
                     {
