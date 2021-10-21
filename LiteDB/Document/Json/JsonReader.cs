@@ -97,6 +97,8 @@ namespace LiteDB
                         case "null": return BsonValue.Null;
                         case "true": return true;
                         case "false": return false;
+                        case "nan": return double.NaN;
+
                         default: throw LiteException.UnexpectedToken(token);
                     }
             }
