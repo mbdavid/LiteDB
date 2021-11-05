@@ -121,7 +121,7 @@ namespace LiteDB.Engine
                 }
 
                 _stream.Position = PAGE_SIZE;
-                _stream.FlushToDisk();
+                _stream.Flush();
 
                 using (var ms = new MemoryStream(new byte[16]))
                 using (var tempStream = new CryptoStream(ms, _decryptor, CryptoStreamMode.Read))
