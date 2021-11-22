@@ -186,6 +186,14 @@ namespace LiteDB.Engine
             // read all pages to get confirmed transactions (do not read page content, only page header)
             foreach (var buffer in _disk.ReadFull(FileOrigin.Log))
             {
+                if(buffer.IsBlank())
+                {
+                    // this should not happen, but if it does, it means there's a zeroed page in the file
+                    // just skip it
+                    current += PAGE_SIZE;
+                    continue;
+                }
+
                 // read direct from buffer to avoid create BasePage structure
                 var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
                 var isConfirmed = buffer.ReadBool(BasePage.P_IS_CONFIRMED);
@@ -299,6 +307,13 @@ namespace LiteDB.Engine
             {
                 foreach (var buffer in _disk.ReadFull(FileOrigin.Log))
                 {
+                    if (buffer.IsBlank())
+                    {
+                        // this should not happen, but if it does, it means there's a zeroed page in the file
+                        // just skip it
+                        continue;
+                    }
+
                     // read direct from buffer to avoid create BasePage structure
                     var transactionID = buffer.ReadUInt32(BasePage.P_TRANSACTION_ID);
 

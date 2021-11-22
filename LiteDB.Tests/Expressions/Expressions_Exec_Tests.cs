@@ -234,6 +234,9 @@ namespace LiteDB.Tests.Expressions
             S("LENGTH(b)").ExpectValue(3);
             S("LENGTH(arr)").ExpectValue(3);
             S("LENGTH($)").ExpectValue(5);
+
+            S("ROUND(DECIMAL(123.45678), 3)").ExpectValue(123.457m);
+            S("ROUND(DOUBLE(123.45678), 3)").ExpectValue(123.457d);
         }
 
         [Fact]
@@ -259,7 +262,7 @@ namespace LiteDB.Tests.Expressions
             P("ARRAY(arr[@ > @0])", 3).ExpectArray(4, 5);
 
             // using map
-            P("ARRAY(MAP(ITEMS(@0) => (@ + @1)))", new BsonArray(new BsonValue[] {10, 11, 12}), 5)
+            P("ARRAY(MAP(ITEMS(@0) => (@ + @1)))", new BsonArray(new BsonValue[] { 10, 11, 12 }), 5)
                 .ExpectArray(15, 16, 17);
 
             // sort ascending
