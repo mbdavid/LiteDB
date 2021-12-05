@@ -135,7 +135,7 @@ namespace LiteDB
             // check if is a list or array
             else if (obj is IEnumerable)
             {
-                return this.SerializeArray(Reflection.GetListItemType(obj.GetType()), obj as IEnumerable, depth);
+                return this.SerializeArray(Reflection.GetListItemType(type), obj as IEnumerable, depth);
             }
             // otherwise serialize as a plain object
             else
