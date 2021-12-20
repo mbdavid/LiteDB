@@ -26,6 +26,8 @@ namespace LiteDB.Engine
 
         private ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
 
+        private int _running = 0;
+
         public DiskWriterQueue(Stream stream)
         {
             _stream = stream;
@@ -54,10 +56,15 @@ namespace LiteDB.Engine
         {
             lock (_queue)
             {
-                if (_queue.Count > 0 && (_task == null || _task.IsCompleted))
+                if (_queue.Count == 0) return;
+
+                var oldValue = Interlocked.CompareExchange(ref _running, 1, 0);
+
+                if (oldValue == 0)
                 {
+                    // Schedule a new thread to process the pages in the queue.
                     // https://blog.stephencleary.com/2013/08/startnew-is-dangerous.html
-                    _task = Task.Run(this.ExecuteQueue);
+                    _task = Task.Run(ExecuteQueue);
                 }
             }
         }
@@ -74,10 +81,7 @@ namespace LiteDB.Engine
                     _task.Wait();
                 }
 
-                if (_queue.Count > 0)
-                {
-                    this.ExecuteQueue();
-                }
+                Run();
             }
 
             ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
@@ -90,32 +94,49 @@ namespace LiteDB.Engine
         {
             if (_queue.Count == 0) return;
 
-            var count = 0;
-
-            try
+            do
             {
-                while (_queue.TryDequeue(out var page))
+                if (_queue.TryDequeue(out var page))
                 {
-                    ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
-
-                    // set stream position according to page
-                    _stream.Position = page.Position;
-
-                    _stream.Write(page.Array, page.Offset, PAGE_SIZE);
-
-                    // release page here (no page use after this)
-                    page.Release();
-
-                    count++;
+                    WritePageToStream(page);
                 }
 
-                // after this I will have 100% sure data are safe on log file
-                _stream.FlushToDisk();
-            }
-            catch (IOException)
-            {
-                //TODO: notify database to stop working (throw error in all operations)
-            }
+                while (page == null)
+                {
+                    Volatile.Write(ref _running, 0);
+
+                    if (!_queue.Any()) return;
+
+                    // Another item was added to the queue after we detected it was empty.
+                    var oldValue = Interlocked.CompareExchange(ref _running, 1, 0);
+
+                    if (oldValue == 1)
+                    {
+                        // A new thread was already scheduled for execution, this thread can return.
+                        return;
+                    }
+
+                    // This thread will continue to process the queue as a new thread was not scheduled.
+                    _queue.TryDequeue(out page);
+                    WritePageToStream(page);
+                }
+
+            } while (true);
+        }
+
+        private void WritePageToStream(PageBuffer page)
+        {
+            if (page == null) return;
+
+            ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
+
+            // set stream position according to page
+            _stream.Position = page.Position;
+
+            _stream.Write(page.Array, page.Offset, PAGE_SIZE);
+
+            // release page here (no page use after this)
+            page.Release();
         }
 
         public void Dispose()
