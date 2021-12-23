@@ -111,7 +111,7 @@ namespace LiteDB.Engine
                 stream.SetLength(initialSize);
             }
 
-            stream.FlushToDisk();
+            stream.Flush();
         }
 
         /// <summary>
@@ -297,7 +297,7 @@ namespace LiteDB.Engine
                 stream.Write(page.Array, page.Offset, PAGE_SIZE);
             }
 
-            stream.FlushToDisk();
+            stream.Flush();
         }
 
         /// <summary>

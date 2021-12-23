@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -41,11 +37,12 @@ namespace LiteDB.Engine
             var isNewFile = write && this.Exists() == false;
 
             var stream = new FileStream(_filename,
-                _readonly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
+                _readonly ? FileMode.Open : FileMode.OpenOrCreate,
                 write ? FileAccess.ReadWrite : FileAccess.Read,
                 write ? FileShare.Read : FileShare.ReadWrite,
                 PAGE_SIZE,
-                sequencial ? FileOptions.SequentialScan : FileOptions.RandomAccess);
+                // FILE_FLAG_NO_BUFFERING = 0x20000000
+                (sequencial ? FileOptions.SequentialScan : FileOptions.RandomAccess) | FileOptions.WriteThrough | (FileOptions)0x20000000);
 
             if (isNewFile && _hidden)
             {

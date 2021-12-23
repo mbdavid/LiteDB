@@ -110,7 +110,7 @@ namespace LiteDB.Engine
                 }
 
                 // after this I will have 100% sure data are safe on log file
-                _stream.FlushToDisk();
+                _stream.Flush();
             }
             catch (IOException)
             {
