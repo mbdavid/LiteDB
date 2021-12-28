@@ -103,6 +103,7 @@ namespace LiteDB.Engine
 
                 while (page == null)
                 {
+                    _stream.FlushToDisk();
                     Volatile.Write(ref _running, 0);
 
                     if (!_queue.Any()) return;
