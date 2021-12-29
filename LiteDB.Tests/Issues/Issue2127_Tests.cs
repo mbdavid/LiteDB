@@ -10,7 +10,7 @@ namespace LiteDB.Tests.Issues
     {
         public class ReproTests
         {
-            [Fact]
+            [Fact(Skip = "To slow for a unit test in a build process")]
             public void InsertItemBackToBack_Test()
             {
                 var databaseDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DatabaseLocation");
