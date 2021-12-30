@@ -129,10 +129,8 @@ namespace LiteDB
                 {
                     Debug.Fail(message);
                 }
-                else
-                {
-                    throw new Exception("LiteDB ENSURE: " + message);
-                }
+                
+                throw new Exception("LiteDB ENSURE: " + message);
             }
         }
 
@@ -148,10 +146,8 @@ namespace LiteDB
                 {
                     Debug.Fail(message);
                 }
-                else
-                {
-                    throw new Exception("LiteDB ENSURE: " + message);
-                }
+                
+                throw new Exception("LiteDB ENSURE: " + message);
             }
         }
 
@@ -168,10 +164,8 @@ namespace LiteDB
                 {
                     Debug.Fail(message);
                 }
-                else
-                {
-                    throw new Exception("LiteDB DEBUG: " + message);
-                }
+                
+                throw new Exception("LiteDB DEBUG: " + message);
             }
         }
     }
