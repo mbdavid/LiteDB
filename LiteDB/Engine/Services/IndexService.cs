@@ -149,6 +149,8 @@ namespace LiteDB.Engine
             {
                 ENSURE(last.NextNode == PageAddress.Empty, "last index node must point to null");
 
+                // reload 'last' index node in case the IndexPage has gone through a defrag
+                last = this.GetNode(last.Position);
                 last.SetNextNode(node.Position);
             }
 
