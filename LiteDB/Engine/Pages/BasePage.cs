@@ -320,9 +320,9 @@ namespace LiteDB.Engine
             // calculate how many continuous bytes are avaiable in this page
             var continuousBlocks = this.FreeBytes - this.FragmentedBytes - (isNewInsert ? SLOT_SIZE : 0);
 
-            ENSURE(continuousBlocks == PAGE_SIZE - this.NextFreePosition - this.FooterSize - (isNewInsert ? SLOT_SIZE : 0), "continuosBlock must be same as from NextFreePosition");
+            ENSURE(continuousBlocks == PAGE_SIZE - this.NextFreePosition - this.FooterSize - (isNewInsert ? SLOT_SIZE : 0), "continuousBlock must be same as from NextFreePosition");
 
-            // if continuous blocks are not big enough for this data, must run page defrag
+            // if continuous blocks are not enough for this data, must run page defrag
             if (bytesLength > continuousBlocks)
             {
                 this.Defrag();
@@ -617,7 +617,7 @@ namespace LiteDB.Engine
                 var positionAddr = CalcPositionAddr(index);
                 var position = _buffer.ReadUInt16(positionAddr);
 
-                // if position = 0 means this slot are not used
+                // if position = 0 means this slot is not used
                 if (position == 0)
                 {
                     _startIndex = (byte)(index + 1);
@@ -637,7 +637,7 @@ namespace LiteDB.Engine
             // check for empty before loop
             if (this.ItemsCount == 0) yield break;
 
-            ENSURE(this.HighestIndex != byte.MaxValue, "if has items count Heighest index should be not emtpy");
+            ENSURE(this.HighestIndex != byte.MaxValue, "if has items count, Highest index should be not empty");
 
             // [safe for byte loop] - because this.HighestIndex can't be 255
             for (byte index = 0; index <= this.HighestIndex; index++)
