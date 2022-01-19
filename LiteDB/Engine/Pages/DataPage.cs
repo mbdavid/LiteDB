@@ -103,8 +103,9 @@ namespace LiteDB.Engine
         };
 
         /// <summary>
-        /// Get page index slot on FreeDataPageID
+        /// Returns the slot the page should be in, given the <paramref name="freeBytes"/> it has
         /// </summary>
+        /// <returns>A slot number between 0 and 4</returns>
         public static byte FreeIndexSlot(int freeBytes)
         {
             ENSURE(freeBytes >= 0, "freeBytes must be positive");
@@ -118,9 +119,10 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get minimum slot with space enough for your data content
-        /// Returns -1 if no space guaranteed (more than 90%)
+        /// Returns the slot where there is a page with enough space for <paramref name="length"/> bytes of data.
+        /// Returns -1 if no space guaranteed (more than 90% of a DataPage net size)
         /// </summary>
+        /// <returns>A slot number between -1 and 3</returns>
         public static int GetMinimumIndexSlot(int length)
         {
             return FreeIndexSlot(length) - 1;

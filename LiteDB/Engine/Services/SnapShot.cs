@@ -252,7 +252,7 @@ namespace LiteDB.Engine
             // get minimum slot to check for free page. Returns -1 if need NewPage
             var startSlot = DataPage.GetMinimumIndexSlot(length);
 
-            // check for avaiable re-usable page
+            // check for available re-usable page
             for (int currentSlot = startSlot; currentSlot >= 0; currentSlot--)
             {
                 var freePageID = _collectionPage.FreeDataPageList[currentSlot];
@@ -263,7 +263,7 @@ namespace LiteDB.Engine
                 var page = this.GetPage<DataPage>(freePageID);
 
                 ENSURE(page.PageListSlot == currentSlot, "stored slot must be same as called");
-                ENSURE(page.FreeBytes >= length, "ensure selected page has space enougth for this content");
+                ENSURE(page.FreeBytes >= length, "ensure selected page has space enough for this content");
 
                 // mark page page as dirty
                 page.IsDirty = true;
@@ -271,7 +271,7 @@ namespace LiteDB.Engine
                 return page;
             }
 
-            // if not page free list page avaiable, create new page
+            // if there is no re-usable page, create a new one
             return this.NewPage<DataPage>();
         }
 

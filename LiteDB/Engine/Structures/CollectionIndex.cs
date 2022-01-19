@@ -127,7 +127,7 @@ namespace LiteDB.Engine
                 PageAddress.SIZE + // Head
                 PageAddress.SIZE + // Tail
                 1 + // MaxLevel
-                (PAGE_FREE_LIST_SLOTS * PageAddress.SIZE); // FreeListPage
+                4; // FreeListPage
         }
     }
 }

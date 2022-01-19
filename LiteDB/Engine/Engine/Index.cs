@@ -20,7 +20,7 @@ namespace LiteDB.Engine
 
             if (name.Length > INDEX_NAME_MAX_LENGTH) throw LiteException.InvalidIndexName(name, collection, "MaxLength = " + INDEX_NAME_MAX_LENGTH);
             if (!name.IsWord()) throw LiteException.InvalidIndexName(name, collection, "Use only [a-Z$_]");
-            if (name.StartsWith("$")) throw LiteException.InvalidIndexName(name, collection, "Index name can't starts with `$`");
+            if (name.StartsWith("$")) throw LiteException.InvalidIndexName(name, collection, "Index name can't start with `$`");
             if (expression.IsScalar == false && unique) throw new LiteException(0, "Multikey index expression do not support unique option");
 
             if (expression.Source == "$._id") return false; // always exists
