@@ -90,7 +90,7 @@ namespace LiteDB
                     this.SetReadStreamPosition(_streamPosition + offset);
                     break;
                 case SeekOrigin.End:
-                    this.SetReadStreamPosition(Length - offset);
+                    this.SetReadStreamPosition(Length + offset);
                     break;
             }
             return _streamPosition;
