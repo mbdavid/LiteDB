@@ -54,7 +54,8 @@ namespace LiteDB.Engine
             // if current thread are in reserved mode, do not exit transaction (will be exit from ExitExclusive)
             if (_transaction.IsWriteLockHeld) return;
 
-            _transaction.ExitReadLock();
+            if(_transaction.IsReadLockHeld)
+                _transaction.ExitReadLock();
         }
 
         /// <summary>
