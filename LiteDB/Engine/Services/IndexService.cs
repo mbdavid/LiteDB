@@ -190,27 +190,17 @@ namespace LiteDB.Engine
         {
             if (address.PageID == uint.MaxValue) return null;
 
-            LiteEngine.GET_NODE_CACHE.StartInc();
-
             if (_cache.TryGetValue(address, out var node))
             {
-                LiteEngine.GET_NODE_CACHE.Stop();
-
                 return node;
             }
             else
             {
-                LiteEngine.GET_NODE_CACHE.Stop();
-
-                LiteEngine.GET_NODE_DISK.StartInc();
-
                 var indexPage = _snapshot.GetPage<IndexPage>(address.PageID);
 
                 node = indexPage.GetIndexNode(address.Index);
 
                 _cache[address] = node;
-
-                LiteEngine.GET_NODE_DISK.Stop();
 
                 return node;
             }

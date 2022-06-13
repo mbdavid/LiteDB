@@ -516,14 +516,6 @@ namespace LiteDB
 
         public virtual int CompareTo(BsonValue other, Collation collation)
         {
-            LiteEngine.COMPARE.StartInc();
-            var r = this.CompareTo2(other, collation);
-            LiteEngine.COMPARE.Stop();
-            return r;
-        }
-
-        public virtual int CompareTo2(BsonValue other, Collation collation)
-        {
             // first, test if types are different
             if (this.Type != other.Type)
             {

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29609.76
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB", "LiteDB\LiteDB.csproj", "{9497DA19-1FCA-4C2E-A1AB-8DFAACBC76E1}"
 EndProject
@@ -12,8 +12,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Benchmarks", "LiteDB.Benchmarks\LiteDB.Benchmarks.csproj", "{DF9C82C1-446F-458A-AA50-78E58BA17273}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Stress", "LiteDB.Stress\LiteDB.Stress.csproj", "{FFBC5669-DA32-4907-8793-7B414279DA3B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{CF054EF8-84FC-48DB-BBFF-6ECB364A44E9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,10 +39,6 @@ Global
 		{FFBC5669-DA32-4907-8793-7B414279DA3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFBC5669-DA32-4907-8793-7B414279DA3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFBC5669-DA32-4907-8793-7B414279DA3B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CF054EF8-84FC-48DB-BBFF-6ECB364A44E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CF054EF8-84FC-48DB-BBFF-6ECB364A44E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CF054EF8-84FC-48DB-BBFF-6ECB364A44E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CF054EF8-84FC-48DB-BBFF-6ECB364A44E9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using static LiteDB.Constants;
+using static LiteDB.Engine.Pragmas;
 
 namespace LiteDB.Engine
 {
@@ -74,18 +75,18 @@ namespace LiteDB.Engine
 
             _pragmas = new Dictionary<string, Pragma>(StringComparer.OrdinalIgnoreCase)
             {
-                [Engine.Pragmas.USER_VERSION] = new Pragma
+                [USER_VERSION] = new Pragma
                 {
-                    Name = Engine.Pragmas.USER_VERSION,
+                    Name = USER_VERSION,
                     Get = () => this.UserVersion,
                     Set = (v) => this.UserVersion = v.AsInt32,
                     Read = (b) => this.UserVersion = b.ReadInt32(P_USER_VERSION),
                     Validate = (v, h) => { },
                     Write = (b) => b.Write(this.UserVersion, P_USER_VERSION)
                 },
-                [Engine.Pragmas.COLLATION] = new Pragma
+                [COLLATION] = new Pragma
                 {
-                    Name = Engine.Pragmas.COLLATION,
+                    Name = COLLATION,
                     Get = () => this.Collation.ToString(),
                     Set = (v) => this.Collation = new Collation(v.AsString),
                     Read = (b) => this.Collation = new Collation(b.ReadInt32(P_COLLATION_LCID), (CompareOptions)b.ReadInt32(P_COLLATION_SORT)),
@@ -96,18 +97,18 @@ namespace LiteDB.Engine
                         b.Write((int)this.Collation.SortOptions, P_COLLATION_SORT);
                     }
                 },
-                [Engine.Pragmas.TIMEOUT] = new Pragma
+                [TIMEOUT] = new Pragma
                 {
-                    Name = Engine.Pragmas.TIMEOUT,
+                    Name = TIMEOUT,
                     Get = () => (int)this.Timeout.TotalSeconds,
                     Set = (v) => this.Timeout = TimeSpan.FromSeconds(v.AsInt32),
                     Read = (b) => this.Timeout = TimeSpan.FromSeconds(b.ReadInt32(P_TIMEOUT)),
                     Validate = (v, h) => { if (v <= 0) throw new LiteException(0, "Pragma TIMEOUT must be greater than zero"); },
                     Write = (b) => b.Write((int)this.Timeout.TotalSeconds, P_TIMEOUT)
                 },
-                [Engine.Pragmas.LIMIT_SIZE] = new Pragma
+                [LIMIT_SIZE] = new Pragma
                 {
-                    Name = Engine.Pragmas.LIMIT_SIZE,
+                    Name = LIMIT_SIZE,
                     Get = () => this.LimitSize,
                     Set = (v) => this.LimitSize = v.AsInt64,
                     Read = (b) =>
@@ -122,18 +123,18 @@ namespace LiteDB.Engine
                     },
                     Write = (b) => b.Write(this.LimitSize, P_LIMIT_SIZE)
                 },
-                [Engine.Pragmas.UTC_DATE] = new Pragma
+                [UTC_DATE] = new Pragma
                 {
-                    Name = Engine.Pragmas.UTC_DATE,
+                    Name = UTC_DATE,
                     Get = () => this.UtcDate,
                     Set = (v) => this.UtcDate = v.AsBoolean,
                     Read = (b) => this.UtcDate = b.ReadBool(P_UTC_DATE),
                     Validate = (v, h) => { },
                     Write = (b) => b.Write(this.UtcDate, P_UTC_DATE)
                 },
-                [Engine.Pragmas.CHECKPOINT] = new Pragma
+                [CHECKPOINT] = new Pragma
                 {
-                    Name = Engine.Pragmas.CHECKPOINT,
+                    Name = CHECKPOINT,
                     Get = () => this.Checkpoint,
                     Set = (v) => this.Checkpoint = v.AsInt32,
                     Read = (b) => this.Checkpoint = b.ReadInt32(P_CHECKPOINT),
