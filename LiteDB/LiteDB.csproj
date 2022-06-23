@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard1.3;netstandard2.0</TargetFrameworks>
-    <AssemblyVersion>5.0.12</AssemblyVersion>
-    <FileVersion>5.0.12</FileVersion>
-    <VersionPrefix>5.0.12</VersionPrefix>
+    <TargetFrameworks>net472;net6.0</TargetFrameworks>
+    <AssemblyVersion>5.0.12.1</AssemblyVersion>
+    <FileVersion>5.0.12.1</FileVersion>
+    <VersionPrefix>5.0.11</VersionPrefix>
     <Authors>Maurício David</Authors>
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
@@ -42,11 +42,11 @@
     <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
     <DefineConstants>HAVE_SHA1_MANAGED;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
     <DefineConstants>HAVE_SHA1_MANAGED</DefineConstants>
   </PropertyGroup>
 
@@ -56,7 +56,7 @@
     <None Include="..\icon_64x64.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="System" />
     <Reference Include="System.Runtime" />
   </ItemGroup>
