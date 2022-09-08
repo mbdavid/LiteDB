@@ -148,6 +148,8 @@ namespace LiteDB
                     {
                         if (lastWildCard >= 0)
                         {
+                            int back = patternIndex - lastWildCard - 1;
+                            i -= back;
                             patternIndex = lastWildCard;
                         }
                         else
