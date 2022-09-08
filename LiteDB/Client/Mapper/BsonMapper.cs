@@ -328,7 +328,8 @@ namespace LiteDB
                 this.ResolveMember?.Invoke(type, memberInfo, member);
 
                 // test if has name and there is no duplicate field
-                if (member.FieldName != null && mapper.Members.Any(x => x.FieldName.Equals(name, StringComparison.OrdinalIgnoreCase)) == false)
+                // when member is not ignore
+                if (member.FieldName != null && mapper.Members.Any(x => x.FieldName.Equals(name, StringComparison.OrdinalIgnoreCase)) == false && !member.IsIgnore)
                 {
                     mapper.Members.Add(member);
                 }
