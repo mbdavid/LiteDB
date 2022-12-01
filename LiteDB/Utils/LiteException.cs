@@ -51,6 +51,8 @@ namespace LiteDB
         public const int INVALID_INITIALSIZE = 211;
         public const int INVALID_NULL_CHAR_STRING = 212;
         public const int INVALID_FREE_SPACE_PAGE = 213;
+        public const int NOT_ENCRYPTED = 214;
+        public const int INVALID_PASSWORD = 215;
 
         #endregion
 
@@ -304,6 +306,16 @@ namespace LiteDB
         internal static LiteException InvalidFreeSpacePage(uint pageID, int freeBytes, int length)
         {
             return new LiteException(INVALID_FREE_SPACE_PAGE, $"An operation that would corrupt page {pageID} was prevented. The operation required {length} free bytes, but the page had only {freeBytes} available.");
+        }
+
+        internal static LiteException FileNotEncrypted()
+        {
+            return new LiteException(NOT_ENCRYPTED, "File is not encrypted.");
+        }
+
+        internal static LiteException InvalidPassword()
+        {
+            return new LiteException(INVALID_PASSWORD, "Invalid password.");
         }
 
         #endregion
