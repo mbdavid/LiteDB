@@ -167,9 +167,12 @@ namespace LiteDB
                 // test if value is object and has _type
                 if (doc.TryGetValue("_type", out var typeField) && typeField.IsString)
                 {
-                    type = _typeNameBinder.GetType(typeField.AsString);
+                    var actualType = _typeNameBinder.GetType(typeField.AsString);
 
-                    if (type == null) throw LiteException.InvalidTypedName(typeField.AsString);
+                    if (actualType == null) throw LiteException.InvalidTypedName(typeField.AsString);
+                    if (!type.IsAssignableFrom(actualType)) throw LiteException.DataTypeNotAssignable(type.FullName, actualType.FullName);
+
+                    type = actualType;
                 }
                 // when complex type has no definition (== typeof(object)) use Dictionary<string, object> to better set values
                 else if (type == typeof(object))
