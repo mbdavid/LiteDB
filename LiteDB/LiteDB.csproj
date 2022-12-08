@@ -5,6 +5,7 @@
     <AssemblyVersion>5.0.13</AssemblyVersion>
     <FileVersion>5.0.13</FileVersion>
     <VersionPrefix>5.0.13</VersionPrefix>
+    <PackageVersion>5.0.13</PackageVersion>
     <Authors>Maurício David</Authors>
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
@@ -12,7 +13,6 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <Title>LiteDB</Title>
     <PackageId>LiteDB</PackageId>
-    <PackageVersion>5.0.12</PackageVersion>
     <PackageTags>database nosql embedded</PackageTags>
     <PackageIcon>icon_64x64.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
