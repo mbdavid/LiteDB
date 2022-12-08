@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NETSTANDARD2_0_OR_GREATER || NET6_0_OR_GREATER
 using System.Security.AccessControl;
 using System.Security.Principal;
 #endif
@@ -27,16 +27,33 @@ namespace LiteDB
 
             try
             {
-#if NETFRAMEWORK
-                var allowEveryoneRule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null),
+#if NETFRAMEWORK || NETSTANDARD2_0_OR_GREATER || NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER
+                if (!OperatingSystem.IsWindows())
+                    _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
+                else
+                {
+#endif
+                    var allowEveryoneRule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null),
                            MutexRights.FullControl, AccessControlType.Allow);
 
-                var securitySettings = new MutexSecurity();
-                securitySettings.AddAccessRule(allowEveryoneRule);
-
+                    var securitySettings = new MutexSecurity();
+                    securitySettings.AddAccessRule(allowEveryoneRule);
+#if NET6_0_OR_GREATER
+                    _mutex = MutexAcl.Create(false, "Global\\" + name + ".Mutex", out _, securitySettings);
+#endif
+#if NETFRAMEWORK
                 _mutex = new Mutex(false, "Global\\" + name + ".Mutex", out _, securitySettings);
+#endif
+#if NETSTANDARD2_0_OR_GREATER
+                _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
+                ThreadingAclExtensions.SetAccessControl(_mutex, securitySettings);
+#endif
 #else
                 _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
+#endif
+#if NET6_0_OR_GREATER
+                }
 #endif
             }
             catch (NotSupportedException ex)
@@ -95,7 +112,7 @@ namespace LiteDB
             }
         }
 
-        #region Transaction Operations
+#region Transaction Operations
 
         public bool BeginTrans()
         {
@@ -147,9 +164,9 @@ namespace LiteDB
             }
         }
 
-        #endregion
+#endregion
 
-        #region Read Operation
+#region Read Operation
 
         public IBsonDataReader Query(string collection, Query query)
         {
@@ -188,9 +205,9 @@ namespace LiteDB
             }
         }
 
-        #endregion
+#endregion
 
-        #region Write Operations
+#region Write Operations
 
         public int Checkpoint()
         {
@@ -360,7 +377,7 @@ namespace LiteDB
             }
         }
 
-        #endregion
+#endregion
 
         public void Dispose()
         {
