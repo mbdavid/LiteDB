@@ -52,6 +52,7 @@ namespace LiteDB
         public const int INVALID_NULL_CHAR_STRING = 212;
         public const int INVALID_FREE_SPACE_PAGE = 213;
         public const int DATA_TYPE_NOT_ASSIGNABLE = 214;
+        public const int AVOID_USE_OF_PROCESS = 215;
 
         #endregion
 
@@ -310,6 +311,11 @@ namespace LiteDB
         internal static LiteException DataTypeNotAssignable(string type1, string type2)
         {
             return new LiteException(DATA_TYPE_NOT_ASSIGNABLE, $"Data type {type1} is not assignable from data type {type2}");
+        }
+
+        internal static LiteException AvoidUseOfProcess()
+        {
+            return new LiteException(AVOID_USE_OF_PROCESS, $"LiteDB do not accept System.Diagnostics.Process class in deserialize mapper");
         }
 
         #endregion
