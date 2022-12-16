@@ -17,7 +17,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal class EnginePragmas
     {
-        // pragma reserved area: 76-191
+        // pragma reserved area: 76-190 (115 bytes)
 
         private const int P_USER_VERSION = 76; // 76-79 (4 bytes)
         private const int P_COLLATION_LCID = 80; // 80-83 (4 bytes)

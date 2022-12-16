@@ -130,7 +130,7 @@ namespace LiteDB
                     Debug.Fail(message);
                 }
                 
-                throw new Exception("LiteDB ENSURE: " + message);
+                throw LiteException.DataInvalidState(message);
             }
         }
 
@@ -146,8 +146,8 @@ namespace LiteDB
                 {
                     Debug.Fail(message);
                 }
-                
-                throw new Exception("LiteDB ENSURE: " + message);
+
+                throw LiteException.DataInvalidState(message);
             }
         }
 
@@ -164,8 +164,8 @@ namespace LiteDB
                 {
                     Debug.Fail(message);
                 }
-                
-                throw new Exception("LiteDB DEBUG: " + message);
+
+                throw LiteException.DataInvalidState(message);
             }
         }
     }

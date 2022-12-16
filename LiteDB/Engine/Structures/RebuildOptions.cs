@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
+
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -17,5 +19,10 @@ namespace LiteDB.Engine
         /// Define a new collation when rebuild
         /// </summary>
         public Collation Collation { get; set; } = null;
+
+        /// <summary>
+        /// After run rebuild process, get a error report (empty if no error detected)
+        /// </summary>
+        public StringBuilder ErrorReport { get; internal set; }
     }
 }

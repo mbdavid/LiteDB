@@ -19,6 +19,8 @@ namespace LiteDB
         private LiteEngine _engine;
         private int _stack = 0;
 
+        public bool IsOpen => _engine.IsOpen;
+
         public SharedEngine(EngineSettings settings)
         {
             _settings = settings;
@@ -94,6 +96,17 @@ namespace LiteDB
                 }
             }
         }
+
+        public bool Open()
+        {
+            return true;
+        }
+
+        public bool Close()
+        {
+            throw new NotImplementedException();
+        }
+
 
         #region Transaction Operations
 
