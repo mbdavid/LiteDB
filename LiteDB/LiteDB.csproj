@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard1.3;netstandard2.0</TargetFrameworks>
-    <AssemblyVersion>5.0.12</AssemblyVersion>
-    <FileVersion>5.0.12</FileVersion>
-    <VersionPrefix>5.0.12</VersionPrefix>
+    <TargetFrameworks>net4.5;netstandard1.3;netstandard2.0</TargetFrameworks>
+    <AssemblyVersion>5.0.14</AssemblyVersion>
+    <FileVersion>5.0.14</FileVersion>
+    <VersionPrefix>5.0.14</VersionPrefix>
+    <PackageVersion>5.0.14</PackageVersion>
     <Authors>Maurício David</Authors>
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
@@ -12,7 +13,6 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <Title>LiteDB</Title>
     <PackageId>LiteDB</PackageId>
-    <PackageVersion>5.0.12</PackageVersion>
     <PackageTags>database nosql embedded</PackageTags>
     <PackageIcon>icon_64x64.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>

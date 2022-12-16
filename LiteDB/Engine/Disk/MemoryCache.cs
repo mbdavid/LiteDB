@@ -222,6 +222,10 @@ namespace LiteDB.Engine
 
                 added = false;
 
+                // Bug 2184: readable page was updated, need to set the page.ShareCounter back to writeable
+                // so that DiscardPage can free the page and put it into the queue.
+                page.ShareCounter = BUFFER_WRITABLE;
+
                 return current;
             });
 

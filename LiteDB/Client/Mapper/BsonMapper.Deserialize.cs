@@ -170,7 +170,19 @@ namespace LiteDB
                     var actualType = _typeNameBinder.GetType(typeField.AsString);
 
                     if (actualType == null) throw LiteException.InvalidTypedName(typeField.AsString);
-                    if (!type.IsAssignableFrom(actualType)) throw LiteException.DataTypeNotAssignable(type.FullName, actualType.FullName);
+
+                    // avoid initialize class that are not assignable 
+                    if (!type.IsAssignableFrom(actualType))
+                    {
+                        throw LiteException.DataTypeNotAssignable(type.FullName, actualType.FullName);
+                    }
+
+                    // avoid use of "System.Diagnostics.Process" in object type definition
+                    // using String test to work in .netstandard 1.3
+                    if (actualType.FullName.Equals("System.Diagnostics.Process", StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw LiteException.AvoidUseOfProcess();
+                    }
 
                     type = actualType;
                 }
