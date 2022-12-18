@@ -89,7 +89,7 @@ namespace LiteDB
         #region Collections
 
         /// <summary>
-        /// Get a collection using a entity class as strong typed document. If collection does not exist, create a new one.
+        /// Get a collection using an entity class as strong typed document. If collection does not exist, create a new one.
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
         /// <param name="autoId">Define autoId data type (when object contains no id field)</param>
