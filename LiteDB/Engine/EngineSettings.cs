@@ -57,6 +57,16 @@ namespace LiteDB.Engine
         public bool ReadOnly { get; set; } = false;
 
         /// <summary>
+        /// Call Open() method in LiteEngine in class constructor
+        /// </summary>
+        public bool AutoOpen { get; set; } = true;
+
+        /// <summary>
+        /// After a Close with exception do a database rebuild
+        /// </summary>
+        public bool AutoRebuild { get; set; } = false;
+
+        /// <summary>
         /// Create new IStreamFactory for datafile
         /// </summary>
         internal IStreamFactory CreateDataFactory()

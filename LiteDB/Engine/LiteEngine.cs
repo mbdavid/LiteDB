@@ -106,19 +106,25 @@ namespace LiteDB.Engine
                 if (buffer[0] == 1) throw new LiteException(0, "This data file is encrypted and needs a password to open");
 
                 // if database is set to invalid state, try auto rebuild
-                if (buffer[HeaderPage.P_DATA_INVALID_STATE] != 0)
+                if (buffer[HeaderPage.P_INVALID_DATAFILE_STATE] != 0 && _settings.AutoRebuild)
                 {
                     // dispose disk access to rebuild process
                     _disk.Dispose();
+                    _disk = null;
 
-                    new RebuildService(_settings).Rebuild(
-                        new RebuildOptions { 
-                            Password = _settings.Password, 
-                            Collation = _settings.Collation 
-                        });
+                    // rebuild database, create -backup file and include $rebuild_errors
+                    this.Rebuild(new RebuildOptions
+                    {
+                        Password = _settings.Password,
+                        Collation = _settings.Collation,
+                        IncludeErrorReport = true
+                    });
 
                     // re-initialize disk service
                     _disk = new DiskService(_settings, MEMORY_SEGMENT_SIZES);
+
+                    // read buffer page again
+                    buffer = _disk.ReadFull(FileOrigin.Data).First();
                 };
 
                 _header = new HeaderPage(buffer);
@@ -179,24 +185,30 @@ namespace LiteDB.Engine
 
             _isOpen = false;
 
-            // stop running all transactions
-            _monitor?.Dispose();
+            try
+            {
+                // stop running all transactions
+                _monitor?.Dispose();
 
-            // do a soft checkpoint (only if exclusive lock is possible)
-            if (_header?.Pragmas.Checkpoint > 0) _walIndex?.TryCheckpoint();
+                // do a soft checkpoint (only if exclusive lock is possible)
+                if (_header?.Pragmas.Checkpoint > 0) _walIndex?.TryCheckpoint();
 
-            // close all disk streams (and delete log if empty)
-            _disk?.Dispose();
+                // close all disk streams (and delete log if empty)
+                _disk?.Dispose();
 
-            // delete sort temp file
-            _sortDisk?.Dispose();
+                // delete sort temp file
+                _sortDisk?.Dispose();
 
-            // dispose lockers
-            _locker?.Dispose();
-
-            this.CleanServiceFields();
+                // dispose lockers
+                _locker?.Dispose();
+            }
+            finally
+            {
+                this.CleanServiceFields();
+            }
 
             return true;
+
         }
 
         /// <summary>
@@ -211,9 +223,31 @@ namespace LiteDB.Engine
         {
             _isOpen = false;
 
-            _disk?.Dispose();
+            // stop running queue to write
+            _disk?.Queue.Abort();
 
-            this.CleanServiceFields();
+            try
+            {
+                // close disks streams
+                _disk?.Dispose();
+
+                _monitor?.Dispose();
+
+                _sortDisk?.Dispose();
+
+                _locker.Dispose();
+            }
+            finally
+            {
+                if (ex is LiteException liteEx && liteEx.ErrorCode == LiteException.INVALID_DATAFILE_STATE)
+                {
+                    // mark byte = 1 in HeaderPage.P_INVALID_DATAFILE_STATE - will open in auto-rebuild
+                    // this method will throw no errors
+                    new RebuildService(_settings).MarkAsInvalidState();
+                }
+
+                this.CleanServiceFields();
+            }
         }
 
         internal void CleanServiceFields()
@@ -241,27 +275,15 @@ namespace LiteDB.Engine
         /// </summary>
         public int Checkpoint() => _walIndex.Checkpoint();
 
-
-
-
-
         public void Dispose()
         {
-            this.Close();
+            this.Dispose(true);
             GC.SuppressFinalize(this);
-        }
-
-        ~LiteEngine()
-        {
-            this.Dispose(false);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                this.Close();
-            }
+            this.Close();
         }
 
     }

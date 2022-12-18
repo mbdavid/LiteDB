@@ -55,7 +55,7 @@ namespace LiteDB
         public const int DATA_TYPE_NOT_ASSIGNABLE = 214;
         public const int AVOID_USE_OF_PROCESS = 215;
 
-        public const int DATA_INVALID_STATE = 999;
+        public const int INVALID_DATAFILE_STATE = 999;
 
         #endregion
 
@@ -328,9 +328,9 @@ namespace LiteDB
             return new LiteException(AVOID_USE_OF_PROCESS, $"LiteDB do not accept System.Diagnostics.Process class in deserialize mapper");
         }
 
-        internal static LiteException DataInvalidState(string message)
+        internal static LiteException InvalidDatafileState(string message)
         {
-            return new LiteException(DATA_INVALID_STATE, "LiteDB found inconsistency in data or memory pages. " + 
+            return new LiteException(INVALID_DATAFILE_STATE, "LiteDB found inconsistency in data or memory pages. " + 
                 "Your database may be corrupted. On the next opening a rebuild process will be executed. " + 
                 "Add parameter AutoRebuild=true in LiteDatabase initialization. " + 
                 "Inner message:" + message);

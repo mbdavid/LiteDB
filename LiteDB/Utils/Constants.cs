@@ -130,7 +130,7 @@ namespace LiteDB
                     Debug.Fail(message);
                 }
                 
-                throw LiteException.DataInvalidState(message);
+                throw LiteException.InvalidDatafileState(message);
             }
         }
 
@@ -147,7 +147,7 @@ namespace LiteDB
                     Debug.Fail(message);
                 }
 
-                throw LiteException.DataInvalidState(message);
+                throw LiteException.InvalidDatafileState(message);
             }
         }
 
@@ -165,7 +165,7 @@ namespace LiteDB
                     Debug.Fail(message);
                 }
 
-                throw LiteException.DataInvalidState(message);
+                throw LiteException.InvalidDatafileState(message);
             }
         }
     }

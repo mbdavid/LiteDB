@@ -21,8 +21,14 @@ namespace LiteDB.Engine
         public Collation Collation { get; set; } = null;
 
         /// <summary>
+        /// When set true, if any problem occurs in rebuild, a $rebuild_errors collection
+        /// will contains all errors found
+        /// </summary>
+        public bool IncludeErrorReport { get; set; } = true;
+
+        /// <summary>
         /// After run rebuild process, get a error report (empty if no error detected)
         /// </summary>
-        public StringBuilder ErrorReport { get; internal set; }
+        public IList<RebuildError> Errors { get; } = new List<RebuildError>();
     }
 }
