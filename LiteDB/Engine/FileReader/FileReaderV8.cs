@@ -17,8 +17,10 @@ namespace LiteDB.Engine
         private readonly Dictionary<string, uint> _collections;
         private readonly Dictionary<string, List<IndexInfo>> _indexes;
         private readonly Dictionary<string, BsonValue> _pragmas;
-        private readonly IDictionary<uint, Tuple<ushort, long>> _logIndexMap = new Dictionary<uint, Tuple<ushort, long>>();
-        private readonly Stream _stream;
+
+        private Stream _dataStream;
+        private Stream _logStream;
+        private readonly IDictionary<uint, long> _logIndexMap = new Dictionary<uint, long>();
 
         private readonly byte[] _cacheBuffer = new byte[PAGE_SIZE];
         private BasePage _cachePage;
@@ -26,11 +28,11 @@ namespace LiteDB.Engine
         private bool _disposedValue;
 
         private readonly EngineSettings _settings;
-        private readonly StringBuilder _errors;
+        private readonly IList<FileReaderError> _errors;
 
         public IDictionary<string, BsonValue> GetPragmas() => _pragmas;
 
-        public FileReaderV8(EngineSettings settings, StringBuilder errors)
+        public FileReaderV8(EngineSettings settings, IList<FileReaderError> errors)
         {
             _settings = settings;
             _errors = errors;
@@ -41,14 +43,17 @@ namespace LiteDB.Engine
             var dataFactory = _settings.CreateDataFactory();
             var logFactory = _settings.CreateLogFactory();
 
+            _dataStream = dataFactory.GetStream(true, true, false);
+
+            _dataStream.Position = 0;
+
+
             if (logFactory.Exists())
             {
-                this.LoadIndexMap(logFactory);
-            }
-        }
+                _logStream = logFactory.GetStream(false, false, true);
 
-        private void LoadIndexMap(IStreamFactory logFactory)
-        {
+                this.LoadIndexMap();
+            }
         }
 
         /// <summary>
@@ -86,38 +91,101 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read page from stream - do not use cache system
+        /// Load log file to build index map (wal map index)
+        /// </summary>
+        private void LoadIndexMap()
+        {
+            var buffer = new PageBuffer(new byte[PAGE_SIZE], 0, 0);
+            var transactions = new Dictionary<uint, List<PagePosition>>();
+            var confirmedTransactions = new List<uint>();
+            var currentPosition = 0L;
+
+            _logStream.Position = 0;
+
+            while (_logStream.Position < _logStream.Length)
+            {
+                if (buffer.IsBlank())
+                {
+                    // this should not happen, but if it does, it means there's a zeroed page in the file
+                    // just skip it
+                    currentPosition += PAGE_SIZE;
+                    continue;
+                }
+
+                _logStream.Position = currentPosition;
+
+                var read = _logStream.Read(buffer.Array, buffer.Offset, PAGE_SIZE);
+
+                var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
+                var isConfirmed = buffer.ReadBool(BasePage.P_IS_CONFIRMED);
+                var transactionID = buffer.ReadUInt32(BasePage.P_TRANSACTION_ID);
+
+                if (read != PAGE_SIZE)
+                {
+                    _errors.Add(new FileReaderError
+                    {
+                        Origin = FileOrigin.Log,
+                        Position = _logStream.Position,
+                        PageID = pageID,
+                        Code = 1,
+                        Message = $"Page position {_logStream} read only than {read} bytes (insted {PAGE_SIZE})"
+                    });
+                }
+
+                var position = new PagePosition(pageID, currentPosition);
+
+                if (transactions.TryGetValue(transactionID, out var list))
+                {
+                    list.Add(position);
+                }
+                else
+                {
+                    transactions[transactionID] = new List<PagePosition> { position };
+                }
+
+                // when page confirm transaction, add to confirmed transaction list
+                if (isConfirmed)
+                {
+                    confirmedTransactions.Add(transactionID);
+                }
+
+                currentPosition += PAGE_SIZE;
+            }
+
+            // now, log index map using only confirmed transactions (override with last transactionID)
+            foreach (var transactionID in confirmedTransactions)
+            {
+                var mapIndexPages = transactions[transactionID];
+
+                // update 
+                foreach (var page in mapIndexPages)
+                {
+                    _logIndexMap[page.PageID] = page.Position;
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// Read page from stream
         /// </summary>
         private T ReadPage<T>(uint pageID)
             where T : BasePage
         {
-            var position = BasePage.GetPagePosition(pageID);
-
-            if (_cachePage?.PageID == pageID) return (T)_cachePage;
-
-            _stream.Position = position;
-            _stream.Read(_cacheBuffer, 0, PAGE_SIZE);
-
-            var buffer = new PageBuffer(_cacheBuffer, 0, 0);
-
-            return (T)(_cachePage = BasePage.ReadPage<T>(buffer));
-        }
-
-        /// <summary>
-        /// Get all data blocks from first data block
-        /// </summary>
-        public IEnumerable<BufferSlice> ReadBlocks(PageAddress address)
-        {
-            while (address != PageAddress.Empty)
+            // get data from log file or original file
+            if (_logIndexMap.TryGetValue(pageID, out var position))
             {
-                var dataPage = this.ReadPage<DataPage>(address.PageID);
-
-                var block = dataPage.GetBlock(address.Index);
-
-                yield return block.Buffer;
-
-                address = block.NextBlock;
+                _logStream.Position = position;
+                _logStream.Read(_cacheBuffer, 0, PAGE_SIZE);
             }
+            else
+            {
+                _dataStream.Position = BasePage.GetPagePosition(pageID);
+                _dataStream.Read(_cacheBuffer, 0, PAGE_SIZE);
+            }
+            var pageBuffer = new PageBuffer(_cacheBuffer, 0, 0);
+
+            return BasePage.ReadPage<T>(pageBuffer);
         }
 
         protected virtual void Dispose(bool disposing)

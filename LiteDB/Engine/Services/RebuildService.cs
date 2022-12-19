@@ -17,7 +17,7 @@ namespace LiteDB.Engine
     {
         private readonly EngineSettings _settings;
         private readonly int _fileVersion;
-        private StringBuilder _errors = new StringBuilder();
+        private IList<FileReaderError> _errors;
 
         public RebuildService(EngineSettings settings)
         {
@@ -41,11 +41,12 @@ namespace LiteDB.Engine
             // open file reader
             var reader = _fileVersion == 7 ? 
                 new FileReaderV7(_settings) : 
-                (IFileReader)new FileReaderV8(_settings, _errors);
+                (IFileReader)new FileReaderV8(_settings, options.Errors);
 
             // open file reader and ready to import to new temp engine instance
             reader.Open();
 
+            // open new engine to recive all data readed from FileReader
             using (var engine = new LiteEngine(new EngineSettings
             {
                 Filename = tempFilename,
@@ -56,7 +57,8 @@ namespace LiteDB.Engine
                 // copy all database to new Log file with NO checkpoint during all rebuild
                 engine.Pragma(Pragmas.CHECKPOINT, 0);
 
-                //this.RebuildContent(reader);
+                // rebuild all content from reader into new engine
+                engine.RebuildContent(reader);
 
                 // insert error report
                 if (options.IncludeErrorReport && options.Errors.Count > 0)
@@ -74,7 +76,7 @@ namespace LiteDB.Engine
                         ["message"] = x.Message,
                     });
 
-                    engine.Insert("$rebuild_errors", docs, BsonAutoId.Int32);
+                    engine.Insert("_rebuild_errors", docs, BsonAutoId.Int32);
                 }
 
                 // after rebuild, copy log bytes into data file

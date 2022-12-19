@@ -8,10 +8,12 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// </summary>
-    public class RebuildError
+    public class FileReaderError
     {
         public DateTime Created { get; } = DateTime.Now;
-        public uint PageID { get; set; }
+        public FileOrigin Origin { get; set; }
+        public long Position { get; set;  }
+        public uint? PageID { get; set; }
         public int Code { get; set; }
         public string Field { get; set; }
         public string Message { get; set; }

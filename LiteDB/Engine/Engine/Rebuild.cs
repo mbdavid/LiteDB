@@ -25,5 +25,57 @@ namespace LiteDB.Engine
             // return how many bytes of diference from original/rebuild version
             return rebuilder.Rebuild(options);
         }
+
+        /// <summary>
+        /// Fill current database with data inside file reader - run inside a transacion
+        /// </summary>
+        internal void RebuildContent(IFileReader reader)
+        {
+            // begin transaction and get TransactionID
+            var transaction = _monitor.GetTransaction(true, false, out _);
+
+            try
+            {
+                foreach (var collection in reader.GetCollections())
+                {
+                    // get snapshot, indexer and data services
+                    var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
+                    var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
+                    var data = new DataService(snapshot);
+
+                    // first create all user indexes (exclude _id index)
+                    foreach (var index in reader.GetIndexes(collection))
+                    {
+                        this.EnsureIndex(collection,
+                            index.Name,
+                            BsonExpression.Create(index.Expression),
+                            index.Unique);
+                    }
+
+                    // get all documents from current collection
+                    var docs = reader.GetDocuments(collection);
+
+                    // insert one-by-one
+                    foreach (var doc in docs)
+                    {
+                        transaction.Safepoint();
+
+                        this.InsertDocument(snapshot, doc, BsonAutoId.ObjectId, indexer, data);
+                    }
+                }
+
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                this.Close(ex);
+
+                throw;
+            }
+            finally
+            {
+                _monitor.ReleaseTransaction(transaction);
+            }
+        }
     }
 }
