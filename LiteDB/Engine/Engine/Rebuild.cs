@@ -65,16 +65,14 @@ namespace LiteDB.Engine
                 }
 
                 transaction.Commit();
+
+                _monitor.ReleaseTransaction(transaction);
             }
             catch (Exception ex)
             {
                 this.Close(ex);
 
                 throw;
-            }
-            finally
-            {
-                _monitor.ReleaseTransaction(transaction);
             }
         }
     }

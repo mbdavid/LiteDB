@@ -17,7 +17,6 @@ namespace LiteDB.Engine
     {
         private readonly EngineSettings _settings;
         private readonly int _fileVersion;
-        private IList<FileReaderError> _errors;
 
         public RebuildService(EngineSettings settings)
         {
@@ -79,9 +78,6 @@ namespace LiteDB.Engine
                     engine.Insert("_rebuild_errors", docs, BsonAutoId.Int32);
                 }
 
-                // after rebuild, copy log bytes into data file
-                engine.Checkpoint();
-
                 // update pragmas
                 var pragmas = reader.GetPragmas();
 
@@ -90,13 +86,16 @@ namespace LiteDB.Engine
                 engine.Pragma(Pragmas.LIMIT_SIZE, pragmas[Pragmas.LIMIT_SIZE]);
                 engine.Pragma(Pragmas.UTC_DATE, pragmas[Pragmas.UTC_DATE]);
                 engine.Pragma(Pragmas.USER_VERSION, pragmas[Pragmas.USER_VERSION]);
+
+                // after rebuild, copy log bytes into data file
+                engine.Checkpoint();
             }
 
             // rename source filename to backup name
-            File.Move(tempFilename, backupFilename);
+            File.Move(_settings.Filename, backupFilename);
 
             // rename temp file into filename
-            File.Move(_settings.Filename, tempFilename);
+            File.Move(tempFilename, _settings.Filename);
 
             // get difference size
             return 
@@ -124,7 +123,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read first 16bk (2 PAGES) in bytes
+        /// Read first 16kb (2 PAGES) in bytes
         /// </summary>
         private byte[] ReadFirstBytes()
         {
