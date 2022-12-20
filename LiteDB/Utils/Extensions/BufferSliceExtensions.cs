@@ -105,21 +105,16 @@ namespace LiteDB
         {
             length = buffer.Count - buffer.Offset - offset;
 
-            var i = offset;
-
-            for (; i < buffer.Count; i++)
+            for (var i = offset + buffer.Offset; i < buffer.Count; i++)
             {
                 if (buffer[i] == '\0')
                 {
-                    length = i - offset + 1; // +1 for \0
+                    length = i - buffer.Offset - offset + 1; // +1 for \0
                     break;
                 }
             }
 
-            // exclude \0 is last char is \0
-            var readLength = buffer[i] == '\0' ? length - 1 : length;
-
-            return Encoding.UTF8.GetString(buffer.Array, buffer.Offset + offset, readLength);
+            return Encoding.UTF8.GetString(buffer.Array, buffer.Offset + offset, length);
         }
 
         /// <summary>

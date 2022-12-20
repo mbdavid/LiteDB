@@ -96,6 +96,33 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Read all file (and log) to find all data pages (and store groupby colPageID)
+        /// </summary>
+        private void LoadDataPages()
+        {
+            var header = ReadPage(0, out _, out _);
+
+            var lastPageID = header.Buffer.ReadUInt32(HeaderPage.P_LAST_PAGE_ID);
+
+            for (uint i = 0; i < lastPageID; i++)
+            {
+                var page = ReadPage(i, out _, out _);
+
+                if (page.PageType == PageType.Data)
+                {
+                    if (_collectionsDataPages.TryGetValue(page.ColID, out var list))
+                    {
+                        list.Add(page.PageID);
+                    }
+                    else
+                    {
+                        _collectionsDataPages[page.ColID] = new List<uint> { page.PageID };
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Load all collections from header OR via all data-pages ColID
         /// </summary>
         private void LoadCollections()
