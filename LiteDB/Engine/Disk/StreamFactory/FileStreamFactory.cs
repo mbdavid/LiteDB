@@ -40,7 +40,8 @@ namespace LiteDB.Engine
 
             var isNewFile = write && this.Exists() == false;
 
-            var stream = new FileStream(_filename,
+            var stream = new FileStream(
+                _filename,
                 _readonly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
                 write ? FileAccess.ReadWrite : FileAccess.Read,
                 write ? FileShare.Read : FileShare.ReadWrite,
@@ -56,7 +57,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get file length using FileInfo
+        /// Get file length using FileInfo. Crop file length if not length % PAGE_SIZE
         /// </summary>
         public long GetLength()
         {
@@ -66,13 +67,29 @@ namespace LiteDB.Engine
             // get physical file length from OS
             var length = new FileInfo(_filename).Length;
 
-            // if length < PAGE_SIZE, ignore file length (should be 0)
-            if (length < PAGE_SIZE) return 0;
+            // if file length are not PAGE_SIZE module, maybe last save are not completed saved on disk
+            // crop file removing last uncompleted page saved
+            if (length % PAGE_SIZE != 0)
+            {
+                length = length - (length % PAGE_SIZE);
 
-            ENSURE(length % PAGE_SIZE == 0, $"file length must be PAGE_SIZE module. length={length}, file={Path.GetFileName(_filename)}");
+                using (var fs = new FileStream(
+                    _filename,
+                    System.IO.FileMode.Open,
+                    FileAccess.Write,
+                    FileShare.None,
+                    PAGE_SIZE,
+                    FileOptions.SequentialScan))
+                {
+                    fs.SetLength(length);
+                    fs.FlushToDisk();
+                }
+            }
 
-            // if encrypted must remove salt first page
-            return length - (_password == null ? 0 : PAGE_SIZE);
+            // if encrypted must remove salt first page (only if page contains data)
+            return length > 0 ?
+                length - (_password == null ? 0 : PAGE_SIZE) :
+                0;
         }
 
         /// <summary>
