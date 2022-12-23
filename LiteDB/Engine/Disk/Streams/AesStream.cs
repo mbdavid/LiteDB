@@ -20,7 +20,8 @@ namespace LiteDB.Engine
         private readonly CryptoStream _reader;
         private readonly CryptoStream _writer;
 
-        private readonly byte[] _decryptedZeroes = new byte[16];
+        private static readonly byte[] _decryptedZeroes = new byte[16];
+        private static readonly byte[] _emptyContent = new byte[PAGE_SIZE - 1 - 16]; // 1 for aes indicator + 16 for salt 
 
         public byte[] Salt { get; }
 
@@ -45,7 +46,7 @@ namespace LiteDB.Engine
             _stream = stream;
             _name = _stream is FileStream fileStream ? Path.GetFileName(fileStream.Name) : null;
 
-            var isNew = _stream.Length == 0;
+            var isNew = _stream.Length < PAGE_SIZE;
 
             try
             {
@@ -57,6 +58,9 @@ namespace LiteDB.Engine
                     // first byte =1 means this datafile is encrypted
                     _stream.WriteByte(1);
                     _stream.Write(this.Salt, 0, ENCRYPTION_SALT_SIZE);
+
+                    // fill with 0 full PAGE_SIZE
+                    _stream.Write(_emptyContent, 0, _emptyContent.Length);
                 }
                 else
                 {
