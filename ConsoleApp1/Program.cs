@@ -34,7 +34,11 @@ using (var db = new LiteDatabase(cs))
     }
 
     // do checkpoint
-    db.Checkpoint();
+    c.Insert(new BsonDocument { ["Name"] = "test2" });
+
+    var doc2 = c.FindAll().Last();
+    Console.WriteLine(JsonSerializer.Serialize(doc2));
+
 }
 
 Console.WriteLine("Done");

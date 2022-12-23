@@ -246,7 +246,7 @@ namespace LiteDB.Engine
         public int Checkpoint()
         {
             // no log file or no confirmed transaction, just exit
-            if (_disk.GetLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
+            if (_disk.GetVirtualLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
 
             var mustExit = _locker.EnterExclusive();
 
@@ -269,7 +269,7 @@ namespace LiteDB.Engine
         public int TryCheckpoint()
         {
             // no log file or no confirmed transaction, just exit
-            if (_disk.GetLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
+            if (_disk.GetVirtualLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
 
             if (_locker.TryEnterExclusive(out var mustExit) == false) return 0;
 

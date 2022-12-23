@@ -20,7 +20,8 @@ namespace LiteDB.Engine
         private readonly CryptoStream _reader;
         private readonly CryptoStream _writer;
 
-        private static readonly byte[] _decryptedZeroes = new byte[16];
+        private readonly byte[] _decryptedZeroes = new byte[16];
+
         private static readonly byte[] _emptyContent = new byte[PAGE_SIZE - 1 - 16]; // 1 for aes indicator + 16 for salt 
 
         public byte[] Salt { get; }
@@ -47,6 +48,9 @@ namespace LiteDB.Engine
             _name = _stream is FileStream fileStream ? Path.GetFileName(fileStream.Name) : null;
 
             var isNew = _stream.Length < PAGE_SIZE;
+
+            // start stream from zero position
+            _stream.Position = 0;
 
             try
             {

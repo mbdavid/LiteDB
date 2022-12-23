@@ -100,7 +100,7 @@ namespace LiteDB.Engine
         {
             transaction.Commit();
             _monitor.ReleaseTransaction(transaction);
-            if (_header.Pragmas.Checkpoint > 0 && _disk.GetLength(FileOrigin.Log) > (_header.Pragmas.Checkpoint * PAGE_SIZE))
+            if (_header.Pragmas.Checkpoint > 0 && _disk.GetVirtualLength(FileOrigin.Log) > (_header.Pragmas.Checkpoint * PAGE_SIZE))
                 _walIndex.TryCheckpoint();
         }
     }

@@ -90,7 +90,7 @@ namespace LiteDB.Engine
                 _walIndex = new WalIndexService(_disk, _locker);
 
                 // if exists log file, restore wal index references (can update full _header instance)
-                if (_disk.GetLength(FileOrigin.Log) > 0)
+                if (_disk.GetVirtualLength(FileOrigin.Log) > 0)
                 {
                     _walIndex.RestoreIndex(ref _header);
                 }

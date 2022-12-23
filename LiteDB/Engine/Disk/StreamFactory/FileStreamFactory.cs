@@ -60,8 +60,19 @@ namespace LiteDB.Engine
         /// </summary>
         public long GetLength()
         {
-            // getting size from OS - if encrypted must remove salt first page
-            return new FileInfo(_filename).Length - (_password == null ? 0 : PAGE_SIZE);
+            // if not file do not exists, returns 0
+            if (!this.Exists()) return 0;
+
+            // get physical file length from OS
+            var length = new FileInfo(_filename).Length;
+
+            // if length < PAGE_SIZE, ignore file length (should be 0)
+            if (length < PAGE_SIZE) return 0;
+
+            ENSURE(length % PAGE_SIZE == 0, $"file length must be PAGE_SIZE module. length={length}, file={Path.GetFileName(_filename)}");
+
+            // if encrypted must remove salt first page
+            return length - (_password == null ? 0 : PAGE_SIZE);
         }
 
         /// <summary>

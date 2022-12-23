@@ -62,7 +62,7 @@ namespace LiteDB.Engine
             // get initial data file length
             _dataLength = _dataFactory.GetLength() - PAGE_SIZE;
 
-            // get initial log file length
+            // get initial log file length (should be 1 page before)
             if (_logFactory.Exists())
             {
                 _logLength = _logFactory.GetLength() - PAGE_SIZE;
@@ -192,9 +192,10 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get virtual file length: real file can be small but async thread can still writing on disk
+        /// Get virtual file length: real file can be small because async thread can still writing on disk
+        /// and incrementing file size (Log file)
         /// </summary>
-        public long GetLength(FileOrigin origin)
+        public long GetVirtualLength(FileOrigin origin)
         {
             if (origin == FileOrigin.Log)
             {
@@ -251,7 +252,7 @@ namespace LiteDB.Engine
             try
             {
                 // get length before starts (avoid grow during loop)
-                var length = this.GetLength(origin);
+                var length = this.GetVirtualLength(origin);
 
                 stream.Position = 0;
 
