@@ -15,6 +15,7 @@ namespace LiteDB.Engine
         private readonly ICryptoTransform _encryptor;
         private readonly ICryptoTransform _decryptor;
 
+        private readonly string _name;
         private readonly Stream _stream;
         private readonly CryptoStream _reader;
         private readonly CryptoStream _writer;
@@ -42,6 +43,7 @@ namespace LiteDB.Engine
         public AesStream(string password, Stream stream)
         {
             _stream = stream;
+            _name = _stream is FileStream fileStream ? Path.GetFileName(fileStream.Name) : null;
 
             var isNew = _stream.Length == 0;
 
@@ -143,7 +145,7 @@ namespace LiteDB.Engine
         public override int Read(byte[] array, int offset, int count)
         {
             ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
-            ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
+            ENSURE(this.Position % PAGE_SIZE == 0, $"AesRead: position must be in PAGE_SIZE module. Position={this.Position}, File={_name}");
 
             var r = _reader.Read(array, offset, count);
 
@@ -164,7 +166,7 @@ namespace LiteDB.Engine
         public override void Write(byte[] array, int offset, int count)
         {
             ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
-            ENSURE(this.Position % PAGE_SIZE == 0, "position must be in PAGE_SIZE module");
+            ENSURE(this.Position % PAGE_SIZE == 0, $"AesWrite: position must be in PAGE_SIZE module. Position={this.Position}, File={_name}");
 
             _writer.Write(array, offset, count);
         }
