@@ -15,7 +15,7 @@ namespace LiteDB
     public class SharedEngine : ILiteEngine
     {
         private readonly EngineSettings _settings;
-        private readonly Mutex _mutex;
+        private readonly Semaphore _semaphore;
         private LiteEngine _engine;
         private int _stack = 0;
 
@@ -28,20 +28,20 @@ namespace LiteDB
             try
             {
 #if NETFRAMEWORK
-                var allowEveryoneRule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null),
-                           MutexRights.FullControl, AccessControlType.Allow);
+                var allowEveryoneRule = new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null),
+                           SemaphoreRights.FullControl, AccessControlType.Allow);
 
-                var securitySettings = new MutexSecurity();
+                var securitySettings = new SemaphoreSecurity();
                 securitySettings.AddAccessRule(allowEveryoneRule);
 
-                _mutex = new Mutex(false, "Global\\" + name + ".Mutex", out _, securitySettings);
+                _semaphore = new Semaphore(1, 1, "Global\\" + name + ".Semaphore", out _, securitySettings);
 #else
-                _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
+                _semaphore = new Semaphore(1, 1, "Global\\" + name + ".Semaphore");
 #endif
             }
             catch (NotSupportedException ex)
             {
-                throw new PlatformNotSupportedException("Shared mode is not supported in platforms that do not implement named mutex.", ex);
+                throw new PlatformNotSupportedException("Shared mode is not supported in platforms that do not implement named semaphore.", ex);
             }
         }
 
@@ -50,17 +50,13 @@ namespace LiteDB
         /// </summary>
         private void OpenDatabase()
         {
-            lock (_mutex)
+            lock (_semaphore)
             {
                 _stack++;
 
                 if (_stack == 1)
                 {
-                    try
-                    {
-                        _mutex.WaitOne();
-                    }
-                    catch (AbandonedMutexException) { }
+                    _semaphore.WaitOne();
 
                     try
                     {
@@ -68,7 +64,7 @@ namespace LiteDB
                     }
                     catch
                     {
-                        _mutex.ReleaseMutex();
+                        _semaphore.Release();
                         _stack = 0;
                         throw;
                     }
@@ -81,7 +77,7 @@ namespace LiteDB
         /// </summary>
         private void CloseDatabase()
         {
-            lock (_mutex)
+            lock (_semaphore)
             {
                 _stack--;
 
@@ -90,7 +86,7 @@ namespace LiteDB
                     _engine.Dispose();
                     _engine = null;
 
-                    _mutex.ReleaseMutex();
+                    _semaphore.Release();
                 }
             }
         }
@@ -381,7 +377,7 @@ namespace LiteDB
                 {
                     _engine.Dispose();
 
-                    _mutex.ReleaseMutex();
+                    _semaphore.Release();
                 }
             }
         }
