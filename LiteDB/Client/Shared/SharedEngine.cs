@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 #if NETFRAMEWORK
 using System.Security.AccessControl;
@@ -17,7 +15,7 @@ namespace LiteDB
         private readonly EngineSettings _settings;
         private readonly Mutex _mutex;
         private LiteEngine _engine;
-        private int _stack = 0;
+        private bool _transactionRunning = false;
 
         public SharedEngine(EngineSettings settings)
         {
@@ -50,28 +48,24 @@ namespace LiteDB
         /// </summary>
         private void OpenDatabase()
         {
-            lock (_mutex)
+            try
             {
-                _stack++;
+                // Acquire mutex for every call to open DB.
+                _mutex.WaitOne();
+            }
+            catch (AbandonedMutexException) { }
 
-                if (_stack == 1)
+            // Don't create a new engine while a transaction is running.
+            if (!_transactionRunning && _engine == null)
+            {
+                try
                 {
-                    try
-                    {
-                        _mutex.WaitOne();
-                    }
-                    catch (AbandonedMutexException) { }
-
-                    try
-                    {
-                        _engine = new LiteEngine(_settings);
-                    }
-                    catch
-                    {
-                        _mutex.ReleaseMutex();
-                        _stack = 0;
-                        throw;
-                    }
+                    _engine = new LiteEngine(_settings);
+                }
+                catch
+                {
+                    _mutex.ReleaseMutex();
+                    throw;
                 }
             }
         }
@@ -81,18 +75,16 @@ namespace LiteDB
         /// </summary>
         private void CloseDatabase()
         {
-            lock (_mutex)
+            // Don't dispose the engine while a transaction is running.
+            if (!this._transactionRunning && _engine != null)
             {
-                _stack--;
-
-                if (_stack == 0)
-                {
-                    _engine.Dispose();
-                    _engine = null;
-
-                    _mutex.ReleaseMutex();
-                }
+                // If no transaction pending, dispose the engine.
+                _engine.Dispose();
+                _engine = null;
             }
+
+            // Release Mutex on every call to close DB.
+            _mutex.ReleaseMutex();
         }
 
         #region Transaction Operations
@@ -103,14 +95,9 @@ namespace LiteDB
 
             try
             {
-                var result = _engine.BeginTrans();
+                this._transactionRunning = _engine.BeginTrans();
 
-                if (result == false)
-                {
-                    _stack--;
-                }
-
-                return result;
+                return this._transactionRunning;
             }
             catch
             {
@@ -129,6 +116,7 @@ namespace LiteDB
             }
             finally
             {
+                this._transactionRunning = false;
                 this.CloseDatabase();
             }
         }
@@ -143,6 +131,7 @@ namespace LiteDB
             }
             finally
             {
+                this._transactionRunning = false;
                 this.CloseDatabase();
             }
         }
@@ -380,7 +369,7 @@ namespace LiteDB
                 if (_engine != null)
                 {
                     _engine.Dispose();
-
+                    _engine = null;
                     _mutex.ReleaseMutex();
                 }
             }
