@@ -33,6 +33,11 @@ namespace LiteDB
         /// </summary>
         public CreateObject CreateInstance { get; set; }
 
+        /// <summary>
+        /// Flag indicating CreateInstance was defined by a CTor
+        /// </summary>
+        internal bool CTor { get; set; } = false;
+
         public EntityMapper(Type forType)
         {
             this.ForType = forType;

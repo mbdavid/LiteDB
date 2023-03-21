@@ -73,6 +73,7 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Ctor(Func<BsonDocument, T> createInstance)
         {
+            _entity.CTor = true; // flag _entity as having a customer CTor
             _entity.CreateInstance = v => createInstance(v);
 
             return this;
