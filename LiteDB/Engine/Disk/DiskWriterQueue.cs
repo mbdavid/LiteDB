@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using static LiteDB.Constants;
@@ -24,7 +19,7 @@ namespace LiteDB.Engine
         // async thread controls
         private Task _task;
 
-        private ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
+        private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
 
         private int _running = 0;
 
@@ -92,8 +87,6 @@ namespace LiteDB.Engine
         /// </summary>
         private void ExecuteQueue()
         {
-            if (_queue.Count == 0) return;
-
             do
             {
                 if (_queue.TryDequeue(out var page))
