@@ -258,7 +258,7 @@ namespace LiteDB
             }
             else
             {
-                var addMethod = type.GetMethod("Add");
+                var addMethod = type.GetMethod("Add", new Type[] { itemType });
 
                 foreach (BsonValue item in value)
                 {
