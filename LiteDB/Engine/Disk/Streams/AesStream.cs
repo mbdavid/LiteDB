@@ -72,7 +72,7 @@ namespace LiteDB.Engine
 
                     if (isEncrypted != 1)
                     {
-                        throw new LiteException(0, "This file is not encrypted");
+                        throw LiteException.FileNotEncrypted();
                     }
 
                     _stream.Read(this.Salt, 0, ENCRYPTION_SALT_SIZE);
@@ -134,7 +134,7 @@ namespace LiteDB.Engine
 
                     if (!checkBuffer.All(x => x == 1))
                     {
-                        throw new LiteException(0, "Invalid password");
+                        throw LiteException.InvalidPassword();
                     }
                 }
 
