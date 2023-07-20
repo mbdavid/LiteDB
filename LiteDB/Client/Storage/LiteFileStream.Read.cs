@@ -44,5 +44,21 @@ namespace LiteDB
             // if chunk is null there is no more chunks
             return chunk?["data"].AsBinary;
         }
+
+        private void SetReadStreamPosition(long newPosition)
+        {
+            if (newPosition < 0 && newPosition > Length)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            _streamPosition = newPosition;
+
+            // calculate new chunk position
+            _currentChunkIndex = (int)_streamPosition / MAX_CHUNK_SIZE;
+            _positionInChunk = (int)_streamPosition % MAX_CHUNK_SIZE;
+
+            // get current chunk
+            _currentChunkData = this.GetChunkData(_currentChunkIndex);
+        }
     }
 }
