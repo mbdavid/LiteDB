@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<TargetFramework>net5</TargetFramework>
+	<TargetFramework>net6</TargetFramework>
 	<AssemblyName>LiteDB.Shell</AssemblyName>
     <PackageId>LiteDB.Shell</PackageId>
     <OutputType>Exe</OutputType>
