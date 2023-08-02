@@ -21,7 +21,7 @@ namespace LiteDB.Engine
 
         private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
 
-        private int _running = 0;
+        private readonly int _running = 0;
 
         public DiskWriterQueue(Stream stream)
         {

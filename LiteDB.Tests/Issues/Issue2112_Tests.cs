@@ -7,7 +7,7 @@ namespace LiteDB.Tests.Issues
 {
     public class Issue2112_Tests
     {
-        private BsonMapper _mapper = new BsonMapper();
+        private readonly BsonMapper _mapper = new BsonMapper();
 
         [Fact]
         public void Serialize_covariant_collection_has_type()

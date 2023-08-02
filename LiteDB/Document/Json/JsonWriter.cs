@@ -11,7 +11,7 @@ namespace LiteDB
     {
         private readonly static IFormatProvider _numberFormat = CultureInfo.InvariantCulture.NumberFormat;
 
-        private TextWriter _writer;
+        private readonly TextWriter _writer;
         private int _indent;
         private string _spacer = "";
 

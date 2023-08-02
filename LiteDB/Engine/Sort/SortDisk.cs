@@ -19,7 +19,7 @@ namespace LiteDB.Engine
         private readonly IStreamFactory _factory;
         private readonly StreamPool _pool;
         private readonly ConcurrentBag<long> _freePositions = new ConcurrentBag<long>();
-        private long _lastContainerPosition = 0;
+        private readonly long _lastContainerPosition = 0;
         private readonly int _containerSize;
         private readonly EnginePragmas _pragmas;
 

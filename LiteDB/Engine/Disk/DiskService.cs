@@ -26,7 +26,7 @@ namespace LiteDB.Engine
         private readonly StreamPool _logPool;
 
         private long _dataLength;
-        private long _logLength;
+        private readonly long _logLength;
 
         public DiskService(EngineSettings settings, int[] memorySegmentSizes)
         {

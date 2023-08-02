@@ -12,7 +12,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexService
     {
-        private static Random _rnd = new Random();
+        private static readonly Random _rnd = new Random();
 
         private readonly Snapshot _snapshot;
         private readonly Collation _collation;
