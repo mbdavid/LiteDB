@@ -270,7 +270,7 @@ namespace LiteDB
 
         private static readonly int _machine;
         private static readonly short _pid;
-        private static readonly int _increment;
+        private static int _increment;
 
         // static constructor
         static ObjectId()
