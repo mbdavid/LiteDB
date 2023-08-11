@@ -16,7 +16,7 @@ namespace LiteDB.Engine
             BasePage.SLOT_SIZE - // [4 bytes]
             DataBlock.DATA_BLOCK_FIXED_SIZE; // [6 bytes];
 
-        private Snapshot _snapshot;
+        private readonly Snapshot _snapshot;
 
         public DataService(Snapshot snapshot)
         {

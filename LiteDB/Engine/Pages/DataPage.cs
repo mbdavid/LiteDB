@@ -94,7 +94,7 @@ namespace LiteDB.Engine
         /// 30% -  60% = 3 (2448 - 4895)
         ///  0% -  30% = 4 (0000 - 2447)
         /// </summary>
-        private static int[] _freePageSlots = new[]
+        private static readonly int[] _freePageSlots = new[]
         {
             (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .90), // 0
             (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .75), // 1

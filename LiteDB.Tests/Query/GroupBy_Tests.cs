@@ -8,10 +8,10 @@ namespace LiteDB.Tests.QueryTest
 {
     public class GroupBy_Tests : IDisposable
     {
-        private Person[] local;
+        private readonly Person[] local;
 
-        private ILiteDatabase db;
-        private ILiteCollection<Person> collection;
+        private readonly ILiteDatabase db;
+        private readonly ILiteCollection<Person> collection;
 
         public GroupBy_Tests()
         {

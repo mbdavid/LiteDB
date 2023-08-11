@@ -11,8 +11,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class BufferPool
     {
-        private static object _lock;
-        private static ArrayPool<byte> _bytePool;
+        private static readonly object _lock;
+        private static readonly ArrayPool<byte> _bytePool;
 
         static BufferPool()
         {

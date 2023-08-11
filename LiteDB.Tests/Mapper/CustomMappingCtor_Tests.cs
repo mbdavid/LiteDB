@@ -74,7 +74,7 @@ namespace LiteDB.Tests.Mapper
             }
         }
 
-        private BsonMapper _mapper = new BsonMapper();
+        private readonly BsonMapper _mapper = new BsonMapper();
 
         [Fact]
         public void Custom_Ctor()

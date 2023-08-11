@@ -12,7 +12,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Sequence cache for collections last ID (for int/long numbers only)
         /// </summary>
-        private ConcurrentDictionary<string, long> _sequences = new ConcurrentDictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, long> _sequences = new ConcurrentDictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Get lastest value from a _id collection and plus 1 - use _sequence cache

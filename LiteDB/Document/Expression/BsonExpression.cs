@@ -279,8 +279,8 @@ namespace LiteDB
 
         #region Static method
 
-        private static ConcurrentDictionary<string, BsonExpressionEnumerableDelegate> _cacheEnumerable = new ConcurrentDictionary<string, BsonExpressionEnumerableDelegate>();
-        private static ConcurrentDictionary<string, BsonExpressionScalarDelegate> _cacheScalar = new ConcurrentDictionary<string, BsonExpressionScalarDelegate>();
+        private static readonly ConcurrentDictionary<string, BsonExpressionEnumerableDelegate> _cacheEnumerable = new ConcurrentDictionary<string, BsonExpressionEnumerableDelegate>();
+        private static readonly ConcurrentDictionary<string, BsonExpressionScalarDelegate> _cacheScalar = new ConcurrentDictionary<string, BsonExpressionScalarDelegate>();
 
         /// <summary>
         /// Parse string and create new instance of BsonExpression - can be cached
@@ -412,7 +412,7 @@ namespace LiteDB
         /// <summary>
         /// Load all static methods from BsonExpressionMethods class. Use a dictionary using name + parameter count
         /// </summary>
-        private static Dictionary<string, MethodInfo> _methods =
+        private static readonly Dictionary<string, MethodInfo> _methods =
             typeof(BsonExpressionMethods).GetMethods(BindingFlags.Public | BindingFlags.Static)
             .ToDictionary(m => m.Name.ToUpperInvariant() + "~" + m.GetParameters().Where(p => p.ParameterType != typeof(Collation)).Count());
 
@@ -438,7 +438,7 @@ namespace LiteDB
         /// <summary>
         /// Load all static methods from BsonExpressionFunctions class. Use a dictionary using name + parameter count
         /// </summary>
-        private static Dictionary<string, MethodInfo> _functions =
+        private static readonly Dictionary<string, MethodInfo> _functions =
             typeof(BsonExpressionFunctions).GetMethods(BindingFlags.Public | BindingFlags.Static)
             .ToDictionary(m => m.Name.ToUpperInvariant() + "~" + m.GetParameters()
             .Skip(5).Count());

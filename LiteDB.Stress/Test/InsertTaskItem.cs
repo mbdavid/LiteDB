@@ -8,7 +8,7 @@ namespace LiteDB.Stress
 {
     public class InsertTaskItem : ITestItem
     {
-        private Random _rnd = new Random();
+        private readonly Random _rnd = new Random();
 
         private ILiteCollection<BsonDocument> _collection;
 

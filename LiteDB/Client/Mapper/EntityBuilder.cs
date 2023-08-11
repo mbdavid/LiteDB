@@ -12,9 +12,9 @@ namespace LiteDB
     /// </summary>
     public class EntityBuilder<T>
     {
-        private BsonMapper _mapper;
-        private EntityMapper _entity;
-        private ITypeNameBinder _typeNameBinder;
+        private readonly BsonMapper _mapper;
+        private readonly EntityMapper _entity;
+        private readonly ITypeNameBinder _typeNameBinder;
 
         internal EntityBuilder(BsonMapper mapper, ITypeNameBinder typeNameBinder)
         {

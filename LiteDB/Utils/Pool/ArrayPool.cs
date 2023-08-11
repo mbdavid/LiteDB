@@ -83,7 +83,7 @@ namespace LiteDB
 
         private sealed class SlotBuff
         {
-            private T[][] _buff = new T[SLOT_COUNT][];
+            private readonly T[][] _buff = new T[SLOT_COUNT][];
             private int _size;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

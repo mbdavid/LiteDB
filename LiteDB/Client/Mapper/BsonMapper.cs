@@ -29,14 +29,14 @@ namespace LiteDB
         /// <summary>
         /// Mapping cache between Class/BsonDocument
         /// </summary>
-        private Dictionary<Type, EntityMapper> _entities = new Dictionary<Type, EntityMapper>();
+        private readonly Dictionary<Type, EntityMapper> _entities = new Dictionary<Type, EntityMapper>();
 
         /// <summary>
         /// Map serializer/deserialize for custom types
         /// </summary>
-        private ConcurrentDictionary<Type, Func<object, BsonValue>> _customSerializer = new ConcurrentDictionary<Type, Func<object, BsonValue>>();
+        private readonly ConcurrentDictionary<Type, Func<object, BsonValue>> _customSerializer = new ConcurrentDictionary<Type, Func<object, BsonValue>>();
 
-        private ConcurrentDictionary<Type, Func<BsonValue, object>> _customDeserializer = new ConcurrentDictionary<Type, Func<BsonValue, object>>();
+        private readonly ConcurrentDictionary<Type, Func<BsonValue, object>> _customDeserializer = new ConcurrentDictionary<Type, Func<BsonValue, object>>();
 
         /// <summary>
         /// Type instantiator function to support IoC
@@ -212,7 +212,7 @@ namespace LiteDB
             return this;
         }
 
-        private Regex _lowerCaseDelimiter = new Regex("(?!(^[A-Z]))([A-Z])", RegexOptions.Compiled);
+        private readonly Regex _lowerCaseDelimiter = new Regex("(?!(^[A-Z]))([A-Z])", RegexOptions.Compiled);
 
         /// <summary>
         /// Uses lower camel case with delimiter to convert property names to field names
