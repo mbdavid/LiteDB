@@ -1,12 +1,9 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -196,22 +193,8 @@ namespace LiteDB
         /// </summary>
         public static bool IsEnumerable(Type type)
         {
-            if (type == typeof(IEnumerable) || type.IsArray) return true;
-            if (type == typeof(string)) return false; // do not define "String" as IEnumerable<char>
-
-            foreach (var @interface in type.GetInterfaces())
-            {
-                if (@interface.GetTypeInfo().IsGenericType)
-                {
-                    if (@interface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                    {
-                        // if needed, you can also return the type used as generic argument
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            return typeof(IEnumerable).IsAssignableFrom(type)
+                && type != typeof(string);
         }
 
         /// <summary>
@@ -219,23 +202,22 @@ namespace LiteDB
         /// </summary>
         public static bool IsSimpleType(Type type)
         {
-            return
-                type == typeof(string) ||
-                type == typeof(Boolean) ||
-                type == typeof(Byte) ||
-                type == typeof(SByte) ||
-                type == typeof(Int16) ||
-                type == typeof(Int32) ||
-                type == typeof(Int64) ||
-                type == typeof(UInt16) ||
-                type == typeof(UInt32) ||
-                type == typeof(UInt64) ||
-                type == typeof(Double) ||
-                type == typeof(Single) ||
-                type == typeof(Decimal) ||
-                type == typeof(ObjectId) ||
-                type == typeof(DateTime) ||
-                type == typeof(Guid);
+            var typeInfo = type.GetTypeInfo();
+            if (typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                // nullable type, check if the nested type is simple.
+                return IsSimpleType(type.GetGenericArguments()[0]);
+            }
+            return typeInfo.IsPrimitive
+                || typeInfo.IsEnum
+                || type.Equals(typeof(string))
+                || type.Equals(typeof(decimal))
+                || type == typeof(DateTime)
+                || type == typeof(DateTimeOffset)
+                || type == typeof(TimeSpan)
+                || type == typeof(Guid)
+                || type == typeof(Uri)
+                || type == typeof(ObjectId);
         }
 
         /// <summary>
