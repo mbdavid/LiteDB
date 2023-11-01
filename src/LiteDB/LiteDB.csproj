@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFramework>net6</TargetFramework>
+	<LangVersion>11</LangVersion>
+	<AssemblyVersion>6.0.0</AssemblyVersion>
+	<FileVersion>6.0.0</FileVersion>
+	<VersionPrefix>6.0.0</VersionPrefix>
+    <Nullable>enable</Nullable>
+	<Authors>Maurício David</Authors>
+	<Product>LiteDB</Product>
+	<Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
+	<Copyright>Apache</Copyright>
+	<NeutralLanguage>en-US</NeutralLanguage>
+	<Title>LiteDB</Title>
+	<PackageId>LiteDB</PackageId>
+	<PackageVersion>6.0.0</PackageVersion>
+	<PackageTags>database nosql embedded</PackageTags>
+	<PackageIcon>icon_64x64.png</PackageIcon>
+	<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	<PackageProjectUrl>https://www.litedb.org</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/mbdavid/LiteDB</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	<RootNamespace>LiteDB</RootNamespace>
+	<AssemblyName>LiteDB</AssemblyName>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<NoWarn>1701;1702;1705;1591;0618</NoWarn>
+	<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LiteDB.xml</DocumentationFile>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+ <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="README.md" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="LICENSE" />
+    <None Include="icon_64x64.png" Pack="true" PackagePath="icon_64x64.png" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <ProjectReference Include="..\LiteDB.Generator\LiteDB.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+		
+</Project>

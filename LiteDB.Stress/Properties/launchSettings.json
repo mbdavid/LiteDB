@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "LiteDB.Stress": {
-      "commandName": "Project",
-      "commandLineArgs": "../../../Examples/test-02.xml"
-    }
-  }
-}
