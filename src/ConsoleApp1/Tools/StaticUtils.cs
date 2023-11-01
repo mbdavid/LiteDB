@@ -61,7 +61,12 @@ public static class StaticUtils
 
         var result = await engine.ExecuteAsync(sql, parameters ?? BsonDocument.Empty);
 
-        Console.WriteLine($"{sw.Elapsed.TotalMilliseconds:n0} ms");
+        Console.Write($"{sw.Elapsed.TotalMilliseconds:n0} ms");
+
+        Console.ForegroundColor = ConsoleColor.DarkBlue;
+        Console.WriteLine($" [{result:n0} affected]");
+        Console.ForegroundColor = ConsoleColor.Gray;
+
 
         Profiler.AddResult(message, true);
     }
@@ -129,7 +134,7 @@ public static class StaticUtils
         Console.Write($"{sw.Elapsed.TotalMilliseconds:n0} ms");
 
         Console.ForegroundColor = ConsoleColor.DarkBlue;
-        Console.Write($" [{total:n0} document{(total > 1 ? "s" : "")}]");
+        Console.WriteLine($" [{total:n0} document{(total > 1 ? "s" : "")}]");
         Console.ForegroundColor = ConsoleColor.Gray;
 
         Profiler.AddResult(message, true);

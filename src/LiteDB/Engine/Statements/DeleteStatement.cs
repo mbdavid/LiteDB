@@ -1,4 +1,6 @@
-﻿namespace LiteDB.Engine;
+﻿using Microsoft.VisualBasic;
+
+namespace LiteDB.Engine;
 
 internal class DeleteStatement : IEngineStatement
 {
@@ -33,16 +35,17 @@ internal class DeleteStatement : IEngineStatement
 
         var count = 0;
 
-        // get all pk indexNode
-        var allNodes = this.GetDeleteEnumerableAsync(factory, transaction, parameters);
+        // get all pkIndexNodeID + dataBlockID
+        var allNodes = this.GetDeleteEnumerable(factory, transaction, parameters)
+            .ToArray(); // TODO: fix memory allocation
 
-        await foreach(var indexNodeResult in allNodes)
+        foreach(var node in allNodes)
         {
             // get value before DeleteAsync
-            var dataBlockID = indexNodeResult.DataBlockID;
+            var dataBlockID = node.DataBlockID;
 
             // delete all index nodes starting from PK
-            indexService.DeleteAll(indexNodeResult);
+            indexService.DeleteAll(node.IndexNodeID);
 
             // delete document
             dataService.DeleteDocument(dataBlockID);
@@ -65,17 +68,44 @@ internal class DeleteStatement : IEngineStatement
         return count;
     }
 
-    private IAsyncEnumerable<IndexNodeResult> GetDeleteEnumerableAsync(IServicesFactory factory, ITransaction transaction, BsonDocument parameters)
+    private IEnumerable<PipeValue> GetDeleteEnumerable(IServicesFactory factory, ITransaction transaction, BsonDocument parameters)
     {
+        var query = new Query 
+        { 
+            Collection = _store.Name, 
+            Select = SelectFields.Id, 
+            Where = _whereExpr
+        };
+
+        var optimizator = factory.CreateQueryOptimization();
+
+        var enumerator = optimizator.ProcessQuery(query, parameters);
+
         var (dataService, indexService) = _store.GetServices(factory, transaction);
         var context = new PipeContext(dataService, indexService, parameters);
 
+        var pkIndex = _store.GetIndexes()[0];
 
-        //var qo = factory.CreateQueryOptimization(null, q);
-        //
-        //var enumerator = qo.ProcessQuery(q, parameters);
+        while (true)
+        {
+            var result = enumerator.MoveNext(context);
 
-        throw new NotSupportedException();
+            if (result.IsEmpty) break;
+
+            if (optimizator.IndexName == "_id")
+            {
+                yield return result;
+            }
+            else
+            {
+                var id = result.Value["_id"];
+
+                // get PK index node based on _id value
+                var node = context.IndexService.Find(pkIndex, id, false, Query.Ascending);
+
+                yield return new PipeValue(node.IndexNodeID, node.DataBlockID, id);
+            }
+        }
     }
 
     public ValueTask<IDataReader> ExecuteReaderAsync(IServicesFactory factory, BsonDocument parameters) => throw new NotSupportedException();

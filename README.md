@@ -2,13 +2,20 @@
 
 This branch is current development of new version of LiteDB v6.
 
-# Next Steps
-- Finish sql methods
-- Implement RandomAccess e SafeHandle
+# Next steps
+- SQL Parser
+    - checkpoint
+    - delete
+- DropCollection
+- DropIndex
+- Rebuild
+- Batch
+
+# Needs implementation
+
+# Engine
+- Implement RandomAccess and SafeHandle
 - Return to async calls in managed memory
-
-
-# Need implement
 
 ## Pragma
 - Replace for a simple `struct` and ref in page header
@@ -21,9 +28,6 @@ This branch is current development of new version of LiteDB v6.
 - IntoPipe
 - Distinct Pipe
 - Virtual collections: $master, $file_json, ...
-
-## SQL Parser
-
 
 ## Operations
 - Update
@@ -58,6 +62,8 @@ This branch is current development of new version of LiteDB v6.
 
 ## LiteDB.TestSuite
 
+## Exception
+- Normalize all exception using ERR_xxx
 
 ## Performance
 - Test use of `ref` in pipe context on movenext

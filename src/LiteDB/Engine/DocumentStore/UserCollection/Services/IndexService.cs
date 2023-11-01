@@ -259,18 +259,18 @@ unsafe internal class IndexService : IIndexService
     /// <summary>
     /// Deletes all indexes nodes from pk RowID
     /// </summary>
-    public void DeleteAll(RowID indexNodeID)
+    public void DeleteAll(RowID pkIndexNodeID)
     {
-         this.GetNode(indexNodeID);
+         this.DeleteAll(this.GetNode(pkIndexNodeID));
     }
 
     /// <summary>
     /// Deletes all indexes nodes from pkNode
     /// </summary>
-    public void DeleteAll(IndexNodeResult nodeResult)
+    private void DeleteAll(IndexNodeResult pkNodeResult)
     {
         // get a copy before change
-        var node = nodeResult;
+        var node = pkNodeResult;
 
         // all indexes nodes from a document are connected by nextNode
         while (!node.IsEmpty)
@@ -296,20 +296,9 @@ unsafe internal class IndexService : IIndexService
         for (int i = node.Node->Levels - 1; i >= 0; i--)
         {
             // get previous and next nodes (between my deleted node)
-            //***var prevNode, prevPage) = this.GetNode(nodePtr.Prev[i]);
-            //***var nextNode, nextPage) = this.GetNode(nodePtr.Next[i]);
             var prev = this.GetNode(node[i]->PrevID);
             var next = this.GetNode(node[i]->NextID);
 
-            //***if (!prevNode.IsEmpty)
-            //***{
-            //***    prevNode.SetNext(prevPage, (byte)i, nodePtr.Next[i]);
-            //***}
-            //***
-            //***if (!nextNode.IsEmpty)
-            //***{
-            //***    nextNode.SetPrev(nextPage, (byte)i, nodePtr.Prev[i]);
-            //***}
             if (!prev.IsEmpty)
             {
                 prev[i]->NextID = node[i]->NextID;

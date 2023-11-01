@@ -31,7 +31,7 @@ internal class LookupEnumerator : IPipeEnumerator
 
         var doc = _lookup.Load(item, context);
 
-        return new PipeValue(RowID.Empty, item.DataBlockID, doc);
+        return new PipeValue(item.IndexNodeID, item.DataBlockID, doc);
     }
 
     public void GetPlan(ExplainPlainBuilder builder, int deep)

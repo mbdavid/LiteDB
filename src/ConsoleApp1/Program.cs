@@ -1,6 +1,6 @@
 ﻿// SETUP //////////////////
 const string VER = "v6";
-var INSERT_1 = new Range(1, 100);
+var INSERT_1 = new Range(1, 100_000);
 var DELETE_1 = new Range(1, 40_000);
 var INSERT_2 = new Range(1, 30_000);
 ////////////////////////
@@ -39,8 +39,10 @@ await db.RunAsync($"Insert col1 {insert1.Length:n0}", "INSERT INTO col1 VALUES @
 await db.RunAsync($"EnsureIndex (age)", "CREATE INDEX idx_01 ON col1 ($.age)");
 //await db.RunAsync($"EnsureIndex (name)", "CREATE INDEX idx_02 ON col1 (name)");
 
-await db.RunQueryAsync(20, $"Query1",
-    @"SELECT _id > 10 ? 1 : 0
+await db.RunAsync("Delete col1", "DELETE col1 WHERE age < 30");
+
+await db.RunQueryAsync(100, $"Query1",
+    @"SELECT COUNT(_id) --_id,name,age
         FROM col1");
 
 

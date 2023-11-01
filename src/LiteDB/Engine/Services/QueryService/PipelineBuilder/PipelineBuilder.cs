@@ -44,7 +44,7 @@ internal class PipelineBuilder
 
     /// <summary>
     /// Add index pipe based on predicate expression (BinaryBsonExpression) or index scan expression
-    /// Delect indexDocument based on left/right side of predicate (should exist in collection)
+    /// Detect indexDocument based on left/right side of predicate (should exist in collection)
     /// </summary>
     public PipelineBuilder AddIndex(BsonExpression expr, int order, bool returnKey)
     {

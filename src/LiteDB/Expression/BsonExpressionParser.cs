@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-namespace LiteDB;
+﻿namespace LiteDB;
 
 /// <summary>
 /// Compile and execute simple expressions using BsonDocuments. Used in indexes and updates operations. See https://github.com/mbdavid/LiteDB/wiki/Expressions

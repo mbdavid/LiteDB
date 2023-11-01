@@ -16,6 +16,7 @@ internal class QueryOptimization : IQueryOptimization
     protected int _indexCost = 0;
     protected BsonExpression _indexExpression = BsonExpression.Empty;
     protected int _indexOrder = Query.Ascending;
+    protected IndexDocument? _indexDocument;
 
     // Define Filter
     protected BsonExpression _filter = BsonExpression.Empty;
@@ -37,6 +38,8 @@ internal class QueryOptimization : IQueryOptimization
     {
         _factory = factory;
     }
+
+    public string IndexName => _indexDocument!.Name;
 
     public virtual IPipeEnumerator ProcessQuery(Query query, BsonDocument queryParameters)
     {
@@ -158,7 +161,7 @@ internal class QueryOptimization : IQueryOptimization
     private void DefineIndexAndFilter(OrderBy orderBy, BsonExpression groupBy)
     {
         // from term predicate list, get lower term that can be use as best index option
-        var (lowerCost, lowerExpr, lowerIndex) = this.GetLowerCostIndex();
+        var (lowerCost, lowerExpr, lowerIndex, lowerIndexDocument) = this.GetLowerCostIndex();
 
         var allIndexes = _store!.GetIndexes();
 
@@ -173,10 +176,12 @@ internal class QueryOptimization : IQueryOptimization
                 allIndexes[0];
 
             _indexExpression = selectedIndex.Expression;
+            _indexDocument = selectedIndex;
         }
         else
         {
             _indexExpression = lowerExpr;
+            _indexDocument = lowerIndexDocument;
 
             _terms.RemoveAt(lowerIndex);
         }
@@ -191,10 +196,12 @@ internal class QueryOptimization : IQueryOptimization
     /// <summary>
     /// Get best index based on all _terms (lower cost). Can returns empty if no index found
     /// </summary>
-    private (int cost, BinaryBsonExpression? expr, int index) GetLowerCostIndex()
+    private (int cost, BinaryBsonExpression? expr, int indexTerm, IndexDocument? indexDocument) GetLowerCostIndex()
     {
         var lowerCost = int.MaxValue;
-        var lowerIndex = -1;
+        var lowerIndexTerm = -1;
+        var lowerIndexDocument = (IndexDocument?)null;
+
         var indexes = _store!.GetIndexes();
         BinaryBsonExpression? lowerExpr = null;
 
@@ -227,12 +234,13 @@ internal class QueryOptimization : IQueryOptimization
                 {
                     lowerCost = cost;
                     lowerExpr = term;
-                    lowerIndex = i;
+                    lowerIndexTerm = i;
+                    lowerIndexDocument = indexDocument;
                 }
             }
         }
 
-        return (lowerCost, lowerExpr, lowerIndex);
+        return (lowerCost, lowerExpr, lowerIndexTerm, lowerIndexDocument);
     }
 
     #endregion

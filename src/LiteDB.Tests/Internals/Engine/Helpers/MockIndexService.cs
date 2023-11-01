@@ -75,4 +75,9 @@ internal class MockIndexService : IIndexService
     {
         throw new NotImplementedException();
     }
+
+    public void DeleteAll(RowID pkIndexNodeID)
+    {
+        throw new NotImplementedException();
+    }
 }

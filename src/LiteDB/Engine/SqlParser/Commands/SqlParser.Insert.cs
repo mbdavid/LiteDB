@@ -1,8 +1,4 @@
-﻿using System.Data;
-using System.Text.Json.Nodes;
-using System.Text.Json;
-
-namespace LiteDB.Engine;
+﻿namespace LiteDB.Engine;
 
 /// <summary>
 /// Internal class to parse and execute sql-like commands
@@ -16,7 +12,7 @@ internal partial class SqlParser
     /// </summary>
     private IEngineStatement ParseInsert()
     {
-        _tokenizer.ReadToken().Expect("INSERT");
+        _tokenizer.ReadToken(); // read INSERT
         _tokenizer.ReadToken().Expect("INTO");
 
         if (!this.TryParseDocumentStore(out var store)) throw ERR_UNEXPECTED_TOKEN(_tokenizer.Current, "{document_store}");

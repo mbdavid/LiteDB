@@ -32,5 +32,5 @@ internal interface IIndexService
     /// <summary>
     /// Deletes all indexes nodes from pkNode
     /// </summary>
-    void DeleteAll(IndexNodeResult nodeResult);
+    void DeleteAll(RowID pkIndexNodeID);
 }
