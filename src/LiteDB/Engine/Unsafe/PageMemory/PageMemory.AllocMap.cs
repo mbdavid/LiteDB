@@ -68,6 +68,26 @@ unsafe internal partial struct PageMemory // PageMemory.AllocMap
 
     }
 
+    /// <summary>
+    /// Read all extends values and get pageID for all used page in this collection
+    /// </summary>
+    public static void LoadPageIDFromExtends(PageMemory* page, byte colID, List<uint> result)
+    {
+
+        for (var j = 0; j < AM_EXTEND_COUNT; j++)
+        {
+            var extendValue = page->Extends[0];
+
+            if (extendValue >> 24 != colID) break;
+
+
+            // deve retornar as paginas usadas neste extend
+            throw new NotImplementedException();
+        }
+
+
+    }
+
     #region Static Helpers
 
     /// <summary>

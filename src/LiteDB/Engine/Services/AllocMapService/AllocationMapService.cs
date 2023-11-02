@@ -1,4 +1,6 @@
-﻿namespace LiteDB.Engine;
+﻿using Microsoft.VisualBasic;
+
+namespace LiteDB.Engine;
 
 /// <summary>
 /// * Singleton (thread safe)
@@ -112,6 +114,44 @@ unsafe internal class AllocationMapService : IAllocationMapService
     public PageMemory* GetPageMemory(int allocationMapID)
     {
         return (PageMemory*)_pages[allocationMapID];
+    }
+
+    /// <summary>
+    /// Get all used pages from a single collection
+    /// </summary>
+    public unsafe IReadOnlyList<uint> GetAllPages(byte colID)
+    {
+        var result = new List<uint>();
+
+        for(var i = 0; i < _pages.Count; i++)
+        {
+            var page = (PageMemory*)_pages[i];
+
+            PageMemory.LoadPageIDFromExtends(page, colID, result);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Clear all extends used in this collection
+    /// </summary>
+    public void ClearExtends(byte colID)
+    {
+        for (var i = 0; i < _pages.Count; i++)
+        {
+            var page = (PageMemory*)_pages[i];
+
+            for (var j = 0; j < AM_EXTEND_COUNT; j++)
+            {
+                var extendValue = page->Extends[j];
+
+                if (extendValue >> 24 == colID)
+                {
+                    page->Extends[j] = 0;
+                }
+            }
+        }
     }
 
     /// <summary>

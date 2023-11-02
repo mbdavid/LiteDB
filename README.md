@@ -4,8 +4,7 @@ This branch is current development of new version of LiteDB v6.
 
 # Next steps
 - SQL Parser
-    - checkpoint
-    - delete
+    - rename collection
 - DropCollection
 - DropIndex
 - Rebuild
