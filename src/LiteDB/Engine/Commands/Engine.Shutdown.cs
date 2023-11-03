@@ -24,12 +24,12 @@ public partial class LiteEngine : ILiteEngine
         // persist all dirty amp into disk
         allocationMapService.WriteAllChanges();
 
-        // if file was changed, update file header check byte
-        if (_factory.FileHeader.IsDirty)
+        // if file was changed, update pragma isdirty check byte
+        if (_factory.Pragmas.IsDirty)
         {
-            stream.WriteFlag(FileHeader.P_IS_DIRTY, 0);
-        
-            _factory.FileHeader.IsDirty = false;
+            _factory.Pragmas.IsDirty = false;
+
+            stream.WritePragmas(_factory.Pragmas);
         }
 
         // release exclusive

@@ -65,11 +65,11 @@ internal class LogService : ILogService
         var writer = _diskService.GetDiskWriter();
 
         // set IsDirty flag in header file to true at first use
-        if (_factory.FileHeader.IsDirty == false)
+        if (_factory.Pragmas.IsDirty == false)
         {
-            _factory.FileHeader.IsDirty = true;
+            _factory.Pragmas.IsDirty = true;
 
-            writer.WriteFlag(FileHeader.P_IS_DIRTY, 1);
+            writer.WritePragmas(_factory.Pragmas);
         }
 
         var lastPositionID = 0u;
@@ -110,12 +110,12 @@ internal class LogService : ILogService
 
         var writer = _diskService.GetDiskWriter();
 
-        // set IsDirty flag in header file to true at first use
-        if (_factory.FileHeader.IsDirty == false)
+        // set IsDirty flag in pragma to true at first use
+        if (_factory.Pragmas.IsDirty == false)
         {
-            _factory.FileHeader.IsDirty = true;
+            _factory.Pragmas.IsDirty = true;
 
-            writer.WriteFlag(FileHeader.P_IS_DIRTY, 1);
+            writer.WritePragmas(_factory.Pragmas);
         }
 
         var lastPositionID = 0u;

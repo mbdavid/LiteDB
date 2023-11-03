@@ -28,7 +28,7 @@ internal static class Dump
                 if (value.Length > 0)
                 {
                     if (sb.Length > 0) sb.Append(", ");
-                    sb.Append($"{f.Name}: {value}");
+                    sb.Append($"{clean(f.Name)}: {value}");
                 }
             }
             else if (member is PropertyInfo p)
@@ -40,10 +40,16 @@ internal static class Dump
                 if (value.Length > 0)
                 {
                     if (sb.Length > 0) sb.Append(", ");
-                    sb.Append($"{p.Name}: {value}");
+                    sb.Append($"{clean(p.Name)}: {value}");
                 }
 
             }
+        }
+
+        string clean(string s)
+        {
+            var n = s.StartsWith("_") ? s[1..] : s;
+            return n[0].ToString().ToLower() + n[1..];
         }
 
         return sb.Length > 0 ? $"{{ {sb} }}" : "{}";
@@ -82,7 +88,10 @@ internal static class Dump
 
             if (Reflection.IsCollection(type) || Reflection.IsDictionary(type))
             {
-                var count = type.GetProperties().FirstOrDefault(x => x.Name == "Count").GetValue(value, null);
+                var cnt = type.GetProperties().FirstOrDefault(x => x.Name == "Count");
+                var len = type.GetProperties().FirstOrDefault(x => x.Name == "Length");
+
+                var count = (cnt ?? len).GetValue(value, null);
                 return $"[{count}]";
             }
             else if (Reflection.IsSimpleType(type))

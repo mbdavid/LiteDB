@@ -2,20 +2,10 @@ namespace LiteDB.Engine;
 
 /// <summary>
 /// First initial data structure at start of disk. 
-/// All information data here are immutable. Only flag controls are changed (IsDisposed)
+/// All information data here are immutable and initialize when database are created and never changes
 /// </summary>
 internal class FileHeader
 {
-    /// <summary>
-    /// Header info the validate that datafile is a LiteDB file (27 bytes)
-    /// </summary>
-    public const string HEADER_INFO = "** This is a LiteDB file **";
-
-    /// <summary>
-    /// Datafile specification version
-    /// </summary>
-    public const byte FILE_VERSION = 9;
-
     #region Buffer Field Positions
 
     public const int P_HEADER_INFO = 0;  // 0-26 [string(27)]
@@ -34,38 +24,21 @@ internal class FileHeader
 
     // reserved 80-97 (18 bytes)
 
-    public const int P_IS_DIRTY = 95; // [byte]
-
     #endregion
 
-    private readonly string _headerInfo;
-    private readonly byte _fileVersion;
+    private readonly string _headerInfo = "";
+    private readonly byte _fileVersion = 0;
 
-    public readonly bool Encrypted;
-    public readonly byte[] EncryptionSalt;
+    public readonly bool Encrypted = false;
+    public readonly byte[] EncryptionSalt = Array.Empty<byte>();
 
-    public readonly Guid InstanceID;
-    public readonly DateTime CreationTime;
-    public readonly Collation Collation;
-    public readonly Version EngineVersion;
+    public readonly Guid InstanceID = Guid.Empty;
+    public readonly DateTime CreationTime = DateTime.MinValue;
+    public readonly Collation Collation = Collation.Binary;
+    public readonly Version EngineVersion = new();
 
-    public bool IsDirty;
-
-    /// <summary>
-    /// Create empty version of file header
-    /// </summary>
     public FileHeader()
     {
-        _headerInfo = "";
-        _fileVersion = 0;
-
-        this.Encrypted = false;
-        this.EncryptionSalt = Array.Empty<byte>();
-        this.InstanceID = Guid.Empty;
-        this.CreationTime = DateTime.MinValue;
-        this.Collation = Collation.Default;
-        this.EngineVersion = new Version();
-        this.IsDirty = false;
     }
 
     /// <summary>
@@ -92,8 +65,6 @@ internal class FileHeader
         var build = buffer[P_ENGINE_VER_BUILD];
 
         this.EngineVersion = new Version(major, minor, build);
-
-        this.IsDirty = buffer[P_IS_DIRTY] != 0;
     }
 
     /// <summary>
@@ -110,21 +81,14 @@ internal class FileHeader
         this.InstanceID = Guid.NewGuid();
         this.CreationTime = DateTime.UtcNow;
         this.Collation = settings.Collation;
-        this.EngineVersion = typeof(LiteEngine).Assembly.GetName().Version;
-
-        this.IsDirty = false;
+        this.EngineVersion = typeof(LiteEngine).Assembly.GetName().Version!;
     }
 
     /// <summary>
     /// Convert header variables into a new array
     /// </summary>
-    public byte[] ToArray()
+    public void Write(Span<byte> buffer)
     {
-        var array = new byte[FILE_HEADER_SIZE];
-
-        // get buffer
-        var buffer = array.AsSpan();
-
         // write flags/data into file header buffer
         buffer[P_HEADER_INFO..].WriteFixedString(HEADER_INFO);
         buffer[P_FILE_VERSION] = FILE_VERSION;
@@ -139,22 +103,18 @@ internal class FileHeader
         buffer[P_ENGINE_VER_MAJOR] = (byte)this.EngineVersion.Major;
         buffer[P_ENGINE_VER_MINOR] = (byte)this.EngineVersion.Minor;
         buffer[P_ENGINE_VER_BUILD] = (byte)this.EngineVersion.Build;
-
-        return array;
     }
 
     public void ValidateFileHeader()
     {
-        if (_headerInfo != HEADER_INFO)
-            throw ERR_INVALID_DATABASE();
+        if (_headerInfo != HEADER_INFO) throw ERR_INVALID_DATABASE();
 
-        if (_fileVersion != FILE_VERSION)
-            throw ERR_INVALID_FILE_VERSION();
+        if (_fileVersion != FILE_VERSION) throw ERR_INVALID_FILE_VERSION();
     }
 
     public override string ToString()
     {
-        return Dump.Object(this);
+        return Dump.Object(new { Encrypted, InstanceID, Collation });
     }
 
 }

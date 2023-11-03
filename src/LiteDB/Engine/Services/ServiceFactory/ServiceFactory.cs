@@ -11,6 +11,7 @@ internal partial class ServicesFactory : IServicesFactory
     public IEngineSettings Settings { get; }
     public EngineState State { get; set; } = EngineState.Close;
     public FileHeader FileHeader { get; set; }
+    public Pragmas Pragmas { get; set; }
     public Exception? Exception { get; set; }
 
     public IBsonReader BsonReader { get; }
@@ -48,6 +49,7 @@ internal partial class ServicesFactory : IServicesFactory
 
         // intial state
         this.FileHeader = new ();
+        this.Pragmas = new ();
         this.State = EngineState.Close;
         this.Exception = null;
 

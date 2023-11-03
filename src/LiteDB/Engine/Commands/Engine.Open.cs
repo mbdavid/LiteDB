@@ -26,19 +26,19 @@ public partial class LiteEngine : ILiteEngine
             var stream = diskService.GetDiskWriter();
 
             // open/create data file and returns file header
-            _factory.FileHeader = await diskService.InitializeAsync();
+            (_factory.FileHeader, _factory.Pragmas) = await diskService.InitializeAsync();
 
             // checks if datafile was finish correctly
-            if (_factory.FileHeader.IsDirty)
+            if (_factory.Pragmas.IsDirty)
             {
                 _factory.State = EngineState.Recovery;
 
                 // do a database recovery
                 await recoveryService.DoRecoveryAsync();
 
-                stream.WriteFlag(FileHeader.P_IS_DIRTY, 0);
+                stream.WritePragmas(_factory.Pragmas);
 
-                _factory.FileHeader.IsDirty = false;
+                _factory.Pragmas.IsDirty = false;
             }
 
             // initialize log service based on disk

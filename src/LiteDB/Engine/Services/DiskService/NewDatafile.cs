@@ -24,13 +24,14 @@ internal class NewDatafile : INewDatafile
     /// Create a empty database using user-settings as default values
     /// Create FileHeader, first AllocationMap page and first $master data page
     /// </summary>
-    public async ValueTask<FileHeader> CreateNewAsync(IDiskStream writer)
+    public async ValueTask<(FileHeader, Pragmas)> CreateNewAsync(IDiskStream writer)
     {
         // initialize FileHeader with user settings
         var fileHeader = new FileHeader(_settings);
+        var pragmas = new Pragmas();
 
         // create new file and write header
-        writer.CreateNewFile(fileHeader);
+        writer.CreateNewFile(fileHeader, pragmas);
 
         unsafe
         {
@@ -78,6 +79,6 @@ internal class NewDatafile : INewDatafile
 
         await writer.FlushAsync();
 
-        return fileHeader;
+        return (fileHeader, pragmas);
     }
 }

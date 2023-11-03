@@ -8,6 +8,8 @@ public partial class LiteEngine : ILiteEngine
     internal void Dump()
     {
         Print("Settings", _factory.Settings.ToString());
+        Print("FileHeader", _factory.FileHeader.ToString());
+        Print("Pragmas", _factory.Pragmas.ToString());
         Print("State", _factory.State.ToString());
         Print("MemoryCache", _factory.MemoryCache.ToString());
         Print("AllocMap", _factory.AllocationMapService.ToString());

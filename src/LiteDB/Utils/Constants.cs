@@ -6,9 +6,19 @@
 internal class Constants
 {
     /// <summary>
-    /// Initial file data descriptor size (before start database - use offset in Stream)
+    /// Initial file data descriptor size (before start database - use offset in Stream - 96 bytes)
     /// </summary>
     public const int FILE_HEADER_SIZE = 96;
+
+    /// <summary>
+    /// Initial file pragma size (before start database - use offset in Stream - 64 bytes)
+    /// </summary>
+    public const int PRAGMA_SIZE = 64;
+
+    /// <summary>
+    /// Page offset from start disk (160 bytes)
+    /// </summary>
+    public const int PAGE_OFFSET = FILE_HEADER_SIZE + PRAGMA_SIZE;
 
     /// <summary>
     /// The size of each page in disk - use 8192 as all major databases
@@ -24,6 +34,16 @@ internal class Constants
     /// Get page content area size (8128)
     /// </summary>
     public const int PAGE_CONTENT_SIZE = PAGE_SIZE - PAGE_HEADER_SIZE;
+
+    /// <summary>
+    /// Header info the validate that datafile is a LiteDB file (27 bytes)
+    /// </summary>
+    public const string HEADER_INFO = "** This is a LiteDB file **";
+
+    /// <summary>
+    /// Datafile specification version
+    /// </summary>
+    public const byte FILE_VERSION = 9;
 
     /// <summary>
     /// Get a full empty array with PAGE_SIZE (do not change any value - shared instance)
@@ -44,11 +64,6 @@ internal class Constants
     /// File header info (27 bytes length)
     /// </summary>
     public const string FILE_HEADER_INFO = "** This is a LiteDB file **";
-
-    /// <summary>
-    /// Current file version
-    /// </summary>
-    public const byte FILE_VERSION = 9;
 
     /// <summary>
     /// Represent pageID of first AllocationMapPage (#0)

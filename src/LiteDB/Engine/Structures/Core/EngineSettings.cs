@@ -67,6 +67,6 @@ public class EngineSettings : IEngineSettings
 
     public override string ToString()
     {
-        return Dump.Object(new { File = Path.GetFileName(Filename), Encrypted = Password != null, Collation, Timeout, ReadOnly, InitialSize });
+        return Dump.Object(new { File = Path.GetFileName(Filename), Password = Password == null ? null : "***", Timeout, ReadOnly });
     }
 }

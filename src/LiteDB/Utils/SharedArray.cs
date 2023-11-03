@@ -1,4 +1,6 @@
-﻿namespace LiteDB;
+﻿using System;
+
+namespace LiteDB;
 
 /// <summary>
 /// A shared byte array to rent and return on dispose
@@ -25,6 +27,12 @@ public readonly struct SharedArray<T> : IDisposable
     public readonly Span<T> AsSpan(int start) => _array.AsSpan(start);
 
     public readonly Span<T> AsSpan(int start, int length) => _array.AsSpan(start, length);
+
+    public readonly Memory<T> AsMemory() => _array.AsMemory(0, _length);
+
+    public readonly Memory<T> AsMemory(int start) => _array.AsMemory(start);
+
+    public readonly Memory<T> AsMemory(int start, int length) => _array.AsMemory(start, length);
 
     public static SharedArray<T> Rent(int length)
     {

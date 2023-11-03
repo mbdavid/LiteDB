@@ -23,57 +23,51 @@ unsafe internal class DiskStream : IDiskStream
     /// Initialize disk opening already exist datafile and return file header structure.
     /// Can open file as read or write
     /// </summary>
-    public FileHeader OpenFile(bool canWrite)
+    public (FileHeader, Pragmas) OpenFile(bool canWrite)
     {
         // get a new FileStream connected to file
         _stream = _streamFactory.GetStream(canWrite,
             FileOptions.RandomAccess);
 
         // reading file header
-        using var buffer = SharedArray<byte>.Rent(FILE_HEADER_SIZE);
+        using var buffer = SharedArray<byte>.Rent(PAGE_OFFSET);
 
         _stream.Position = 0;
 
         var read = _stream.Read(buffer.AsSpan());
 
-        ENSURE(read != PAGE_HEADER_SIZE, new { read });
+        ENSURE(read == PAGE_OFFSET, new { read });
 
-        var header = new FileHeader(buffer.AsSpan());
-
-        // for content stream, use AesStream (for encrypted file) or same _stream
-        _contentStream = header.Encrypted ?
-            new AesStream(_stream, _settings.Password ?? "", header.EncryptionSalt) :
-            _stream;
-
-        return header;
-    }
-
-    /// <summary>
-    /// Open stream with no FileHeader read (need FileHeader instance)
-    /// </summary>
-    public void OpenFile(FileHeader header)
-    {
-        // get a new FileStream connected to file
-        _stream = _streamFactory.GetStream(false, FileOptions.RandomAccess);
+        var header = new FileHeader(buffer.AsSpan(FILE_HEADER_SIZE));
+        var pragmas = new Pragmas(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
 
         // for content stream, use AesStream (for encrypted file) or same _stream
         _contentStream = header.Encrypted ?
             new AesStream(_stream, _settings.Password ?? "", header.EncryptionSalt) :
             _stream;
+
+        return (header, pragmas);
     }
 
     /// <summary>
     /// Initialize disk creating a new datafile and writing file header
     /// </summary>
-    public void CreateNewFile(FileHeader fileHeader)
+    public void CreateNewFile(FileHeader fileHeader, Pragmas pragmas)
     {
+        using var buffer = SharedArray<byte>.Rent(PAGE_OFFSET);
+
         // create new data file
         _stream = _streamFactory.GetStream(true, FileOptions.SequentialScan);
 
         // writing file header
         _stream.Position = 0;
 
-        _stream.Write(fileHeader.ToArray());
+        // update buffer with header/pragmas values 
+        fileHeader.Write(buffer.AsSpan(FILE_HEADER_SIZE));
+        pragmas.Write(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
+
+        // write on disk
+        _stream.Write(buffer.AsSpan());
 
         // for content stream, use AesStream (for encrypted file) or same _stream
         _contentStream = fileHeader.Encrypted ?
@@ -94,9 +88,9 @@ unsafe internal class DiskStream : IDiskStream
         var fileLength = _streamFactory.GetLength();
 
         // fileLength must be, at least, FILE_HEADER
-        if (fileLength <= FILE_HEADER_SIZE) throw ERR($"Invalid datafile. Data file is too small (length = {fileLength}).");
+        if (fileLength <= PAGE_OFFSET) throw ERR($"Invalid datafile. Data file is too small (length = {fileLength}).");
 
-        var content = fileLength - FILE_HEADER_SIZE;
+        var content = fileLength - PAGE_OFFSET;
         var celling = content % PAGE_SIZE > 0 ? 1 : 0;
         var result = content / PAGE_SIZE;
 
@@ -115,7 +109,7 @@ unsafe internal class DiskStream : IDiskStream
         ENSURE(positionID != uint.MaxValue, "PositionID should not be empty");
 
         // set real position on stream
-        _contentStream!.Position = FILE_HEADER_SIZE + (positionID * PAGE_SIZE);
+        _contentStream!.Position = PAGE_OFFSET + (positionID * PAGE_SIZE);
 
         var span = new Span<byte>(page, PAGE_SIZE);
 
@@ -152,7 +146,7 @@ unsafe internal class DiskStream : IDiskStream
         page->UniqueID = 0; 
 
         // set real position on stream
-        _contentStream!.Position = FILE_HEADER_SIZE + (page->PositionID * PAGE_SIZE);
+        _contentStream!.Position = PAGE_OFFSET + (page->PositionID * PAGE_SIZE);
 
         var span = new Span<byte>(page, PAGE_SIZE);
 
@@ -162,7 +156,6 @@ unsafe internal class DiskStream : IDiskStream
         page->UniqueID = uniqueID;
         page->ShareCounter = NO_CACHE;
         page->IsDirty = false;
-
     }
 
     /// <summary>
@@ -171,7 +164,7 @@ unsafe internal class DiskStream : IDiskStream
     public void WriteEmptyPage(uint positionID)
     {
         // set real position on stream
-        _contentStream!.Position = FILE_HEADER_SIZE + (positionID * PAGE_SIZE);
+        _contentStream!.Position = PAGE_OFFSET + (positionID * PAGE_SIZE);
 
         _contentStream.Write(PAGE_EMPTY);
     }
@@ -184,7 +177,7 @@ unsafe internal class DiskStream : IDiskStream
         for (var i = fromPositionID; i <= toPositionID && token.IsCancellationRequested; i++)
         {
             // set real position on stream
-            _contentStream!.Position = FILE_HEADER_SIZE + (i * PAGE_SIZE);
+            _contentStream!.Position = PAGE_OFFSET + (i * PAGE_SIZE);
 
             _contentStream.Write(PAGE_EMPTY);
         }
@@ -196,19 +189,24 @@ unsafe internal class DiskStream : IDiskStream
     /// </summary>
     public void SetSize(uint lastPageID)
     {
-        var fileLength = FILE_HEADER_SIZE +
+        var fileLength = PAGE_OFFSET +
             ((lastPageID + 1) * PAGE_SIZE);
 
         _stream!.SetLength(fileLength);
     }
 
     /// <summary>
-    /// Write a specific byte in datafile with a flag/byte value - used to restore. Use sync write
+    /// Write pragma values into disk stream
     /// </summary>
-    public void WriteFlag(int headerPosition, byte flag)
+    public void WritePragmas(Pragmas pragmas)
     {
-        _stream!.Position = FileHeader.P_IS_DIRTY;
-        _stream.WriteByte(flag);
+        _stream!.Position = PAGE_OFFSET; // just after file header
+
+        using var buffer = SharedArray<byte>.Rent(PRAGMA_SIZE);
+
+
+
+//        _stream;
 
         _stream.Flush();
     }

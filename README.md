@@ -5,22 +5,27 @@ This branch is current development of new version of LiteDB v6.
 # Next steps
 - SQL Parser
     - rename collection
-- DropCollection
-- DropIndex
-- Rebuild
-- Batch
+- Unit tests for query
 
 # Needs implementation
 
 # Engine
 - Implement RandomAccess and SafeHandle
 - Return to async calls in managed memory
+- CRC32
+
+## Operations
+- Update
+- DropIndex
+- Batch
+- Rebuild
+- Vaccum?
 
 ## Pragma
 - Replace for a simple `struct` and ref in page header
 
 ## Master
-- Review
+- Review after change pragma
 
 ## Query Engine
 - Create IQuery and slipt query in Query GroupByQuery
@@ -28,19 +33,12 @@ This branch is current development of new version of LiteDB v6.
 - Distinct Pipe
 - Virtual collections: $master, $file_json, ...
 
-## Operations
-- Update
-- DeleteMany
-- DropIndex
-- DropCollection
-- Batch
-- Rebuild
-- Vaccum?
-
 ## SharedMode
 
 ## Services
 - ErrorHandling review
+- try/catch/deallocate
+- Auto-Rebuid, Flag error
 
 ## Page Structures
 - FileHeader (define big/little endian machine)

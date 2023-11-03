@@ -51,13 +51,7 @@ internal class MasterMapper : IMasterMapper
                     ["head"] = BsonArray.FromArray(new BsonValue[] { i.HeadIndexNodeID.PageID, i.HeadIndexNodeID.Index }),
                     ["tail"] = BsonArray.FromArray(new BsonValue[] { i.TailIndexNodeID.PageID, i.TailIndexNodeID.Index }),
                 }))
-            })),
-            ["pragmas"] = new BsonDocument
-            {
-                ["user_version"] = master.Pragmas.UserVersion,
-                ["limit_size"] = master.Pragmas.LimitSizeID,
-                ["checkpoint"] = master.Pragmas.Checkpoint,
-            }
+            }))
         };
 
         return doc;
@@ -80,13 +74,7 @@ internal class MasterMapper : IMasterMapper
                     HeadIndexNodeID = new((uint)i["head"][0], (byte)i["head"][1]),
                     TailIndexNodeID = new((uint)i["tail"][0], (byte)i["tail"][1])
                 }).ToList()
-            }),
-            Pragmas = new PragmaDocument
-            {
-                UserVersion = doc["pragmas"]["user_version"],
-                LimitSizeID = doc["pragmas"]["limit_size"],
-                Checkpoint = doc["pragmas"]["checkpoint"]
-            }
+            })
         };
 
         return master;

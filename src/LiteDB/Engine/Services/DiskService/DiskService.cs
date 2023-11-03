@@ -29,7 +29,7 @@ internal class DiskService : IDiskService
     /// <summary>
     /// Open (or create) datafile.
     /// </summary>
-    public async ValueTask<FileHeader> InitializeAsync()
+    public async ValueTask<(FileHeader, Pragmas)> InitializeAsync()
     {
         // if file not exists, create empty database
         if (_streamFactory.Exists() == false)
@@ -61,7 +61,7 @@ internal class DiskService : IDiskService
         reader = _factory.CreateDiskStream();
 
         // and open to read-only (use saved header)
-        reader.OpenFile(_factory.FileHeader);
+        reader.OpenFile(false);
 
         return reader;
     }
