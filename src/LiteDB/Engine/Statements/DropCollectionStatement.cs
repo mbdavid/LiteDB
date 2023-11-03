@@ -32,18 +32,9 @@ internal class DropCollectionStatement : IEngineStatement
         // create a new transaction locking colID = 255 ($master) and colID
         var transaction = await monitorService.CreateTransactionAsync(new byte[] { MASTER_COL_ID, colID });
 
-        var pageIDs = allocationMapService.GetAllPages(colID);
+        var pages = allocationMapService.GetAllPages(colID);
 
-        foreach(var pageID in pageIDs)
-        {
-            transaction.DeletePage(pageID);
-
-            // do a safepoint after insert each document
-            if (monitorService.Safepoint(transaction))
-            {
-                await transaction.SafepointAsync();
-            }
-        }
+        transaction.DeleteAllPages(pages);
 
         // remove collection from $master
         master.Collections.Remove(_store.Name);

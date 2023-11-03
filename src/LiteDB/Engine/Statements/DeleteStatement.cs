@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualBasic;
-
-namespace LiteDB.Engine;
+﻿namespace LiteDB.Engine;
 
 internal class DeleteStatement : IEngineStatement
 {

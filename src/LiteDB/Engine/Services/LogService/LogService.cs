@@ -102,6 +102,59 @@ internal class LogService : ILogService
     }
 
     /// <summary>
+    /// Write all pagesIDs inside pages in log as empty page. Reuse same PageMemory instance
+    /// </summary>
+    public unsafe void WriteEmptyLogPages(IReadOnlyList<uint> pages, int transactionID)
+    {
+        var writer = _diskService.GetDiskWriter();
+
+        // set IsDirty flag in header file to true at first use
+        if (_factory.FileHeader.IsDirty == false)
+        {
+            _factory.FileHeader.IsDirty = true;
+
+            writer.WriteFlag(FileHeader.P_IS_DIRTY, 1);
+        }
+
+        var lastPositionID = 0u;
+        var positions = new List<uint>();
+
+        // get all positionsID generated
+        foreach(var pageID in pages)
+        {
+            lastPositionID = this.GetNextLogPositionID();
+            positions.Add(lastPositionID);
+        }
+
+        // pre-allocate file
+        writer.SetSize(lastPositionID);
+
+        // create a re-use page instance
+        var page = _memoryFactory.AllocateNewPage();
+
+        for(var i = 0; i < pages.Count; i++)
+        {
+            // setup page info as a new empty page
+            page->PageID = pages[i];
+            page->PageType = PageType.Empty;
+            page->PositionID = page->RecoveryPositionID = positions[i];
+            page->TransactionID = transactionID;
+            page->IsConfirmed = false; // $master change will be last page
+
+            // write page to writer stream
+            writer.WritePage(page);
+
+            // create a log header structure with needed information about this page on checkpoint
+            var header = new LogPageHeader { PositionID = page->PositionID, PageID = page->PageID, TransactionID = page->TransactionID, IsConfirmed = page->IsConfirmed };
+
+            // add page header only into log memory list
+            this.AddLogPage(header);
+        }
+
+        _memoryFactory.DeallocatePage(page);
+    }
+
+    /// <summary>
     /// Get next positionID in log
     /// </summary>
     private uint GetNextLogPositionID()
