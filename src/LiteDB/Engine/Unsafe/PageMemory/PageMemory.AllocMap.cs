@@ -71,21 +71,25 @@ unsafe internal partial struct PageMemory // PageMemory.AllocMap
     /// <summary>
     /// Read all extends values and get pageID for all used page in this collection
     /// </summary>
-    public static void LoadPageIDFromExtends(PageMemory* page, byte colID, List<uint> result)
+    public static void LoadPageIDFromExtends(PageMemory* page, int allocationMapID, byte colID, List<uint> result)
     {
-
         for (var j = 0; j < AM_EXTEND_COUNT; j++)
         {
-            var extendValue = page->Extends[0];
+            var extendValue = page->Extends[j];
 
-            if (extendValue >> 24 != colID) break;
+            if (extendValue >> 24 != colID) continue;
 
+            var pageID = ExtendLocation.GetFirstPageID(allocationMapID, j);
 
-            // deve retornar as paginas usadas neste extend
-            throw new NotImplementedException();
+            if ((extendValue & 0b00000000_111_000_000_000_000_000_000_000) > 0) result.Add(pageID + 0);
+            if ((extendValue & 0b00000000_000_111_000_000_000_000_000_000) > 0) result.Add(pageID + 1);
+            if ((extendValue & 0b00000000_000_000_111_000_000_000_000_000) > 0) result.Add(pageID + 2);
+            if ((extendValue & 0b00000000_000_000_000_111_000_000_000_000) > 0) result.Add(pageID + 3);
+            if ((extendValue & 0b00000000_000_000_000_000_111_000_000_000) > 0) result.Add(pageID + 4);
+            if ((extendValue & 0b00000000_000_000_000_000_000_111_000_000) > 0) result.Add(pageID + 5);
+            if ((extendValue & 0b00000000_000_000_000_000_000_000_111_000) > 0) result.Add(pageID + 6);
+            if ((extendValue & 0b00000000_000_000_000_000_000_000_000_111) > 0) result.Add(pageID + 7);
         }
-
-
     }
 
     #region Static Helpers

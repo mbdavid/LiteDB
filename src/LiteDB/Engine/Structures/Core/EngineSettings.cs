@@ -64,4 +64,9 @@ public class EngineSettings : IEngineSettings
     /// Indicate that engine will open files in readonly mode (and will not support any database change)
     /// </summary>
     public bool ReadOnly { get; init; } = false;
+
+    public override string ToString()
+    {
+        return Dump.Object(new { File = Path.GetFileName(Filename), Encrypted = Password != null, Collation, Timeout, ReadOnly, InitialSize });
+    }
 }

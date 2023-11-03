@@ -92,7 +92,7 @@ internal static class Dump
             else
             {
                 var toString = Reflection.IsOverride(type.GetMethods().FirstOrDefault(x => x.Name == "ToString" && x.GetParameters().Length == 0));
-                var isLiteDB = type.Namespace.StartsWith("LiteDB");
+                var isLiteDB = type.Namespace?.StartsWith("LiteDB") ?? false;
                 var isEmpty = type.GetProperties().FirstOrDefault(x => x.Name == "IsEmpty");
 
                 if (isLiteDB && isEmpty is not null && (bool)isEmpty.GetValue(value) == true) return "<EMPTY>";

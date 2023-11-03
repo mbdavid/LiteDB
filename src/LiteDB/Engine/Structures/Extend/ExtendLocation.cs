@@ -9,7 +9,7 @@ internal struct ExtendLocation : IIsEmpty
 
     public int ExtendID => this.IsEmpty ? -1 : (this.AllocationMapID * AM_EXTEND_COUNT) + this.ExtendIndex;
 
-    public uint FirstPageID => (uint)(this.AllocationMapID * AM_PAGE_STEP + this.ExtendIndex * AM_EXTEND_SIZE + 1);
+    public uint FirstPageID => GetFirstPageID(this.AllocationMapID, this.ExtendIndex);
 
     public ExtendLocation()
     {
@@ -32,4 +32,7 @@ internal struct ExtendLocation : IIsEmpty
     }
 
     public override string ToString() => Dump.Object(this);
+
+    public static uint GetFirstPageID(int allocationMapID, int extendIndex) => (uint)(allocationMapID * AM_PAGE_STEP + extendIndex * AM_EXTEND_SIZE + 1);
+
 }

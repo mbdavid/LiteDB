@@ -35,8 +35,8 @@ internal partial class SqlParser
             _tokenizer.ReadToken(); // read DROP
             ahead = _tokenizer.LookAhead();
 
-            if (ahead.Match("COLLECTION")) return this.ParseCreateCollection();
-            if (ahead.Match("INDEX")) return this.ParseCreateIndex();
+            if (ahead.Match("COLLECTION")) return this.ParseDropCollection();
+            //if (ahead.Match("INDEX")) return this.ParseCreateIndex();
 
             throw ERR_UNEXPECTED_TOKEN(ahead);
         }

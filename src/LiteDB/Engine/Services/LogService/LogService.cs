@@ -104,8 +104,10 @@ internal class LogService : ILogService
     /// <summary>
     /// Write all pagesIDs inside pages in log as empty page. Reuse same PageMemory instance
     /// </summary>
-    public unsafe void WriteEmptyLogPages(IReadOnlyList<uint> pages, int transactionID)
+    public unsafe void WriteEmptyLogPages(IReadOnlyList<uint> pages, int transactionID, Dictionary<uint, uint> walDirtyPages)
     {
+        ENSURE(walDirtyPages.Count == 0);
+
         var writer = _diskService.GetDiskWriter();
 
         // set IsDirty flag in header file to true at first use
@@ -117,13 +119,14 @@ internal class LogService : ILogService
         }
 
         var lastPositionID = 0u;
-        var positions = new List<uint>();
 
         // get all positionsID generated
         foreach(var pageID in pages)
         {
             lastPositionID = this.GetNextLogPositionID();
-            positions.Add(lastPositionID);
+
+            // add wal reference into transaction local wal
+            walDirtyPages.Add(pageID, lastPositionID);
         }
 
         // pre-allocate file
@@ -132,14 +135,15 @@ internal class LogService : ILogService
         // create a re-use page instance
         var page = _memoryFactory.AllocateNewPage();
 
-        for(var i = 0; i < pages.Count; i++)
+        foreach (var (pageID, positionID) in walDirtyPages)
         {
             // setup page info as a new empty page
-            page->PageID = pages[i];
+            page->PageID = pageID;
             page->PageType = PageType.Empty;
-            page->PositionID = page->RecoveryPositionID = positions[i];
+            page->PositionID = page->RecoveryPositionID = positionID;
             page->TransactionID = transactionID;
             page->IsConfirmed = false; // $master change will be last page
+            page->IsDirty = true;
 
             // write page to writer stream
             writer.WritePage(page);

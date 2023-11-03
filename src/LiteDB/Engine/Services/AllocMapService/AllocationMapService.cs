@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualBasic;
-
-namespace LiteDB.Engine;
+﻿namespace LiteDB.Engine;
 
 /// <summary>
 /// * Singleton (thread safe)
@@ -127,7 +125,7 @@ unsafe internal class AllocationMapService : IAllocationMapService
         {
             var page = (PageMemory*)_pages[i];
 
-            PageMemory.LoadPageIDFromExtends(page, colID, result);
+            PageMemory.LoadPageIDFromExtends(page, i, colID, result);
         }
 
         return result;
@@ -138,14 +136,17 @@ unsafe internal class AllocationMapService : IAllocationMapService
     /// </summary>
     public void ClearExtends(byte colID)
     {
+        // loop over all allocation map pages
         for (var i = 0; i < _pages.Count; i++)
         {
             var page = (PageMemory*)_pages[i];
 
+            // and loop over all extend value inside a allocation map page
             for (var j = 0; j < AM_EXTEND_COUNT; j++)
             {
                 var extendValue = page->Extends[j];
 
+                // checks if first byte are for this colID
                 if (extendValue >> 24 == colID)
                 {
                     page->Extends[j] = 0;
@@ -203,7 +204,7 @@ unsafe internal class AllocationMapService : IAllocationMapService
 
     public override string ToString()
     {
-        return Dump.Object(new { _pages = Dump.Array(_pages) });
+        return Dump.Object(new { _pages = _pages.Count });
     }
 
     public void Dispose()
