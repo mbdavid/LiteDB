@@ -25,5 +25,10 @@ internal class IndexDocument
         this.HeadIndexNodeID = other.HeadIndexNodeID;
         this.TailIndexNodeID = other.TailIndexNodeID;
     }
+
+    public override string ToString()
+    {
+        return Dump.Object(this);
+    }
 }
 

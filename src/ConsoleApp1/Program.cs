@@ -36,43 +36,16 @@ var doc = new BsonDocument
 await db.RunAsync($"Create Collection 'col1'", "CREATE COLLECTION col1");
 await db.RunAsync($"Insert col1 {insert1.Length:n0}", "INSERT INTO col1 VALUES @0", insert1);
 
-await db.RunQueryAsync(10, $"Query1", @"SELECT $ FROM col1");
+await db.RunAsync($"CreateIndex (age)", "CREATE INDEX idx_age ON col1 ($.age)");
+await db.RunAsync($"CreateIndex (name)", "CREATE INDEX idx_name ON col1 ($.name)");
+await db.RunAsync($"CreateIndex (created)", "CREATE INDEX idx_created ON col1 ($.created)");
+
+await db.RunQueryAsync(10, $"Query1", @"EXPLAIN SELECT COUNT(_id) FROM col1 WHERE age = 32");
+
+await db.RunAsync($"DropIndex (age)", "DROP INDEX col1.idx_age");
 
 
-await db.RunAsync($"Drop col1", "DROP COLLECTION col1");
-
-await db.RunAsync($"Create Collection 'col1'", "CREATE COLLECTION col1");
-
-await db.RunAsync($"Insert col1 {insert1.Length:n0}", "INSERT INTO col1 VALUES @0", insert1);
-
-await db.RunQueryAsync(10, $"Query1", @"SELECT $ FROM col1");
-
-db.Dump();
-//await db.RunAsync($"EnsureIndex (age)", "CREATE INDEX idx_01 ON col1 ($.age)");
-//await db.RunAsync($"EnsureIndex (name)", "CREATE INDEX idx_02 ON col1 (name)");
-
-//await db.RunAsync("Delete col1", "DELETE col1 WHERE age < 30");
-
-//await db.RunQueryAsync(100, $"Query1",
-//    @"SELECT COUNT(_id) --_id,name,age
-//        FROM col1");
-
-
-//await db.RunQueryAsync(20, $"Query1",
-//    @"SELECT age, 
-//             COUNT(age) AS qtd,
-//             --MIN(name) AS min_nome,
-//             --MAX(name) AS max_name,
-//             --FIRST(name) AS first_nome,
-//             --LAST(name) AS last_name,
-//             --AVG(DOUBLE(DAY(created))) AS avg_day,
-//             --SUM(age) AS sum_age,
-//             --ANY(age) AS any_age,
-//             --ARRAY(name) as arr_nomes,
-//             SUM(age) AS #sum_age,
-//             sum_age + 100 AS sum_100
-//        FROM col1 
-//       GROUP BY age");
+//db.Dump();
 
 // SHUTDOWN
 await db.ShutdownAsync();
@@ -87,6 +60,4 @@ Console.WriteLine($"# DEBUG - {VER}");
 #else
 Console.WriteLine($"# RELEASE - {VER}");
 #endif
-
-
 //Console.ReadKey();

@@ -21,5 +21,10 @@ internal class CollectionDocument
         this.Name = other.Name;
         this.Indexes = new List<IndexDocument>(other.Indexes);
     }
+
+    public override string ToString()
+    {
+        return Dump.Object(this);
+    }
 }
 

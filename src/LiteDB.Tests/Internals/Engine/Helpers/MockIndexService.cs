@@ -80,4 +80,9 @@ internal class MockIndexService : IIndexService
     {
         throw new NotImplementedException();
     }
+
+    public void DropIndex(int slot, RowID pkHeadIndexNodeID)
+    {
+        throw new NotImplementedException();
+    }
 }

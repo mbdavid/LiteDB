@@ -1,4 +1,6 @@
-﻿namespace LiteDB.Engine;
+﻿using System;
+
+namespace LiteDB.Engine;
 
 /// <summary>
 /// Implement a Index service - Add/Remove index nodes on SkipList
@@ -319,6 +321,44 @@ unsafe internal class IndexService : IIndexService
         if (newPageValue != ExtendPageValue.NoChange)
         {
             _transaction.UpdatePageMap(node.Page->PageID, newPageValue);
+        }
+    }
+
+    /// <summary>
+    /// </summary>
+    public void DropIndex(int slot, RowID pkHeadIndexNodeID)
+    {
+        // init from first node after head
+        var pkRowID = this.GetNode(pkHeadIndexNodeID)[0]->NextID;
+
+        // loop over all pk index nodes
+        while (pkRowID.IsEmpty == false)
+        {
+            var node = this.GetNode(pkRowID);
+
+            while (node.NextNodeID.IsEmpty == false)
+            {
+                var last = node;
+
+                node = this.GetNode(node.NextNodeID);
+
+                // skip if not same slot
+                if (node.Node->Slot != slot) continue;
+
+                // fix last index node pointer
+                last.NextNodeID = node.NextNodeID;
+                last.Page->IsDirty = true;
+
+                // delete node
+                PageMemory.DeleteSegment(node.Page, node.IndexNodeID.Index, out var pageValue);
+
+                if (pageValue != ExtendPageValue.NoChange)
+                {
+                    _transaction.UpdatePageMap(node.Page->PageID, pageValue);
+                }
+            }
+
+            pkRowID = node[0]->GetNext(Query.Ascending);
         }
     }
 }

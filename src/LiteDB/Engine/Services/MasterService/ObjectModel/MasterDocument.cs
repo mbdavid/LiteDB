@@ -22,5 +22,10 @@ internal class MasterDocument
     {
         this.Collections = new(other.Collections);
     }
+
+    public override string ToString()
+    {
+        return Dump.Object(new { cols = Dump.Array(Collections) });
+    }
 }
 
