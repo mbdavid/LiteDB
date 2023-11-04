@@ -7,6 +7,7 @@ This branch is current development of new version of LiteDB v6.
     - rename collection
 - Unit tests for query
 
+
 # Needs implementation
 
 # Engine
@@ -21,11 +22,8 @@ This branch is current development of new version of LiteDB v6.
 - Rebuild
 - Vaccum?
 
-## Pragma
-- Replace for a simple `struct` and ref in page header
-
 ## Master
-- Review after change pragma
+- Review
 
 ## Query Engine
 - Create IQuery and slipt query in Query GroupByQuery
@@ -39,9 +37,6 @@ This branch is current development of new version of LiteDB v6.
 - ErrorHandling review
 - try/catch/deallocate
 - Auto-Rebuid, Flag error
-
-## Page Structures
-- FileHeader (define big/little endian machine)
 
 ## BsonExpressions
 - MakeDocument spread: { ...$ }

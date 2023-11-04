@@ -21,8 +21,9 @@ internal class FileHeader
     public const int P_ENGINE_VER_MAJOR = 77; // 77-79 [byte "6.*.*"]
     public const int P_ENGINE_VER_MINOR = 78; // 77-79 [byte "*.1.*"]
     public const int P_ENGINE_VER_BUILD = 79; // 77-79 [byte "*.*.4"]
+    public const int P_IS_LITTLE_ENDIAN = 80; // 80-80 [bool]
 
-    // reserved 80-97 (18 bytes)
+    // reserved 81-96
 
     #endregion
 
@@ -36,6 +37,7 @@ internal class FileHeader
     public readonly DateTime CreationTime = DateTime.MinValue;
     public readonly Collation Collation = Collation.Binary;
     public readonly Version EngineVersion = new();
+    public readonly bool IsLittleEndian = true;
 
     public FileHeader()
     {
@@ -65,6 +67,7 @@ internal class FileHeader
         var build = buffer[P_ENGINE_VER_BUILD];
 
         this.EngineVersion = new Version(major, minor, build);
+        this.IsLittleEndian = buffer[P_IS_LITTLE_ENDIAN] == 1;
     }
 
     /// <summary>
@@ -82,6 +85,7 @@ internal class FileHeader
         this.CreationTime = DateTime.UtcNow;
         this.Collation = settings.Collation;
         this.EngineVersion = typeof(LiteEngine).Assembly.GetName().Version!;
+        this.IsLittleEndian = BitConverter.IsLittleEndian;
     }
 
     /// <summary>
@@ -110,6 +114,8 @@ internal class FileHeader
         if (_headerInfo != HEADER_INFO) throw ERR_INVALID_DATABASE();
 
         if (_fileVersion != FILE_VERSION) throw ERR_INVALID_FILE_VERSION();
+
+        if (this.IsLittleEndian != BitConverter.IsLittleEndian) throw ERR("Different original file architecture and current running architecture byte order (little/big endian)");
     }
 
     public override string ToString()
