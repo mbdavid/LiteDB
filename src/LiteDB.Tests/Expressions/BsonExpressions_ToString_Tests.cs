@@ -1,8 +1,4 @@
-﻿using Bogus.Bson;
-using Castle.Core.Configuration;
-using Newtonsoft.Json.Linq;
-using System;
-using static LiteDB.BsonExpression;
+﻿using static LiteDB.BsonExpression;
 
 namespace LiteDB.Tests.Expressions;
 
@@ -106,7 +102,7 @@ public class BsonExpressions_ToString_Tests
         #region IS_DATETYPE
         yield return new object[] { Call("IS_MINVALUE", new BsonExpression[] { Constant(BsonValue.MinValue) }), "IS_MINVALUE({\"$minValue\":\"1\"})" };
         yield return new object[] { Call("IS_NULL", new BsonExpression[] { Constant(BsonValue.Null) }), "IS_NULL(null)" };
-        yield return new object[] { Call("IS_INT32", new BsonExpression[] { Constant(2) }), "IS_INT32(2)"};
+        yield return new object[] { Call("IS_INT32", new BsonExpression[] { Constant(2) }), "IS_INT32(2)" };
         yield return new object[] { Call("IS_INT64", new BsonExpression[] { Constant(new BsonInt64(2)) }), "IS_INT64({\"$numberLong\":\"2\"})" };
         yield return new object[] { Call("IS_DOUBLE", new BsonExpression[] { Constant(2.6) }), "IS_DOUBLE(2.6)" };
         yield return new object[] { Call("IS_DECIMAL", new BsonExpression[] { Constant(new BsonDecimal(2)) }), "IS_DECIMAL({\"$numberDecimal\":\"2\"})" };
@@ -184,6 +180,18 @@ public class BsonExpressions_ToString_Tests
         yield return new object[] { Call("JOIN", new BsonExpression[] { Array("LiteDB", "LiteDB"), Constant("/") }), "JOIN([\"LiteDB\",\"LiteDB\"],\"/\")" };
         #endregion
         #endregion
+
+        #region ConditionalExpressions
+
+        yield return new object[] { Conditional(Constant(true), Constant(10), Constant(12)), "true?10:12" };
+        yield return new object[] { Conditional(Constant(false), Constant(10), Constant(12)), "false?10:12" };
+        yield return new object[] { Conditional(And(Constant(true), Constant(false)), Constant(10), Constant(12)), "true AND false?10:12" };
+        yield return new object[] { Conditional(Or(Constant(true), Constant(false)), Constant(10), Constant(12)), "true OR false?10:12" };
+        yield return new object[] { Conditional(Constant(true), Add(Constant(10), Constant(20)), Constant(12)), "true?10+20:12" };
+        yield return new object[] { Conditional(Constant(false), Constant(10), Multiply(Constant(7), Constant(8))), "false?10:7*8" };
+
+        #endregion
+
     }
 
     [Theory]

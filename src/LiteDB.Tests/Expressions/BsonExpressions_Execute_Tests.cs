@@ -1,7 +1,4 @@
-﻿using Bogus.Bson;
-using Castle.Core.Configuration;
-using Newtonsoft.Json.Linq;
-using static LiteDB.BsonExpression;
+﻿using static LiteDB.BsonExpression;
 
 namespace LiteDB.Tests.Expressions;
 
@@ -225,6 +222,17 @@ public class Expressions_Tests
         yield return new object[] { In(Constant(1), Array(2, 3)), new BsonBoolean(false) };
         yield return new object[] { Or(Constant(true), Constant(false)), new BsonBoolean(true) };
         yield return new object[] { And(Constant(true), Constant(false)), new BsonBoolean(false) };
+        #endregion
+
+        #region ConditionalExpressions
+
+        yield return new object[] { Conditional(Constant(true), Constant(10), Constant(12)), new BsonInt32(10) };
+        yield return new object[] { Conditional(Constant(false), Constant(10), Constant(12)), new BsonInt32(12) };
+        yield return new object[] { Conditional(And(Constant(true), Constant(false)), Constant(10), Constant(12)), new BsonInt32(12) };
+        yield return new object[] { Conditional(Or(Constant(true), Constant(false)), Constant(10), Constant(12)), new BsonInt32(10) };
+        yield return new object[] { Conditional(Constant(true), Add(Constant(10), Constant(20)), Constant(12)), new BsonInt32(30) };
+        yield return new object[] { Conditional(Constant(false), Constant(10), Multiply(Constant(7), Constant(8))), new BsonInt32(56) };
+
         #endregion
     }
 
