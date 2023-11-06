@@ -42,9 +42,9 @@ public class BsonInt32 : BsonValue
 
     public static implicit operator BsonInt32(int value) => value switch
     {
-        -1 => BsonInt32.MinusOne,
-        0 => BsonInt32.Zero,
-        1 => BsonInt32.One,
+        -1 => MinusOne,
+        0 => Zero,
+        1 => One,
         _ => new BsonInt32(value),
     };
 

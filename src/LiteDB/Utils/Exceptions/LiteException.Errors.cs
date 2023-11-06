@@ -17,7 +17,7 @@ public partial class LiteException
     internal static LiteException ERR_TIMEOUT(TimeSpan timeout) =>
         new(3, $"Timeout exceeded. Limit: {timeout.TotalSeconds:0}");
 
-    internal static NotSupportedException ERR_READONLY_OBJECT() =>
+    internal static InvalidOperationException ERR_READONLY_OBJECT() =>
         new($"This object are marked as readonly and can't be changed");
 
     internal static LiteException ERR_INVALID_CTOR(Type type, Exception? inner) =>

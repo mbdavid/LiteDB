@@ -30,4 +30,12 @@ internal class BsonObjectId : BsonValue
     }
 
     #endregion
+
+    #region Implicit Ctor
+
+    public static implicit operator ObjectId(BsonObjectId value) => value.AsObjectId;
+
+    public static implicit operator BsonObjectId(ObjectId value) => value == ObjectId.Empty ? Empty : new BsonObjectId(value);
+
+    #endregion
 }

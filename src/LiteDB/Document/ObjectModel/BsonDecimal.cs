@@ -36,6 +36,20 @@ internal class BsonDecimal : BsonValue
 
     #endregion
 
+    #region Implicit Ctor
+
+    public static implicit operator decimal(BsonDecimal value) => value.AsDecimal;
+
+    public static implicit operator BsonDecimal(decimal value) => value switch
+    {
+        -1 => MinusOne,
+        0 => Zero,
+        1 => One,
+        _ => new BsonDecimal(value),
+    };
+
+    #endregion
+
     #region Convert Types
 
     public override bool ToBoolean() => this.Value != 0;
