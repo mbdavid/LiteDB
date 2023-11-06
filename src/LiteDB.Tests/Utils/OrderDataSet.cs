@@ -14,8 +14,8 @@ internal class OrderDataSet
                 ["name"] = Faker.Fullname(),
                 ["age"] = Faker.Age(),
                 ["salary"] = (double)Faker.Next(5_000, 30_000),
-                ["depto"] = Faker.Depto(),
-                ["created"] = Faker.Created()
+                //["depto"] = Faker.Depto(),
+                //["created"] = Faker.Created()
             })
             .ToList();
 
