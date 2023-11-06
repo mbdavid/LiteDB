@@ -34,11 +34,12 @@ var doc = new BsonDocument
 // RUN 
 
 await db.RunAsync($"Create Collection 'col1'", "CREATE COLLECTION col1");
-await db.RunAsync($"Insert col1 {insert1.Length:n0}", "INSERT INTO col1 VALUES @0", insert1);
 
 await db.RunAsync($"CreateIndex (age)", "CREATE INDEX idx_age ON col1 ($.age)");
 await db.RunAsync($"CreateIndex (name)", "CREATE INDEX idx_name ON col1 ($.name)");
 await db.RunAsync($"CreateIndex (created)", "CREATE INDEX idx_created ON col1 ($.created)");
+
+await db.RunAsync($"Insert col1 {insert1.Length:n0}", "INSERT INTO col1 VALUES @0", insert1);
 
 await db.RunQueryAsync(10, $"Query1", @"EXPLAIN SELECT COUNT(_id) FROM col1 WHERE age = 32");
 
