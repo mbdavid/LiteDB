@@ -1,5 +1,3 @@
-namespace LiteDB.Tests;
-
 internal static partial class Faker
 {
     private static string[] _maleNames = new string[]

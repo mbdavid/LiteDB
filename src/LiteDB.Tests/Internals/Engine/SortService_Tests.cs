@@ -16,7 +16,6 @@ public class SortService_Tests
 
         var streamFactory = new MemoryStreamFactory(stream);
         var context = new PipeContext();
-        var faker = new Faker();
 
         using var sut = new SortService(streamFactory, factory);
 
@@ -39,14 +38,14 @@ public class SortService_Tests
                 new RowID((uint)i, 0), 
                 new BsonDocument
                 {
-                    ["name"] = faker.Name.FullName()
+                    ["name"] = Faker.Fullname()
                 }))
             .ToArray();
 
         using var enumerator = new MockEnumerator(source);
 
         // Act
-        using var sorter = sut.CreateSort(new OrderBy("name", Query.Ascending));
+        using var sorter = sut.CreateSort(new OrderBy("name", 1));
 
         // insert all data
         sorter.InsertData(enumerator, context);
