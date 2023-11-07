@@ -36,6 +36,20 @@ internal class BsonDouble : BsonValue
 
     #endregion
 
+    #region Implicit Ctor
+
+    public static implicit operator double(BsonDouble value) => value.AsDouble;
+
+    public static implicit operator BsonDouble(int value) => value switch
+    {
+        -1 => MinusOne,
+        0 => Zero,
+        1 => One,
+        _ => new BsonDouble(value),
+    };
+
+    #endregion
+
     #region Convert Types
 
     public override bool ToBoolean() => this.Value != 0;

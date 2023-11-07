@@ -32,6 +32,14 @@ internal class BsonBoolean : BsonValue
 
     #endregion
 
+    #region Implicit Ctor
+
+    public static implicit operator bool(BsonBoolean value) => value.AsBoolean;
+
+    public static implicit operator BsonBoolean(bool value) => value ? BsonBoolean.True : BsonBoolean.False;
+
+    #endregion
+
     #region Convert Types
 
     public override bool ToBoolean() => this.Value;

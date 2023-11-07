@@ -291,7 +291,7 @@ public abstract class BsonValue : IComparable<BsonValue>, IEquatable<BsonValue>
         return left.CompareTo(right) < 0;
     }
 
-    public static bool operator >(BsonValue left, BsonValue right) => !(left < right);
+    public static bool operator >(BsonValue left, BsonValue right) => !(left <= right);
 
     public static bool operator <=(BsonValue left, BsonValue right)
     {

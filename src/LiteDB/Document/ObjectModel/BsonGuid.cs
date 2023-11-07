@@ -32,4 +32,12 @@ internal class BsonGuid : BsonValue
     }
 
     #endregion
+
+    #region Implicit Ctor
+
+    public static implicit operator Guid(BsonGuid value) => value.AsGuid;
+
+    public static implicit operator BsonGuid(Guid value) => value == Guid.Empty ? Empty : new BsonGuid(value);
+
+    #endregion
 }

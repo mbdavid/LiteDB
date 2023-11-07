@@ -1,30 +1,34 @@
-﻿using Bogus.Bson;
-using Castle.Core.Configuration;
-using Newtonsoft.Json.Linq;
-using static LiteDB.BsonExpression;
+﻿using static LiteDB.BsonExpression;
 
 namespace LiteDB.Tests.Expressions;
 
 
 public class BsonExpressions_Parser_Tests
 {
+
     #region StaticAuxiliaryMethods
+
     private static BsonExpression Array(params BsonValue[] values)
     {
         var expressions = new List<BsonExpression>();
+
         foreach (BsonValue value in values)
         {
             expressions.Add(Constant(value));
         }
+
         return MakeArray(expressions);
     }
+
     #endregion
 
 
 
     public static IEnumerable<object[]> Get_Expressions()
     {
+
         #region BasicTypes
+
         yield return new object[] { "10", Constant(10) };
         yield return new object[] { "2.6", Constant(2.6) };
         yield return new object[] { "true", Constant(true) };
@@ -33,9 +37,11 @@ public class BsonExpressions_Parser_Tests
         yield return new object[] { "{a:1}", MakeDocument(new Dictionary<string, BsonExpression> { ["a"] = Constant(1) }) };
         yield return new object[] { "@LiteDB", Parameter("LiteDB") };
         yield return new object[] { "$.field", Path(Root, "field") };
+
         #endregion
 
         #region InterTypesInteraction
+
         yield return new object[] { "12+14", Add(Constant(12), Constant(14)) };
         yield return new object[] { "2.9+3", Add(Constant(2.9), Constant(3)) };
         yield return new object[] { "\"Lite\"+\"DB\"", Add(Constant("Lite"), Constant("DB")) };
@@ -43,18 +49,22 @@ public class BsonExpressions_Parser_Tests
         yield return new object[] { "{a:1}+\"string\"", Add(MakeDocument(new Dictionary<string, BsonExpression> { ["a"] = "1" }), Constant("string")) };
         yield return new object[] { "1+\"string\"", Add(Constant(1), Constant("string")) };
         yield return new object[] { "[1,2]+3", Add(Array(1, 2), Constant(3)) };
+
         #endregion
 
         #region DocumentRelated
+
         yield return new object[] { "$.clients", Path(Root, "clients") };
         yield return new object[] { "$.doc.arr", Path(Path(Root, "doc"), "arr") };
         yield return new object[] { "@.name", Path(Current, "name") };
         yield return new object[] { "$.clients[age>=18]", Filter(Path(Root, "clients"), GreaterThanOrEqual(Path(Current, "age"), Constant(18))) };
         yield return new object[] { "$.clients=>@.name", Map(Path(Root, "clients"), Path(Current, "name")) };
         yield return new object[] { "$.arr[1]", ArrayIndex(Path(Root, "arr"), Constant(1)) };
+
         #endregion
 
         #region BinaryExpressions
+
         yield return new object[] { "'LiteDB' LIKE 'L%'", Like(Constant("LiteDB"), Constant("L%")) };
         yield return new object[] { "1+2", Add(Constant(1), Constant(2)) };
         yield return new object[] { "1-2", Subtract(Constant(1), Constant(2)) };
@@ -73,11 +83,15 @@ public class BsonExpressions_Parser_Tests
         yield return new object[] { "1 IN [2,3]", In(Constant(1), Array(2, 3)) };
         yield return new object[] { "true OR false", Or(Constant(true), Constant(false)) };
         yield return new object[] { "true AND false", And(Constant(true), Constant(false)) };
+
         #endregion
 
         #region CallMethods
+
         #region DataTypes
+
         #region NEW_INSTANCE
+
         yield return new object[] { "MINVALUE()" , Call("MINVALUE", new BsonExpression[] { })   };
         yield return new object[] { "OBJECTID()" , Call("OBJECTID", new BsonExpression[] { })   };
         yield return new object[] { "GUID()"     , Call("GUID", new BsonExpression[] { })       };
@@ -85,9 +99,11 @@ public class BsonExpressions_Parser_Tests
         yield return new object[] { "NOW_UTC()"  , Call("NOW_UTC", new BsonExpression[] { })    };
         yield return new object[] { "TODAY()"    , Call("TODAY", new BsonExpression[] { })      };
         yield return new object[] { "MAXVALUE()" , Call("MAXVALUE", new BsonExpression[] { })   };
+        
         #endregion
 
         #region DATATYPE
+
         yield return new object[] { "INT32(2.4)"                                                , Call("INT32", new BsonExpression[] { Constant(2.4) })                                                    };
         yield return new object[] { "INT64(2)"                                                  , Call("INT64", new BsonExpression[] { Constant(2) })                                                      };
         yield return new object[] { "DOUBLE(2)"                                                 , Call("DOUBLE", new BsonExpression[] { Constant(2) })                                                     };
@@ -99,9 +115,11 @@ public class BsonExpressions_Parser_Tests
         yield return new object[] { "BOOLEAN(true)"                                             , Call("BOOLEAN", new BsonExpression[] { Constant(true) })                                                 };
         yield return new object[] { "DATETIME(2000,10,16)"                                      , Call("DATETIME", new BsonExpression[] { Constant(2000), Constant(10), Constant(16) })                    };
         yield return new object[] { "DATETIME_UTC(2000,10,16)"                                  , Call("DATETIME_UTC", new BsonExpression[] { Constant(2000), Constant(10), Constant(16) })                };
+        
         #endregion
 
         #region IS_DATETYPE
+
         yield return new object[] { "IS_NULL(null)"                                                   , Call("IS_NULL", new BsonExpression[] { Constant(BsonValue.Null) })                                                                                                        };
         yield return new object[] { "IS_INT32(2)"                                                     , Call("IS_INT32", new BsonExpression[] { Constant(2) })                                                                                                                    };
         yield return new object[] { "IS_DOUBLE(2.6)"                                                  , Call("IS_DOUBLE", new BsonExpression[] { Constant(2.6) })                                                                                                                 };
@@ -110,10 +128,13 @@ public class BsonExpressions_Parser_Tests
         yield return new object[] { "IS_DOCUMENT({name:\"Maria\",age:18})"                            , Call("IS_DOCUMENT", new BsonExpression[] { MakeDocument(new Dictionary<string, BsonExpression> { ["name"] = Constant("Maria"), ["age"] = Constant(18) }) })               };
         yield return new object[] { "IS_ARRAY([10,11,12])"                                            , Call("IS_ARRAY", new BsonExpression[] { Array(10, 11, 12) })                                                                                                              };
         yield return new object[] { "IS_BOOLEAN(true)"                                                , Call("IS_BOOLEAN", new BsonExpression[] { Constant(true) })                                                                                                               };
+        
         #endregion
+
         #endregion
 
         #region Math
+
         yield return new object[] { "ABS(-10)", Call("ABS", new BsonExpression[] { Constant(-10) }) };
         yield return new object[] { "ABS(-10.5)", Call("ABS", new BsonExpression[] { Constant(-10.5) }) };
         yield return new object[] { "ROUND(2,1)", Call("ROUND", new BsonExpression[] { Constant(2), Constant(1) }) };
@@ -121,9 +142,11 @@ public class BsonExpressions_Parser_Tests
         yield return new object[] { "ROUND(2.5,0)", Call("ROUND", new BsonExpression[] { Constant(2.5), Constant(0) }) };
         yield return new object[] { "ROUND(2.6,0)", Call("ROUND", new BsonExpression[] { Constant(2.6), Constant(0) }) };
         yield return new object[] { "POW(2,3)", Call("POW", new BsonExpression[] { Constant(2), Constant(3) }) };
+        
         #endregion
 
         #region Misc
+
         yield return new object[] { "JSON(\"{\\\"a\\\":1}\")"              , Call("JSON", new BsonExpression[] { Constant("{\"a\":1}") })                                                                                                                                       };
         yield return new object[] { "EXTEND({b:2},{a:1})"                  , Call("EXTEND", new BsonExpression[] { MakeDocument(new Dictionary<string, BsonExpression> { ["b"] = Constant(2) }), MakeDocument(new Dictionary<string, BsonExpression> { ["a"] = Constant(1) }) })};
         yield return new object[] { "KEYS({name:\"Maria\",age:18})"        , Call("KEYS", new BsonExpression[] { MakeDocument(new Dictionary<string, BsonExpression> { ["name"] = Constant("Maria"), ["age"] = Constant(18) }) })                                               };
@@ -138,9 +161,11 @@ public class BsonExpressions_Parser_Tests
         yield return new object[] { "UNION([10,11,12,13],[14,15,16,17])"   , Call("UNION", new BsonExpression[] { Array(10, 11, 12, 13), Array(14, 15, 16, 17) })                                                                                                               };
         yield return new object[] { "EXCEPT([10,11,12,13],[12,13,14,15])"  , Call("EXCEPT", new BsonExpression[] { Array(10, 11, 12, 13), Array(12, 13, 14, 15) })                                                                                                              };
         yield return new object[] { "DISTINCT([10,10,11,12,13])"           , Call("DISTINCT", new BsonExpression[] { Array(10, 10, 11, 12, 13) })                                                                                                                               };
+        
         #endregion
 
         #region String
+
         yield return new object[] { "LOWER(\"LiteDB\")", Call("LOWER", new BsonExpression[] { Constant("LiteDB") }) };
         yield return new object[] { "UPPER(\"LiteDB\")", Call("UPPER", new BsonExpression[] { Constant("LiteDB") }) };
         yield return new object[] { "LTRIM(\"    LiteDB\")", Call("LTRIM", new BsonExpression[] { Constant("    LiteDB") }) };
@@ -158,7 +183,20 @@ public class BsonExpressions_Parser_Tests
         yield return new object[] { "FORMAT(42,\"X\")", Call("FORMAT", new BsonExpression[] { Constant(42), Constant("X") }) };
         yield return new object[] { "JOIN([\"LiteDB\",\"-LiteDB\"])", Call("JOIN", new BsonExpression[] { Array("LiteDB", "-LiteDB") }) };
         yield return new object[] { "JOIN([\"LiteDB\",\"LiteDB\"],\"/\")", Call("JOIN", new BsonExpression[] { Array("LiteDB", "LiteDB"), Constant("/") }) };
+        
         #endregion
+
+        #endregion
+
+        #region ConditionalExpressions
+
+        yield return new object[] { "true ? 10 : 12", Conditional(Constant(true), Constant(10), Constant(12)) };
+        yield return new object[] { "false ? 10 : 12", Conditional(Constant(false), Constant(10), Constant(12)) };
+        yield return new object[] { "true AND false ? 10 : 12", Conditional(And(Constant(true), Constant(false)), Constant(10), Constant(12)) };
+        yield return new object[] { "true OR false ? 10 : 12", Conditional(Or(Constant(true), Constant(false)), Constant(10), Constant(12)) };
+        yield return new object[] { "true ? 10+20 : 12", Conditional(Constant(true), Add(Constant(10), Constant(20)), Constant(12)) };
+        yield return new object[] { "false ? 10 : 7*8", Conditional(Constant(false), Constant(10), Multiply(Constant(7), Constant(8))) };
+
         #endregion
     }
 

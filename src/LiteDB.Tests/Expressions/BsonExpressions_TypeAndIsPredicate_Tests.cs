@@ -26,6 +26,7 @@ public class BsonExpressions_TypeAndIsPredicate_Tests
     [InlineData("7 IN [1,4,7]", BsonExpressionType.In, true)]
     [InlineData("true AND true", BsonExpressionType.And, false)]
     [InlineData("true OR false", BsonExpressionType.Or, false)]
+    [InlineData("true?10:12", BsonExpressionType.Conditional, false)]
     [InlineData("arr=>@", BsonExpressionType.Map, false)]
    public void BsonExpressionTypeANDIsPredicate_Theory(string exp, BsonExpressionType type, bool isPredicate)
     {

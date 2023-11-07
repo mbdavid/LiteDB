@@ -37,14 +37,14 @@ internal class BsonString : BsonValue
 
     public static implicit operator string(BsonString value) => value.Value;
 
-    public static implicit operator BsonString(string value)
+    public static implicit operator BsonString(string value) => value switch
     {
-        if (value == null) throw new ArgumentNullException(nameof(value));
+        null => throw new ArgumentNullException(nameof(value)),
+        "" => Emtpy,
+        "_id" => Id,
+        _ => new BsonString(value)
+    };
 
-        if (value.Length == 0) return Emtpy;
-
-        return new BsonString(value);
-    }
 
     #endregion
 

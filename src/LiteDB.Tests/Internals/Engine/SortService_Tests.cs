@@ -1,6 +1,4 @@
-﻿using System.Dynamic;
-
-namespace LiteDB.Tests.Internals.Engine;
+﻿namespace LiteDB.Tests.Internals.Engine;
 
 public class SortService_Tests
 {

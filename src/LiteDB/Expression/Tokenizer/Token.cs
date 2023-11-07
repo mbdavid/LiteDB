@@ -33,6 +33,7 @@ internal struct Token : IIsEmpty
             TokenType.Double => value.Length,
             TokenType.Whitespace => length,
 
+            TokenType.Arrow => 2, // =>
             TokenType.NotEquals => 2, // !=
             TokenType.GreaterOrEquals => 2, // >=
             TokenType.LessOrEquals => 2, // <=
@@ -60,7 +61,7 @@ internal struct Token : IIsEmpty
             TokenType.Comma => ",",
             TokenType.Colon => ":",
             TokenType.SemiColon => ";",
-            TokenType.Arrow => "=",
+            TokenType.Arrow => "=>",
             TokenType.At => "@",
             TokenType.Hashtag => "#",
             TokenType.Til => "~",
