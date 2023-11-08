@@ -10,10 +10,13 @@ This branch is current development of new version of LiteDB v6.
 
 # Needs implementation
 
-# Engine
+## Engine
 - Implement RandomAccess and SafeHandle
 - Return to async calls in managed memory
 - CRC32
+
+## Know Bugs
+- The problem of COUNT($.phones)
 
 ## Operations
 - Update
@@ -30,6 +33,24 @@ This branch is current development of new version of LiteDB v6.
 - IntoPipe
 - Distinct Pipe
 - Virtual collections: $master, $file_json, ...
+
+## Query Join
+- DataStore Alias to support SELECT p._id FROM products p
+- JoinPipeEnumerator (DataStore, PathExpression, Inner/Left)
+- Link over _id only
+```SQL
+SELECT c, p
+  FROM customers c
+ INNER JOIN products p ON c.id_customer (always use products PK to link)
+```
+- Convert PipeValue in List<(DataStore, PipeValue)> in enumerators
+- JoinDataStore - use only _id as key
+- JoinPipeEnumerator keeps IndexNode and navigate in "continue mode"
+
+## SubQuery
+- Used in FROM (....)
+- Used in SELECT (...) AS col
+- Used in WHERE _id IN (...)
 
 ## SharedMode
 

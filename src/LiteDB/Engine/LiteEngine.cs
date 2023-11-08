@@ -33,7 +33,7 @@ public partial class LiteEngine : ILiteEngine
     /// <summary>
     /// Initialize LiteEngine using all engine settings
     /// </summary>
-    public LiteEngine(EngineSettings settings)
+    public LiteEngine(IEngineSettings settings)
         : this  (new ServicesFactory(settings))
     {
     }

@@ -1,4 +1,4 @@
-﻿namespace LiteDB.Tests.Serialize;
+﻿namespace Serialize;
 
 public class JsonTokenizer_Tests
 {

@@ -20,11 +20,20 @@ public static class BsonDataReaderExtensions
         }
     }
 
-    //TODO: tenho que consumier o async enumerable pra gerar isso
-    //public static ValueTask<BsonValue[]> ToArrayAsync(this IBsonDataReader reader) => ToEnumerableAsync(reader);
-    //
-    //public static IList<BsonValue> ToListAsync(this IBsonDataReader reader) => ToEnumerable(reader).ToList();
-    //
+    public static async ValueTask<IList<BsonValue>> ToListAsync(this IDataReader reader)
+    {
+        var result = new List<BsonValue>();
+
+        while (await reader.ReadAsync())
+        {
+            result.Add(reader.Current);
+        }
+
+        return result;
+    }
+
+    public static async ValueTask<BsonValue[]> ToArrayAsync(this IDataReader reader) => (await ToListAsync(reader)).ToArray();
+
     //public static BsonValue FirstAsync(this IBsonDataReader reader) => ToEnumerable(reader).First();
     //
     //public static BsonValue FirstOrDefaultAsync(this IBsonDataReader reader) => ToEnumerable(reader).FirstOrDefault();

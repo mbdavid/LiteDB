@@ -9,6 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\LiteDB.Tests\Utils\Faker.cs" Link="Tests\Faker.cs" />
+    <Compile Include="..\LiteDB.Tests\Utils\Faker.Names.cs" Link="Tests\Faker.Names.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj" />
 	<PackageReference Include="Bogus" Version="34.0.2" />
 	<PackageReference Include="System.Runtime" Version="4.3.1" />

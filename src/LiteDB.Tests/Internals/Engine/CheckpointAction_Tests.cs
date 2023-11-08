@@ -1,4 +1,4 @@
-﻿namespace LiteDB.Tests.Internals.Engine;
+﻿namespace Internals;
 
 public class CheckpointAction_Tests
 {

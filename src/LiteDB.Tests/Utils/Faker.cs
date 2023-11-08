@@ -36,6 +36,11 @@
         return _random.Next(start, end);
     }
 
+    public static double NextDouble(double start, double end)
+    {
+        return start + (_random.NextDouble() * (end - start));
+    }
+
     // https://stackoverflow.com/a/13095144/3286260
     public static long NextLong(this Random random, long min, long max)
     {
@@ -64,4 +69,29 @@
     {
         return random.NextSingle() >= 0.5;
     }
+
+    public static string Departments() => _departments[_random.Next(0, _departments.Length - 1)];
+
+    internal static BsonValue Created()
+    {
+        var oldest = DateTime.Today.AddYears(-5).Ticks;
+        var now = DateTime.Now.Ticks;
+        var range = now - oldest;
+
+        var date = new DateTime(oldest + _random.NextLong(0, range));
+
+        return date;
+    }
+
+    public static string Language() => _departments[_random.Next(0, _departments.Length - 1)];
+
+    public static string Department() => _departments[_random.Next(0, _departments.Length - 1)];
+
+    public static string Country() => _countries[_random.Next(0, _countries.Length - 1)];
+
+    public static string Job() => _jobTitles[_random.Next(0, _jobTitles.Length - 1)];
+
+    internal static string SkuNumber() =>
+        string.Join("", Enumerable.Range(1, 8).Select(x => _skuDigits[_random.Next(0, _skuDigits.Length - 1)]));
+
 }

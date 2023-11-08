@@ -1,6 +1,6 @@
 ﻿using static LiteDB.BsonExpression;
 
-namespace LiteDB.Tests.Expressions;
+namespace Expressions;
 
 
 public class BsonExpressions_Parser_Tests

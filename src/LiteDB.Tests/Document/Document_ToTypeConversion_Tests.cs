@@ -1,4 +1,4 @@
-﻿namespace LiteDB.Tests.Document;
+﻿namespace Document;
 
 public class Document_ToTypeConversion_Tests
 {

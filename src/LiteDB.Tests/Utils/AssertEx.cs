@@ -1,6 +1,4 @@
-﻿namespace LiteDB.Tests;
-
-/// <summary>
+﻿/// <summary>
 /// Extension and additional methods for debug
 /// </summary>
 public static class AssertEx
