@@ -60,7 +60,7 @@ internal partial class SqlParser
 
     /// <summary>
     /// select-named-field::
-    ///   expr_single [ [ _ "AS"] _ (word | json_string) ]
+    ///   expr_single [ [ _ "AS"] _ ( ("#" | word ) | json_string) ]
     /// </summary>
     private SelectField ParseSelectNamedField()
     {
@@ -70,11 +70,16 @@ internal partial class SqlParser
         string name;
         var hidden = false;
 
-        if (ahead.Value.Eq("AS"))
-        {
-            _tokenizer.ReadToken(); // read AS
+        var isNamed = (ahead.IsWord || ahead.IsString || ahead.IsHashtag) && !ahead.Match("FROM");
 
+        if (isNamed) 
+        {
             var token = _tokenizer.ReadToken();
+
+            if (token.Match("AS"))
+            {
+                token = _tokenizer.ReadToken();
+            }
 
             if (token.Type == TokenType.Hashtag) // check for # hidden column
             {
