@@ -48,7 +48,8 @@ internal partial class SqlParser
         if (ahead.Match("DELETE")) return this.ParseDelete();
 
         //if (ahead.Match("UPDATE")) return this.ParseUpdate();
-        //if (ahead.Match("RENAME")) return this.ParseRename();
+
+        if (ahead.Match("RENAME")) return this.ParseRenameCollection();
         //
         if (ahead.Match("CHECKPOINT")) return this.ParseCheckpoint();
         //if (ahead.Match("REBUILD")) return this.ParseRebuild();

@@ -28,17 +28,14 @@ internal class UserCollectionStore : IDocumentStore
             throw ERR($"Collection {_name} does not exist");
         }
     }
+    public byte GetColID() => _collection!.ColID;
 
-    public IReadOnlyList<IndexDocument> GetIndexes() => 
-        _collection!.Indexes;
+    public CollectionDocument GetCollection() => _collection!;
+
+    public IReadOnlyList<IndexDocument> GetIndexes() => _collection!.Indexes;
 
     public (IDataService dataService, IIndexService indexService) GetServices(IServicesFactory factory, ITransaction transaction) =>
         (factory.CreateDataService(transaction), factory.CreateIndexService(transaction));
-
-    public IPipeEnumerator GetPipeEnumerator(BsonExpression expression)
-    {
-        throw new NotImplementedException();
-    }
 
     public void Dispose()
     {

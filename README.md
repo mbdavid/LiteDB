@@ -3,8 +3,10 @@
 This branch is current development of new version of LiteDB v6.
 
 # Next steps
+- Implement RandomAccess and SafeHandle
+
 - SQL Parser
-    - rename collection
+    - pragma (get/set)
 - Unit tests for query
 
 
@@ -13,62 +15,27 @@ This branch is current development of new version of LiteDB v6.
 ## Engine
 - Implement RandomAccess and SafeHandle
 - Return to async calls in managed memory
-- CRC32
-
-## Know Bugs
-- The problem of COUNT($.phones) (static type vs dynamic type)
-  - I don't know $.phones type in compile time to know if run over document or aggregate
-- Idea 1) Use SELECT ALL when run over collection
-```SQL
-SELECT COUNT($.phones) FROM customers -- returns phones count per document
-vs
-SELECT ALL COUNT($.phones) FROM customers -- return single count result over all collection documents
-
-SELECT COUNT($) FROM customers
-vs
-SELECT ALL COUNT($) FROM customers
-```
 
 ## Operations
 - Update
-- DropIndex
 - Batch
 - Rebuild
-- Vaccum?
-
-## Master
-- Review
+- Vaccum? (maybe later)
 
 ## Query Engine
-- Create IQuery and slipt query in Query GroupByQuery
+- Create IQuery and split Query in Query/GroupByQuery
 - IntoPipe
 - Distinct Pipe
-- Virtual collections: $master, $file_json, ...
-
-## Query Join
-- DataStore Alias to support SELECT p._id FROM products p
-- JoinPipeEnumerator (DataStore, PathExpression, Inner/Left)
-- Link over _id only
-```SQL
-SELECT c, p
-  FROM customers c
- INNER JOIN products p ON c.id_customer (always use products PK to link)
-```
-- Convert PipeValue in List<(DataStore, PipeValue)> in enumerators
-- JoinDataStore - use only _id as key
-- JoinPipeEnumerator keeps IndexNode and navigate in "continue mode"
-
-## SubQuery
-- Used in FROM (....)
-- Used in SELECT (...) AS col
-- Used in WHERE _id IN (...)
-
-## SharedMode
+- Virtual collections (IDocumentStore): $master, $file_json, ...
 
 ## Services
+- CRC32
 - ErrorHandling review
 - try/catch/deallocate
 - Auto-Rebuid, Flag error
+
+## Exception
+- Normalize all exception using ERR_xxx
 
 ## BsonExpressions
 - MakeDocument spread: { ...$ }
@@ -86,8 +53,7 @@ SELECT c, p
 
 ## LiteDB.TestSuite
 
-## Exception
-- Normalize all exception using ERR_xxx
+## SharedMode
 
 ## Performance
 - Test use of `ref` in pipe context on movenext
@@ -107,3 +73,24 @@ SELECT c, p
 
 ## Documentation
 - Define docs structure using a menu tree navigation and a single template
+
+
+# Future
+
+## Query Join
+- DataStore Alias to support SELECT p._id FROM products p
+- JoinPipeEnumerator (DataStore, PathExpression, Inner/Left)
+- Link over _id only
+```SQL
+SELECT c, p
+  FROM customers c
+ INNER JOIN products p ON c.id_customer (always use products PK to link)
+```
+- Convert PipeValue in List<(DataStore, PipeValue)> in enumerators
+- JoinDataStore - use only _id as key
+- JoinPipeEnumerator keeps IndexNode and navigate in "continue mode"
+
+## SubQuery
+- Used in FROM (....)
+- Used in SELECT (...) AS col
+- Used in WHERE _id IN (...)

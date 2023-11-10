@@ -3,6 +3,7 @@
 internal interface IDocumentStore : IDisposable
 {
     byte ColID { get; }
+
     string Name { get; }
 
     /// <summary>
@@ -10,11 +11,11 @@ internal interface IDocumentStore : IDisposable
     /// </summary>
     void Initialize(IMasterService masterService);
 
+    CollectionDocument GetCollection();
+
     IReadOnlyList<IndexDocument> GetIndexes();
 
     (IDataService dataService, IIndexService indexService) GetServices(IServicesFactory factory, ITransaction transaction);
-
-    IPipeEnumerator GetPipeEnumerator(BsonExpression expression);
 
     // Dipose will be run in statement dispose
 }

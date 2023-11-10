@@ -5,7 +5,7 @@ internal class DropIndexStatement : IEngineStatement
     private readonly IDocumentStore _store;
     private readonly string _indexName;
 
-    public EngineStatementType StatementType => EngineStatementType.DropCollection;
+    public EngineStatementType StatementType => EngineStatementType.DropIndex;
 
     public DropIndexStatement(IDocumentStore store, string indexName)
     {
