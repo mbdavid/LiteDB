@@ -334,20 +334,29 @@ unsafe internal class IndexService : IIndexService
         // loop over all pk index nodes
         while (pkRowID.IsEmpty == false)
         {
-            var node = this.GetNode(pkRowID);
+            var pkNode = this.GetNode(pkRowID);
 
-            while (node.NextNodeID.IsEmpty == false)
+            var last = pkNode;
+            var nextNodeID = last.NextNodeID;
+
+            while (nextNodeID.IsEmpty == false)
             {
-                var last = node;
-
-                node = this.GetNode(node.NextNodeID);
+                var node = this.GetNode(nextNodeID);
 
                 // skip if not same slot
-                if (node.Node->Slot != slot) continue;
+                if (node.Node->Slot != slot)
+                {
+                    nextNodeID = node.NextNodeID;
+                    last = node;
+                    continue;
+                }
 
                 // fix last index node pointer
                 last.NextNodeID = node.NextNodeID;
                 last.Page->IsDirty = true;
+
+                // keep nextNodeID 
+                nextNodeID = node.NextNodeID;
 
                 // delete node
                 PageMemory.DeleteSegment(node.Page, node.IndexNodeID.Index, out var pageValue);
@@ -358,7 +367,7 @@ unsafe internal class IndexService : IIndexService
                 }
             }
 
-            pkRowID = node[0]->GetNext(Query.Ascending);
+            pkRowID = pkNode[0]->GetNext(Query.Ascending);
         }
     }
 }

@@ -1,21 +1,22 @@
-﻿internal class TempFile : IDisposable
+﻿internal class TempDB : LiteEngine, IDisposable
 {
     private readonly string _filename;
 
-    public TempFile()
+    public TempDB(IEngineSettings settings)
+        : base(settings)
     {
-        _filename = Path.Combine(Path.GetTempPath(), "litedb-" + (new Random().NextInt64(100000, 999999)) + ".db");
+        _filename = settings.Filename;
     }
 
-    public async ValueTask<ILiteEngine> CreateOrderDBAsync(OrderSet dataset)
+    public static async ValueTask<ILiteEngine> CreateOrderDBAsync(OrderSet dataset)
     {
         var settings = new EngineSettings
         {
-            Filename = _filename,
+            Filename = Path.Combine(Path.GetTempPath(), "litedb-" + (new Random().NextInt64(100000, 999999)) + ".db"),
             Collation = Collation.Default
         };
 
-        var db = new LiteEngine(settings);
+        var db = new TempDB(settings);
 
         await db.OpenAsync();
 
@@ -28,8 +29,10 @@
         return db;
     }
 
-    public void Dispose()
+    public new void Dispose()
     {
+        base.Dispose();
+
         try
         {
             File.Delete(_filename);

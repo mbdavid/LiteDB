@@ -1,6 +1,4 @@
-﻿using NSubstitute;
-
-namespace Query;
+﻿namespace Query;
 
 public class Query_Simple_Tests
 {
@@ -8,8 +6,7 @@ public class Query_Simple_Tests
     public async void Query_Over_Belgium()
     {
         var dataset = new OrderSet(1_000);
-        using var temp = new TempFile();
-        using var db = await temp.CreateOrderDBAsync(dataset);
+        using var db = await TempDB.CreateOrderDBAsync(dataset);
 
         var resultSet = dataset.Customers
             .Where(x => x["country"] == "Belgium" && x["age"] > 35)

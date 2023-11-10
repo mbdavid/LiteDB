@@ -94,8 +94,8 @@ internal class CreateIndexStatement : IEngineStatement
                 // get all keys for this index
                 var keys = _expression.GetIndexKeys(docResult.Value.AsDocument, collation);
 
-                var first = IndexNodeResult.Empty;
-                var last = IndexNodeResult.Empty;
+                var pkNextNodeID = pkIndexNode.NextNodeID;
+                var last = pkIndexNode;
 
                 foreach (var key in keys)
                 {
@@ -107,22 +107,12 @@ internal class CreateIndexStatement : IEngineStatement
                         pkIndexNode.Reload();
                     }
 
-                    // keep first node to add in NextNode list (after pk)
-                    if (first.IsEmpty) first = node;
-
                     last = node;
                     counter++;
                 }
 
-                ENSURE(first.IsEmpty == false);
-                //pkIndexNode.Reload();
-
-                pkIndexNode.NextNodeID = first.IndexNodeID;
-
-                unsafe
-                {
-                    pkIndexNode.Page->IsDirty = true;
-                }
+                // page already marked as Dirty on add node
+                last.NextNodeID = pkNextNodeID;
 
                 // do a safepoint after insert each document
                 if (monitorService.Safepoint(transaction))
