@@ -33,6 +33,9 @@ var doc = new BsonDocument
 
 // RUN 
 
+await db.RunAsync($"Create Collection 'col1'", "PRAGMA USER_VERSION = 25");
+
+
 await db.RunAsync($"Create Collection 'col1'", "CREATE COLLECTION col1");
 
 await db.RunAsync($"Insert col1 {insert1.Length:n0}", "INSERT INTO col1 VALUES @0", insert1);

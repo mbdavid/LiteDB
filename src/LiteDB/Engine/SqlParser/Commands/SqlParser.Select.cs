@@ -49,11 +49,11 @@ internal partial class SqlParser
 
         if (from.Type == TokenType.EOF || from.Type == TokenType.SemiColon)
         {
-            throw new NotImplementedException();
+            throw ERR_UNEXPECTED_TOKEN(from);
         }
         else if (from.Match("INTO"))
         {
-            if (!this.TryParseDocumentStore(out var intoStore)) throw ERR_UNEXPECTED_TOKEN(_tokenizer.Current, "document-store::");
+            var intoStore = this.ParseDocumentStore();
 
             this.TryParseWithAutoId(out var intoAutoId);
 
@@ -67,7 +67,7 @@ internal partial class SqlParser
         }
 
         // read FROM <name>
-        if (!this.TryParseDocumentStore(out var fromStore)) throw ERR_UNEXPECTED_TOKEN(_tokenizer.Current, "document-store::");
+        var fromStore = this.ParseDocumentStore();
 
         var ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 

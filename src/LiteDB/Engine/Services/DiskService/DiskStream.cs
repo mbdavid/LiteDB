@@ -204,9 +204,9 @@ unsafe internal class DiskStream : IDiskStream
 
         using var buffer = SharedArray<byte>.Rent(PRAGMA_SIZE);
 
+        pragmas.Write(buffer.AsSpan());
 
-
-//        _stream;
+        _stream.Write(buffer.AsSpan());
 
         _stream.Flush();
     }

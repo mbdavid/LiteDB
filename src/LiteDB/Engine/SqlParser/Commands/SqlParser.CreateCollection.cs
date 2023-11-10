@@ -13,8 +13,8 @@ internal partial class SqlParser
     {
         _tokenizer.ReadToken().Expect("COLLECTION"); // CREATE token already readed
 
-        // create collection name
-        if (!this.TryParseDocumentStore(out var store)) throw ERR_UNEXPECTED_TOKEN(_tokenizer.Current, "{document_store}");
+        // parse collection name
+        var store = this.ParseDocumentStore();
 
         // expect end of statement
         _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);

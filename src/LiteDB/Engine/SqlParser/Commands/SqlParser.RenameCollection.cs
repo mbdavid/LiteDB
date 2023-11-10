@@ -11,11 +11,11 @@ internal partial class SqlParser
     /// </summary>
     private IEngineStatement ParseRenameCollection()
     {
-        _tokenizer.ReadToken().Expect("RENAME");
+        _tokenizer.ReadToken(); // read RENAME
         _tokenizer.ReadToken().Expect("COLLECTION");
 
         // get current collection name
-        if (!this.TryParseDocumentStore(out var store)) throw ERR_UNEXPECTED_TOKEN(_tokenizer.Current, "{document_store}");
+        var store = this.ParseDocumentStore();
 
         _tokenizer.ReadToken().Expect("TO");
 

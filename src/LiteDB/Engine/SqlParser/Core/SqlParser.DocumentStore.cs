@@ -13,7 +13,7 @@ internal partial class SqlParser
     /// virtual_collection::
     ///  "$" word [ collection_parameters ] 
     /// </summary>
-    private bool TryParseDocumentStore(out IDocumentStore store)
+    private IDocumentStore ParseDocumentStore()
     {
         var ahead = _tokenizer.LookAhead();
 
@@ -21,9 +21,9 @@ internal partial class SqlParser
         {
             var token = _tokenizer.ReadToken(); // read "collection_name";
 
-            store = new UserCollectionStore(token.Value);
+            var store = new UserCollectionStore(token.Value);
 
-            return true;
+            return store;
         }
         else if (ahead.Type != TokenType.Dollar)
         {
@@ -42,8 +42,6 @@ internal partial class SqlParser
             //return true;
         }
 
-        store = default;
-        return false;
-
+        throw ERR_UNEXPECTED_TOKEN(_tokenizer.Current, "{document_store}");
     }
 }

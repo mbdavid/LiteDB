@@ -5,6 +5,10 @@ namespace LiteDB.Engine;
 /// </summary>
 internal class Pragmas
 {
+    public const string USER_VERSION = nameof(USER_VERSION);
+    public const string LIMIT_SIZE = nameof(LIMIT_SIZE);
+    public const string CHECKPOINT = nameof(CHECKPOINT);
+
     #region Buffer Field Positions
 
     public const int P_IS_DIRTY = 0;      // 00-00 [byte]
@@ -36,6 +40,23 @@ internal class Pragmas
     /// Checkpoint = 0 means there's no auto-checkpoint nor shutdown checkpoint
     /// </summary>
     public int Checkpoint = CHECKPOINT_SIZE;
+
+    public int Get(string key) => key.ToUpper() switch
+    {
+        USER_VERSION => this.UserVersion,
+        LIMIT_SIZE => this.LimitSizeID,
+        CHECKPOINT => this.Checkpoint,
+        _ => 0
+    };
+
+    public void Set(string key, int value)
+    {
+        if (key.Eq(USER_VERSION)) this.UserVersion = value;
+        else if (key.Eq(LIMIT_SIZE)) this.LimitSizeID = value;
+        else if (key.Eq(CHECKPOINT)) this.Checkpoint = value;
+        else
+            throw ERR($"Invalid {key} pragma name");
+    }
 
     /// <summary>
     /// Create empty version of pragma variables

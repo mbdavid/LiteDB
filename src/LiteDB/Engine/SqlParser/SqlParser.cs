@@ -19,6 +19,15 @@ internal partial class SqlParser
     {
         var ahead = _tokenizer.LookAhead().Expect(TokenType.Word);
 
+        if (ahead.Match("SELECT") || ahead.Match("EXPLAIN")) return this.ParseSelect();
+
+        if (ahead.Match("INSERT")) return this.ParseInsert();
+
+        //if (ahead.Match("UPDATE")) return this.ParseUpdate();
+
+        if (ahead.Match("DELETE")) return this.ParseDelete();
+
+
         if (ahead.Match("CREATE"))
         {
             _tokenizer.ReadToken(); // read CREATE
@@ -41,20 +50,13 @@ internal partial class SqlParser
             throw ERR_UNEXPECTED_TOKEN(ahead);
         }
 
-        if (ahead.Match("SELECT") || ahead.Match("EXPLAIN")) return this.ParseSelect();
-
-        if (ahead.Match("INSERT")) return this.ParseInsert();
-
-        if (ahead.Match("DELETE")) return this.ParseDelete();
-
-        //if (ahead.Match("UPDATE")) return this.ParseUpdate();
-
         if (ahead.Match("RENAME")) return this.ParseRenameCollection();
         //
         if (ahead.Match("CHECKPOINT")) return this.ParseCheckpoint();
-        //if (ahead.Match("REBUILD")) return this.ParseRebuild();
 
-        //if (ahead.Value.Eq("PRAGMA")) return this.ParsePragma();
+        if (ahead.Value.Eq("PRAGMA")) return this.ParsePragma();
+
+        //if (ahead.Match("REBUILD")) return this.ParseRebuild();
 
         throw ERR_UNEXPECTED_TOKEN(ahead);
     }

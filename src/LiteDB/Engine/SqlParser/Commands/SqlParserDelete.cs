@@ -14,7 +14,7 @@ internal partial class SqlParser
     {
         _tokenizer.ReadToken(); // read DELETE
 
-        if (!this.TryParseDocumentStore(out var store)) throw ERR_UNEXPECTED_TOKEN(_tokenizer.Current, "{document_store}");
+        var store = this.ParseDocumentStore();
 
         var ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 

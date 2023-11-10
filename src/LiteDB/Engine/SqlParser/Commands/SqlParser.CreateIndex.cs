@@ -28,7 +28,7 @@ internal partial class SqlParser
         _tokenizer.ReadToken().Expect("ON");
 
         // get collection name
-        if (!this.TryParseDocumentStore(out var store)) throw ERR_UNEXPECTED_TOKEN(_tokenizer.Current, "{document_store}");
+        var store = this.ParseDocumentStore();
 
         // read (
         _tokenizer.ReadToken().Expect(TokenType.OpenParenthesis);

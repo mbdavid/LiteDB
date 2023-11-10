@@ -3,11 +3,10 @@
 This branch is current development of new version of LiteDB v6.
 
 # Next steps
-- Implement RandomAccess and SafeHandle
-
 - SQL Parser
     - pragma (get/set)
-- Unit tests for query
+
+- Implement RandomAccess and SafeHandle
 
 
 # Needs implementation
@@ -42,6 +41,11 @@ This branch is current development of new version of LiteDB v6.
 - MakeArray spread: [ ...phones ]
 - CoalesceExpression:  a ?? 5 
 - ANY: array ANY >= 8 // retorna TRUE se algum item de left (um array) satisfizer a operação com right (single::)
+
+## Tokenizer
+- Write a single tokenizer
+   
+
 
 ## BsonValue
 - DateTimeOffset

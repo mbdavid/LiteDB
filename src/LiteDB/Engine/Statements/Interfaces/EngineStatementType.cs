@@ -19,6 +19,9 @@ internal enum EngineStatementType
     CreateIndex,
     DropIndex,
 
+    // pragmas
+    Pragma,
+
     // tools
     Checkpoint,
     Rebuild
