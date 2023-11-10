@@ -16,7 +16,18 @@ This branch is current development of new version of LiteDB v6.
 - CRC32
 
 ## Know Bugs
-- The problem of COUNT($.phones)
+- The problem of COUNT($.phones) (static type vs dynamic type)
+  - I don't know $.phones type in compile time to know if run over document or aggregate
+- Idea 1) Use SELECT ALL when run over collection
+```SQL
+SELECT COUNT($.phones) FROM customers -- returns phones count per document
+vs
+SELECT ALL COUNT($.phones) FROM customers -- return single count result over all collection documents
+
+SELECT COUNT($) FROM customers
+vs
+SELECT ALL COUNT($) FROM customers
+```
 
 ## Operations
 - Update
