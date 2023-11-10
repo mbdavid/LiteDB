@@ -45,7 +45,6 @@ internal class BsonString : BsonValue
         _ => new BsonString(value)
     };
 
-
     #endregion
 
     #region Convert Types

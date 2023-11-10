@@ -48,8 +48,8 @@ internal class MasterMapper : IMasterMapper
                     ["name"] = i.Name,
                     ["expr"] = i.Expression.ToString()!,
                     ["unique"] = i.Unique,
-                    ["head"] = BsonArray.FromArray(new BsonValue[] { i.HeadIndexNodeID.PageID, i.HeadIndexNodeID.Index }),
-                    ["tail"] = BsonArray.FromArray(new BsonValue[] { i.TailIndexNodeID.PageID, i.TailIndexNodeID.Index }),
+                    ["head"] = new BsonArray(new BsonValue[] { i.HeadIndexNodeID.PageID, i.HeadIndexNodeID.Index }),
+                    ["tail"] = new BsonArray(new BsonValue[] { i.TailIndexNodeID.PageID, i.TailIndexNodeID.Index }),
                 }))
             }))
         };

@@ -1,6 +1,18 @@
-﻿// SETUP //////////////////
+﻿
+IEnumerable<BsonValue> iter()
+{
+    yield return 1;
+    yield return 2;
+}
+
+var arrList = new BsonArray(new List<BsonValue>() { 1, 2, 3 });
+var arrArray = new BsonArray(new BsonValue[] { 1, 2, 3 });
+var arrEnum = new BsonArray(iter());
+
+
+// SETUP //////////////////
 const string VER = "v6";
-var INSERT_1 = new Range(1, 100_000);
+var INSERT_1 = new Range(1, 100);
 var DELETE_1 = new Range(1, 40_000);
 var INSERT_2 = new Range(1, 30_000);
 ////////////////////////

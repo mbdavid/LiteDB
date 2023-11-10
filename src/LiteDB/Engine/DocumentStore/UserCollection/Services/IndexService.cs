@@ -109,16 +109,13 @@ unsafe internal class IndexService : IIndexService
                 var rightNode = this.GetNode(right);
 
                 // read next node to compare
-                //***var diff = rightNode.Node.Key.CompareTo(key, _collation);
                 var diff = IndexKey.Compare(rightNode.Key, key, _collation);
 
-                //***if unique and diff == 0, throw index exception (must rollback transaction - others nodes can be dirty)
                 if (diff == 0 && index.Unique) throw ERR("IndexDuplicateKey(index.Name, key)");
 
                 if (diff == 1) break; // stop going right
 
                 leftNode = rightNode;
-                //***right = rightNode.Node.Next[currentLevel];
                 right = rightNode[currentLevel]->NextID;
             }
 
@@ -128,8 +125,6 @@ unsafe internal class IndexService : IIndexService
                 // node: new inserted node
                 // next: right node from prev (where left is pointing)
 
-                //***var prev = leftNode.Node.IndexNodeID;
-                //***var next = leftNode.Node.Next[currentLevel];
                 var prev = leftNode.IndexNodeID;
                 var next = leftNode[currentLevel]->NextID;
 
@@ -137,21 +132,15 @@ unsafe internal class IndexService : IIndexService
                 if (next.IsEmpty) next = index.TailIndexNodeID;
 
                 // set new node pointer links with current level sibling
-                //***node.SetNext(page, currentLevel, next);
-                //***node.SetPrev(page, currentLevel, prev);
                 node[currentLevel]->NextID = next;
                 node[currentLevel]->PrevID = prev;
 
                 // fix sibling pointer to new node
-                //***leftNode.Node.SetNext(leftNode.Page, currentLevel, node.IndexNodeID);
                 leftNode[currentLevel]->NextID = node.IndexNodeID;
                 leftNode.Page->IsDirty = true;
 
-                //***right = node.Next[currentLevel];
                 right = node[currentLevel]->NextID;
 
-                //***var rightNode = await this.GetNodeAsync(right);
-                //***rightNode.Node.SetPrev(rightNode.Page, currentLevel, node.IndexNodeID);
                 var rightNode = this.GetNode(right);
 
                 // mark right page as dirty (after change PrevID)
@@ -165,7 +154,6 @@ unsafe internal class IndexService : IIndexService
         if (!last.IsEmpty)
         {
             // set last node to link with current node
-            //***last.Node.SetNextNodeID(last.Page, node.IndexNodeID);
             last.Node->NextNodeID = node.IndexNodeID;
             last.Page->IsDirty = true;
         }
@@ -222,14 +210,12 @@ unsafe internal class IndexService : IIndexService
 
         for (var level = INDEX_MAX_LEVELS - 1; level >= 0; level--)
         {
-            //***var right = leftNode.Node.GetNextPrev(level, order);
             var right = leftNode[level]->GetNext(order);
 
             while (right.IsEmpty == false)
             {
                 var rightNode = this.GetNode(right);
 
-                //var diff = rightNode.Node.Key.CompareTo(key, _collation);
                 var diff = IndexKey.Compare(rightNode.Key, key, _collation);
 
                 if (diff == order && (level > 0 || !sibling)) break; // go down one level
@@ -237,7 +223,6 @@ unsafe internal class IndexService : IIndexService
                 if (diff == order && level == 0 && sibling)
                 {
                     // is head/tail?
-                    //***return (rightNode.Node.Key.IsMinValue || rightNode.Node.Key.IsMaxValue) ? __IndexNodeResult.Empty : rightNode;
                     return (rightNode.Key->IsMinValue || rightNode.Key->IsMaxValue) ? IndexNodeResult.Empty : rightNode;
                 }
 
@@ -248,7 +233,6 @@ unsafe internal class IndexService : IIndexService
                 }
 
                 leftNode = rightNode;
-                //***right = rightNode.Node.GetNextPrev(level, order);
                 right = rightNode[level]->GetNext(order);
             }
         }

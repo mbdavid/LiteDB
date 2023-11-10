@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LiteDB;
+﻿namespace LiteDB;
 
 /// <summary>
 /// Represent a array of BsonValue in Bson object model
@@ -10,18 +8,17 @@ public class BsonArray : BsonValue, IList<BsonValue>
     /// <summary>
     /// Singleton Empty BsonArray (readonly)
     /// </summary>
-    public static readonly BsonArray Empty = FromArray(Array.Empty<BsonArray>());
+    public static readonly BsonArray Empty = Array.Empty<BsonArray>();
 
-    private readonly IList<BsonValue>? _list;
-    private readonly IReadOnlyList<BsonValue>? _array; // readonly list (when came from an array)
+    private readonly IList<BsonValue> _list;
 
     private int _length = -1;
+    private bool _readonly = false;
 
     /// <summary>
     /// Get internal list of items (can be from an IList or IReadOnlyList)
     /// </summary>
-    public IReadOnlyList<BsonValue> Value =>
-        _list is not null ? (IReadOnlyList<BsonValue>)_list : _array!;
+    public IList<BsonValue> Value => _list;
 
     public BsonArray() : this(0)
     {
@@ -30,55 +27,23 @@ public class BsonArray : BsonValue, IList<BsonValue>
     public BsonArray(int capacity)
     {
         _list = new List<BsonValue>(capacity);
-        _array = null;
     }
 
     public BsonArray(IEnumerable<BsonValue> values)
-        : this(0)
     {
-        this.AddRange(values);
+        if (values is IList<BsonValue> list)
+        {
+            _readonly = values.GetType().IsArray;
+
+            _list = list;
+        }
+        else
+        {
+            _readonly = false;
+
+            _list = new List<BsonValue>(values);
+        }
     }
-
-    public BsonArray(IReadOnlyList<BsonValue> array)
-        : this(0)
-    {
-        _list = null;
-        _array = array;
-    }
-
-    #region Static constructors
-
-    public BsonArray(IList<BsonValue>? list, IReadOnlyList<BsonValue>? array)
-    {
-        _list = list;
-        _array = array;
-    }
-
-    /// <summary>
-    /// Create a new instance of BsonArray using an already instance of IList (make BsonArray read/write)
-    /// </summary>
-    public static BsonArray FromList(IList<BsonValue> list)
-        => new(list, null);
-
-    /// <summary>
-    /// Create a new instance of BsonArray using a new instance of List (make BsonArray read/write)
-    /// </summary>
-    public static BsonArray FromList(ICollection<BsonValue> collection)
-        => new(new List<BsonValue>(collection), null);
-
-    /// <summary>
-    /// Create a new instance of BsonArray using an already instance of IReadOnlyList (make BsonArray as readonly)
-    /// </summary>
-    public static BsonArray FromArray(IReadOnlyList<BsonValue> array)
-        => new(null, array);
-
-    /// <summary>
-    /// Create a new instance of BsonArray using an already instance of IReadOnlyList of BsonDocuments (make BsonArray as readonly)
-    /// </summary>
-    public static BsonArray FromArray(IReadOnlyList<BsonDocument> array)
-        => new(null, array);
-
-    #endregion
 
     public override BsonType Type => BsonType.Array;
 
@@ -150,14 +115,22 @@ public class BsonArray : BsonValue, IList<BsonValue>
 
     #endregion
 
+    #region Implicit Ctor
+
+    public static implicit operator BsonArray(List<BsonValue> value) => new ((IList<BsonValue>)value);
+
+    public static implicit operator BsonArray(BsonValue[] value) => new ((IReadOnlyList<BsonValue>)value);
+
+    #endregion
+
     #region IList implementation
 
     public override BsonValue this[int index]
     {
-        get => this.Value[index];
+        get => _list[index];
         set
         {
-            if (_list is null) throw ERR_READONLY_OBJECT();
+            if (_readonly) throw ERR_READONLY_OBJECT();
 
             _list[index] = value;
         }
@@ -165,82 +138,54 @@ public class BsonArray : BsonValue, IList<BsonValue>
 
     public void Add(BsonValue item)
     {
-        if (_list is null) throw ERR_READONLY_OBJECT();
+        if (_readonly) throw ERR_READONLY_OBJECT();
 
         _list.Add(item ?? BsonValue.Null);
     }
 
     public void Clear()
     {
-        if (_list is null) throw ERR_READONLY_OBJECT();
+        if (_readonly) throw ERR_READONLY_OBJECT();
 
         _list.Clear();
     }
 
     public bool Remove(BsonValue item)
     {
-        if (_list is null) throw ERR_READONLY_OBJECT();
+        if (_readonly) throw ERR_READONLY_OBJECT();
 
         return _list.Remove(item ?? BsonValue.Null);
     }
 
     public void RemoveAt(int index)
     {
-        if (_list is null) throw ERR_READONLY_OBJECT();
+        if (_readonly) throw ERR_READONLY_OBJECT();
 
         _list.RemoveAt(index);
     }
 
     public void Insert(int index, BsonValue item)
     {
-        if (_list is null) throw ERR_READONLY_OBJECT();
+        if (_readonly) throw ERR_READONLY_OBJECT();
 
         _list.Insert(index, item ?? BsonValue.Null);
     }
 
     public int Count => this.Value.Count;
 
-    public bool IsReadOnly => _list is null;
+    public bool IsReadOnly => _readonly;
 
-    public int IndexOf(BsonValue item)
-    {
-        if (_list is not null) return _list.IndexOf(item);
+    public int IndexOf(BsonValue item) => _list.IndexOf(item);
 
-        throw new NotImplementedException();
-    }
+    public bool Contains(BsonValue item) =>  _list.Contains(item);
 
-    public bool Contains(BsonValue item)
-    {
-        if (_list is not null) return _list.Contains(item);
+    public bool Contains(BsonValue item, Collation collation) => _list.Contains(item);
 
-        throw new NotImplementedException();
-    }
+    public void CopyTo(BsonValue[] array, int arrayIndex) => _list.CopyTo(array, arrayIndex);
 
-    public bool Contains(BsonValue item, Collation collation)
-    {
-        if (_list is not null)
-        {
-            return _list.Any(x => collation.Compare(x, item ?? BsonValue.Null) == 0);
-        }
+    public IEnumerator<BsonValue> GetEnumerator() => _list.GetEnumerator();
 
-        throw new NotImplementedException();
-    }
-
-    public void CopyTo(BsonValue[] array, int arrayIndex)
-    {
-        if (_list is not null)
-        {
-            _list.CopyTo(array, arrayIndex);
-        }
-        else
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public IEnumerator<BsonValue> GetEnumerator() => this.Value.GetEnumerator();
-
-    IEnumerator IEnumerable.GetEnumerator() => this.Value.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => _list.GetEnumerator();
 
     #endregion
 

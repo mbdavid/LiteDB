@@ -441,7 +441,7 @@ internal partial class BsonExpressionMethods
     {
         if (values.IsArray) return values;
 
-        if (values is BsonDocument doc) return BsonArray.FromList(doc.Values);
+        if (values is BsonDocument doc) return new BsonArray(doc.Values);
 
         return BsonArray.Empty;
     }

@@ -18,6 +18,6 @@ internal class ExplainPlainBuilder
             .Select(x => new BsonString(x))
             .ToArray();
 
-        return BsonArray.FromArray(lines);
+        return new BsonArray(lines);
     }
 }

@@ -48,7 +48,7 @@ public static class StaticUtils
 
     public static Task RunAsync(this ILiteEngine db, string message, string sql, IReadOnlyList<BsonValue> args0)
     {
-        var doc = new BsonDocument { ["0"] = BsonArray.FromArray(args0) };
+        var doc = new BsonDocument { ["0"] = new BsonArray(args0) };
 
         return RunAsync(db, message, sql, doc);
     }

@@ -23,8 +23,8 @@ public class Query_Simple_Tests
             .ToListAsync();
 
         var isEqual = 
-            JsonSerializer.Serialize(BsonArray.FromArray(resultSet)) ==
-            JsonSerializer.Serialize(BsonArray.FromList(resultDB));
+            JsonSerializer.Serialize(new BsonArray(resultSet)) ==
+            JsonSerializer.Serialize(new BsonArray(resultDB));
 
 
 

@@ -23,8 +23,8 @@
         await db.ExecuteAsync("CREATE COLLECTION orders");
         await db.ExecuteAsync("CREATE COLLECTION customers");
 
-        await db.ExecuteAsync("INSERT INTO orders VALUES @0", BsonArray.FromArray(dataset.Orders));
-        await db.ExecuteAsync("INSERT INTO customers VALUES @0", BsonArray.FromArray(dataset.Customers));
+        await db.ExecuteAsync("INSERT INTO orders VALUES @0", new BsonArray(dataset.Orders));
+        await db.ExecuteAsync("INSERT INTO customers VALUES @0", new BsonArray(dataset.Customers));
 
         return db;
     }
