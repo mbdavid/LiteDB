@@ -83,7 +83,7 @@
         return date;
     }
 
-    public static string Language() => _departments[_random.Next(0, _departments.Length - 1)];
+    public static string Language() => _languages[_random.Next(0, _departments.Length - 1)];
 
     public static string Department() => _departments[_random.Next(0, _departments.Length - 1)];
 
