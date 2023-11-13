@@ -8,7 +8,8 @@ internal class SortOperation : ISortOperation
     private readonly Collation _collation;
     private readonly IServicesFactory _factory;
     private readonly OrderBy _orderBy;
-    private Stream? _stream;
+
+    private IDiskStream? _stream;
 
     private readonly int _containerSize;
     private readonly int _containerSizeLimit;
@@ -90,8 +91,8 @@ internal class SortOperation : ISortOperation
         // rent container byffer array
         _containerBuffer ??= ArrayPool<byte>.Shared.Rent(_containerSize);
 
-        // rent a exclusive stream for this sort operation
-        _stream ??= _sortService.RentSortStream();
+        // get a stream impl to read/write on disk
+        _stream ??= _sortService.GetSortStream();
 
         // get a new containerID 
         var containerID = _sortService.GetAvailableContainerID();
@@ -108,9 +109,9 @@ internal class SortOperation : ISortOperation
         remaining.Clear();
 
         // position stream in container disk position
-        _stream.Position = containerID * _containerSize;
+        var position = containerID * _containerSize;
 
-        _stream.Write(_containerBuffer);
+        _stream.WriteBuffer(_containerBuffer, position);
 
         _containers.Add(container);
 
@@ -165,12 +166,6 @@ internal class SortOperation : ISortOperation
 
     public void Dispose()
     {
-        // release rented stream
-        if (_stream is not null)
-        {
-            _sortService.ReleaseSortStream(_stream);
-        }
-
         // dispose all containers (release PageBuffers)
         foreach(var container in _containers)
         {

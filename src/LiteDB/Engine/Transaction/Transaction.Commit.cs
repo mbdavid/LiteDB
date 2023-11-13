@@ -11,8 +11,6 @@ internal partial class Transaction : ITransaction
         using var _pc = PERF_COUNTER(140, nameof(CommitAsync), nameof(Transaction));
 
         this.CommitInternal();
-
-        await _diskService.GetDiskWriter().FlushAsync();
     }
 
     private unsafe void CommitInternal()

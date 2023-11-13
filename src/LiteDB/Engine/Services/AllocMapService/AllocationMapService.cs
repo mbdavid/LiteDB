@@ -30,14 +30,13 @@ unsafe internal class AllocationMapService : IAllocationMapService
         // read all allocation maps pages on disk
         var positionID = AM_FIRST_PAGE_ID;
 
-        var writer = _diskService.GetDiskWriter();
-        var lastPositionID = writer.GetLastFilePositionID();
+        var lastPositionID = _diskService.GetLastFilePositionID();
 
         while (positionID <= lastPositionID)
         {
             var page = _memoryFactory.AllocateNewPage();
 
-            writer.ReadPage(page, positionID);
+            _diskService.ReadPage(page, positionID);
 
             _pages.Add((nint)page);
 
@@ -189,15 +188,13 @@ unsafe internal class AllocationMapService : IAllocationMapService
     /// </summary>
     public void WriteAllChanges()
     {
-        var writer = _diskService.GetDiskWriter();
-
         foreach(var ptr in _pages)
         {
             var page = (PageMemory*)ptr;
 
             if (page->IsDirty)
             {
-                writer.WritePage(page);
+                _diskService.WritePage(page);
             }
         }
     }

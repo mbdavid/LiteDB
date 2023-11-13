@@ -9,7 +9,7 @@ unsafe internal class SortContainer : ISortContainer
 
     private readonly int _containerID;
     private readonly int _order;
-    private readonly Stream _stream;
+    private readonly IDiskStream _stream;
 
     private byte[] _buffer; // 8k page buffe
 
@@ -24,7 +24,7 @@ unsafe internal class SortContainer : ISortContainer
         Collation collation,
         int containerID,
         int order,
-        Stream stream)
+        IDiskStream stream)
     {
         _collation = collation;
         _containerID = containerID;
@@ -122,10 +122,10 @@ unsafe internal class SortContainer : ISortContainer
 
         if (_pageRemaining == 0)
         {
-            // set stream position to page position (increment pageIndex before)
-            _stream.Position = (_containerID * (CONTAINER_SORT_SIZE_IN_PAGES * PAGE_SIZE)) + (++_pageIndex * PAGE_SIZE);
+            // get stream position to page position (increment pageIndex before)
+            var position = (_containerID * (CONTAINER_SORT_SIZE_IN_PAGES * PAGE_SIZE)) + (++_pageIndex * PAGE_SIZE);
 
-            _stream.Read(_buffer, 0, PAGE_SIZE);
+            _stream.ReadBuffer(_buffer, position);
 
             // set position and read remaining page items
             _position = 2; // for int16

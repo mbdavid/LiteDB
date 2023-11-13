@@ -3,17 +3,12 @@
 This branch is current development of new version of LiteDB v6.
 
 # Next steps
-- SQL Parser
-    - pragma (get/set)
-
-- Implement RandomAccess and SafeHandle
-
+- Implement RandomAccess and SafeHandle (thread safe - single DiskStream)
+- Return to async calls in managed memory
 
 # Needs implementation
 
 ## Engine
-- Implement RandomAccess and SafeHandle
-- Return to async calls in managed memory
 
 ## Operations
 - Update
@@ -25,10 +20,11 @@ This branch is current development of new version of LiteDB v6.
 - Create IQuery and split Query in Query/GroupByQuery
 - IntoPipe
 - Distinct Pipe
-- Virtual collections (IDocumentStore): $master, $file_json, ...
+- Virtual collections (IDocumentStore): $master, $pragmas, $file_json, ...
 
 ## Services
 - CRC32
+- AES - XTS Review
 - ErrorHandling review
 - try/catch/deallocate
 - Auto-Rebuid, Flag error

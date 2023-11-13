@@ -26,10 +26,8 @@ internal class PragmaStatement : IEngineStatement
         // update pragma value
         pragmas.Set(_name, _value);
 
-        // get writer and save on disk
-        var writer = diskService.GetDiskWriter();
-
-        writer.WritePragmas(pragmas);
+        // write pragmas on disk
+        diskService.WritePragmas(pragmas);
 
         return 1;
     }

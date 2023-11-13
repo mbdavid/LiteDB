@@ -30,7 +30,7 @@ internal class FileHeader
     private readonly string _headerInfo = "";
     private readonly byte _fileVersion = 0;
 
-    public readonly bool Encrypted = false;
+    public readonly bool IsEncrypted = false;
     public readonly byte[] EncryptionSalt = Array.Empty<byte>();
 
     public readonly Guid InstanceID = Guid.Empty;
@@ -51,7 +51,7 @@ internal class FileHeader
         _headerInfo = buffer[P_HEADER_INFO..(P_HEADER_INFO + HEADER_INFO.Length)].ReadFixedString();
         _fileVersion = buffer[P_FILE_VERSION];
 
-        this.Encrypted = buffer[P_ENCRYPTED] == 1;
+        this.IsEncrypted = buffer[P_ENCRYPTED] == 1;
         this.EncryptionSalt = buffer[P_ENCRYPTION_SALT..(P_ENCRYPTION_SALT + ENCRYPTION_SALT_SIZE)].ToArray();
 
         this.InstanceID = buffer[P_INSTANCE_ID..].ReadGuid();
@@ -78,8 +78,8 @@ internal class FileHeader
         _headerInfo = HEADER_INFO;
         _fileVersion = FILE_VERSION;
 
-        this.Encrypted = settings.Password is not null;
-        this.EncryptionSalt = this.Encrypted ? AesStream.NewSalt() : new byte[ENCRYPTION_SALT_SIZE];
+        this.IsEncrypted = settings.Password is not null;
+        this.EncryptionSalt = this.IsEncrypted ? AesStream.NewSalt() : new byte[ENCRYPTION_SALT_SIZE];
 
         this.InstanceID = Guid.NewGuid();
         this.CreationTime = DateTime.UtcNow;
@@ -97,7 +97,7 @@ internal class FileHeader
         buffer[P_HEADER_INFO..].WriteFixedString(HEADER_INFO);
         buffer[P_FILE_VERSION] = FILE_VERSION;
 
-        buffer[P_ENCRYPTED] = this.Encrypted ? (byte)1 : (byte)0;
+        buffer[P_ENCRYPTED] = this.IsEncrypted ? (byte)1 : (byte)0;
         buffer[P_ENCRYPTION_SALT..].WriteBytes(this.EncryptionSalt);
 
         buffer[P_INSTANCE_ID..].WriteGuid(this.InstanceID);
@@ -120,7 +120,7 @@ internal class FileHeader
 
     public override string ToString()
     {
-        return Dump.Object(new { Encrypted, InstanceID, Collation });
+        return Dump.Object(new { IsEncrypted, InstanceID, Collation });
     }
 
 }

@@ -14,10 +14,9 @@ public class SortService_Tests
         using var stream = new MemoryStream();
         using var factory = Substitute.For<IServicesFactory>();
 
-        var streamFactory = new MemoryStreamFactory(stream);
         var context = new PipeContext();
 
-        using var sut = new SortService(streamFactory, factory);
+        using var sut = new SortService(factory);
 
         factory.CreateSortOperation(Arg.Any<OrderBy>())
             .Returns(c =>
@@ -25,10 +24,10 @@ public class SortService_Tests
                 return new SortOperation(sut, collation, factory, c.Arg<OrderBy>());
             });
 
-        factory.CreateSortContainer(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<Stream>())
+        factory.CreateSortContainer(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<IDiskStream>())
             .Returns(c =>
             {
-                return new SortContainer(collation, c.ArgAt<int>(0), c.ArgAt<int>(1), c.Arg<Stream>());
+                return new SortContainer(collation, c.ArgAt<int>(0), c.ArgAt<int>(1), c.Arg<IDiskStream>());
             });
 
         // create unsorted fake data

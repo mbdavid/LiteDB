@@ -13,8 +13,6 @@ internal partial class Transaction : ITransaction
         using var _pc = PERF_COUNTER(130, nameof(SafepointAsync), nameof(Transaction));
 
         this.SafepointInternal();
-
-        await _diskService.GetDiskWriter().FlushAsync();
     }
 
     private unsafe void SafepointInternal()

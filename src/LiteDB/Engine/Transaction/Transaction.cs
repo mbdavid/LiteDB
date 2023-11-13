@@ -17,9 +17,6 @@ internal partial class Transaction : ITransaction
     // count how many locks this transaction contains
     private int _lockCounter = 0;
 
-    // rented reader stream
-    private IDiskStream? _reader;
-
     // local page cache - contains only data/index pages about this collection
     private readonly Dictionary<uint, nint> _localPages = new();
 
@@ -111,12 +108,6 @@ internal partial class Transaction : ITransaction
 
     public void Dispose()
     {
-        // return reader if used
-        if (_reader is not null)
-        {
-            _diskService.ReturnDiskReader(_reader);
-        }
-
         // Transaction = 0 means is created for first $master read. There are an ExclusiveLock befre
         if (this.TransactionID == 0) return;
 

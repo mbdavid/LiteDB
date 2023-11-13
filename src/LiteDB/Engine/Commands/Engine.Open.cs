@@ -23,8 +23,6 @@ public partial class LiteEngine : ILiteEngine
 
         try
         {
-            var stream = diskService.GetDiskWriter();
-
             // open/create data file and returns file header
             (_factory.FileHeader, _factory.Pragmas) = await diskService.InitializeAsync();
 
@@ -36,7 +34,7 @@ public partial class LiteEngine : ILiteEngine
                 // do a database recovery
                 await recoveryService.DoRecoveryAsync();
 
-                stream.WritePragmas(_factory.Pragmas);
+                diskService.WritePragmas(_factory.Pragmas);
 
                 _factory.Pragmas.IsDirty = false;
             }

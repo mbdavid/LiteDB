@@ -7,23 +7,21 @@
 internal class DiskService : IDiskService
 {
     // dependency injection
-    private readonly IStreamFactory _streamFactory;
-    private readonly IServicesFactory _factory;
-
-    private readonly IDiskStream _writer;
-
-    private readonly ConcurrentQueue<IDiskStream> _readers = new ();
-
-    public IDiskStream GetDiskWriter() => _writer;
+    private readonly IEngineSettings _settings;
+    private readonly IMasterMapper _masterMapper;
+    private readonly IMemoryFactory _memoryFactory;
+    private readonly IDiskStream _stream;
 
     public DiskService(
-        IStreamFactory streamFactory,
-        IServicesFactory factory)
+        IEngineSettings settings,
+        IMasterMapper masterMapper,
+        IMemoryFactory memoryFactory,
+        IDiskStream stream)
     {
-        _streamFactory = streamFactory;
-        _factory = factory;
-
-        _writer = factory.CreateDiskStream();
+        _settings = settings;
+        _masterMapper = masterMapper;
+        _memoryFactory = memoryFactory;
+        _stream = stream;
     }
 
     /// <summary>
@@ -32,64 +30,224 @@ internal class DiskService : IDiskService
     public async ValueTask<(FileHeader, Pragmas)> InitializeAsync()
     {
         // if file not exists, create empty database
-        if (_streamFactory.Exists() == false)
+        if (_stream.Exists() == false)
         {
-            // intialize new database class factory
-            var newFile = _factory.CreateNewDatafile();
-
-            // create first AM page and $master 
-            return await newFile.CreateNewAsync(_writer);
+            return this.CreateNewDatabase();
         }
         else
         {
+            using var buffer = SharedArray<byte>.Rent(PAGE_OFFSET);
+
             // read header page buffer from start of disk
-            return _writer.OpenFile(true);
+            _stream.OpenFile(buffer.AsSpan());
+
+            var header = new FileHeader(buffer.AsSpan(FILE_HEADER_SIZE));
+            var pragmas = new Pragmas(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
+
+            return (header, pragmas);
         }
     }
 
     /// <summary>
-    /// Rent a disk reader from pool. Must return after use
+    /// Create a empty database using user-settings as default values
+    /// Create FileHeader, first AllocationMap page and first $master data page
     /// </summary>
-    public IDiskStream RentDiskReader()
+    private (FileHeader, Pragmas) CreateNewDatabase()
     {
-        if (_readers.TryDequeue(out var reader))
+        using var buffer = SharedArray<byte>.Rent(PAGE_OFFSET);
+
+        // initialize FileHeader with user settings
+        var fileHeader = new FileHeader(_settings);
+        var pragmas = new Pragmas();
+        var bsonWriter = new BsonWriter();
+
+        // update buffer with header/pragmas values 
+        fileHeader.Write(buffer.AsSpan(0, FILE_HEADER_SIZE));
+        pragmas.Write(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
+
+        // write on disk initial header/pragmas
+        _stream.CreateNewFile(buffer.AsSpan());
+
+        unsafe
         {
-            return reader;
+            // create map page
+            var mapPage = _memoryFactory.AllocateNewPage();
+
+            mapPage->PageID = AM_FIRST_PAGE_ID;
+            mapPage->PageType = PageType.AllocationMap;
+
+            // mark first extend to $master and first page as data
+            mapPage->Buffer[0] = MASTER_COL_ID;
+            mapPage->Buffer[1] = 0b0010_0000; // set first 3 bits as "001" - data page
+
+            mapPage->IsDirty = true;
+
+            // create $master page buffer
+            var masterPage = _memoryFactory.AllocateNewPage();
+
+            // initialize page buffer as data page
+            PageMemory.InitializeAsDataPage(masterPage, MASTER_PAGE_ID, MASTER_COL_ID);
+
+            // create new/empty $master document
+            var master = new MasterDocument();
+            var masterDoc = _masterMapper.MapToDocument(master);
+            using var masterBuffer = SharedArray<byte>.Rent(masterDoc.GetBytesCount());
+
+            // serialize $master document 
+            bsonWriter.WriteDocument(masterBuffer.AsSpan(), masterDoc, out _);
+
+            // insert $master document into master page
+            PageMemory.InsertDataBlock(masterPage, masterBuffer.AsSpan(), false, out _, out _);
+
+            // initialize fixed position id 
+            mapPage->PositionID = 0;
+            masterPage->PositionID = 1;
+
+            // write both pages in disk and flush to OS
+            this.WritePage(mapPage);
+            this.WritePage(masterPage);
+
+            // deallocate buffers
+            _memoryFactory.DeallocatePage(mapPage);
+            _memoryFactory.DeallocatePage(masterPage);
         }
 
-        // create new diskstream
-        reader = _factory.CreateDiskStream();
-
-        // and open to read-only (use saved header)
-        reader.OpenFile(false);
-
-        return reader;
+        return (fileHeader, pragmas);
     }
 
     /// <summary>
-    /// Return a rented reader and add to pool
+    /// Calculate, using disk file length, last PositionID. Should considering FILE_HEADER_SIZE and celling pages.
     /// </summary>
-    public void ReturnDiskReader(IDiskStream reader)
+    public uint GetLastFilePositionID()
     {
-        _readers.Enqueue(reader);
+        var fileLength = _stream.GetLength();
+
+        // fileLength must be, at least, FILE_HEADER
+        if (fileLength <= PAGE_OFFSET) throw ERR($"Invalid datafile. Data file is too small (length = {fileLength}).");
+
+        var content = fileLength - PAGE_OFFSET;
+        var celling = content % PAGE_SIZE > 0 ? 1 : 0;
+        var result = content / PAGE_SIZE;
+
+        // if last page was not completed written, add missing bytes to complete
+
+        return (uint)(result + celling - 1);
+    }
+
+    /// <summary>
+    /// Set file length according with last pageID
+    /// </summary>
+    public void SetLength(uint lastPageID)
+    {
+        var fileLength = PAGE_OFFSET +
+            ((lastPageID + 1) * PAGE_SIZE);
+
+        _stream.SetLength(fileLength);
+    }
+
+    /// <summary>
+    /// Read single page from disk using disk position. Load header instance too. This position has FILE_HEADER_SIZE offset
+    /// </summary>
+    public unsafe bool ReadPage(PageMemory* page, uint positionID)
+    {
+        using var _pc = PERF_COUNTER(40, nameof(ReadPage), nameof(DiskService));
+
+        ENSURE(positionID != uint.MaxValue, "PositionID should not be empty");
+
+        // get real position on stream
+        var position = PAGE_OFFSET + (positionID * PAGE_SIZE);
+
+        var span = new Span<byte>(page, PAGE_SIZE);
+
+        // read uniqueID to restore after read from disk
+        var uniqueID = page->UniqueID;
+
+        var read = _stream.ReadBuffer(span, position);
+
+        ENSURE(page->UniqueID == 0);
+
+        // update init value on page (memory)
+        page->UniqueID = uniqueID;
+        page->ShareCounter = NO_CACHE;
+        page->IsDirty = false;
+
+        return read;
+    }
+
+    public unsafe void WritePage(PageMemory* page)
+    {
+        using var _pc = PERF_COUNTER(50, nameof(WritePage), nameof(DiskService));
+
+        ENSURE(page->IsDirty);
+        ENSURE(page->ShareCounter == NO_CACHE);
+        ENSURE(page->PositionID != int.MaxValue);
+
+        // update crc32 page
+        page->Crc32 = 0; // pagePtr->ComputeCrc8();
+
+        // cache and clear before write on disk
+        var uniqueID = page->UniqueID;
+        page->UniqueID = 0;
+
+        // get real position on stream
+        var position = PAGE_OFFSET + (page->PositionID * PAGE_SIZE);
+
+        var span = new Span<byte>(page, PAGE_SIZE);
+
+        _stream.WriteBuffer(span, position);
+
+        // clear isDirty flag before write on disk
+        page->UniqueID = uniqueID;
+        page->ShareCounter = NO_CACHE;
+        page->IsDirty = false;
+    }
+
+    /// <summary>
+    /// Write an empty (full \0) PAGE_SIZE using positionID
+    /// </summary>
+    public void WriteEmptyPage(uint positionID)
+    {
+        // get real position on stream
+        var position = PAGE_OFFSET + (positionID * PAGE_SIZE);
+
+        _stream.WriteBuffer(PAGE_EMPTY, position);
+    }
+
+    /// <summary>
+    /// Write an empty (full \0) PAGE_SIZE using from/to (inclusive)
+    /// </summary>
+    public void WriteEmptyPages(uint fromPositionID, uint toPositionID, CancellationToken token = default)
+    {
+        for (var i = fromPositionID; i <= toPositionID && token.IsCancellationRequested; i++)
+        {
+            // set real position on stream
+            var position = PAGE_OFFSET + (i * PAGE_SIZE);
+
+            _stream.WriteBuffer(PAGE_EMPTY, position);
+        }
+    }
+
+    /// <summary>
+    /// Write pragma values into disk stream
+    /// </summary>
+    public void WritePragmas(Pragmas pragmas)
+    {
+        using var buffer = SharedArray<byte>.Rent(PRAGMA_SIZE);
+
+        pragmas.Write(buffer.AsSpan());
+
+        var position = FILE_HEADER_SIZE; // just after file header
+
+        _stream.WriteBuffer(buffer.AsSpan(), position);
     }
 
     public override string ToString()
     {
-        return Dump.Object(new { _readers });
+        return Dump.Object(new { stream = _stream.ToString() });
     }
 
     public void Dispose()
     {
-        // dispose all open streams
-        _writer.Dispose();
-
-        foreach (var reader in _readers)
-        {
-            reader.Dispose();
-        }
-
-        // empty stream pool
-        _readers.Clear();
+        _stream.Dispose();
     }
 }

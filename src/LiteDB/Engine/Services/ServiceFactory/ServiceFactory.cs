@@ -18,8 +18,6 @@ internal partial class ServicesFactory : IServicesFactory
     public IBsonWriter BsonWriter { get; }
 
     public IMemoryFactory MemoryFactory { get; }
-    public IStreamFactory StreamFactory { get; }
-    public IStreamFactory SortStreamFactory { get; }
     public IDocumentStoreFactory StoreFactory { get; }
 
 
@@ -64,42 +62,34 @@ internal partial class ServicesFactory : IServicesFactory
 
         // settings dependency only
         this.LockService = new LockService(settings.Timeout);
-        this.StreamFactory = settings.Filename is not null ?
-            new FileStreamFactory(settings.Filename, settings.ReadOnly) :
-            new FileStreamFactory("implementar MemoryStream", false);
 
-        this.SortStreamFactory = settings.Filename is not null ?
-            new FileSortStreamFactory(settings.Filename) :
-            new FileStreamFactory("implementar MemoryStream", false);
+        var stream = this.CreateDiskStream();
 
         // other services dependencies
         this.MemoryCache = new MemoryCache(this.MemoryFactory);
-        this.DiskService = new DiskService(this.StreamFactory, this);
+        this.DiskService = new DiskService(settings, this.MasterMapper, this.MemoryFactory, stream);
         this.LogService = new LogService(this.DiskService, this.MemoryCache, this.MemoryFactory, this.WalIndexService, this);
         this.AllocationMapService = new AllocationMapService(this.DiskService, this.MemoryFactory);
         this.MasterService = new MasterService(this);
         this.MonitorService = new MonitorService(this);
         this.RecoveryService = new RecoveryService(this.MemoryFactory, this.DiskService);
-        this.SortService = new SortService(this.SortStreamFactory, this);
+        this.SortService = new SortService(this);
         this.QueryService = new QueryService(this.WalIndexService, this);
     }
 
     #region Transient instances ("Create" prefix)
 
     public IDiskStream CreateDiskStream()
-        => new DiskStream(this.Settings, this.StreamFactory);
+        => new DiskStream(this.Settings.Filename!, this.Settings.Password);
+
+    public IDiskStream CreateSortDiskStream()
+        => new DiskStream(this.Settings.Filename!, this.Settings.Password);
 
     public IQueryOptimization CreateQueryOptimization()
         => new QueryOptimization(this);
 
     public IDataReader CreateDataReader(Cursor cursor, int fetchSize, IServicesFactory factory)
         => new BsonDataReader(cursor, fetchSize, factory);
-
-    public NewDatafile CreateNewDatafile() => new NewDatafile(
-        this.MemoryFactory,
-        this.MasterMapper,
-        this.BsonWriter,
-        this.Settings);
 
     public ITransaction CreateTransaction(int transactionID, byte[] writeCollections, int readVersion) => new Transaction(
         this.DiskService,
@@ -133,7 +123,7 @@ internal partial class ServicesFactory : IServicesFactory
         this,
         orderBy);
 
-    public ISortContainer CreateSortContainer(int containerID, int order, Stream stream) => new SortContainer(
+    public ISortContainer CreateSortContainer(int containerID, int order, IDiskStream stream) => new SortContainer(
         this.FileHeader.Collation,
         containerID,
         order,

@@ -20,6 +20,8 @@ global using System.Reflection;
 global using System.Buffers;
 global using System.Buffers.Binary;
 
+global using Microsoft.Win32.SafeHandles;
+
 global using LiteDB.Engine;
 global using static LiteDB.Constants;
 global using static LiteDB.LiteException;

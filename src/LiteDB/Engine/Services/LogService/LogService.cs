@@ -35,9 +35,7 @@ internal class LogService : ILogService
 
     public void Initialize()
     {
-        var writer = _diskService.GetDiskWriter();
-
-        _lastPageID = writer.GetLastFilePositionID();
+        _lastPageID = _diskService.GetLastFilePositionID();
 
         _logPositionID = this.CalcInitLogPositionID(_lastPageID);
     }
@@ -62,14 +60,12 @@ internal class LogService : ILogService
     /// </summary>
     public unsafe void WriteLogPages(nint[] pages)
     {
-        var writer = _diskService.GetDiskWriter();
-
         // set IsDirty flag in header file to true at first use
         if (_factory.Pragmas.IsDirty == false)
         {
             _factory.Pragmas.IsDirty = true;
 
-            writer.WritePragmas(_factory.Pragmas);
+            _diskService.WritePragmas(_factory.Pragmas);
         }
 
         var lastPositionID = 0u;
@@ -84,14 +80,14 @@ internal class LogService : ILogService
         }
 
         // pre-allocate file
-        writer.SetSize(lastPositionID);
+        _diskService.SetLength(lastPositionID);
 
         for (var i = 0; i < pages.Length; i++)
         {
             var page = (PageMemory*)pages[i];
 
             // write page to writer stream
-            writer.WritePage(page);
+            _diskService.WritePage(page);
 
             // create a log header structure with needed information about this page on checkpoint
             var header = new LogPageHeader { PositionID = page->PositionID, PageID = page->PageID, TransactionID = page->TransactionID, IsConfirmed = page->IsConfirmed };
@@ -108,14 +104,12 @@ internal class LogService : ILogService
     {
         ENSURE(walDirtyPages.Count == 0);
 
-        var writer = _diskService.GetDiskWriter();
-
         // set IsDirty flag in pragma to true at first use
         if (_factory.Pragmas.IsDirty == false)
         {
             _factory.Pragmas.IsDirty = true;
 
-            writer.WritePragmas(_factory.Pragmas);
+            _diskService.WritePragmas(_factory.Pragmas);
         }
 
         var lastPositionID = 0u;
@@ -130,7 +124,7 @@ internal class LogService : ILogService
         }
 
         // pre-allocate file
-        writer.SetSize(lastPositionID);
+        _diskService.SetLength(lastPositionID);
 
         // create a re-use page instance
         var page = _memoryFactory.AllocateNewPage();
@@ -146,7 +140,7 @@ internal class LogService : ILogService
             page->IsDirty = true;
 
             // write page to writer stream
-            writer.WritePage(page);
+            _diskService.WritePage(page);
 
             // create a log header structure with needed information about this page on checkpoint
             var header = new LogPageHeader { PositionID = page->PositionID, PageID = page->PageID, TransactionID = page->TransactionID, IsConfirmed = page->IsConfirmed };
@@ -220,7 +214,6 @@ internal class LogService : ILogService
             tempPages).ToArray();
 
         // get writer stream from disk service
-        var writer = _diskService.GetDiskWriter();
         var counter = 0;
 
         foreach (var action in actions)
@@ -234,12 +227,12 @@ internal class LogService : ILogService
                 }
 
                 // write an empty page at position
-                writer.WriteEmptyPage(action.PositionID);
+                _diskService.WriteEmptyPage(action.PositionID);
             }
             else
             {
                 // get page from file position ID (log or data)
-                var page = this.GetLogPage(writer, action.PositionID);
+                var page = this.GetLogPage(action.PositionID);
 
                 if (action.Action == CheckpointActionType.CopyToDataFile)
                 {
@@ -249,7 +242,7 @@ internal class LogService : ILogService
                     page->IsConfirmed = false;
                     page->IsDirty = true;
 
-                    writer.WritePage(page);
+                    _diskService.WritePage(page);
 
                     // increment checkpoint counter page
                     counter++;
@@ -261,13 +254,13 @@ internal class LogService : ILogService
                     page->IsConfirmed = true; // mark all pages to true in temp disk (to recovery)
                     page->IsDirty = true;
 
-                    writer.WritePage(page);
+                    _diskService.WritePage(page);
                 }
 
                 // after copy page, checks if page need to be clean on disk
                 if (action.MustClear)
                 {
-                    writer.WriteEmptyPage(action.PositionID);
+                    _diskService.WriteEmptyPage(action.PositionID);
                 }
 
                 // if cache contains this position (old data version) must be removed from cache and deallocate
@@ -297,7 +290,7 @@ internal class LogService : ILogService
         if (crop)
         {
             // crop file after _lastPageID
-            writer.SetSize(_lastPageID);
+            _diskService.SetLength(_lastPageID);
         }
         else
         {
@@ -306,7 +299,7 @@ internal class LogService : ILogService
                 startTempPositionID * tempPages.Count :
                 _logPositionID;
 
-            writer.WriteEmptyPages(_lastPageID + 1, (uint)lastFilePositionID);
+            _diskService.WriteEmptyPages(_lastPageID + 1, (uint)lastFilePositionID);
         }
 
         // reset initial log position
@@ -329,7 +322,7 @@ internal class LogService : ILogService
     /// <summary>
     /// Get page from cache (remove if found) or create a new from page factory
     /// </summary>
-    private unsafe PageMemory* GetLogPage(IDiskStream stream, uint positionID)
+    private unsafe PageMemory* GetLogPage(uint positionID)
     {
         // try get page from cache
         if (_memoryCache.TryRemove(positionID, out var page))
@@ -340,7 +333,7 @@ internal class LogService : ILogService
         // otherwise, allocate new buffer page and read from disk
         page = _memoryFactory.AllocateNewPage();
 
-        stream.ReadPage(page, positionID);
+        _diskService.ReadPage(page, positionID);
 
         return page;
     }

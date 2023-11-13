@@ -10,7 +10,6 @@ public partial class LiteEngine : ILiteEngine
         var diskService = _factory.DiskService;
         var logService = _factory.LogService;
         var allocationMapService = _factory.AllocationMapService;
-        var stream = diskService.GetDiskWriter();
 
         // must enter in exclusive lock
         await lockService.EnterExclusiveAsync();
@@ -29,7 +28,7 @@ public partial class LiteEngine : ILiteEngine
         {
             _factory.Pragmas.IsDirty = false;
 
-            stream.WritePragmas(_factory.Pragmas);
+            diskService.WritePragmas(_factory.Pragmas);
         }
 
         // release exclusive

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LiteDB.Engine;
+﻿namespace LiteDB.Engine;
 
 /// <summary>
 /// </summary>
@@ -40,8 +38,6 @@ internal partial class Transaction : ITransaction
     {
         using var _pc = PERF_COUNTER(100, nameof(ReadPage), nameof(Transaction));
 
-        _reader ??= _diskService.RentDiskReader();
-
         var writable = false;
         var found = false;
 
@@ -56,7 +52,7 @@ internal partial class Transaction : ITransaction
                 // if not found, allocate new page
                 var walPage = _memoryFactory.AllocateNewPage();
 
-                _reader.ReadPage(walPage, positionID);
+                _diskService.ReadPage(walPage, positionID);
 
                 ENSURE(walPage->PageType == PageType.Data || walPage->PageType == PageType.Index, $"Only data/index page on transaction read page: {walPage->PageID}");
 
@@ -79,7 +75,7 @@ internal partial class Transaction : ITransaction
         {
             page = _memoryFactory.AllocateNewPage();
 
-            _reader.ReadPage(page, positionID);
+            _diskService.ReadPage(page, positionID);
 
             ENSURE(page->PageType == PageType.Data || page->PageType == PageType.Index, $"Only data/index page on transaction read page: {page->PageID}");
         }

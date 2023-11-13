@@ -4,17 +4,14 @@
 internal class SortService : ISortService
 {
     private readonly IServicesFactory _factory;
-    private readonly IStreamFactory _sortStreamFactory;
 
+    private IDiskStream? _stream = null;
     private readonly ConcurrentQueue<int> _availableContainersID = new();
-    private readonly ConcurrentQueue<Stream> _streamPool = new();
     private int _nextContainerID = -1;
 
     public SortService(
-        IStreamFactory sortStreamFactory,
         IServicesFactory factory)
     {
-        _sortStreamFactory = sortStreamFactory;
         _factory = factory;
     }
 
@@ -23,6 +20,11 @@ internal class SortService : ISortService
         var sorter = _factory.CreateSortOperation(orderBy);
 
         return sorter;
+    }
+
+    public IDiskStream GetSortStream()
+    {
+        return _stream ?? _factory.CreateSortDiskStream();
     }
 
     public int GetAvailableContainerID()
@@ -35,36 +37,13 @@ internal class SortService : ISortService
         return Interlocked.Increment(ref _nextContainerID);
     }
 
-    public Stream RentSortStream()
-    {
-        if (!_streamPool.TryDequeue(out var stream))
-        {
-            stream = _sortStreamFactory.GetStream(true, FileOptions.None); // parameters are not used for sort stream factory
-        }
-
-        return stream;
-    }
-
-    public void ReleaseSortStream(Stream stream)
-    {
-        _streamPool.Enqueue(stream);
-    }
-
     public void Dispose()
     {
-        foreach(var stream  in _streamPool)
-        {
-            stream.Dispose();
-        }
-
-        if (_streamPool.Count > 0)
-        {
-            _sortStreamFactory.Delete();
-        }
+        _stream?.Dispose();
+        _stream?.Delete();
 
         // clear service states
         _availableContainersID.Clear();
-        _streamPool.Clear();
         _nextContainerID = -1;
     }
 }
