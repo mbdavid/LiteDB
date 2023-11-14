@@ -11,13 +11,13 @@ internal static class FileHelper
     public static string GetSufixFile(string filename, string suffix = "-temp", bool checkIfExists = true)
     {
         var count = 0;
-        var temp = Path.Combine(Path.GetDirectoryName(filename), 
+        var temp = Path.Combine(Path.GetDirectoryName(filename)!, 
             Path.GetFileNameWithoutExtension(filename) + suffix + 
             Path.GetExtension(filename));
 
         while(checkIfExists && File.Exists(temp))
         {
-            temp = Path.Combine(Path.GetDirectoryName(filename),
+            temp = Path.Combine(Path.GetDirectoryName(filename)!,
                 Path.GetFileNameWithoutExtension(filename) + suffix +
                 "-" + (++count) +
                 Path.GetExtension(filename));
@@ -27,14 +27,9 @@ internal static class FileHelper
     }
 
     /// <summary>
-    /// Get LOG file based on data file
+    /// Get temp SORT file based on data file
     /// </summary>
-    public static string GetLogFile(string filename) => GetSufixFile(filename, "-log", false);
-
-    /// <summary>
-    /// Get TEMP file based on data file
-    /// </summary>
-    public static string GetTempFile(string filename) => GetSufixFile(filename, "-tmp", false);
+    public static string GetSortFile(string filename) => GetSufixFile(filename, "-sort", true);
 
     /// <summary>
     /// Test if file are used by any process
