@@ -37,7 +37,7 @@ internal class IndexAllEnumerator : IPipeEnumerator
         {
             _init = true;
 
-            var first = indexService.GetNode(head);
+            var first = indexService.GetNodeAsync(head);
 
             // get pointer to first element 
             _next = first[0]->GetNext(_order);
@@ -51,7 +51,7 @@ internal class IndexAllEnumerator : IPipeEnumerator
         }
 
         // go forward
-        var node = indexService.GetNode(_next);
+        var node = indexService.GetNodeAsync(_next);
 
         _next = node[0]->GetNext(_order);
 

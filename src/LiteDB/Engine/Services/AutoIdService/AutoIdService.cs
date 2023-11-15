@@ -1,7 +1,7 @@
 ﻿namespace LiteDB.Engine;
 
 [AutoInterface(typeof(IDisposable))]
-unsafe internal class AutoIdService : IAutoIdService
+internal class AutoIdService : IAutoIdService
 {
     // dependency injection
 
@@ -77,25 +77,28 @@ unsafe internal class AutoIdService : IAutoIdService
     /// <summary>
     /// Initialize sequence based on last value on _id key.
     /// </summary>
-    public void Initialize(byte colID, RowID tailIndexNodeID, IIndexService indexService)
+    public async ValueTask InitializeAsync(byte colID, RowID tailIndexNodeID, IIndexService indexService)
     {
-        var tail = indexService.GetNode(tailIndexNodeID);
-        var last = indexService.GetNode(tail[0]->PrevID);
+        var tail = await indexService.GetNodeAsync(tailIndexNodeID);
+        var prevID = tail.GetPrevID(0);
+        var last = await indexService.GetNodeAsync(prevID);
 
-        if (last.Key->Type == BsonType.Int32)
+        unsafe
         {
-            _sequences[colID].LastInt = last.Key->ValueInt32;
-        }
-        else if (last.Key->Type == BsonType.Int64)
-        {
-            throw new NotImplementedException();
-            //_sequences[colID].LastLong = last.Key->ValueInt64;
-        }
-        else
-        {
-            // initialize when last value is not an int/long
-            _sequences[colID].LastInt = 0;
-            _sequences[colID].LastLong = 0;
+            if (last.Key->Type == BsonType.Int32)
+            {
+                _sequences[colID].LastInt = last.Key->ValueInt32;
+            }
+            else if (last.Key->Type == BsonType.Int64)
+            {
+                _sequences[colID].LastLong = IndexKey.ToInt64(last.Key);
+            }
+            else
+            {
+                // initialize when last value is not an int/long
+                _sequences[colID].LastInt = 0;
+                _sequences[colID].LastLong = 0;
+            }
         }
     }
 

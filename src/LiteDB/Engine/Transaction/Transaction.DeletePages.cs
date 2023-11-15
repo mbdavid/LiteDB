@@ -30,6 +30,6 @@ internal partial class Transaction : ITransaction
         }
 
         // write empty log pages and load _walDrityPages to be added in commit
-        _logService.WriteEmptyLogPages(pages, this.TransactionID, _walDirtyPages);
+        _logService.WriteEmptyLogPagesAsync(pages, this.TransactionID, _walDirtyPages);
     }
 }

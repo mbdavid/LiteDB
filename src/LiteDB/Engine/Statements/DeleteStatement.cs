@@ -43,10 +43,10 @@ internal class DeleteStatement : IEngineStatement
             var dataBlockID = node.DataBlockID;
 
             // delete all index nodes starting from PK
-            indexService.DeleteAll(node.IndexNodeID);
+            indexService.DeleteAllAsync(node.IndexNodeID);
 
             // delete document
-            dataService.DeleteDocument(dataBlockID);
+            dataService.DeleteDocumentAsync(dataBlockID);
 
             count++;
 
@@ -99,7 +99,7 @@ internal class DeleteStatement : IEngineStatement
                 var id = result.Value["_id"];
 
                 // get PK index node based on _id value
-                var node = context.IndexService.Find(pkIndex, id, false, Query.Ascending);
+                var node = context.IndexService.FindAsync(pkIndex, id, false, Query.Ascending);
 
                 yield return new PipeValue(node.IndexNodeID, node.DataBlockID, id);
             }

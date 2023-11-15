@@ -55,7 +55,7 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
         {
             _init = true;
 
-            var node = indexService.Find(_indexDocument, _startsWith, true, Query.Ascending);
+            var node = indexService.FindAsync(_indexDocument, _startsWith, true, Query.Ascending);
 
             // if node was not found, end enumerator
             if (node.IsEmpty || node.Key->Type != BsonType.String) return this.Finish();
@@ -69,7 +69,7 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
             // add all prev items into _prevs
             while (true)
             {
-                var nodePrev = indexService.GetNode(prevID);
+                var nodePrev = indexService.GetNodeAsync(prevID);
 
                 if (nodePrev.Key->Type != BsonType.String) break;
 
@@ -102,7 +102,7 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
             if (_next == head) return this.Finish();
 
             // get nextNode and test if match
-            var nodeNext = indexService.GetNode(_next);
+            var nodeNext = indexService.GetNodeAsync(_next);
 
             // set for next
             _next = nodeNext[0]->GetNext(_order);
@@ -146,7 +146,7 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
         {
             _init = true;
 
-            var node = indexService.GetNode(head);
+            var node = indexService.GetNodeAsync(head);
 
             _next = node[0]->GetNext(_order);
 
@@ -161,7 +161,7 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
         // go forward
         while (_eof == false)
         {
-            var node = indexService.GetNode(_next);
+            var node = indexService.GetNodeAsync(_next);
 
             // update next node
             _next = node[0]->GetNext(_order);

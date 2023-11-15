@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\LiteDB.Tests\Utils\Faker.cs" Link="Tests\Faker.cs" />
     <Compile Include="..\LiteDB.Tests\Utils\Faker.Names.cs" Link="Tests\Faker.Names.cs" />
   </ItemGroup>

@@ -2,8 +2,11 @@
 
 unsafe internal partial struct PageMemory // PageMemory.AllocMap
 {
-    public static (int extendIndex, int pageIndex, bool isNew) GetFreeExtend(PageMemory* page, int currentExtendIndex, byte colID, PageType type)
+    public static (int extendIndex, int pageIndex, bool isNew) GetFreeExtend(nint ptr, int currentExtendIndex, byte colID, PageType type)
     {
+        // cast pointer type as PageMemory pointer
+        var page = (PageMemory*)ptr;
+
         ENSURE(page->PageType == PageType.AllocationMap);
 
         while (currentExtendIndex < AM_EXTEND_COUNT)
@@ -38,8 +41,11 @@ unsafe internal partial struct PageMemory // PageMemory.AllocMap
     /// <summary>
     /// Update extend value based on extendIndex (0-2031) and pageIndex (0-7)
     /// </summary>
-    public static void UpdateExtendPageValue(PageMemory* page, int extendIndex, int pageIndex, ExtendPageValue pageValue)
+    public static void UpdateExtendPageValue(nint ptr, int extendIndex, int pageIndex, ExtendPageValue pageValue)
     {
+        // cast pointer type as PageMemory pointer
+        var page = (PageMemory*)ptr;
+
         ENSURE(extendIndex <= 2031);
         ENSURE(pageIndex <= 7);
 
@@ -65,14 +71,16 @@ unsafe internal partial struct PageMemory // PageMemory.AllocMap
 
         // mark page as dirty (in map page this should be manual)
         page->IsDirty = true;
-
     }
 
     /// <summary>
     /// Read all extends values and get pageID for all used page in this collection
     /// </summary>
-    public static void LoadPageIDFromExtends(PageMemory* page, int allocationMapID, byte colID, List<uint> result)
+    public static void LoadPageIDFromExtends(nint ptr, int allocationMapID, byte colID, List<uint> result)
     {
+        // cast pointer type as PageMemory pointer
+        var page = (PageMemory*)ptr;
+
         for (var j = 0; j < AM_EXTEND_COUNT; j++)
         {
             var extendValue = page->Extends[j];

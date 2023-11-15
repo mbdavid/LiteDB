@@ -44,7 +44,7 @@ internal class CreateIndexStatement : IEngineStatement
         var indexService = factory.CreateIndexService(transaction);
 
         // create new index (head/tail)
-        var (head, tail) = indexService.CreateHeadTailNodes(collection.ColID);
+        var (head, tail) = indexService.CreateHeadTailNodesAsync(collection.ColID);
 
         // get a free index slot
         var freeIndexSlot = (byte)Enumerable.Range(1, INDEX_MAX_LEVELS)
@@ -66,7 +66,7 @@ internal class CreateIndexStatement : IEngineStatement
         collection.Indexes.Add(indexDocument);
 
         // write master collection into pages inside transaction
-        masterService.WriteCollection(master, transaction);
+        masterService.WriteCollectionAsync(master, transaction);
 
         // create pipe context
         var pipeContext = new PipeContext(dataService, indexService, BsonDocument.Empty);
@@ -87,7 +87,7 @@ internal class CreateIndexStatement : IEngineStatement
                 var defrag = false;
 
                 // read document fields
-                var docResult = dataService.ReadDocument(pkIndexNode.DataBlockID, fields);
+                var docResult = dataService.ReadDocumentAsync(pkIndexNode.DataBlockID, fields);
 
                 if (docResult.Fail) throw docResult.Exception;
 
@@ -99,7 +99,7 @@ internal class CreateIndexStatement : IEngineStatement
 
                 foreach (var key in keys)
                 {
-                    var node = indexService.AddNode(collection.ColID, indexDocument, key, dataBlockID, last, out defrag);
+                    var node = indexService.AddNodeAsync(collection.ColID, indexDocument, key, dataBlockID, last, out defrag);
 
                     // ensure execute reload on indexNode after any defrag
                     if (defrag && pkIndexNode.IndexNodeID.PageID == node.IndexNodeID.PageID)

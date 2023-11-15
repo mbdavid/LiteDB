@@ -21,14 +21,14 @@ public partial class LiteEngine : ILiteEngine
         await logService.CheckpointAsync(true, false);
 
         // persist all dirty amp into disk
-        allocationMapService.WriteAllChanges();
+        allocationMapService.WriteAllChangesAsync();
 
         // if file was changed, update pragma isdirty check byte
         if (_factory.Pragmas.IsDirty)
         {
             _factory.Pragmas.IsDirty = false;
 
-            diskService.WritePragmas(_factory.Pragmas);
+            diskService.WritePragmasAsync(_factory.Pragmas);
         }
 
         // release exclusive

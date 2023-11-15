@@ -3,7 +3,7 @@
 /// <summary>
 /// Implement a simplw wrapper over generic Stream to read as a IDisk
 /// </summary>
-unsafe internal class MemoryDisk : IDisk
+internal class MemoryDisk : IDisk
 {
     private readonly Stream _stream;
     private bool _disposed;
@@ -32,30 +32,31 @@ unsafe internal class MemoryDisk : IDisk
     {
     }
 
-    public bool ReadBuffer(Span<byte> buffer, long position)
+    public async ValueTask<bool> ReadBufferAsync(Memory<byte> buffer, long position)
     {
-        lock(_stream)
+        //lock(_stream) //TODO: do async
         {
             _stream.Position = position;
 
-            var read = _stream.Read(buffer);
+            var read = await _stream.ReadAsync(buffer);
 
             return read == buffer.Length;
         }
     }
 
-    public void WriteBuffer(Span<byte> buffer, long position)
+    public ValueTask WriteBufferAsync(ReadOnlyMemory<byte> buffer, long position)
     {
         ENSURE(
             buffer.Length == PAGE_SIZE || // full page
             (buffer.Length == PRAGMA_SIZE && position == FILE_HEADER_SIZE) || // pragma update
             (buffer.Length == PAGE_OFFSET && position == 0)); // file init
 
-        lock (_stream)
+        //lock (_stream) TODO: async lock
         {
             _stream.Position = position;
 
-            _stream.Write(buffer);
+            //_stream.Write(buffer);
+            return _stream.WriteAsync(buffer);
         }
     }
 

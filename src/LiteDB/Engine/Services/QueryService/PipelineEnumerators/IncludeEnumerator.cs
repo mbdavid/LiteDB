@@ -78,7 +78,7 @@ internal class IncludeEnumerator : IPipeEnumerator
 
         if (master.Collections.TryGetValue(refCol.AsString, out var collection))
         {
-            var node = context.IndexService.Find(collection.PK, refId, false, Query.Ascending);
+            var node = context.IndexService.FindAsync(collection.PK, refId, false, Query.Ascending);
 
             if (!node.IsEmpty)
             {

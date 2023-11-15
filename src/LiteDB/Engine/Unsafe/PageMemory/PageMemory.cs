@@ -62,8 +62,11 @@ unsafe internal partial struct PageMemory             // 8192 (64 bytes header -
     {
     }
 
-    public static void Initialize(PageMemory* page, int uniqueID)
+    public static void Initialize(nint ptr, int uniqueID)
     {
+        // cast pointer type as PageMemory pointer
+        var page = (PageMemory*)ptr;
+
         page->PositionID = uint.MaxValue;
         page->PageID = uint.MaxValue;
 
@@ -92,6 +95,11 @@ unsafe internal partial struct PageMemory             // 8192 (64 bytes header -
 
         // clear full content area
         MarshalEx.FillZero((byte*)(nint)page + PAGE_HEADER_SIZE, PAGE_CONTENT_SIZE);
+    }
+
+    public static bool IsPageDirty(nint ptr)
+    {
+        return ((PageMemory*)ptr)->IsDirty;
     }
 
     public string DumpPage()

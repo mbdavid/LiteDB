@@ -9,6 +9,13 @@ unsafe internal struct IndexNodeResult : IIsEmpty
     public IndexNode* Node;
     public IndexKey* Key;
 
+    #region Shortcuts
+
+    /// <summary>
+    /// Shortcut for get Page->PageID
+    /// </summary>
+    public uint PageID => this.Page->PageID;
+
     /// <summary>
     /// Shortcut for get Node->DataBlockID (safe)
     /// </summary>
@@ -17,11 +24,53 @@ unsafe internal struct IndexNodeResult : IIsEmpty
     /// <summary>
     /// Shortcut for get/set Node->NextNodeID (safe) MUST set page as dirty in set!!
     /// </summary>
-    public RowID NextNodeID { get => this.Node->NextNodeID; set => this.Node->NextNodeID = value; } 
+    public RowID NextNodeID { get => this.Node->NextNodeID; set => this.Node->NextNodeID = value; }
+
+    /// <summary>
+    /// Shortcut for get Node->NextID (or PrevID) according level and order
+    /// </summary>
+    public RowID GetNextID(int level, int order = Query.Ascending) => this.GetLevel(level)->GetNext(order);
+
+    /// <summary>
+    /// Shortcut for set Node->NextID according level and order
+    /// </summary>
+    public RowID SetNextID(int level, RowID value) => this.GetLevel(level)->NextID = value;
+
+    /// <summary>
+    /// Shortcut for get Node->PrevID (or NextID) according level
+    /// </summary>
+    public RowID GetPrevID(int level, int order = Query.Ascending) => this.GetLevel(level)->GetPrev(order);
+
+    /// <summary>
+    /// Shortcut for set Node->PrevID according level
+    /// </summary>
+    public RowID SetPrevID(int level, RowID value) => this.GetLevel(level)->PrevID = value;
+
+    /// <summary>
+    /// Shortcut for get/set current page as dirty Page->IsDirty
+    /// </summary>
+    public bool IsDirtyPage { get => this.Page->IsDirty; set => this.Page->IsDirty = value; }
+
+    /// <summary>
+    /// Shortcut for get if Key-Type is MinValue or MaxValue
+    /// </summary>
+    public bool IsMinOrMaxValue => this.Key->IsMinValue || this.Key->IsMaxValue;
+
+    /// <summary>
+    /// Shortcut for IndexKey.CompareTo(value)
+    /// </summary>
+    public int KeyCompareTo(BsonValue value, Collation collation) => IndexKey.Compare(this.Key, value, collation);
+
+    #endregion
 
     public static IndexNodeResult Empty = new() { IndexNodeID = RowID.Empty, Page = default };
 
     public bool IsEmpty => this.IndexNodeID.IsEmpty;
+
+    public IndexNodeResult(nint ptr, RowID indexNodeID)
+        : this((PageMemory*)ptr, indexNodeID)
+    {
+    }
 
     public IndexNodeResult(PageMemory* page, RowID indexNodeID)
     {
@@ -45,16 +94,13 @@ unsafe internal struct IndexNodeResult : IIsEmpty
         this.Key = (IndexKey*)((nint)this.Page + keyOffset);
     }
 
-    public IndexNodeLevel* this[int level]
+    private IndexNodeLevel* GetLevel(int level)
     {
-        get
-        {
-            ENSURE(level <= this.Node->Levels);
+        ENSURE(level <= this.Node->Levels);
 
-            var ptr = ((nint)this.Node + sizeof(IndexNode) + (level * sizeof(IndexNodeLevel)));
+        var ptr = ((nint)this.Node + sizeof(IndexNode) + (level * sizeof(IndexNodeLevel)));
 
-            return (IndexNodeLevel*)ptr;
-        }
+        return (IndexNodeLevel*)ptr;
     }
 
     public override string ToString()

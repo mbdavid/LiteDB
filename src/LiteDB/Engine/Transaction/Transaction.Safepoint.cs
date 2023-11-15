@@ -8,61 +8,69 @@ internal partial class Transaction : ITransaction
     /// Persist current pages changes and discard all local pages. Works as a Commit, but without
     /// marking last page as confirmed
     /// </summary>
-    public async Task SafepointAsync()
+    public async ValueTask SafepointAsync()
     {
         using var _pc = PERF_COUNTER(130, nameof(SafepointAsync), nameof(Transaction));
 
-        this.SafepointInternal();
+        await this.SafepointInternalAsync();
     }
 
-    private unsafe void SafepointInternal()
+    private async ValueTask SafepointInternalAsync()
     {
-        // get dirty pages only //TODO: can be re-used array?
-        var dirtyPages = _localPages.Values
-            .Where(x => ((PageMemory*)x)->IsDirty)
-            .ToArray();
+        nint[] dirtyPages;
 
-        for (var i = 0; i < dirtyPages.Length; i++)
+        unsafe
         {
-            var page = (PageMemory*)dirtyPages[i];
+            // get dirty pages only //TODO: can be re-used array?
+            dirtyPages = _localPages.Values
+                .Where(x => ((PageMemory*)x)->IsDirty)
+                .ToArray();
 
-            ENSURE(page->ShareCounter == NO_CACHE, "Page should not be on cache when saving");
+            for (var i = 0; i < dirtyPages.Length; i++)
+            {
+                var page = (PageMemory*)dirtyPages[i];
 
-            // update page header
-            page->TransactionID = this.TransactionID;
-            page->IsConfirmed = false;
+                ENSURE(page->ShareCounter == NO_CACHE, "Page should not be on cache when saving");
+
+                // update page header
+                page->TransactionID = this.TransactionID;
+                page->IsConfirmed = false;
+            }
         }
 
         // write pages on disk and flush data (updates PositionID and IsDirty = false)
-        _logService.WriteLogPages(dirtyPages);
+        await _logService.WriteLogPagesAsync(dirtyPages);
 
-        // update local transaction wal index
-        for (var i = 0; i < dirtyPages.Length; i++)
+        unsafe
         {
-            var page = (PageMemory*)dirtyPages[i];
-
-            _walDirtyPages[page->PageID] = page->PositionID;
-        }
-
-        // add pages to cache or decrement sharecount
-        foreach (var ptr in _localPages.Values)
-        {
-            var page = (PageMemory*)ptr;
-
-            if (page->IsPageInCache)
+            // update local transaction wal index
+            for (var i = 0; i < dirtyPages.Length; i++)
             {
-                // page already in cache (was not changed)
-                _memoryCache.ReturnPageToCache(page);
+                var page = (PageMemory*)dirtyPages[i];
+
+                _walDirtyPages[page->PageID] = page->PositionID;
             }
-            else
-            {
-                // add page to cache (even if is on "non-commited" transaction)
-                // only this transactions knows about this new positionIDs
-                var added = _memoryCache.AddPageInCache(page);
 
-                if (!added)
+            // add pages to cache or decrement sharecount
+            foreach (var ptr in _localPages.Values)
+            {
+                var page = (PageMemory*)ptr;
+
+                if (page->IsPageInCache)
                 {
-                    _memoryFactory.DeallocatePage(page);
+                    // page already in cache (was not changed)
+                    _memoryCache.ReturnPageToCache(page);
+                }
+                else
+                {
+                    // add page to cache (even if is on "non-commited" transaction)
+                    // only this transactions knows about this new positionIDs
+                    var added = _memoryCache.AddPageInCache(page);
+
+                    if (!added)
+                    {
+                        _memoryFactory.DeallocatePage(page);
+                    }
                 }
             }
         }

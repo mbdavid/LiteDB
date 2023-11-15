@@ -43,7 +43,7 @@ unsafe internal class IndexEqualsEnumerator : IPipeEnumerator
         {
             _init = true;
 
-            var node = indexService.Find(_indexDocument, _value, false, Query.Ascending);
+            var node = indexService.FindAsync(_indexDocument, _value, false, Query.Ascending);
 
             // if node was not found, end enumerator
             if (node.IsEmpty)
@@ -78,7 +78,7 @@ unsafe internal class IndexEqualsEnumerator : IPipeEnumerator
         if (_prev.IsEmpty == false)
         {
             // do not test head node
-            var node = indexService.GetNode(_prev);
+            var node = indexService.GetNodeAsync(_prev);
 
             var isEqual = IndexKey.Compare(_value, node.Key, _collation) == 0;
 
@@ -101,7 +101,7 @@ unsafe internal class IndexEqualsEnumerator : IPipeEnumerator
         // and than go forward
         if (_next.IsEmpty == false)
         {
-            var node = indexService.GetNode(_next);
+            var node = indexService.GetNodeAsync(_next);
 
             //var isEqual = _collation.Equals(_value, node.Key);
             var isEqual = IndexKey.Compare(_value, node.Key, _collation) == 0;

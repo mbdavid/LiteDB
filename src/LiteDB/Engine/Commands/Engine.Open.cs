@@ -34,7 +34,7 @@ public partial class LiteEngine : ILiteEngine
                 // do a database recovery
                 await recoveryService.DoRecoveryAsync();
 
-                diskService.WritePragmas(_factory.Pragmas);
+                diskService.WritePragmasAsync(_factory.Pragmas);
 
                 _factory.Pragmas.IsDirty = false;
             }
@@ -43,10 +43,10 @@ public partial class LiteEngine : ILiteEngine
             logService.Initialize();
 
             // initialize AM service
-            allocationMapService.Initialize();
+            allocationMapService.InitializeAsync();
 
             // read $master
-            masterService.Initialize();
+            masterService.InitializeAsync();
 
             // update header/state
             _factory.State = EngineState.Open;

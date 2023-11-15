@@ -3,7 +3,7 @@
 /// <summary>
 /// Thread Safe disk access using RandomAccess (a new class in .NET 6)
 /// </summary>
-unsafe internal class FileDisk : IDisk
+internal class FileDisk : IDisk
 {
     private readonly string _filename;
     private readonly string? _password;
@@ -53,27 +53,29 @@ unsafe internal class FileDisk : IDisk
             share: FileShare.ReadWrite,
             options: _isTemp ? (FileOptions.DeleteOnClose | options) : options);
 
-        //if (fileHeader.IsEncrypted)
+        //if (_password is not null)
         {
             // initialize aes
         }
     }
 
-    public bool ReadBuffer(Span<byte> buffer, long position)
+    public async ValueTask<bool> ReadBufferAsync(Memory<byte> buffer, long position)
     {
-        var read = RandomAccess.Read(_handle!, buffer, position);
+        var read = await RandomAccess.ReadAsync(_handle!, buffer, position);
 
         return read == buffer.Length;
     }
 
-    public void WriteBuffer(Span<byte> buffer, long position)
+    public ValueTask WriteBufferAsync(ReadOnlyMemory<byte> buffer, long position)
     {
         ENSURE(
             buffer.Length == PAGE_SIZE || // full page
             (buffer.Length == PRAGMA_SIZE && position == FILE_HEADER_SIZE) || // pragma update
             (buffer.Length == PAGE_OFFSET && position == 0)); // file init
 
-        RandomAccess.Write(_handle!, buffer, position);
+        //RandomAccess.Write(_handle!, buffer, position);
+
+        return RandomAccess.WriteAsync(_handle!, buffer, position);
     }
 
     public bool Exists()

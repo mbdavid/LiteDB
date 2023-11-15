@@ -6,29 +6,25 @@ internal class MasterMapper : IMasterMapper
     #region $master document structure
 
     /*
-    # Master Document Structure
+    # Master Document Structure Example
     {
         "collections": {
-            "<col-name>": {
+            "<collection-name>": {
                 "colID": 1,
                 "meta": { ... },
                 "indexes": [{
                         "slot": 0,
+                        "name": "<index-name>"
                         "expr": "$._id",
                         "unique": true,
                         "head": [8,0]
                         "tail": [8,1]
                         "meta": { ... }
-                    }, { ... }],
+                    }],
                     //...
                 }
             },
             //...
-        },
-        "pragmas": {
-            "user_version": 0,
-            "limit": 0,
-            "checkpoint": 1000
         }
     }
     */
@@ -48,8 +44,8 @@ internal class MasterMapper : IMasterMapper
                     ["name"] = i.Name,
                     ["expr"] = i.Expression.ToString()!,
                     ["unique"] = i.Unique,
-                    ["head"] = new BsonArray(new BsonValue[] { i.HeadIndexNodeID.PageID, i.HeadIndexNodeID.Index }),
-                    ["tail"] = new BsonArray(new BsonValue[] { i.TailIndexNodeID.PageID, i.TailIndexNodeID.Index }),
+                    ["head"] = new BsonArray(i.HeadIndexNodeID.PageID, i.HeadIndexNodeID.Index),
+                    ["tail"] = new BsonArray(i.TailIndexNodeID.PageID, i.TailIndexNodeID.Index),
                 }))
             }))
         };

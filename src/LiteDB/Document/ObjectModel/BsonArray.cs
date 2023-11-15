@@ -29,6 +29,15 @@ public class BsonArray : BsonValue, IList<BsonValue>
         _list = new List<BsonValue>(capacity);
     }
 
+    public BsonArray(BsonValue item0, BsonValue item1)
+        : this(0)
+    {
+        // used to avoid create array for 2 elements
+
+        _list.Add(item0);
+        _list.Add(item1);
+    }
+
     public BsonArray(IEnumerable<BsonValue> values)
     {
         if (values is IList<BsonValue> list)

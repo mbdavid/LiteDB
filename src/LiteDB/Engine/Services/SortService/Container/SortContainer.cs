@@ -124,7 +124,7 @@ unsafe internal class SortContainer : ISortContainer
             // get stream position to page position (increment pageIndex before)
             var position = (_containerID * (CONTAINER_SORT_SIZE_IN_PAGES * PAGE_SIZE)) + (++_pageIndex * PAGE_SIZE);
 
-            _sortDisk.ReadBuffer(_buffer, position);
+            _sortDisk.ReadBufferAsync(_buffer, position);
 
             // set position and read remaining page items
             _position = 2; // for int16

@@ -28,6 +28,17 @@ unsafe internal partial struct IndexKey
 
             _ => throw new NotSupportedException()
         };
+    }
 
+    public static long ToInt64(IndexKey* indexKey)
+    {
+        var ptr = (nint)indexKey + sizeof(long);
+
+        if (indexKey->Type == BsonType.Int64)
+        {
+            return *(long*)ptr;
+        }
+
+        throw new InvalidCastException();
     }
 }

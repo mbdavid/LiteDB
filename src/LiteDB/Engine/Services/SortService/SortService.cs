@@ -3,17 +3,14 @@
 [AutoInterface]
 internal class SortService : ISortService
 {
-    private readonly IDisk _sortDisk;
     private readonly IServicesFactory _factory;
 
     private readonly ConcurrentQueue<int> _availableContainersID = new();
     private int _nextContainerID = -1;
 
     public SortService(
-        IDisk sortDisk,
         IServicesFactory factory)
     {
-        _sortDisk = sortDisk;
         _factory = factory;
     }
 

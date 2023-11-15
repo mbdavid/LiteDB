@@ -3,8 +3,11 @@
 [AutoInterface]
 unsafe internal partial struct PageMemory // PageMemory.DataBlock
 {
-    public static void InitializeAsDataPage(PageMemory* page, uint pageID, byte colID)
+    public static void InitializeAsDataPage(nint ptr, uint pageID, byte colID)
     {
+        // cast pointer type as PageMemory pointer
+        var page = (PageMemory*)ptr;
+
         page->PageID = pageID;
         page->PageType = PageType.Data;
         page->ColID = colID;
@@ -12,8 +15,11 @@ unsafe internal partial struct PageMemory // PageMemory.DataBlock
         page->IsDirty = true;
     }
 
-    public static DataBlockResult InsertDataBlock(PageMemory* page, Span<byte> content, bool extend, out bool defrag, out ExtendPageValue newPageValue)
+    public static DataBlockResult InsertDataBlock(nint ptr, Span<byte> content, bool extend, out bool defrag, out ExtendPageValue newPageValue)
     {
+        // cast pointer type as PageMemory pointer
+        var page = (PageMemory*)ptr;
+
         // get required bytes this insert
         var bytesLength = sizeof(DataBlock) + content.Length;
 
@@ -51,8 +57,11 @@ unsafe internal partial struct PageMemory // PageMemory.DataBlock
     /// <summary>
     /// Update an existing document inside a single page. This new document must fit on this page
     /// </summary>
-    public static void UpdateDataBlock(PageMemory* page, ushort index, Span<byte> content, RowID nextBlock, out bool defrag, out ExtendPageValue newPageValue)
+    public static void UpdateDataBlock(nint ptr, ushort index, Span<byte> content, RowID nextBlock, out bool defrag, out ExtendPageValue newPageValue)
     {
+        // cast pointer type as PageMemory pointer
+        var page = (PageMemory*)ptr;
+
         // get required bytes this insert
         var bytesLength = sizeof(DataBlock) + content.Length;
 

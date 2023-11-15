@@ -46,7 +46,7 @@ internal class MockIndexService : IIndexService
     //    return new ValueTask<IndexNodeResult>(result);
     //}
 
-    public (RowID head, RowID tail) CreateHeadTailNodes(byte colID)
+    public (RowID head, RowID tail) CreateHeadTailNodesAsync(byte colID)
     {
         throw new NotImplementedException();
     }
@@ -61,12 +61,12 @@ internal class MockIndexService : IIndexService
         throw new NotImplementedException();
     }
 
-    public IndexNodeResult GetNode(RowID indexNodeID)
+    public IndexNodeResult GetNodeAsync(RowID indexNodeID)
     {
         throw new NotImplementedException();
     }
 
-    public IndexNodeResult Find(IndexDocument index, BsonValue key, bool sibling, int order)
+    public IndexNodeResult FindAsync(IndexDocument index, BsonValue key, bool sibling, int order)
     {
         throw new NotImplementedException();
     }
@@ -76,12 +76,12 @@ internal class MockIndexService : IIndexService
         throw new NotImplementedException();
     }
 
-    public void DeleteAll(RowID pkIndexNodeID)
+    public void DeleteAllAsync(RowID pkIndexNodeID)
     {
         throw new NotImplementedException();
     }
 
-    public void DropIndex(int slot, RowID pkHeadIndexNodeID)
+    public void DropIndexAsync(int slot, RowID pkHeadIndexNodeID)
     {
         throw new NotImplementedException();
     }

@@ -2,8 +2,11 @@
 
 unsafe internal partial struct PageMemory // PageMemory.IndexNode
 {
-    public static void InitializeAsIndexPage(PageMemory* page, uint pageID, byte colID)
+    public static void InitializeAsIndexPage(nint ptr, uint pageID, byte colID)
     {
+        // cast pointer type as PageMemory pointer
+        var page = (PageMemory*)ptr;
+
         page->PageID = pageID;
         page->PageType = PageType.Index;
         page->ColID = colID;
@@ -11,8 +14,11 @@ unsafe internal partial struct PageMemory // PageMemory.IndexNode
         page->IsDirty = true;
     }
 
-    public static IndexNodeResult InsertIndexNode(PageMemory* page, byte slot, byte levels, BsonValue key, RowID dataBlockID, out bool defrag, out ExtendPageValue newPageValue)
+    public static IndexNodeResult InsertIndexNode(nint ptr, byte slot, byte levels, BsonValue key, RowID dataBlockID, out bool defrag, out ExtendPageValue newPageValue)
     {
+        // cast pointer type as PageMemory pointer
+        var page = (PageMemory*)ptr;
+
         // get a new index block
         var newIndex = PageMemory.GetFreeIndex(page);
 

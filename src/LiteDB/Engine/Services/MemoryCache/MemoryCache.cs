@@ -21,7 +21,7 @@ unsafe internal class MemoryCache : IMemoryCache
         _memoryFactory = memoryFactory;
     }
 
-    public PageMemory* GetPageReadWrite(uint positionID, byte[] writeCollections, out bool writable, out bool found)
+    public nint GetPageReadWrite(uint positionID, byte[] writeCollections, out bool writable, out bool found)
     {
         using var _pc = PERF_COUNTER(101, nameof(GetPageReadWrite), nameof(MemoryCache));
 
@@ -30,7 +30,8 @@ unsafe internal class MemoryCache : IMemoryCache
         if (!found)
         {
             writable = false;
-            return null;
+
+            return IntPtr.Zero;
         }
 
         using var _ph = PERF_COUNTER(102, nameof(GetPageReadWrite) + " (hit)", nameof(MemoryCache));
@@ -50,7 +51,7 @@ unsafe internal class MemoryCache : IMemoryCache
             // increment ShareCounter to be used by another transaction
             Interlocked.Increment(ref page->ShareCounter);
 
-            return page;
+            return ptr;
         }
         else
         {
@@ -65,12 +66,12 @@ unsafe internal class MemoryCache : IMemoryCache
                 page->ShareCounter = NO_CACHE;
                 page->IsDirty = false;
 
-                return page;
+                return ptr;
             }
             else
             {
                 // if page is in use, create a new page
-                var newPage = _memoryFactory.AllocateNewPage();
+                var newPage = (PageMemory*)_memoryFactory.AllocateNewPage();
 
                 // keep uniqueID
                 var uniqueID = page->UniqueID;
@@ -87,7 +88,7 @@ unsafe internal class MemoryCache : IMemoryCache
                 newPage->IsDirty = false;
 
                 // and return as a new page instance
-                return newPage;
+                return (nint)newPage;
             }
         }
 
@@ -95,24 +96,29 @@ unsafe internal class MemoryCache : IMemoryCache
     }
 
     /// <summary>
-    /// Remove page from cache. Must not be in use
+    /// Remove page from cache. Page must not be in use
     /// </summary>
-    public bool TryRemove(uint positionID, [MaybeNullWhen(false)] out PageMemory* page)
+    public bool TryRemove(uint positionID, [MaybeNullWhen(false)] out nint ptr)
     {
         // first try to remove from cache
-        if (_cache.TryRemove(positionID, out var ptr))
+        if (_cache.TryRemove(positionID, out ptr))
         {
-            page = (PageMemory*)ptr;
+            unsafe
+            {
+                var page = (PageMemory*)ptr;
 
-            page->ShareCounter = NO_CACHE;
+                page->ShareCounter = NO_CACHE;
+            }
 
             return true;
         }
 
-        page = default;
+        ptr = IntPtr.Zero;
 
         return false;
     }
+
+    public bool AddPageInCache(nint ptr) => this.AddPageInCache((PageMemory*)ptr);
 
     /// <summary>
     /// Add a new page to cache. Returns true if page was added. If returns false,
@@ -147,6 +153,8 @@ unsafe internal class MemoryCache : IMemoryCache
 
         return true;
     }
+
+    public void ReturnPageToCache(nint ptr) => this.ReturnPageToCache((PageMemory*)ptr);
 
     public void ReturnPageToCache(PageMemory* page)
     {
@@ -189,7 +197,7 @@ unsafe internal class MemoryCache : IMemoryCache
                 page->ShareCounter = NO_CACHE;
 
                 // deallocate page
-                _memoryFactory.DeallocatePage(page);
+                _memoryFactory.DeallocatePage(ptr);
 
                 total++;
             }
@@ -226,7 +234,7 @@ unsafe internal class MemoryCache : IMemoryCache
 
             page->ShareCounter = NO_CACHE;
 
-            _memoryFactory.DeallocatePage(page);
+            _memoryFactory.DeallocatePage(ptr);
         }
     }
 
@@ -237,7 +245,7 @@ unsafe internal class MemoryCache : IMemoryCache
 
     public void Dispose()
     {
-        ENSURE(_cache.Count(x => ((PageMemory*)x.Value) -> ShareCounter != 0) == 0, "Cache must be clean before dipose");
+        ENSURE(_cache.Count(x => ((PageMemory*)x.Value)->ShareCounter != 0) == 0, "Cache must be clean before dipose");
 
 #if DEBUG
         // in DEBUG mode, let's clear all pages one-by-one
@@ -245,7 +253,7 @@ unsafe internal class MemoryCache : IMemoryCache
         {
             var page = (PageMemory*)ptr;
             page->ShareCounter = NO_CACHE;
-            _memoryFactory.DeallocatePage(page);
+            _memoryFactory.DeallocatePage(ptr);
         }
 #endif
 

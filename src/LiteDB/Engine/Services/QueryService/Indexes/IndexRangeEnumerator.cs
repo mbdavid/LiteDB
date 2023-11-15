@@ -62,9 +62,9 @@ unsafe internal class IndexRangeEnumerator : IPipeEnumerator
 
             // find first indexNode (or get from head/tail if Min/Max value)
             var first =
-                _start.IsMinValue ? indexService.GetNode(_indexDocument.HeadIndexNodeID) :
-                _start.IsMaxValue ? indexService.GetNode(_indexDocument.TailIndexNodeID) :
-                indexService.Find(_indexDocument, _start, true, _order);
+                _start.IsMinValue ? indexService.GetNodeAsync(_indexDocument.HeadIndexNodeID) :
+                _start.IsMaxValue ? indexService.GetNodeAsync(_indexDocument.TailIndexNodeID) :
+                indexService.FindAsync(_indexDocument, _start, true, _order);
 
             // get pointer to next/prev at level 0
             _prev = first[0]->GetPrev(_order);
@@ -84,7 +84,7 @@ unsafe internal class IndexRangeEnumerator : IPipeEnumerator
         // first go forward
         if (_prev.IsEmpty == false)
         {
-            var node = indexService.GetNode(_prev);
+            var node = indexService.GetNodeAsync(_prev);
 
             // check for Min/Max bson values index node key
             if (node.Key->IsMaxValue || node.Key->IsMinValue)
@@ -113,7 +113,7 @@ unsafe internal class IndexRangeEnumerator : IPipeEnumerator
         // and than, go backward
         if (_next.IsEmpty == false)
         {
-            var node = indexService.GetNode(_next);
+            var node = indexService.GetNodeAsync(_next);
 
             // check for Min/Max bson values index node key
             if (node.Key->IsMaxValue || node.Key->IsMinValue) return this.Finish();

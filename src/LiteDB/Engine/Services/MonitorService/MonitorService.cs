@@ -80,7 +80,7 @@ internal class MonitorService : IMonitorService
     /// </summary>
     public void Dispose()
     {
-        if (_transactions.Count > 0)
+        if (_transactions.IsEmpty == false)
         {
             foreach (var transaction in _transactions.Values)
             {

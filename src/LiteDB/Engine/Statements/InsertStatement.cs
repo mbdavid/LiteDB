@@ -186,13 +186,13 @@ internal class InsertStatement : IEngineStatement
         var id = autoIdService.SetDocumentID(colID, doc, autoId);
 
         // insert document and get position address
-        var dataBlockID = dataService.InsertDocument(colID, doc);
+        var dataBlockID = dataService.InsertDocumentAsync(colID, doc);
 
         // insert all indexes (init by PK)
         if (indexes.Count > 0)
         {
             // insert _id as PK and get node to be used 
-            var last = indexService.AddNode(colID, indexes[0], id, dataBlockID, IndexNodeResult.Empty, out _);
+            var last = indexService.AddNodeAsync(colID, indexes[0], id, dataBlockID, IndexNodeResult.Empty, out _);
 
             for (var i = 1; i < indexes.Count; i++)
             {

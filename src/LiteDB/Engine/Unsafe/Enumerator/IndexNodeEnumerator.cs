@@ -1,6 +1,6 @@
 ﻿namespace LiteDB.Engine;
 
-unsafe internal class IndexNodeEnumerator : IEnumerator<IndexNodeResult>
+internal class IndexNodeEnumerator : IAsyncEnumerator<IndexNodeResult>
 {
     private readonly IIndexService _indexService;
     private readonly IndexDocument _indexDocument;
@@ -19,9 +19,8 @@ unsafe internal class IndexNodeEnumerator : IEnumerator<IndexNodeResult>
     }
 
     public IndexNodeResult Current => _current;
-    object IEnumerator.Current => _current;
 
-    public bool MoveNext()
+    public async ValueTask<bool> MoveNextAsync()
     {
         if (_eof) return false;
 
@@ -29,14 +28,19 @@ unsafe internal class IndexNodeEnumerator : IEnumerator<IndexNodeResult>
         {
             _init = true;
 
-            var head = _indexService.GetNode(_indexDocument.HeadIndexNodeID);
+            var head = await _indexService.GetNodeAsync(_indexDocument.HeadIndexNodeID);
 
-            if (head[0]->NextID == _indexDocument.TailIndexNodeID) return false;
+            var nextID = head.GetNextID(0);
 
-            _current = _indexService.GetNode(head[0]->NextID);
+            if (nextID == _indexDocument.TailIndexNodeID) return false;
+
+            _current = await _indexService.GetNodeAsync(nextID);
 
             // buffer next in level 0
-            _nextID = _current[0]->NextID;
+            unsafe
+            {
+                _nextID = _current[0]->NextID;
+            }
 
             return true;
         }
@@ -47,10 +51,10 @@ unsafe internal class IndexNodeEnumerator : IEnumerator<IndexNodeResult>
             return false;
         }
 
-        _current = _indexService.GetNode(_nextID);
+        _current = await _indexService.GetNodeAsync(_nextID);
 
         // buffer next in level 0
-        _nextID = _current[0]->NextID;
+        _nextID = _current.GetNextID(0);
 
         return true;
     }
@@ -62,8 +66,10 @@ unsafe internal class IndexNodeEnumerator : IEnumerator<IndexNodeResult>
         _eof = false;
     }
 
-    public void Dispose()
+    public ValueTask DisposeAsync()
     {
         this.Reset();
+
+        return new ValueTask();
     }
 }

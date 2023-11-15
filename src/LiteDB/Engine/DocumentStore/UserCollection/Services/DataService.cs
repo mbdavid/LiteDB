@@ -1,6 +1,6 @@
 ﻿namespace LiteDB.Engine;
 
-unsafe internal class DataService : IDataService
+internal class DataService : IDataService
 {
     // dependency injection
     private readonly IBsonReader _bsonReader;
@@ -20,9 +20,9 @@ unsafe internal class DataService : IDataService
     /// <summary>
     /// Insert BsonDocument into new data pages
     /// </summary>
-    public RowID InsertDocument(byte colID, BsonDocument doc)
+    public async ValueTask<RowID> InsertDocumentAsync(byte colID, BsonDocument doc)
     {
-        using var _pc = PERF_COUNTER(20, nameof(InsertDocument), nameof(DataService));
+        using var _pc = PERF_COUNTER(20, nameof(InsertDocumentAsync), nameof(DataService));
 
         var docLength = doc.GetBytesCount();
 
@@ -35,7 +35,7 @@ unsafe internal class DataService : IDataService
         _bsonWriter.WriteDocument(bufferDoc.AsSpan(), doc, out _);
 
         // get first page
-        var page = _transaction.GetFreeDataPage(colID);
+        var ptr = await _transaction.GetFreeDataPageAsync(colID);
 
         // keep last instance to update nextBlock
         var lastDataBlock = DataBlockResult.Empty;
@@ -50,44 +50,52 @@ unsafe internal class DataService : IDataService
 
         while (true)
         {
-            // get how many avaiable bytes (excluding new added record) this page contains
-            var pageAvailableSpace =
-                page->FreeBytes -
-                sizeof(DataBlock) - // new data block fixed syze
-                (sizeof(PageSegment) * 2) - // footer (*2 to align)
-                8; // extra align
-
-            var bytesToCopy = Math.Min(pageAvailableSpace, bytesLeft);
-
-            var dataBlock = PageMemory.InsertDataBlock(page, bufferDoc.AsSpan(position, bytesToCopy), extend, out defrag, out var newPageValue);
-
-            if (newPageValue != ExtendPageValue.NoChange)
+            unsafe
             {
-                _transaction.UpdatePageMap(page->PageID, newPageValue);
+                var page = (PageMemory*)ptr;
+
+                // get how many avaiable bytes (excluding new added record) this page contains
+                var pageAvailableSpace =
+                    page->FreeBytes -
+                    sizeof(DataBlock) - // new data block fixed syze
+                    (sizeof(PageSegment) * 2) - // footer (*2 to align)
+                    8; // extra align
+
+                var bytesToCopy = Math.Min(pageAvailableSpace, bytesLeft);
+
+                var dataBlock = PageMemory.InsertDataBlock(page, bufferDoc.AsSpan(position, bytesToCopy), extend, out defrag, out var newPageValue);
+
+                if (newPageValue != ExtendPageValue.NoChange)
+                {
+                    _transaction.UpdatePageMap(page->PageID, newPageValue);
+                }
+
+                if (lastDataBlock.IsEmpty == false)
+                {
+                    ENSURE(dataBlock.Page->PageID != lastDataBlock.Page->PageID);
+
+                    // update NextDataBlock from last page
+                    lastDataBlock.DataBlock->NextBlockID = dataBlock.DataBlockID;
+                }
+                else
+                {
+                    // get first dataBlock dataBlockID
+                    firstDataBlockID = dataBlock.DataBlockID;
+                }
+
+                bytesLeft -= bytesToCopy;
+                position += bytesToCopy;
+
+                ENSURE(bytesToCopy > 0);
+
+                if (bytesLeft == 0) break;
+
+                // keep last instance
+                lastDataBlock = dataBlock;
+
             }
 
-            if (lastDataBlock.IsEmpty == false)
-            {
-                ENSURE(dataBlock.Page->PageID != lastDataBlock.Page->PageID);
-
-                // update NextDataBlock from last page
-                lastDataBlock.DataBlock->NextBlockID = dataBlock.DataBlockID;
-            }
-            else
-            {
-                // get first dataBlock dataBlockID
-                firstDataBlockID = dataBlock.DataBlockID;
-            }
-
-            bytesLeft -= bytesToCopy;
-            position += bytesToCopy;
-
-            if (bytesLeft == 0) break;
-
-            // keep last instance
-            lastDataBlock = dataBlock;
-
-            page = _transaction.GetFreeDataPage(colID);
+            ptr = await _transaction.GetFreeDataPageAsync(colID);
 
             // mark next data block as extend
             extend = true;
@@ -99,7 +107,7 @@ unsafe internal class DataService : IDataService
     /// <summary>
     /// Update existing document in a single or multiple pages
     /// </summary>
-    public void UpdateDocument(RowID dataBlockID, BsonDocument doc)
+    public async ValueTask UpdateDocumentAsync(RowID dataBlockID, BsonDocument doc)
     {
         var docLength = doc.GetBytesCount();
 
@@ -112,100 +120,119 @@ unsafe internal class DataService : IDataService
         _bsonWriter.WriteDocument(bufferDoc.AsSpan(), doc, out _);
 
         // get current datablock (for first one)
-        var page = _transaction.GetPage(dataBlockID.PageID);
+        var ptr = await _transaction.GetPageAsync(dataBlockID.PageID);
 
 //        //TODO: SOMENTE PRIMEIRA PAGINA
-
-        PageMemory.UpdateDataBlock(page, dataBlockID.Index, bufferDoc.AsSpan(), RowID.Empty, out var _, out var newPageValue);
-
-        if (newPageValue != ExtendPageValue.NoChange)
+        unsafe
         {
-            _transaction.UpdatePageMap(page->PageID, newPageValue);
+            var page = (PageMemory*)ptr;
+
+            PageMemory.UpdateDataBlock(page, dataBlockID.Index, bufferDoc.AsSpan(), RowID.Empty, out var _, out var newPageValue);
+
+            if (newPageValue != ExtendPageValue.NoChange)
+            {
+                _transaction.UpdatePageMap(page->PageID, newPageValue);
+            }
         }
     }
 
     /// <summary>
     /// Read a single document in a single/multiple pages
     /// </summary>
-    public BsonReadResult ReadDocument(RowID dataBlockID, string[] fields)
+    public async ValueTask<BsonReadResult> ReadDocumentAsync(RowID dataBlockID, string[] fields)
     {
-        using var _pc = PERF_COUNTER(30, nameof(ReadDocument), nameof(DataService));
+        using var _pc = PERF_COUNTER(30, nameof(ReadDocumentAsync), nameof(DataService));
 
-        var page = _transaction.GetPage(dataBlockID.PageID);
+        var ptr = await _transaction.GetPageAsync(dataBlockID.PageID);
 
         // get data block segment
-        var dataBlock = new DataBlockResult(page, dataBlockID);
+        var dataBlock = new DataBlockResult(ptr, dataBlockID);
 
-        if (dataBlock.DataBlock->NextBlockID.IsEmpty)
+        unsafe
         {
-            // get content buffer inside dataBlock 
-            var result = _bsonReader.ReadDocument(dataBlock.AsSpan(), fields, false, out _);
+            if (dataBlock.DataBlock->NextBlockID.IsEmpty)
+            {
+                // get content buffer inside dataBlock 
+                var resultSingle = _bsonReader.ReadDocument(dataBlock.AsSpan(), fields, false, out _);
 
-            return result;
+                return resultSingle;
+            }
         }
-        else
+
+        // get a full array to read all document chuncks
+        using var docBuffer = SharedArray<byte>.Rent(dataBlock.DocumentLength);
+
+        // copy datablock content to new in memory buffer
+        dataBlock.AsSpan().CopyTo(docBuffer.AsSpan());
+
+        var position = dataBlock.ContentLength;
+
+        ENSURE(dataBlock.DocumentLength > 0, new { dataBlock });
+
+        RowID nextBlockID;
+        
+        unsafe
         {
-            // get a full array to read all document chuncks
-            using var docBuffer = SharedArray<byte>.Rent(dataBlock.DocumentLength);
+            nextBlockID = dataBlock.DataBlock->NextBlockID;
+        }
+
+        while (nextBlockID.IsEmpty)
+        {
+            ptr = await _transaction.GetPageAsync(dataBlock.DataBlockID.PageID);
+
+            dataBlock = new DataBlockResult(ptr, nextBlockID);
 
             // copy datablock content to new in memory buffer
-            dataBlock.AsSpan().CopyTo(docBuffer.AsSpan());
+            dataBlock.AsSpan().CopyTo(docBuffer.AsSpan(position));
 
-            var position = dataBlock.ContentLength;
+            position += dataBlock.ContentLength;
 
-            ENSURE(dataBlock.DocumentLength > 0, new { dataBlock });
-
-            while (dataBlock.DataBlock->NextBlockID.IsEmpty)
+            unsafe
             {
                 // retain nextBlockID before change page
-                var nextBlockID = dataBlock.DataBlock->NextBlockID;
-
-                page = _transaction.GetPage(dataBlock.DataBlockID.PageID);
-
-                dataBlock = new DataBlockResult(page, nextBlockID);
-
-                // copy datablock content to new in memory buffer
-                dataBlock.AsSpan().CopyTo(docBuffer.AsSpan(position));
-
-                position += dataBlock.ContentLength;
+                nextBlockID = dataBlock.DataBlock->NextBlockID;
             }
-
-            var result = _bsonReader.ReadDocument(docBuffer.AsSpan(), fields, false, out _);
-
-            return result;
         }
+
+        var result = _bsonReader.ReadDocument(docBuffer.AsSpan(), fields, false, out _);
+
+        return result;
     }
 
     /// <summary>
     /// Delete a full document from a single or multiple pages
     /// </summary>
-    public void DeleteDocument(RowID dataBlockID)
+    public async ValueTask DeleteDocumentAsync(RowID dataBlockID)
     {
         while (true)
         {
             // get page from dataBlockID
-            var page = _transaction.GetPage(dataBlockID.PageID);
+            var ptr = await _transaction.GetPageAsync(dataBlockID.PageID);
 
-            var dataBlock = new DataBlockResult(page, dataBlockID);
-
-            // copy values before delete
-            var nextBlockID = dataBlock.DataBlock->NextBlockID;
-
-            // delete dataBlock (do not use "dataBlock" after here because are "fully zero")
-            PageMemory.DeleteSegment(page, dataBlockID.Index, out var newPageValue);
-
-            // checks if extend pageValue changes
-            if (newPageValue != ExtendPageValue.NoChange)
+            unsafe
             {
-                // update allocation map after change page
-                _transaction.UpdatePageMap(page->PageID, newPageValue);
+                var page = (PageMemory*)ptr;
+                var dataBlock = new DataBlockResult(page, dataBlockID);
+
+                // copy values before delete
+                var nextBlockID = dataBlock.DataBlock->NextBlockID;
+
+                // delete dataBlock (do not use "dataBlock" after here because are "fully zero")
+                PageMemory.DeleteSegment(page, dataBlockID.Index, out var newPageValue);
+
+                // checks if extend pageValue changes
+                if (newPageValue != ExtendPageValue.NoChange)
+                {
+                    // update allocation map after change page
+                    _transaction.UpdatePageMap(page->PageID, newPageValue);
+                }
+
+                // stop if there is not block to delete
+                if (nextBlockID.IsEmpty) break;
+
+                // go to next block
+                dataBlockID = nextBlockID;
             }
-
-            // stop if there is not block to delete
-            if (nextBlockID.IsEmpty) break;
-
-            // go to next block
-            dataBlockID = nextBlockID;
         }
     }
 

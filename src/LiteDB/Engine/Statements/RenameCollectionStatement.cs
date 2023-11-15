@@ -43,7 +43,7 @@ internal class RenameCollectionStatement : IEngineStatement
         master.Collections.Add(_name, collection);
 
         // write master collection into pages
-        masterService.WriteCollection(master, transaction);
+        masterService.WriteCollectionAsync(master, transaction);
 
         // write all dirty pages into disk
         await transaction.CommitAsync();

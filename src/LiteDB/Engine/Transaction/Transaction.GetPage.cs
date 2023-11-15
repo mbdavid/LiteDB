@@ -8,35 +8,38 @@ internal partial class Transaction : ITransaction
     /// Get a existing page on database based on ReadVersion. Try get first from localPages,
     /// cache and in last case read from disk (and add to localPages)
     /// </summary>
-    public unsafe PageMemory* GetPage(uint pageID)
+    public async ValueTask<nint> GetPageAsync(uint pageID)
     {
-        using var _pc = PERF_COUNTER(90, nameof(GetPage), nameof(Transaction));
+        using var _pc = PERF_COUNTER(90, nameof(GetPageAsync), nameof(Transaction));
 
         ENSURE(pageID != uint.MaxValue, "PageID must have a value");
 
         if (_localPages.TryGetValue(pageID, out var ptr))
         {
-            var page = (PageMemory*)ptr;
+            unsafe
+            {
+                var page = (PageMemory*)ptr;
 
-            // if writable, page should not be in cache
-            ENSURE(Array.IndexOf(_writeCollections, page->ColID) > -1, page->ShareCounter == NO_CACHE, "Page should not be in cache", new { _writeCollections });
+                // if writable, page should not be in cache
+                ENSURE(Array.IndexOf(_writeCollections, page->ColID) > -1, page->ShareCounter == NO_CACHE, "Page should not be in cache", new { _writeCollections });
+            }
 
-            return page;
+            return ptr;
         }
 
-        var newPage = this.ReadPage(pageID, this.ReadVersion);
+        var newPagePtr = await this.ReadPageAsync(pageID, this.ReadVersion);
 
-        _localPages.Add(pageID, (nint)newPage);
+        _localPages.Add(pageID, newPagePtr);
 
-        return newPage;
+        return newPagePtr;
     }
 
     /// <summary>
     /// Read a data/index page from disk (data or log). Can return page from global cache
     /// </summary>
-    private unsafe PageMemory* ReadPage(uint pageID, int readVersion)
+    private async ValueTask<nint> ReadPageAsync(uint pageID, int readVersion)
     {
-        using var _pc = PERF_COUNTER(100, nameof(ReadPage), nameof(Transaction));
+        using var _pc = PERF_COUNTER(100, nameof(ReadPageAsync), nameof(Transaction));
 
         var writable = false;
         var found = false;
@@ -45,22 +48,22 @@ internal partial class Transaction : ITransaction
         if (_walDirtyPages.TryGetValue(pageID, out var positionID))
         {
             // if page are in local wal, try get from cache
-            var cachePage = _memoryCache.GetPageReadWrite(positionID, _writeCollections, out writable, out found);
+            var cachePagePtr = _memoryCache.GetPageReadWritePtr(positionID, _writeCollections, out writable, out found);
 
             if (found == false)
             {
                 // if not found, allocate new page
-                var walPage = _memoryFactory.AllocateNewPage();
+                var walPagePtr = _memoryFactory.AllocateNewPagePtr();
 
-                _diskService.ReadPage(walPage, positionID);
+                await _diskService.ReadPageAsync(walPagePtr, positionID);
 
-                ENSURE(walPage->PageType == PageType.Data || walPage->PageType == PageType.Index, $"Only data/index page on transaction read page: {walPage->PageID}");
+                //ENSURE(walPage->PageType == PageType.Data || walPage->PageType == PageType.Index, $"Only data/index page on transaction read page: {walPage->PageID}");
 
-                return walPage;
+                return walPagePtr;
             }
             else
             {
-                return cachePage;
+                return cachePagePtr;
             }
         }
 
@@ -68,27 +71,27 @@ internal partial class Transaction : ITransaction
         positionID = _walIndexService.GetPagePositionID(pageID, readVersion, out _);
 
         // get a page from cache (if writable, this page are not linked to cache anymore)
-        var page = _memoryCache.GetPageReadWrite(positionID, _writeCollections, out writable, out found);
+        var ptr = _memoryCache.GetPageReadWritePtr(positionID, _writeCollections, out writable, out found);
 
         // if page not found, allocate new page and read from disk
         if (found == false)
         {
-            page = _memoryFactory.AllocateNewPage();
+            ptr = _memoryFactory.AllocateNewPagePtr();
 
-            _diskService.ReadPage(page, positionID);
+            await _diskService.ReadPageAsync(ptr, positionID);
 
-            ENSURE(page->PageType == PageType.Data || page->PageType == PageType.Index, $"Only data/index page on transaction read page: {page->PageID}");
+            //ENSURE(page->PageType == PageType.Data || page->PageType == PageType.Index, $"Only data/index page on transaction read page: {page->PageID}");
         }
 
-        return page;
+        return ptr;
     }
 
     /// <summary>
     /// Get a Data Page with, at least, 30% free space
     /// </summary>
-    public unsafe PageMemory* GetFreeDataPage(byte colID)
+    public async ValueTask<nint> GetFreeDataPageAsync(byte colID)
     {
-        using var _pc = PERF_COUNTER(110, nameof(GetFreeDataPage), nameof(Transaction));
+        using var _pc = PERF_COUNTER(110, nameof(GetFreeDataPageAsync), nameof(Transaction));
 
         var colIndex = Array.IndexOf(_writeCollections, colID);
         var currentExtend = _currentDataExtend[colIndex];
@@ -101,31 +104,31 @@ internal partial class Transaction : ITransaction
 
         if (isNew)
         {
-            var page = _memoryFactory.AllocateNewPage();
+            var ptr = _memoryFactory.AllocateNewPagePtr();
 
             // initialize empty page as data page
-            PageMemory.InitializeAsDataPage(page, pageID, colID);
+            PageMemory.InitializeAsDataPage(ptr, pageID, colID);
 
             // add in local cache
-            _localPages.Add(pageID, (nint)page);
+            _localPages.Add(pageID, ptr);
 
-            return page;
+            return ptr;
         }
         else
         {
             // if page already exists, just get page
-            var page = this.GetPage(pageID);
+            var ptr = await this.GetPageAsync(pageID);
 
-            return page;
+            return ptr;
         }
     }
 
     /// <summary>
     /// Get a Index Page with space enougth for index node
     /// </summary>
-    public unsafe PageMemory* GetFreeIndexPage(byte colID, int indexNodeLength)
+    public async ValueTask<nint> GetFreeIndexPageAsync(byte colID, int indexNodeLength)
     {
-        using var _pc = PERF_COUNTER(120, nameof(GetFreeIndexPage), nameof(Transaction));
+        using var _pc = PERF_COUNTER(120, nameof(GetFreeIndexPageAsync), nameof(Transaction));
 
         var colIndex = Array.IndexOf(_writeCollections, colID);
         var currentExtend = _currentIndexExtend[colIndex];
@@ -138,23 +141,32 @@ internal partial class Transaction : ITransaction
 
         if (isNew)
         {
-            var page = _memoryFactory.AllocateNewPage();
+            var ptr = _memoryFactory.AllocateNewPagePtr();
 
             // initialize empty page as index page
-            PageMemory.InitializeAsIndexPage(page, pageID, colID);
+            PageMemory.InitializeAsIndexPage(ptr, pageID, colID);
 
             // add in local cache
-            _localPages.Add(pageID, (nint)page);
+            _localPages.Add(pageID, ptr);
 
-            return page;
+            return ptr;
         }
         else
         {
-            var page = this.GetPage(pageID);
+            var ptr = await this.GetPageAsync(pageID);
+
+            // get free bytes from readed page
+            int freeBytes;
+
+            unsafe
+            {
+                var page = (PageMemory*)ptr;
+                freeBytes = page->FreeBytes;
+            }
 
             // get how many avaiable bytes (excluding new added record) this page contains
             var pageAvailableSpace =
-                page->FreeBytes -
+                freeBytes -
                 indexNodeLength -
                 8; // extra align
 
@@ -162,13 +174,14 @@ internal partial class Transaction : ITransaction
             if (pageAvailableSpace < indexNodeLength)
             {
                 // set this page as full before get next page
-                this.UpdatePageMap(page->PageID, ExtendPageValue.Full);
+                //**this.UpdatePageMap(page->PageID, ExtendPageValue.Full);
+                this.UpdatePageMap(pageID, ExtendPageValue.Full);
 
                 // call recursive to get another page
-                return this.GetFreeIndexPage(colID, indexNodeLength);
+                return await this.GetFreeIndexPageAsync(colID, indexNodeLength);
             }
 
-            return page;
+            return ptr;
         }
     }
 }

@@ -8,9 +8,8 @@ internal class SortOperation : ISortOperation
     private readonly Collation _collation;
     private readonly IDisk _sortDisk;
     private readonly IServicesFactory _factory;
+
     private readonly OrderBy _orderBy;
-
-
     private readonly int _containerSize;
     private readonly int _containerSizeLimit;
     private Queue<SortItem>? _sortedItems; // when use less than 1 container
@@ -116,7 +115,7 @@ internal class SortOperation : ISortOperation
         // position stream in container disk position
         var position = containerID * _containerSize;
 
-        _sortDisk.WriteBuffer(_containerBuffer, position);
+        _sortDisk.WriteBufferAsync(_containerBuffer, position);
 
         _containers.Add(container);
 

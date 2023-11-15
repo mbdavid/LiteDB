@@ -6,6 +6,8 @@
 [AutoInterface(typeof(IDisposable))]
 unsafe internal class MemoryFactory : IMemoryFactory
 {
+    private readonly ConcurrentDictionary<nint, (GCHandle handle, byte[] buffer)> _pages = new();
+
     private readonly ConcurrentDictionary<int, nint> _inUsePages = new();
     private readonly ConcurrentQueue<nint> _freePages = new();
 
@@ -16,7 +18,11 @@ unsafe internal class MemoryFactory : IMemoryFactory
     {
     }
 
-    public PageMemory* AllocateNewPage()
+    /// <summary>
+    /// Allocate new byte[PAGE_SIZE] (or get from cache) and return pointer to (PageMemory*)
+    /// </summary>
+    /// <returns></returns>
+    public nint AllocateNewPage()
     {
         if (_freePages.TryDequeue(out var ptr))
         {
@@ -24,11 +30,20 @@ unsafe internal class MemoryFactory : IMemoryFactory
 
             _inUsePages.TryAdd(page->UniqueID, ptr);
 
-            return page;
+            return ptr;
         }
 
-        // get memory pointer from unmanaged memory
-        var newPage = (PageMemory*)Marshal.AllocHGlobal(sizeof(PageMemory));
+        // create new byte[] in memory and get pinned point to use with pointer types
+        var buffer = new byte[PAGE_SIZE];
+        var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+        ptr = handle.AddrOfPinnedObject();
+
+        // add this page into local map
+        var added = _pages.TryAdd(ptr, (handle, buffer));
+
+        ENSURE(added);
+
+        var newPage = (PageMemory*)ptr;
 
         var uniqueID = Interlocked.Increment(ref _nextUniqueID);
         Interlocked.Increment(ref _pagesAllocated);
@@ -38,11 +53,14 @@ unsafe internal class MemoryFactory : IMemoryFactory
 
         _inUsePages.TryAdd(newPage->UniqueID, (nint)newPage);
 
-        return newPage;
+        return ptr;
     }
 
-    public void DeallocatePage(PageMemory* page)
+    public void DeallocatePage(nint ptr)
     {
+        // cast pointer type as PageMemory pointer
+        var page = (PageMemory*)ptr;
+
         ENSURE(page->ShareCounter != NO_CACHE, page->ShareCounter != 0, "ShareCounter must be 0 before return page to memory");
 
         // remove from inUse pages 
@@ -57,6 +75,17 @@ unsafe internal class MemoryFactory : IMemoryFactory
         _freePages.Enqueue((nint)page);
     }
 
+    /// <summary>
+    /// Get buffer array (in managed memory) from a page pointer
+    /// </summary>
+    public byte[] GetPageArray(nint ptr)
+    {
+        var found = _pages.TryGetValue(ptr, out var result);
+
+        ENSURE(found);
+
+        return result.buffer;
+    }
 
     public override string ToString()
     {
@@ -67,16 +96,13 @@ unsafe internal class MemoryFactory : IMemoryFactory
     {
         ENSURE(_pagesAllocated == (_inUsePages.Count + _freePages.Count));
 
-        // release unmanaged memory
-        foreach (var ptr in _inUsePages.Values)
+        // release memory
+        foreach(var (handle, _) in _pages.Values)
         {
-            Marshal.FreeHGlobal(ptr);
-        }
-        foreach (var ptr in _freePages)
-        {
-            Marshal.FreeHGlobal(ptr);
+            handle.Free();
         }
 
+        _pages.Clear();
         _inUsePages.Clear();
         _freePages.Clear();
 

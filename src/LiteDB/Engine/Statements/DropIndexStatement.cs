@@ -49,13 +49,13 @@ internal class DropIndexStatement : IEngineStatement
         var (_, indexService) = _store.GetServices(factory, transaction);
 
         // drop all index nodes for this slot. Scan from pk items
-        indexService.DropIndex(indexDocument.Slot, pkIndex.HeadIndexNodeID);
+        indexService.DropIndexAsync(indexDocument.Slot, pkIndex.HeadIndexNodeID);
 
         // remove index from collection on $master
         collection.Indexes.Remove(indexDocument);
 
         // write master collection into pages
-        masterService.WriteCollection(master, transaction);
+        masterService.WriteCollectionAsync(master, transaction);
 
         // write all dirty pages into disk
         await transaction.CommitAsync();

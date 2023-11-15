@@ -11,7 +11,7 @@ internal class DataLookup : IDocumentLookup
 
     public BsonDocument Load(PipeValue key, PipeContext context)
     {
-        var result = context.DataService.ReadDocument(key.DataBlockID, _fields);
+        var result = context.DataService.ReadDocumentAsync(key.DataBlockID, _fields);
 
         if (result.Fail) throw result.Exception;
 

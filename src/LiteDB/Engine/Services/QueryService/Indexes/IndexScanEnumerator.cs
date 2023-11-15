@@ -40,7 +40,7 @@ internal class IndexScanEnumerator : IPipeEnumerator
         {
             _init = true;
 
-            var node = indexService.GetNode(head);
+            var node = indexService.GetNodeAsync(head);
 
             // get pointer to next at level 0
             _next = node[0]->GetNext(_order);
@@ -56,7 +56,7 @@ internal class IndexScanEnumerator : IPipeEnumerator
         // loop until find any func<> = true
         while (true)
         {
-            var node = indexService.GetNode(_next);
+            var node = indexService.GetNodeAsync(_next);
 
             _next = node[0]->GetNext(_order);
 

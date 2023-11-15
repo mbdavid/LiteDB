@@ -27,7 +27,7 @@ internal class PragmaStatement : IEngineStatement
         pragmas.Set(_name, _value);
 
         // write pragmas on disk
-        diskService.WritePragmas(pragmas);
+        diskService.WritePragmasAsync(pragmas);
 
         return 1;
     }
