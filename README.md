@@ -150,7 +150,7 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 - A GUI editor tool: https://github.com/JosefNemec/LiteDbExplorer (v4)
 - Lucene.NET directory: https://github.com/sheryever/LiteDBDirectory
 - LINQPad support: https://github.com/adospace/litedbpad
-- F# Support: https://github.com/Zaid-Ajaj/LiteDB.FSharp
+- F# Support: https://github.com/Zaid-Ajaj/LiteDB.FSharp (v4)
 - UltraLiteDB (for Unity or IOT): https://github.com/rejemy/UltraLiteDB
 - OneBella - cross platform (windows, macos, linux) GUI tool : https://github.com/namigop/OneBella
 
