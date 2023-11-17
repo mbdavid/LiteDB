@@ -37,10 +37,7 @@ internal class IndexNodeEnumerator : IAsyncEnumerator<IndexNodeResult>
             _current = await _indexService.GetNodeAsync(nextID);
 
             // buffer next in level 0
-            unsafe
-            {
-                _nextID = _current[0]->NextID;
-            }
+            _nextID = _current.GetNextID(0);
 
             return true;
         }

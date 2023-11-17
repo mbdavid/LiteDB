@@ -29,28 +29,23 @@ internal class IndexService : IIndexService
         var bytesLength = (ushort)IndexNode.GetSize(INDEX_MAX_LEVELS, BsonValue.MinValue);
 
         // get a index page for this collection
-        var ptr = await _transaction.GetFreeIndexPageAsync(colID, bytesLength * 2);
+        var page = await _transaction.GetFreeIndexPageAsync(colID, bytesLength * 2);
 
-        unsafe
+        // add head/tail nodes into page
+        var head = PageMemory.InsertIndexNode(page, 0, INDEX_MAX_LEVELS, BsonValue.MinValue, RowID.Empty, out _, out var newPageValue);
+        var tail = PageMemory.InsertIndexNode(page, 0, INDEX_MAX_LEVELS, BsonValue.MaxValue, RowID.Empty, out _, out _);
+
+        // link head-to-tail with double link list in first level
+        head.SetNextID(0, tail.IndexNodeID);
+        tail.SetPrevID(0, head.IndexNodeID);
+
+        // update allocation map if needed
+        if (newPageValue != ExtendPageValue.NoChange)
         {
-            var page = (PageMemory*)ptr;
-
-            // add head/tail nodes into page
-            var head = PageMemory.InsertIndexNode(page, 0, INDEX_MAX_LEVELS, BsonValue.MinValue, RowID.Empty, out _, out var newPageValue);
-            var tail = PageMemory.InsertIndexNode(page, 0, INDEX_MAX_LEVELS, BsonValue.MaxValue, RowID.Empty, out _, out _);
-
-            // link head-to-tail with double link list in first level
-            head.SetNextID(0, tail.IndexNodeID);
-            tail.SetPrevID(0, head.IndexNodeID);
-
-            // update allocation map if needed
-            if (newPageValue != ExtendPageValue.NoChange)
-            {
-                _transaction.UpdatePageMap(page->PageID, newPageValue);
-            }
-
-            return (head.IndexNodeID, tail.IndexNodeID);
+            _transaction.UpdatePageMap(page.PageID, newPageValue);
         }
+
+        return (head.IndexNodeID, tail.IndexNodeID);
     }
 
     #endregion
@@ -91,23 +86,15 @@ internal class IndexService : IIndexService
         var bytesLength = IndexNode.GetSize(insertLevels, key);
 
         // get an index page with avaliable space to add this node
-        var ptr = await _transaction.GetFreeIndexPageAsync(colID, bytesLength);
+        var page = await _transaction.GetFreeIndexPageAsync(colID, bytesLength);
 
-        bool defrag;
-        IndexNodeResult node;
+        // create node in page
+        var node = PageMemory.InsertIndexNode(page, index.Slot, (byte)insertLevels, key, dataBlockID, out var defrag, out var newPageValue);
 
-        unsafe
+        // update allocation map if needed (this page has no more "size" changes)
+        if (newPageValue != ExtendPageValue.NoChange)
         {
-            var page = (PageMemory*)ptr;
-
-            // create node in page
-            node = PageMemory.InsertIndexNode(page, index.Slot, (byte)insertLevels, key, dataBlockID, out defrag, out var newPageValue);
-
-            // update allocation map if needed (this page has no more "size" changes)
-            if (newPageValue != ExtendPageValue.NoChange)
-            {
-                _transaction.UpdatePageMap(page->PageID, newPageValue);
-            }
+            _transaction.UpdatePageMap(page.PageID, newPageValue);
         }
 
         // now, let's link my index node on right place
@@ -151,7 +138,7 @@ internal class IndexService : IIndexService
 
                 // fix sibling pointer to new node
                 leftNode.SetNextID(currentLevel, node.IndexNodeID);
-                leftNode.IsDirtyPage = true;
+                leftNode.Page.IsDirty = true;
 
                 right = node.GetNextID(currentLevel);
 
@@ -159,7 +146,7 @@ internal class IndexService : IIndexService
 
                 // mark right page as dirty (after change PrevID)
                 rightNode.SetPrevID(currentLevel, node.IndexNodeID);
-                rightNode.IsDirtyPage = true;
+                rightNode.Page.IsDirty = true;
             }
         }
 
@@ -168,7 +155,7 @@ internal class IndexService : IIndexService
         {
             // set last node to link with current node
             last.NextNodeID = node.IndexNodeID;
-            last.IsDirtyPage = true;
+            last.Page.IsDirty = true;
         }
 
         return (node, defrag);
@@ -204,11 +191,11 @@ internal class IndexService : IIndexService
         ENSURE(!indexNodeID.IsEmpty);
         ENSURE(!(indexNodeID.PageID == 0 && indexNodeID.Index == 0));
 
-        var ptr = await _transaction.GetPageAsync(indexNodeID.PageID);
+        var page = await _transaction.GetPageAsync(indexNodeID.PageID);
 
-        //ENSURE(page->PageType == PageType.Index, new { indexNodeID });
+        ENSURE(page.PageType == PageType.Index, new { indexNodeID });
 
-        var result = new IndexNodeResult(ptr, indexNodeID);
+        var result = new IndexNodeResult(page, indexNodeID);
 
         return result;
     }
@@ -279,12 +266,7 @@ internal class IndexService : IIndexService
         while (!node.IsEmpty)
         {
             // keep result before delete
-            RowID nextNodeID; 
-
-            unsafe
-            {
-                nextNodeID = node.Node->NextNodeID;
-            }
+            var nextNodeID = node.NextNodeID;
 
             await this.DeleteSingleNodeAsync(node);
 
@@ -300,15 +282,8 @@ internal class IndexService : IIndexService
     /// </summary>
     private async ValueTask DeleteSingleNodeAsync(IndexNodeResult node)
     {
-        int start;
-
-        unsafe
-        {
-            start = node.Node->Levels - 1;
-        }
-
         // run over all levels linking prev with next
-        for (int i = start; i >= 0; i--)
+        for (int i = node.Levels; i >= 0; i--)
         {
             var prevID = node.GetPrevID(i);
             var nextID = node.GetNextID(i);
@@ -320,26 +295,23 @@ internal class IndexService : IIndexService
             if (!prev.IsEmpty)
             {
                 prev.SetNextID(i, node.GetNextID(i));
-                prev.IsDirtyPage = true;
+                prev.Page.IsDirty = true;
             }
 
             if (!next.IsEmpty)
             {
                 next.SetPrevID(i, node.GetPrevID(i));
-                next.IsDirtyPage = true;
+                next.Page.IsDirty = true;
             }
         }
 
-        unsafe
-        {
-            // delete node segment in page (set IsDirtry = true)
-            PageMemory.DeleteSegment(node.Page, node.IndexNodeID.Index, out var newPageValue);
+        // delete node segment in page (set IsDirtry = true)
+        PageMemory.DeleteSegment(node.Page.Ptr, node.IndexNodeID.Index, out var newPageValue);
 
-            // update map page only if change page value
-            if (newPageValue != ExtendPageValue.NoChange)
-            {
-                _transaction.UpdatePageMap(node.Page->PageID, newPageValue);
-            }
+        // update map page only if change page value
+        if (newPageValue != ExtendPageValue.NoChange)
+        {
+            _transaction.UpdatePageMap(node.PageID, newPageValue);
         }
     }
 
@@ -349,7 +321,7 @@ internal class IndexService : IIndexService
 
     /// <summary>
     /// </summary>
-    public async ValueTask DropIndexAsync(int slot, RowID pkHeadIndexNodeID)
+    public async ValueTask DropIndexAsync(int slot, RowID pkHeadIndexNodeID, RowID pkTailIndexNodeID)
     {
         // init from first node after head
         var pkNode = await this.GetNodeAsync(pkHeadIndexNodeID);
@@ -357,7 +329,7 @@ internal class IndexService : IIndexService
         var pkRowID = pkNode.GetNextID(0);
 
         // loop over all pk index nodes
-        while (pkRowID.IsEmpty == false)
+        while (pkRowID.IsEmpty == false && pkRowID != pkTailIndexNodeID)
         {
             pkNode = await this.GetNodeAsync(pkRowID);
 
@@ -368,37 +340,31 @@ internal class IndexService : IIndexService
             {
                 var node = await this.GetNodeAsync(nextNodeID);
 
-                unsafe
+                // skip if not same slot
+                if (node.Slot != slot)
                 {
-                    // skip if not same slot
-                    if (node.Node->Slot != slot)
-                    {
-                        nextNodeID = node.NextNodeID;
-                        last = node;
-                        continue;
-                    }
-
-                    // fix last index node pointer
-                    last.NextNodeID = node.NextNodeID;
-                    last.Page->IsDirty = true;
-
-                    // keep nextNodeID 
                     nextNodeID = node.NextNodeID;
+                    last = node;
+                    continue;
+                }
 
-                    // delete node
-                    PageMemory.DeleteSegment(node.Page, node.IndexNodeID.Index, out var pageValue);
+                // fix last index node pointer
+                last.NextNodeID = node.NextNodeID;
+                last.Page.IsDirty = true;
 
-                    if (pageValue != ExtendPageValue.NoChange)
-                    {
-                        _transaction.UpdatePageMap(node.Page->PageID, pageValue);
-                    }
+                // keep nextNodeID 
+                nextNodeID = node.NextNodeID;
+
+                // delete node
+                PageMemory.DeleteSegment(node.Page.Ptr, node.IndexNodeID.Index, out var pageValue);
+
+                if (pageValue != ExtendPageValue.NoChange)
+                {
+                    _transaction.UpdatePageMap(node.Page.PageID, pageValue);
                 }
             }
 
-            unsafe
-            {
-                pkRowID = pkNode[0]->GetNext(Query.Ascending);
-            }
+            pkRowID = pkNode.GetNextID(0);
         }
     }
 

@@ -34,5 +34,5 @@ internal interface IIndexService
     /// </summary>
     ValueTask DeleteAllAsync(RowID pkIndexNodeID);
 
-    ValueTask DropIndexAsync(int slot, RowID pkHeadIndexNodeID);
+    ValueTask DropIndexAsync(int slot, RowID pkHeadIndexNodeID, RowID pkTailIndexNodeID);
 }

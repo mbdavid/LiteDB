@@ -15,10 +15,10 @@ unsafe internal partial struct PageMemory // PageMemory.DataBlock
         page->IsDirty = true;
     }
 
-    public static DataBlockResult InsertDataBlock(nint ptr, Span<byte> content, bool extend, out bool defrag, out ExtendPageValue newPageValue)
+    public static DataBlockResult InsertDataBlock(PageMemoryResult pageResult, Span<byte> content, bool extend, out bool defrag, out ExtendPageValue newPageValue)
     {
-        // cast pointer type as PageMemory pointer
-        var page = (PageMemory*)ptr;
+        // get PageMemory
+        var page = pageResult.Page;
 
         // get required bytes this insert
         var bytesLength = sizeof(DataBlock) + content.Length;
@@ -45,7 +45,7 @@ unsafe internal partial struct PageMemory // PageMemory.DataBlock
         dataBlock->Padding = (byte)padding;
         dataBlock->NextBlockID = RowID.Empty;
 
-        var result = new DataBlockResult(page, dataBlockID);
+        var result = new DataBlockResult(pageResult, dataBlockID);
 
         // copy content into dataBlock content block
         content.CopyTo(result.AsSpan());
@@ -57,10 +57,10 @@ unsafe internal partial struct PageMemory // PageMemory.DataBlock
     /// <summary>
     /// Update an existing document inside a single page. This new document must fit on this page
     /// </summary>
-    public static void UpdateDataBlock(nint ptr, ushort index, Span<byte> content, RowID nextBlock, out bool defrag, out ExtendPageValue newPageValue)
+    public static void UpdateDataBlock(PageMemoryResult pageResult, ushort index, Span<byte> content, RowID nextBlock, out bool defrag, out ExtendPageValue newPageValue)
     {
-        // cast pointer type as PageMemory pointer
-        var page = (PageMemory*)ptr;
+        // get PageMemory
+        var page = pageResult.Page;
 
         // get required bytes this insert
         var bytesLength = sizeof(DataBlock) + content.Length;
@@ -89,5 +89,18 @@ unsafe internal partial struct PageMemory // PageMemory.DataBlock
         var dataBlockSpan = new Span<byte>(contentPtr, bytesLength);
 
         content.CopyTo(dataBlockSpan);
+    }
+
+    /// <summary>
+    /// Get how many bytes a page contains to be used in a new DataBlock content size (should consider new block fix size)
+    /// </summary>
+    public static int GetPageAvailableSpace(nint ptr)
+    {
+        var page = (PageMemory*)ptr;
+
+        return page->FreeBytes -
+               sizeof(DataBlock) - // new data block fixed syze
+               (sizeof(PageSegment) * 2) - // footer (*2 to align)
+               8; // extra align
     }
 }

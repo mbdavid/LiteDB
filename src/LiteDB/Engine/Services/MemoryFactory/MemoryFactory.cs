@@ -6,10 +6,8 @@
 [AutoInterface(typeof(IDisposable))]
 unsafe internal class MemoryFactory : IMemoryFactory
 {
-    private readonly ConcurrentDictionary<nint, (GCHandle handle, byte[] buffer)> _pages = new();
-
-    private readonly ConcurrentDictionary<int, nint> _inUsePages = new();
-    private readonly ConcurrentQueue<nint> _freePages = new();
+    private readonly ConcurrentDictionary<int, PageMemoryResult> _inUsePages = new();
+    private readonly ConcurrentQueue<PageMemoryResult> _freePages = new();
 
     private int _nextUniqueID = BUFFER_UNIQUE_ID - 1;
     private int _pagesAllocated = 0;
@@ -21,70 +19,42 @@ unsafe internal class MemoryFactory : IMemoryFactory
     /// <summary>
     /// Allocate new byte[PAGE_SIZE] (or get from cache) and return pointer to (PageMemory*)
     /// </summary>
-    /// <returns></returns>
-    public nint AllocateNewPage()
+    public PageMemoryResult AllocateNewPage()
     {
-        if (_freePages.TryDequeue(out var ptr))
+        if (_freePages.TryDequeue(out var page))
         {
-            var page = (PageMemory*)ptr;
+            _inUsePages.TryAdd(page.UniqueID, page);
 
-            _inUsePages.TryAdd(page->UniqueID, ptr);
-
-            return ptr;
+            return page;
         }
 
-        // create new byte[] in memory and get pinned point to use with pointer types
-        var buffer = new byte[PAGE_SIZE];
-        var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-        ptr = handle.AddrOfPinnedObject();
-
-        // add this page into local map
-        var added = _pages.TryAdd(ptr, (handle, buffer));
-
-        ENSURE(added);
-
-        var newPage = (PageMemory*)ptr;
-
         var uniqueID = Interlocked.Increment(ref _nextUniqueID);
+
         Interlocked.Increment(ref _pagesAllocated);
 
-        // clear page and initialize with uniqueID
-        PageMemory.Initialize(newPage, uniqueID);
+        page = new PageMemoryResult(uniqueID);
 
-        _inUsePages.TryAdd(newPage->UniqueID, (nint)newPage);
+        _inUsePages.TryAdd(uniqueID, page);
 
-        return ptr;
+        return page;
     }
 
-    public void DeallocatePage(nint ptr)
+    public void DeallocatePage(PageMemoryResult page)
     {
-        // cast pointer type as PageMemory pointer
-        var page = (PageMemory*)ptr;
-
-        ENSURE(page->ShareCounter != NO_CACHE, page->ShareCounter != 0, "ShareCounter must be 0 before return page to memory");
+        ENSURE(page.ShareCounter != NO_CACHE, page.ShareCounter != 0, "ShareCounter must be 0 before return page to memory");
 
         // remove from inUse pages 
-        var removed = _inUsePages.TryRemove(page->UniqueID, out _);
+        var removed = _inUsePages.TryRemove(page.UniqueID, out _);
 
         ENSURE(removed, new { _pagesAllocated, _freePages, _inUsePages });
 
         // clear page
-        PageMemory.Initialize(page, page->UniqueID);
+        page.Initialize();
 
         // add used page as new free page
-        _freePages.Enqueue((nint)page);
-    }
+        _freePages.Enqueue(page);
 
-    /// <summary>
-    /// Get buffer array (in managed memory) from a page pointer
-    /// </summary>
-    public byte[] GetPageArray(nint ptr)
-    {
-        var found = _pages.TryGetValue(ptr, out var result);
-
-        ENSURE(found);
-
-        return result.buffer;
+        // i can decide here if _freePages are too high it's possible to deallocate some byte[]
     }
 
     public override string ToString()
@@ -97,12 +67,16 @@ unsafe internal class MemoryFactory : IMemoryFactory
         ENSURE(_pagesAllocated == (_inUsePages.Count + _freePages.Count));
 
         // release memory
-        foreach(var (handle, _) in _pages.Values)
+        foreach (var page in _freePages)
         {
-            handle.Free();
+            page.Dispose();
         }
 
-        _pages.Clear();
+        foreach (var page in _inUsePages.Values)
+        {
+            page.Dispose();
+        }
+
         _inUsePages.Clear();
         _freePages.Clear();
 

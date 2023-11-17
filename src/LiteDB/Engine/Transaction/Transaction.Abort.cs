@@ -9,18 +9,16 @@ internal partial class Transaction : ITransaction
         using var _pc = PERF_COUNTER(150, nameof(Abort), nameof(Transaction));
 
         // add pages to cache or decrement sharecount
-        foreach (var ptr in _localPages.Values)
+        foreach (var page in _localPages.Values)
         {
-            var page = (PageMemory*)ptr;
-
-            if (page->IsDirty)
+            if (page.IsDirty)
             {
                 _memoryFactory.DeallocatePage(page);
             }
             else
             {
                 // test if page is came from the cache
-                if (page->IsPageInCache)
+                if (page.IsPageInCache)
                 {
                     // return page to cache
                     _memoryCache.ReturnPageToCache(page);

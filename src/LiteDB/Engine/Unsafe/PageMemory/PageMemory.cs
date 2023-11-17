@@ -4,34 +4,29 @@
 unsafe internal partial struct PageMemory             // 8192 (64 bytes header - 8128 content)
 {
     [FieldOffset(00)] public uint PositionID;         // 4
-    [FieldOffset(04)] public uint PageID;             // 4 *
+    [FieldOffset(04)] public uint PageID;             // 4 * (8)
 
     [FieldOffset(08)] public PageType PageType;       // 1
     [FieldOffset(09)] public byte ColID;              // 1
-    [FieldOffset(10)] public bool IsDirty;            // 1    - memory only control (but stores on disk default value)
-    [FieldOffset(11)] public bool IsConfirmed;        // 1
+    [FieldOffset(10)] public bool IsConfirmed;        // 1
+    [FieldOffset(11)] public bool IsDirty;            // 1
+    [FieldOffset(12)] public int TransactionID;       // 4 * (16)
 
-    [FieldOffset(12)] public int ShareCounter;        // 4 *  - memory only control (but stores on disk default value)
-    [FieldOffset(16)] public int UniqueID;            // 4    - memory only control (but stores on disk default value)
-    [FieldOffset(20)] public int TransactionID;       // 4 *
-    [FieldOffset(24)] public uint RecoveryPositionID; // 4
+    [FieldOffset(16)] public uint RecoveryPositionID; // 4
+    [FieldOffset(20)] public ushort ItemsCount;       // 2
+    [FieldOffset(22)] public ushort UsedBytes;        // 2 * (24)
 
-    [FieldOffset(28)] public ushort ItemsCount;       // 2
-    [FieldOffset(30)] public ushort UsedBytes;        // 2 *
-    [FieldOffset(32)] public ushort FragmentedBytes;  // 2
-    [FieldOffset(34)] public ushort NextFreeLocation; // 2
-    [FieldOffset(36)] public short HighestIndex;      // 2  use -1 to unset
+    [FieldOffset(24)] public ushort FragmentedBytes;  // 2
+    [FieldOffset(26)] public ushort NextFreeLocation; // 2
+    [FieldOffset(28)] public short HighestIndex;      // 2  use -1 to unset
+    [FieldOffset(30)] public ushort Reserved1;        // 2 * (32)
 
-    [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    [FieldOffset(38)] public ushort Reserved1;        // 2 *
-    [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    [FieldOffset(40)] public ulong Reserved2;         // 8 *
-    [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    [FieldOffset(48)] public ulong Reserved3;         // 8 *
-    [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    [FieldOffset(56)] public uint Reserved4;          // 4
+    [FieldOffset(32)] public ulong Reserved2;         // 8 * (40)
+    [FieldOffset(40)] public ulong Reserved3;         // 8 * (48)
+    [FieldOffset(48)] public ulong Reserved4;         // 8 * (56)
 
-    [FieldOffset(60)] public int Crc32;               // 4 *
+    [FieldOffset(56)] public uint Reserved5;          // 4
+    [FieldOffset(60)] public int Crc32;               // 4 * (64)
 
     [FieldOffset(PAGE_HEADER_SIZE)] public fixed byte Buffer[PAGE_CONTENT_SIZE];  // 8128
     [FieldOffset(PAGE_HEADER_SIZE)] public fixed uint Extends[AM_EXTEND_COUNT];   // 8128
@@ -53,35 +48,22 @@ unsafe internal partial struct PageMemory             // 8192 (64 bytes header -
     /// <summary>
     /// Get current extend page value based on PageType and FreeSpace
     /// </summary>
-    public ExtendPageValue ExtendPageValue => PageMemory.GetExtendPageValue(this.PageType, this.FreeBytes);
-
-    public bool IsPageInLogFile => this.PositionID != this.PageID;
-    public bool IsPageInCache => this.ShareCounter != NO_CACHE;
+    public unsafe ExtendPageValue ExtendPageValue => PageMemory.GetExtendPageValue(this.PageType, this.FreeBytes);
 
     public PageMemory()
     {
     }
 
-    public static void Initialize(nint ptr, int uniqueID)
+    public static void Initialize(PageMemory* page)
     {
-        // cast pointer type as PageMemory pointer
-        var page = (PageMemory*)ptr;
-
         page->PositionID = uint.MaxValue;
         page->PageID = uint.MaxValue;
 
         page->PageType = PageType.Empty;
         page->ColID = 0;
-        page->IsDirty = false;
         page->IsConfirmed = false;
+        page->IsDirty = false;
 
-        page->Reserved1 = 0;
-        page->Reserved2 = 0;
-        page->Reserved3 = 0;
-        page->Reserved4 = 0;
-
-        page->ShareCounter = NO_CACHE;
-        page->UniqueID = uniqueID;
         page->TransactionID = 0;
         page->RecoveryPositionID = uint.MaxValue;
 
@@ -91,15 +73,16 @@ unsafe internal partial struct PageMemory             // 8192 (64 bytes header -
         page->NextFreeLocation = PAGE_HEADER_SIZE; // first location
         page->HighestIndex = -1;
 
+        page->Reserved1 = 0;
+        page->Reserved2 = 0;
+        page->Reserved3 = 0;
+        page->Reserved4 = 0;
+        page->Reserved5 = 0;
+
         page->Crc32 = 0;
 
         // clear full content area
-        MarshalEx.FillZero((byte*)(nint)page + PAGE_HEADER_SIZE, PAGE_CONTENT_SIZE);
-    }
-
-    public static bool IsPageDirty(nint ptr)
-    {
-        return ((PageMemory*)ptr)->IsDirty;
+        MarshalEx.FillZero((byte*)((nint)page) + PAGE_HEADER_SIZE, PAGE_CONTENT_SIZE);
     }
 
     public string DumpPage()
@@ -112,6 +95,6 @@ unsafe internal partial struct PageMemory             // 8192 (64 bytes header -
 
     public override string ToString()
     {
-        return Dump.Object(new { PositionID, PageID, PageType, ColID, IsDirty, IsConfirmed, ShareCounter, TransactionID, ItemsCount, FreeBytes });
+        return Dump.Object(new { PositionID, PageID, PageType, ColID, IsConfirmed, TransactionID, ItemsCount, FreeBytes });
     }
 }

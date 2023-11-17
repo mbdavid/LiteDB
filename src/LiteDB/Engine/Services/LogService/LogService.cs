@@ -11,7 +11,6 @@ internal class LogService : ILogService
     private readonly IMemoryCache _memoryCache;
     private readonly IMemoryFactory _memoryFactory;
     private readonly IWalIndexService _walIndexService;
-    private readonly IServicesFactory _factory;
 
     private uint _lastPageID;
     private uint _logPositionID;
@@ -23,14 +22,12 @@ internal class LogService : ILogService
         IDiskService diskService,
         IMemoryCache memoryCache,
         IMemoryFactory memoryFactory,
-        IWalIndexService walIndexService,
-        IServicesFactory factory)
+        IWalIndexService walIndexService)
     {
         _diskService = diskService;
         _memoryCache = memoryCache;
         _memoryFactory = memoryFactory;
         _walIndexService = walIndexService;
-        _factory = factory;
     }
 
     public void Initialize()
@@ -58,28 +55,17 @@ internal class LogService : ILogService
 
     /// <summary>
     /// </summary>
-    public async ValueTask WriteLogPagesAsync(nint[] pages)
+    public async ValueTask WriteLogPagesAsync(PageMemoryResult[] pages)
     {
-        // set IsDirty flag in header file to true at first use
-        if (_factory.Pragmas.IsDirty == false)
-        {
-            _factory.Pragmas.IsDirty = true;
-
-            await _diskService.WritePragmasAsync(_factory.Pragmas);
-        }
-
         var lastPositionID = 0u;
 
         // set all lastPosition before write on disk
-        unsafe
+        for (var i = 0; i < pages.Length; i++)
         {
-            for (var i = 0; i < pages.Length; i++)
-            {
-                var page = (PageMemory*)pages[i];
+            var page = pages[i];
 
-                // get next page position on log (update header PositionID too)
-                lastPositionID = page->PositionID = page->RecoveryPositionID = this.GetNextLogPositionID();
-            }
+            // get next page position on log (update header PositionID too)
+            lastPositionID = page.PositionID = page.RecoveryPositionID = this.GetNextLogPositionID();
         }
 
         // pre-allocate file
@@ -87,25 +73,22 @@ internal class LogService : ILogService
 
         for (var i = 0; i < pages.Length; i++)
         {
+            var page = pages[i];
+
             // write page to disk
-            await _diskService.WritePageAsync(pages[i]);
+            await _diskService.WritePageAsync(page);
 
-            unsafe
-            {
-                var page = (PageMemory*)pages[i];
+            // create a log header structure with needed information about this page on checkpoint
+            var header = new LogPageHeader 
+            { 
+                PositionID = page.PositionID, 
+                PageID = page.PageID, 
+                TransactionID = page.TransactionID, 
+                IsConfirmed = page.IsConfirmed
+            };
 
-                // create a log header structure with needed information about this page on checkpoint
-                var header = new LogPageHeader 
-                { 
-                    PositionID = page->PositionID, 
-                    PageID = page->PageID, 
-                    TransactionID = page->TransactionID, 
-                    IsConfirmed = page->IsConfirmed
-                };
-
-                // add page header only into log memory list
-                this.AddLogPage(header);
-            }
+            // add page header only into log memory list
+            this.AddLogPage(header);
         }
     }
 
@@ -115,14 +98,6 @@ internal class LogService : ILogService
     public async ValueTask WriteEmptyLogPagesAsync(IReadOnlyList<uint> pages, int transactionID, Dictionary<uint, uint> walDirtyPages)
     {
         ENSURE(walDirtyPages.Count == 0);
-
-        // set IsDirty flag in pragma to true at first use
-        if (_factory.Pragmas.IsDirty == false)
-        {
-            _factory.Pragmas.IsDirty = true;
-
-            await _diskService.WritePragmasAsync(_factory.Pragmas);
-        }
 
         var lastPositionID = 0u;
 
@@ -139,45 +114,35 @@ internal class LogService : ILogService
         _diskService.SetLength(lastPositionID);
 
         // allocate new page and get as nint pointer
-        var ptr = _memoryFactory.AllocateNewPage();
+        var page = _memoryFactory.AllocateNewPage();
 
         foreach (var (pageID, positionID) in walDirtyPages)
         {
-            unsafe
-            {
-                var page = (PageMemory*)ptr;
-
-                // setup page info as a new empty page
-                page->PageID = pageID;
-                page->PageType = PageType.Empty;
-                page->PositionID = page->RecoveryPositionID = positionID;
-                page->TransactionID = transactionID;
-                page->IsConfirmed = false; // $master change will be last page
-                page->IsDirty = true;
-            }
+            // setup page info as a new empty page
+            page.PageID = pageID;
+            page.PageType = PageType.Empty;
+            page.PositionID = page.RecoveryPositionID = positionID;
+            page.TransactionID = transactionID;
+            page.IsConfirmed = false; // $master change will be last page
+            page.IsDirty = true;
 
             // write page to disk
-            await _diskService.WritePageAsync(ptr);
+            await _diskService.WritePageAsync(page);
 
-            unsafe
-            {
-                var page = (PageMemory*)ptr;
+            // create a log header structure with needed information about this page on checkpoint
+            var header = new LogPageHeader
+            { 
+                PositionID = page.PositionID, 
+                PageID = page.PageID, 
+                TransactionID = page.TransactionID, 
+                IsConfirmed = page.IsConfirmed
+            };
 
-                // create a log header structure with needed information about this page on checkpoint
-                var header = new LogPageHeader
-                { 
-                    PositionID = page->PositionID, 
-                    PageID = page->PageID, 
-                    TransactionID = page->TransactionID, 
-                    IsConfirmed = page->IsConfirmed
-                };
-
-                // add page header only into log memory list
-                this.AddLogPage(header);
-            }
+            // add page header only into log memory list
+            this.AddLogPage(header);
         }
 
-        _memoryFactory.DeallocatePage(ptr);
+        _memoryFactory.DeallocatePage(page);
     }
 
     /// <summary>
@@ -249,9 +214,9 @@ internal class LogService : ILogService
             if (action.Action == CheckpointActionType.ClearPage)
             {
                 // if this page are in cache, remove and deallocate
-                if (_memoryCache.TryRemove(action.PositionID, out nint ptr))
+                if (_memoryCache.TryRemove(action.PositionID, out var page))
                 {
-                    _memoryFactory.DeallocatePage(ptr);
+                    _memoryFactory.DeallocatePage(page);
                 }
 
                 // write an empty page at position
@@ -259,30 +224,25 @@ internal class LogService : ILogService
             }
             else
             {
-                // get page pointer from file position ID (log or data)
-                var ptr = await this.GetLogPageAsync(action.PositionID);
+                // get page from file position ID (log or data)
+                var page = await this.GetLogPageAsync(action.PositionID);
 
                 // store page->PositionID
                 uint positionID;
 
                 if (action.Action == CheckpointActionType.CopyToDataFile)
                 {
-                    unsafe
-                    {
-                        var page = (PageMemory*)ptr;
+                    // transform this page into a data file page
+                    page.PositionID = page.RecoveryPositionID = page.PageID = action.TargetPositionID;
+                    page.TransactionID = 0;
+                    page.IsConfirmed = false;
+                    page.IsDirty = true;
 
-                        // transform this page into a data file page
-                        page->PositionID = page->RecoveryPositionID = page->PageID = action.TargetPositionID;
-                        page->TransactionID = 0;
-                        page->IsConfirmed = false;
-                        page->IsDirty = true;
-
-                        // retain page-PositionID
-                        positionID = page->PositionID;
-                    }
+                    // retain page-PositionID
+                    positionID = page.PositionID;
 
                     // write page on disk
-                    await _diskService.WritePageAsync(ptr);
+                    await _diskService.WritePageAsync(page);
 
                     // increment checkpoint counter page
                     counter++;
@@ -291,20 +251,15 @@ internal class LogService : ILogService
                 {
                     ENSURE(action.Action == CheckpointActionType.CopyToTempFile);
 
-                    unsafe
-                    {
-                        var page = (PageMemory*)ptr;
+                    // transform this page into a log temp file (keeps Header.PositionID in original value)
+                    page.PositionID = action.TargetPositionID;
+                    page.IsConfirmed = true; // mark all pages to true in temp disk (to recovery)
+                    page.IsDirty = true;
 
-                        // transform this page into a log temp file (keeps Header.PositionID in original value)
-                        page->PositionID = action.TargetPositionID;
-                        page->IsConfirmed = true; // mark all pages to true in temp disk (to recovery)
-                        page->IsDirty = true;
+                    // retain page-PositionID
+                    positionID = page.PositionID;
 
-                        // retain page-PositionID
-                        positionID = page->PositionID;
-                    }
-
-                    await _diskService.WritePageAsync(ptr);
+                    await _diskService.WritePageAsync(page);
                 }
 
                 // after copy page, checks if page need to be clean on disk
@@ -314,10 +269,10 @@ internal class LogService : ILogService
                 }
 
                 // if cache contains this position (old data version) must be removed from cache and deallocate
-                if (_memoryCache.TryRemove(positionID, out nint removedPagePtr))
+                if (_memoryCache.TryRemove(positionID, out PageMemoryResult removedPage))
                 {
                     ENSURE(false); // quando para aqui?
-                    _memoryFactory.DeallocatePage(removedPagePtr);
+                    _memoryFactory.DeallocatePage(removedPage);
                 }
 
                 // add this page to cache (or try it)
@@ -325,13 +280,13 @@ internal class LogService : ILogService
 
                 if (addToCache)
                 {
-                    added = _memoryCache.AddPageInCache(ptr);
+                    added = _memoryCache.AddPageInCache(page);
                 }
 
                 // if cache is full, deallocate page
                 if (!added)
                 {
-                    _memoryFactory.DeallocatePage(ptr);
+                    _memoryFactory.DeallocatePage(page);
                 }
             }
         }
@@ -349,7 +304,7 @@ internal class LogService : ILogService
                 startTempPositionID * tempPages.Count :
                 _logPositionID;
 
-            _diskService.WriteEmptyPagesAsync(_lastPageID + 1, (uint)lastFilePositionID);
+            await _diskService.WriteEmptyPagesAsync(_lastPageID + 1, (uint)lastFilePositionID);
         }
 
         // reset initial log position
@@ -372,20 +327,20 @@ internal class LogService : ILogService
     /// <summary>
     /// Get page from cache (remove if found) or create a new from page factory
     /// </summary>
-    private async ValueTask<nint> GetLogPageAsync(uint positionID)
+    private async ValueTask<PageMemoryResult> GetLogPageAsync(uint positionID)
     {
         // try get page from cache
-        if (_memoryCache.TryRemove(positionID, out nint ptr))
+        if (_memoryCache.TryRemove(positionID, out PageMemoryResult page))
         {
-            return ptr;
+            return page;
         }
 
         // otherwise, allocate new buffer page and read from disk
-        ptr = _memoryFactory.AllocateNewPage();
+        page = _memoryFactory.AllocateNewPage();
 
-        await _diskService.ReadPageAsync(ptr, positionID);
+        await _diskService.ReadPageAsync(page, positionID);
 
-        return ptr;
+        return page;
     }
 
     public override string ToString()

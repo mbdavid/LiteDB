@@ -1,21 +1,10 @@
 ﻿namespace LiteDB.Engine;
 
-internal class DataService : IDataService
+internal class DataService (
+    IBsonReader _bsonReader, 
+    IBsonWriter _bsonWriter, 
+    ITransaction _transaction) : IDataService
 {
-    // dependency injection
-    private readonly IBsonReader _bsonReader;
-    private readonly IBsonWriter _bsonWriter;
-    private readonly ITransaction _transaction;
-
-    public DataService(
-        IBsonReader bsonReader,
-        IBsonWriter bsonWriter,
-        ITransaction transaction)
-    {
-        _bsonReader = bsonReader;
-        _bsonWriter = bsonWriter;
-        _transaction = transaction;
-    }
 
     /// <summary>
     /// Insert BsonDocument into new data pages
@@ -35,7 +24,7 @@ internal class DataService : IDataService
         _bsonWriter.WriteDocument(bufferDoc.AsSpan(), doc, out _);
 
         // get first page
-        var ptr = await _transaction.GetFreeDataPageAsync(colID);
+        var page = await _transaction.GetFreeDataPageAsync(colID);
 
         // keep last instance to update nextBlock
         var lastDataBlock = DataBlockResult.Empty;
@@ -50,52 +39,42 @@ internal class DataService : IDataService
 
         while (true)
         {
-            unsafe
+            // get how many avaiable bytes (excluding new added record) this page contains
+            var pageAvailableSpace = PageMemory.GetPageAvailableSpace(page.Ptr);
+
+            var bytesToCopy = Math.Min(pageAvailableSpace, bytesLeft);
+
+            var dataBlock = PageMemory.InsertDataBlock(page, bufferDoc.AsSpan(position, bytesToCopy), extend, out defrag, out var newPageValue);
+
+            if (newPageValue != ExtendPageValue.NoChange)
             {
-                var page = (PageMemory*)ptr;
-
-                // get how many avaiable bytes (excluding new added record) this page contains
-                var pageAvailableSpace =
-                    page->FreeBytes -
-                    sizeof(DataBlock) - // new data block fixed syze
-                    (sizeof(PageSegment) * 2) - // footer (*2 to align)
-                    8; // extra align
-
-                var bytesToCopy = Math.Min(pageAvailableSpace, bytesLeft);
-
-                var dataBlock = PageMemory.InsertDataBlock(page, bufferDoc.AsSpan(position, bytesToCopy), extend, out defrag, out var newPageValue);
-
-                if (newPageValue != ExtendPageValue.NoChange)
-                {
-                    _transaction.UpdatePageMap(page->PageID, newPageValue);
-                }
-
-                if (lastDataBlock.IsEmpty == false)
-                {
-                    ENSURE(dataBlock.Page->PageID != lastDataBlock.Page->PageID);
-
-                    // update NextDataBlock from last page
-                    lastDataBlock.DataBlock->NextBlockID = dataBlock.DataBlockID;
-                }
-                else
-                {
-                    // get first dataBlock dataBlockID
-                    firstDataBlockID = dataBlock.DataBlockID;
-                }
-
-                bytesLeft -= bytesToCopy;
-                position += bytesToCopy;
-
-                ENSURE(bytesToCopy > 0);
-
-                if (bytesLeft == 0) break;
-
-                // keep last instance
-                lastDataBlock = dataBlock;
-
+                _transaction.UpdatePageMap(page.PageID, newPageValue);
             }
 
-            ptr = await _transaction.GetFreeDataPageAsync(colID);
+            if (lastDataBlock.IsEmpty == false)
+            {
+                ENSURE(dataBlock.Page.PageID != lastDataBlock.Page.PageID);
+
+                // update NextDataBlock from last page
+                lastDataBlock.NextBlockID = dataBlock.DataBlockID;
+            }
+            else
+            {
+                // get first dataBlock dataBlockID
+                firstDataBlockID = dataBlock.DataBlockID;
+            }
+
+            bytesLeft -= bytesToCopy;
+            position += bytesToCopy;
+
+            ENSURE(bytesToCopy > 0);
+
+            if (bytesLeft == 0) break;
+
+            // keep last instance
+            lastDataBlock = dataBlock;
+
+            page = await _transaction.GetFreeDataPageAsync(colID);
 
             // mark next data block as extend
             extend = true;
@@ -120,19 +99,14 @@ internal class DataService : IDataService
         _bsonWriter.WriteDocument(bufferDoc.AsSpan(), doc, out _);
 
         // get current datablock (for first one)
-        var ptr = await _transaction.GetPageAsync(dataBlockID.PageID);
+        var page = await _transaction.GetPageAsync(dataBlockID.PageID);
 
 //        //TODO: SOMENTE PRIMEIRA PAGINA
-        unsafe
+        PageMemory.UpdateDataBlock(page, dataBlockID.Index, bufferDoc.AsSpan(), RowID.Empty, out var _, out var newPageValue);
+
+        if (newPageValue != ExtendPageValue.NoChange)
         {
-            var page = (PageMemory*)ptr;
-
-            PageMemory.UpdateDataBlock(page, dataBlockID.Index, bufferDoc.AsSpan(), RowID.Empty, out var _, out var newPageValue);
-
-            if (newPageValue != ExtendPageValue.NoChange)
-            {
-                _transaction.UpdatePageMap(page->PageID, newPageValue);
-            }
+            _transaction.UpdatePageMap(dataBlockID.PageID, newPageValue);
         }
     }
 
@@ -143,20 +117,17 @@ internal class DataService : IDataService
     {
         using var _pc = PERF_COUNTER(30, nameof(ReadDocumentAsync), nameof(DataService));
 
-        var ptr = await _transaction.GetPageAsync(dataBlockID.PageID);
+        var page = await _transaction.GetPageAsync(dataBlockID.PageID);
 
         // get data block segment
-        var dataBlock = new DataBlockResult(ptr, dataBlockID);
+        var dataBlock = new DataBlockResult(page, dataBlockID);
 
-        unsafe
+        if (dataBlock.NextBlockID.IsEmpty)
         {
-            if (dataBlock.DataBlock->NextBlockID.IsEmpty)
-            {
-                // get content buffer inside dataBlock 
-                var resultSingle = _bsonReader.ReadDocument(dataBlock.AsSpan(), fields, false, out _);
+            // get content buffer inside dataBlock 
+            var resultSingle = _bsonReader.ReadDocument(dataBlock.AsSpan(), fields, false, out _);
 
-                return resultSingle;
-            }
+            return resultSingle;
         }
 
         // get a full array to read all document chuncks
@@ -169,29 +140,21 @@ internal class DataService : IDataService
 
         ENSURE(dataBlock.DocumentLength > 0, new { dataBlock });
 
-        RowID nextBlockID;
-        
-        unsafe
-        {
-            nextBlockID = dataBlock.DataBlock->NextBlockID;
-        }
+        var nextBlockID = dataBlock.NextBlockID;
 
         while (nextBlockID.IsEmpty)
         {
-            ptr = await _transaction.GetPageAsync(dataBlock.DataBlockID.PageID);
+            page = await _transaction.GetPageAsync(dataBlock.DataBlockID.PageID);
 
-            dataBlock = new DataBlockResult(ptr, nextBlockID);
+            dataBlock = new DataBlockResult(page, nextBlockID);
 
             // copy datablock content to new in memory buffer
             dataBlock.AsSpan().CopyTo(docBuffer.AsSpan(position));
 
             position += dataBlock.ContentLength;
 
-            unsafe
-            {
-                // retain nextBlockID before change page
-                nextBlockID = dataBlock.DataBlock->NextBlockID;
-            }
+            // retain nextBlockID before change page
+            nextBlockID = dataBlock.NextBlockID;
         }
 
         var result = _bsonReader.ReadDocument(docBuffer.AsSpan(), fields, false, out _);
@@ -207,32 +170,28 @@ internal class DataService : IDataService
         while (true)
         {
             // get page from dataBlockID
-            var ptr = await _transaction.GetPageAsync(dataBlockID.PageID);
+            var page = await _transaction.GetPageAsync(dataBlockID.PageID);
 
-            unsafe
+            var dataBlock = new DataBlockResult(page, dataBlockID);
+
+            // copy values before delete
+            var nextBlockID = dataBlock.NextBlockID;
+
+            // delete dataBlock (do not use "dataBlock" after here because are "fully zero")
+            PageMemory.DeleteSegment(page.Ptr, dataBlockID.Index, out var newPageValue);
+
+            // checks if extend pageValue changes
+            if (newPageValue != ExtendPageValue.NoChange)
             {
-                var page = (PageMemory*)ptr;
-                var dataBlock = new DataBlockResult(page, dataBlockID);
-
-                // copy values before delete
-                var nextBlockID = dataBlock.DataBlock->NextBlockID;
-
-                // delete dataBlock (do not use "dataBlock" after here because are "fully zero")
-                PageMemory.DeleteSegment(page, dataBlockID.Index, out var newPageValue);
-
-                // checks if extend pageValue changes
-                if (newPageValue != ExtendPageValue.NoChange)
-                {
-                    // update allocation map after change page
-                    _transaction.UpdatePageMap(page->PageID, newPageValue);
-                }
-
-                // stop if there is not block to delete
-                if (nextBlockID.IsEmpty) break;
-
-                // go to next block
-                dataBlockID = nextBlockID;
+                // update allocation map after change page
+                _transaction.UpdatePageMap(page.PageID, newPageValue);
             }
+
+            // stop if there is not block to delete
+            if (nextBlockID.IsEmpty) break;
+
+            // go to next block
+            dataBlockID = nextBlockID;
         }
     }
 

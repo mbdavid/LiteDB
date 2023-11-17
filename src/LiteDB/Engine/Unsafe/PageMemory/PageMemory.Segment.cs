@@ -76,6 +76,9 @@ unsafe internal partial struct PageMemory // PageMemory.Segment
         return segment;
     }
 
+    public static void DeleteSegment(nint ptr, ushort index, out ExtendPageValue newPageValue)
+        => DeleteSegment((PageMemory*)ptr, index, out newPageValue);
+
     /// <summary>
     /// Remove index slot about this page segment. Returns deleted page segment
     /// </summary>

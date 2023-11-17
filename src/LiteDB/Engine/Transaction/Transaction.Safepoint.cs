@@ -17,60 +17,50 @@ internal partial class Transaction : ITransaction
 
     private async ValueTask SafepointInternalAsync()
     {
-        nint[] dirtyPages;
+        // get dirty pages only //TODO: can be re-used array?
+        var dirtyPages = _localPages.Values
+            .Where(x => x.IsDirty)
+            .ToArray();
 
-        unsafe
+        for (var i = 0; i < dirtyPages.Length; i++)
         {
-            // get dirty pages only //TODO: can be re-used array?
-            dirtyPages = _localPages.Values
-                .Where(x => ((PageMemory*)x)->IsDirty)
-                .ToArray();
+            var page = dirtyPages[i];
 
-            for (var i = 0; i < dirtyPages.Length; i++)
-            {
-                var page = (PageMemory*)dirtyPages[i];
+            ENSURE(page.ShareCounter == NO_CACHE, "Page should not be on cache when saving");
 
-                ENSURE(page->ShareCounter == NO_CACHE, "Page should not be on cache when saving");
-
-                // update page header
-                page->TransactionID = this.TransactionID;
-                page->IsConfirmed = false;
-            }
+            // update page header
+            page.TransactionID = this.TransactionID;
+            page.IsConfirmed = false;
         }
 
         // write pages on disk and flush data (updates PositionID and IsDirty = false)
         await _logService.WriteLogPagesAsync(dirtyPages);
 
-        unsafe
+        // update local transaction wal index
+        for (var i = 0; i < dirtyPages.Length; i++)
         {
-            // update local transaction wal index
-            for (var i = 0; i < dirtyPages.Length; i++)
-            {
-                var page = (PageMemory*)dirtyPages[i];
+            var page = dirtyPages[i];
 
-                _walDirtyPages[page->PageID] = page->PositionID;
+            _walDirtyPages[page.PageID] = page.PositionID;
+        }
+
+        // add pages to cache or decrement sharecount
+        foreach (var page in _localPages.Values)
+        {
+            if (page.IsPageInCache)
+            {
+                // page already in cache (was not changed)
+                _memoryCache.ReturnPageToCache(page);
             }
-
-            // add pages to cache or decrement sharecount
-            foreach (var ptr in _localPages.Values)
+            else
             {
-                var page = (PageMemory*)ptr;
+                // add page to cache (even if is on "non-commited" transaction)
+                // only this transactions knows about this new positionIDs
+                var added = _memoryCache.AddPageInCache(page);
 
-                if (page->IsPageInCache)
+                if (!added)
                 {
-                    // page already in cache (was not changed)
-                    _memoryCache.ReturnPageToCache(page);
-                }
-                else
-                {
-                    // add page to cache (even if is on "non-commited" transaction)
-                    // only this transactions knows about this new positionIDs
-                    var added = _memoryCache.AddPageInCache(page);
-
-                    if (!added)
-                    {
-                        _memoryFactory.DeallocatePage(page);
-                    }
+                    _memoryFactory.DeallocatePage(page);
                 }
             }
         }

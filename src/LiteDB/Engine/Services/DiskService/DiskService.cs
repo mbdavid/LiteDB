@@ -12,6 +12,9 @@ internal class DiskService : IDiskService
     private readonly IMemoryFactory _memoryFactory;
     private readonly IDisk _disk;
 
+    private FileHeader? _fileHeader;
+    private Pragmas? _pragmas;
+
     public DiskService(
         IEngineSettings settings,
         IMasterMapper masterMapper,
@@ -43,10 +46,11 @@ internal class DiskService : IDiskService
 
             await _disk.ReadBufferAsync(buffer.AsMemory(), 0);
 
-            var header = new FileHeader(buffer.AsSpan(FILE_HEADER_SIZE));
-            var pragmas = new Pragmas(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
+            // keep local instances
+            _fileHeader = new FileHeader(buffer.AsSpan(FILE_HEADER_SIZE));
+            _pragmas = new Pragmas(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
 
-            return (header, pragmas);
+            return (_fileHeader, _pragmas);
         }
     }
 
@@ -58,65 +62,62 @@ internal class DiskService : IDiskService
     {
         using var buffer = SharedArray<byte>.Rent(PAGE_OFFSET);
 
-        // initialize FileHeader with user settings
-        var fileHeader = new FileHeader(_settings);
-        var pragmas = new Pragmas();
+        // initialize FileHeader/Pragmas with user settings (keep in instance)
+        _fileHeader = new FileHeader(_settings);
+        _pragmas = new Pragmas();
+
         var bsonWriter = new BsonWriter();
 
         // update buffer with header/pragmas values 
-        fileHeader.Write(buffer.AsSpan(0, FILE_HEADER_SIZE));
-        pragmas.Write(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
+        _fileHeader.Write(buffer.AsSpan(0, FILE_HEADER_SIZE));
+        _pragmas.Write(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
 
         // write on disk initial header/pragmas
         _disk.CreateNew();
 
         await _disk.WriteBufferAsync(buffer.AsMemory(), 0);
 
-        // keep map and master page pointer
-        var mapPagePtr = _memoryFactory.AllocateNewPage();
-        var masterPagePtr = _memoryFactory.AllocateNewPage();
+        // get 2 new empty pages in memory
+        var mapPage = _memoryFactory.AllocateNewPage();
+        var masterPage = _memoryFactory.AllocateNewPage();
+
+        // initialize map/master pages
+        mapPage.PageID = mapPage.PositionID = AM_FIRST_PAGE_ID;
+        masterPage.PositionID = masterPage.PositionID = MASTER_PAGE_ID;
+        mapPage.IsDirty = masterPage.IsDirty = true;
+
+        // initialize first allocation map
+        mapPage.PageType = PageType.AllocationMap;
 
         unsafe
         {
-            // create map page
-            var mapPage = (PageMemory*)_memoryFactory.AllocateNewPage();
-
-            mapPage->PageID = AM_FIRST_PAGE_ID;
-            mapPage->PageType = PageType.AllocationMap;
-
             // mark first extend to $master and first page as data
-            mapPage->Buffer[0] = MASTER_COL_ID;
-            mapPage->Buffer[1] = 0b0010_0000; // set first 3 bits as "001" - data page
-
-            mapPage->IsDirty = true;
-
-            // initialize page buffer as data page
-            PageMemory.InitializeAsDataPage(masterPagePtr, MASTER_PAGE_ID, MASTER_COL_ID);
-
-            // create new/empty $master document
-            var master = new MasterDocument();
-            var masterDoc = _masterMapper.MapToDocument(master);
-            using var masterBuffer = SharedArray<byte>.Rent(masterDoc.GetBytesCount());
-
-            // serialize $master document 
-            bsonWriter.WriteDocument(masterBuffer.AsSpan(), masterDoc, out _);
-
-            // insert $master document into master page
-            PageMemory.InsertDataBlock(masterPagePtr, masterBuffer.AsSpan(), false, out _, out _);
-
-            // initialize fixed position id 
-            mapPage->PositionID = 0;
-            ((PageMemory*)masterPagePtr)->PositionID = 1;
+            mapPage.Page->Buffer[0] = MASTER_COL_ID;
+            mapPage.Page->Buffer[1] = 0b0010_0000; // set first 3 bits as "001" - data page
         }
 
-        await this.WritePageAsync(mapPagePtr);
-        await this.WritePageAsync(masterPagePtr);
+        // initialize page buffer as data page
+        PageMemory.InitializeAsDataPage(masterPage.Ptr, MASTER_PAGE_ID, MASTER_COL_ID);
+
+        // create new/empty $master document
+        var master = new MasterDocument();
+        var masterDoc = _masterMapper.MapToDocument(master);
+        using var masterBuffer = SharedArray<byte>.Rent(masterDoc.GetBytesCount());
+
+        // serialize $master document 
+        bsonWriter.WriteDocument(masterBuffer.AsSpan(), masterDoc, out _);
+
+        // insert $master document into master page
+        PageMemory.InsertDataBlock(masterPage.Ptr, masterBuffer.AsSpan(), false, out _, out _);
+
+        await this.WritePageAsync(mapPage);
+        await this.WritePageAsync(masterPage);
 
         // deallocate buffers
-        _memoryFactory.DeallocatePage(mapPagePtr);
-        _memoryFactory.DeallocatePage(masterPagePtr);
+        _memoryFactory.DeallocatePage(mapPage);
+        _memoryFactory.DeallocatePage(masterPage);
 
-        return (fileHeader, pragmas);
+        return (_fileHeader, _pragmas);
     }
 
     /// <summary>
@@ -150,9 +151,9 @@ internal class DiskService : IDiskService
     }
 
     /// <summary>
-    /// Read single page from disk using disk position. Load header instance too. This position has FILE_HEADER_SIZE offset
+    /// Read single page from disk using disk position. Load header instance too.
     /// </summary>
-    public async ValueTask<bool> ReadPageAsync(nint ptr, uint positionID)
+    public async ValueTask<bool> ReadPageAsync(PageMemoryResult page, uint positionID)
     {
         using var _pc = PERF_COUNTER(40, nameof(ReadPageAsync), nameof(DiskService));
 
@@ -161,88 +162,60 @@ internal class DiskService : IDiskService
         // get real position on stream
         var position = PAGE_OFFSET + (positionID * PAGE_SIZE);
 
-        int uniqueID;
-
-        unsafe
-        {
-            var page = (PageMemory*)ptr;
-
-            // read uniqueID to restore after read from disk
-            uniqueID = page->UniqueID;
-        }
-
-        // get page array from memory factory
-        var buffer = _memoryFactory.GetPageArray(ptr);
-
         // read from disk
-        var read = await _disk.ReadBufferAsync(buffer, position);
+        var read = await _disk.ReadBufferAsync(page.Buffer, position);
 
-        unsafe
-        {
-            var page = (PageMemory*)ptr;
-
-            ENSURE(page->UniqueID == 0);
-
-            // update init value on page (memory)
-            page->UniqueID = uniqueID;
-            page->ShareCounter = NO_CACHE;
-            page->IsDirty = false;
-        }
+        page.ShareCounter = NO_CACHE;
+        page.IsDirty = false;
 
         return read;
     }
 
-    public async ValueTask WritePageAsync(nint ptr)
+    public async ValueTask WritePageAsync(PageMemoryResult page)
     {
         using var _pc = PERF_COUNTER(50, nameof(WritePageAsync), nameof(DiskService));
 
-        long position;
-        byte[] buffer;
-        int uniqueID;
+        ENSURE(page.IsDirty);
+        ENSURE(page.ShareCounter == NO_CACHE);
+        ENSURE(page.PositionID != int.MaxValue);
 
-        unsafe
+        // test pragma IsDirty
+        if (_pragmas!.IsDirty == false)
         {
-            var page = (PageMemory*)ptr;
+            _pragmas.IsDirty = true;
 
-            ENSURE(page->IsDirty);
-            ENSURE(page->ShareCounter == NO_CACHE);
-            ENSURE(page->PositionID != int.MaxValue);
-
-            // update crc32 page
-            page->Crc32 = 0; // pagePtr->ComputeCrc8();
-
-            // cache and clear before write on disk
-            uniqueID = page->UniqueID;
-            page->UniqueID = 0;
-
-            // get real position on stream
-            position = PAGE_OFFSET + (page->PositionID * PAGE_SIZE);
-
-            buffer = _memoryFactory.GetPageArray(ptr);
+            await this.WritePragmasAsync(_pragmas);
         }
 
-        await _disk.WriteBufferAsync(buffer, position);
+        // update crc32 page
+        // page->Crc32 = 0; // pagePtr->ComputeCrc8();
 
-        unsafe
-        {
-            var page = (PageMemory*)ptr;
+        // get real position on stream
+        var position = PAGE_OFFSET + (page.PositionID * PAGE_SIZE);
 
-            // clear isDirty flag before write on disk
-            page->UniqueID = uniqueID;
-            page->ShareCounter = NO_CACHE;
-            page->IsDirty = false;
-        }
+        await _disk.WriteBufferAsync(page.Buffer, position);
+
+        page.ShareCounter = NO_CACHE;
+        page.IsDirty = false;
     }
 
     /// <summary>
     /// Write an empty (full \0) PAGE_SIZE using positionID
     /// </summary>
-    public ValueTask WriteEmptyPageAsync(uint positionID)
+    public async ValueTask WriteEmptyPageAsync(uint positionID)
     {
+        // test pragma IsDirty
+        if (_pragmas!.IsDirty == false)
+        {
+            _pragmas.IsDirty = true;
+
+            await this.WritePragmasAsync(_pragmas);
+        }
+
         // get real position on stream
         var position = PAGE_OFFSET + (positionID * PAGE_SIZE);
 
-        return _disk.WriteBufferAsync(PAGE_EMPTY, position);
+        await _disk.WriteBufferAsync(PAGE_EMPTY, position);
     }
 
     /// <summary>
@@ -252,10 +225,7 @@ internal class DiskService : IDiskService
     {
         for (var i = fromPositionID; i <= toPositionID && token.IsCancellationRequested; i++)
         {
-            // set real position on stream
-            var position = PAGE_OFFSET + (i * PAGE_SIZE);
-
-            await _disk.WriteBufferAsync(PAGE_EMPTY, position);
+            await this.WriteEmptyPageAsync(i);
         }
     }
 

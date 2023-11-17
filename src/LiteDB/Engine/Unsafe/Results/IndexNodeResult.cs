@@ -2,9 +2,10 @@
 
 unsafe internal struct IndexNodeResult : IIsEmpty
 {
-    public RowID IndexNodeID;
+    public readonly RowID IndexNodeID;
 
-    public PageMemory* Page;
+    public readonly PageMemoryResult Page;
+
     public PageSegment* Segment;
     public IndexNode* Node;
     public IndexKey* Key;
@@ -14,7 +15,7 @@ unsafe internal struct IndexNodeResult : IIsEmpty
     /// <summary>
     /// Shortcut for get Page->PageID
     /// </summary>
-    public uint PageID => this.Page->PageID;
+    public uint PageID => this.Page.Page->PageID;
 
     /// <summary>
     /// Shortcut for get Node->DataBlockID (safe)
@@ -25,6 +26,16 @@ unsafe internal struct IndexNodeResult : IIsEmpty
     /// Shortcut for get/set Node->NextNodeID (safe) MUST set page as dirty in set!!
     /// </summary>
     public RowID NextNodeID { get => this.Node->NextNodeID; set => this.Node->NextNodeID = value; }
+
+    /// <summary>
+    /// Shortcut for get Node->Slot
+    /// </summary>
+    public byte Slot => this.Node->Slot;
+
+    /// <summary>
+    /// Shortcut for get Node->Levels
+    /// </summary>
+    public byte Levels => this.Node->Levels;
 
     /// <summary>
     /// Shortcut for get Node->NextID (or PrevID) according level and order
@@ -47,11 +58,6 @@ unsafe internal struct IndexNodeResult : IIsEmpty
     public RowID SetPrevID(int level, RowID value) => this.GetLevel(level)->PrevID = value;
 
     /// <summary>
-    /// Shortcut for get/set current page as dirty Page->IsDirty
-    /// </summary>
-    public bool IsDirtyPage { get => this.Page->IsDirty; set => this.Page->IsDirty = value; }
-
-    /// <summary>
     /// Shortcut for get if Key-Type is MinValue or MaxValue
     /// </summary>
     public bool IsMinOrMaxValue => this.Key->IsMinValue || this.Key->IsMaxValue;
@@ -63,35 +69,36 @@ unsafe internal struct IndexNodeResult : IIsEmpty
 
     #endregion
 
-    public static IndexNodeResult Empty = new() { IndexNodeID = RowID.Empty, Page = default };
+    public static IndexNodeResult Empty = new();
 
     public bool IsEmpty => this.IndexNodeID.IsEmpty;
 
-    public IndexNodeResult(nint ptr, RowID indexNodeID)
-        : this((PageMemory*)ptr, indexNodeID)
+    public IndexNodeResult(PageMemoryResult page, RowID indexNodeID)
     {
-    }
-
-    public IndexNodeResult(PageMemory* page, RowID indexNodeID)
-    {
-        ENSURE(page->PageID == indexNodeID.PageID);
+        ENSURE(page.PageID == indexNodeID.PageID);
 
         this.Page = page;
         this.IndexNodeID = indexNodeID;
 
         this.Reload();
 
-        ENSURE(this.Segment->AsSpan(page).IsFullZero() == false);
+        ENSURE(this.Segment->AsSpan(page.Page).IsFullZero() == false);
         ENSURE(this.Node->Levels > 0 && this.Node->Levels <= INDEX_MAX_LEVELS);
+    }
+
+    public IndexNodeResult()
+    {
+        this.IndexNodeID = RowID.Empty;
+        this.Page = PageMemoryResult.Empty;
     }
 
     public void Reload()
     {
         // load all pointer based on indexNodeID and &page
-        this.Segment = PageMemory.GetSegmentPtr(this.Page, this.IndexNodeID.Index);
-        this.Node = (IndexNode*)((nint)this.Page + this.Segment->Location);
+        this.Segment = PageMemory.GetSegmentPtr(this.Page.Page, this.IndexNodeID.Index);
+        this.Node = (IndexNode*)(this.Page.Ptr + this.Segment->Location);
         var keyOffset = this.Segment->Location + sizeof(IndexNode) + (this.Node->Levels * sizeof(IndexNodeLevel));
-        this.Key = (IndexKey*)((nint)this.Page + keyOffset);
+        this.Key = (IndexKey*)(this.Page.Ptr + keyOffset);
     }
 
     private IndexNodeLevel* GetLevel(int level)

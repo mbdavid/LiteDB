@@ -4,7 +4,7 @@
 /// * Singleton (thread safe)
 /// </summary>
 [AutoInterface(typeof(IDisposable))]
-unsafe internal class MemoryCache : IMemoryCache
+internal class MemoryCache : IMemoryCache
 {
     // dependency injection
     private readonly IMemoryFactory _memoryFactory;
@@ -12,7 +12,7 @@ unsafe internal class MemoryCache : IMemoryCache
     /// <summary>
     /// A dictionary to cache use/re-use same data buffer indexed by PositionID
     /// </summary>
-    private readonly ConcurrentDictionary<uint, nint> _cache = new();
+    private readonly ConcurrentDictionary<uint, PageMemoryResult> _cache = new();
 
     public int ItemsCount => _cache.Count;
 
@@ -21,74 +21,64 @@ unsafe internal class MemoryCache : IMemoryCache
         _memoryFactory = memoryFactory;
     }
 
-    public nint GetPageReadWrite(uint positionID, byte[] writeCollections, out bool writable, out bool found)
+    public PageMemoryResult GetPageReadWrite(uint positionID, byte[] writeCollections, out bool writable, out bool found)
     {
         using var _pc = PERF_COUNTER(101, nameof(GetPageReadWrite), nameof(MemoryCache));
 
-        found = _cache.TryGetValue(positionID, out var ptr);
+        found = _cache.TryGetValue(positionID, out var page);
 
         if (!found)
         {
             writable = false;
 
-            return IntPtr.Zero;
+            return PageMemoryResult.Empty;
         }
 
         using var _ph = PERF_COUNTER(102, nameof(GetPageReadWrite) + " (hit)", nameof(MemoryCache));
 
-        var page = (PageMemory*)ptr;
-
-        ENSURE(page->ShareCounter != NO_CACHE);
+        ENSURE(page!.ShareCounter != NO_CACHE);
 
         // test if this page are getted from a writable collection in transaction
-        writable = Array.IndexOf(writeCollections, page->ColID) > -1;
+        writable = Array.IndexOf(writeCollections, page.ColID) > -1;
 
         if (writable == false) // read only - copy same copy as in memory (+1 sharecounter)
         {
             // get page for read-only
-            ENSURE(page->ShareCounter != NO_CACHE);
+            ENSURE(page.ShareCounter != NO_CACHE);
 
             // increment ShareCounter to be used by another transaction
-            Interlocked.Increment(ref page->ShareCounter);
+            Interlocked.Increment(ref page.ShareCounter);
 
-            return ptr;
+            return page;
         }
         else
         {
             // if no one are using, remove from cache (double check)
-            if (page->ShareCounter == 0)
+            if (page.ShareCounter == 0)
             {
                 var removed = _cache.TryRemove(positionID, out _);
 
                 ENSURE(removed, new { removed, self = this });
 
                 // clean share counter after remove from cache
-                page->ShareCounter = NO_CACHE;
-                page->IsDirty = false;
+                page.ShareCounter = NO_CACHE;
+                page.IsDirty = false;
 
-                return ptr;
+                return page;
             }
             else
             {
                 // if page is in use, create a new page
-                var newPage = (PageMemory*)_memoryFactory.AllocateNewPage();
+                var newPage = _memoryFactory.AllocateNewPage();
 
-                // keep uniqueID
-                var uniqueID = page->UniqueID;
-
-                // get span from each page pointer
-                var sourceSpan = new Span<byte>(page, PAGE_SIZE);
-                var targetSpan = new Span<byte>(newPage, PAGE_SIZE);
-
-                sourceSpan.CopyTo(targetSpan);
+                page.Buffer.CopyTo((Memory<byte>)newPage.Buffer);
 
                 // clean page after copy all content
-                newPage->UniqueID = uniqueID;
-                newPage->ShareCounter = NO_CACHE;
-                newPage->IsDirty = false;
+                newPage.ShareCounter = NO_CACHE;
+                newPage.IsDirty = false;
 
                 // and return as a new page instance
-                return (nint)newPage;
+                return newPage;
             }
         }
 
@@ -98,38 +88,31 @@ unsafe internal class MemoryCache : IMemoryCache
     /// <summary>
     /// Remove page from cache. Page must not be in use
     /// </summary>
-    public bool TryRemove(uint positionID, [MaybeNullWhen(false)] out nint ptr)
+    public bool TryRemove(uint positionID, out PageMemoryResult page)
     {
         // first try to remove from cache
-        if (_cache.TryRemove(positionID, out ptr))
+        if (_cache.TryRemove(positionID, out page))
         {
-            unsafe
-            {
-                var page = (PageMemory*)ptr;
-
-                page->ShareCounter = NO_CACHE;
-            }
+            page.ShareCounter = NO_CACHE;
 
             return true;
         }
 
-        ptr = IntPtr.Zero;
+        page = PageMemoryResult.Empty;
 
         return false;
     }
-
-    public bool AddPageInCache(nint ptr) => this.AddPageInCache((PageMemory*)ptr);
 
     /// <summary>
     /// Add a new page to cache. Returns true if page was added. If returns false,
     /// page are not in cache and must be released in bufferFactory
     /// </summary>
-    public bool AddPageInCache(PageMemory* page)
+    public bool AddPageInCache(PageMemoryResult page)
     {
-        ENSURE(!page->IsDirty, "PageMemory must be clean before add into cache");
-        ENSURE(page->PositionID != uint.MaxValue, "PageMemory must have a position before add in cache");
-        ENSURE(page->ShareCounter == NO_CACHE);
-        ENSURE(page->PageType == PageType.Data || page->PageType == PageType.Index);
+        ENSURE(!page.IsDirty, "PageMemory must be clean before add into cache");
+        ENSURE(page.PositionID != uint.MaxValue, "PageMemory must have a position before add in cache");
+        ENSURE(page.ShareCounter == NO_CACHE);
+        ENSURE(page.PageType == PageType.Data || page.PageType == PageType.Index);
 
         // before add, checks cache limit and cleanup if full
         if (_cache.Count >= CACHE_LIMIT)
@@ -144,25 +127,23 @@ unsafe internal class MemoryCache : IMemoryCache
         }
 
         // try add into cache before change page
-        var added = _cache.TryAdd(page->PositionID, (nint)page);
+        var added = _cache.TryAdd(page.PositionID, page);
 
         if (!added) return false;
 
         // initialize shared counter
-        page->ShareCounter = 0;
+        page.ShareCounter = 0;
 
         return true;
     }
 
-    public void ReturnPageToCache(nint ptr) => this.ReturnPageToCache((PageMemory*)ptr);
-
-    public void ReturnPageToCache(PageMemory* page)
+    public void ReturnPageToCache(PageMemoryResult page)
     {
-        ENSURE(!page->IsDirty); // vai sair essa regra na disk queue
-        ENSURE(page->ShareCounter > 0);
-        ENSURE(page->ShareCounter != NO_CACHE);
+        ENSURE(!page.IsDirty); // vai sair essa regra na disk queue
+        ENSURE(page.ShareCounter > 0);
+        ENSURE(page.ShareCounter != NO_CACHE);
 
-        Interlocked.Decrement(ref page->ShareCounter);
+        Interlocked.Decrement(ref page.ShareCounter);
     }
 
     /// <summary>
@@ -173,10 +154,11 @@ unsafe internal class MemoryCache : IMemoryCache
     {
         var limit = (int)(CACHE_LIMIT * .3); // 30% of CACHE_LIMIT
 
+        //TODO: reuse array
         var positions = _cache.Values
-            .Where(x => ((PageMemory*)x)->ShareCounter == 0)
+            .Where(x => x.ShareCounter == 0)
 //            .OrderByDescending(x => x.Timestamp)
-            .Select(x => ((PageMemory*)x)->PositionID)
+            .Select(x => x.PositionID)
             .Take(limit)
             .ToArray();
 
@@ -184,27 +166,25 @@ unsafe internal class MemoryCache : IMemoryCache
 
         foreach(var positionID in positions)
         {
-            var removed = _cache.TryRemove(positionID, out var ptr);
+            var removed = _cache.TryRemove(positionID, out var page);
 
             if (!removed) continue;
 
-            var page = (PageMemory*)ptr;
-
             // double check
-            if (page->ShareCounter == 0)
+            if (page!.ShareCounter == 0)
             {
                 // set page out of cache
-                page->ShareCounter = NO_CACHE;
+                page.ShareCounter = NO_CACHE;
 
                 // deallocate page
-                _memoryFactory.DeallocatePage(ptr);
+                _memoryFactory.DeallocatePage(page);
 
                 total++;
             }
             else
             {
                 // page should be re-added to cache
-                var added = _cache.TryAdd(positionID, ptr);
+                var added = _cache.TryAdd(positionID, page);
 
                 if (!added)
                 {
@@ -222,19 +202,19 @@ unsafe internal class MemoryCache : IMemoryCache
     public void ClearLogPages()
     {
         var logPositions = _cache.Values
-            .Where(x => ((PageMemory*)x)->PositionID != ((PageMemory*)x)->PageID)
-            .Select(x => ((PageMemory*)x)->PositionID)
+            .Where(x => x.PositionID != x.PageID)
+            .Select(x => x.PositionID)
             .ToArray();
 
         foreach(var logPosition in logPositions)
         {
-            _cache.Remove(logPosition, out var ptr);
+            var removed = _cache.Remove(logPosition, out var page);
 
-            var page = (PageMemory*)ptr;
+            ENSURE(removed);
 
-            page->ShareCounter = NO_CACHE;
+            page!.ShareCounter = NO_CACHE;
 
-            _memoryFactory.DeallocatePage(ptr);
+            _memoryFactory.DeallocatePage(page);
         }
     }
 
@@ -245,17 +225,13 @@ unsafe internal class MemoryCache : IMemoryCache
 
     public void Dispose()
     {
-        ENSURE(_cache.Count(x => ((PageMemory*)x.Value)->ShareCounter != 0) == 0, "Cache must be clean before dipose");
+        ENSURE(_cache.Count(x => x.Value.ShareCounter != 0) == 0, "Cache must be clean before dipose");
 
-#if DEBUG
-        // in DEBUG mode, let's clear all pages one-by-one
-        foreach(var ptr in _cache.Values)
+        foreach(var page in _cache.Values)
         {
-            var page = (PageMemory*)ptr;
-            page->ShareCounter = NO_CACHE;
-            _memoryFactory.DeallocatePage(ptr);
+            page.ShareCounter = NO_CACHE;
+            _memoryFactory.DeallocatePage(page);
         }
-#endif
 
         // deattach PageBuffers from _cache object
         _cache.Clear();

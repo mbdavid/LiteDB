@@ -18,7 +18,7 @@ internal partial class Transaction : ITransaction
     private int _lockCounter = 0;
 
     // local page cache - contains only data/index pages about this collection
-    private readonly Dictionary<uint, nint> _localPages = new();
+    private readonly Dictionary<uint, PageMemoryResult> _localPages = new();
 
     // when safepoint occurs, save reference for changed pages on log (PageID, PositionID)
     private readonly Dictionary<uint, uint> _walDirtyPages = new();
