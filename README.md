@@ -4,10 +4,17 @@ This branch is current development of new version of LiteDB v6.
 
 # Next steps
 - Return to async calls in managed memory
+    - Sort
+    - Implement Recovery
+- InMemoryOrderBy (commented)
+- Recovery (commented)
 
 # Needs implementation
 
 ## Engine
+
+## Index/Query
+- Add exlain plain details about docs read/read_size index_cost
 
 ## Operations
 - Update

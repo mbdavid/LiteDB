@@ -74,7 +74,7 @@ internal class InsertStatement : IEngineStatement
             {
                 if (indexes.Count > 0)
                 {
-                    autoIdService.Initialize(_store.ColID, indexes[0].TailIndexNodeID, indexService);
+                    await autoIdService.InitializeAsync(_store.ColID, indexes[0].TailIndexNodeID, indexService);
                 }
                 else
                 {
@@ -87,7 +87,7 @@ internal class InsertStatement : IEngineStatement
             foreach (var doc in docs)
             {
                 // insert document and all indexes for this document (based on collection indexes)
-                InsertInternal(
+                await InsertInternalAsync(
                     _store.ColID,
                     doc,
                     _autoId,
@@ -108,7 +108,6 @@ internal class InsertStatement : IEngineStatement
             await transaction.CommitAsync();
 
             monitorService.ReleaseTransaction(transaction);
-
         }
         catch (Exception ex)
         {
@@ -170,7 +169,7 @@ internal class InsertStatement : IEngineStatement
     /// <summary>
     /// A static function to insert a document and all indexes using only interface services. Will be use in InsertSingle, InsertMany, InsertBulk
     /// </summary>
-    public static void InsertInternal(
+    public static async ValueTask InsertInternalAsync(
         byte colID,
         BsonDocument doc, 
         BsonAutoId autoId,
@@ -180,19 +179,19 @@ internal class InsertStatement : IEngineStatement
         IAutoIdService autoIdService, 
         Collation collation)
     {
-        using var _pc = PERF_COUNTER(10, nameof(InsertInternal), nameof(InsertStatement));
+        using var _pc = PERF_COUNTER(10, nameof(InsertInternalAsync), nameof(InsertStatement));
 
         // get/set _id
         var id = autoIdService.SetDocumentID(colID, doc, autoId);
 
         // insert document and get position address
-        var dataBlockID = dataService.InsertDocumentAsync(colID, doc);
+        var dataBlockID = await dataService.InsertDocumentAsync(colID, doc);
 
         // insert all indexes (init by PK)
         if (indexes.Count > 0)
         {
             // insert _id as PK and get node to be used 
-            var last = indexService.AddNodeAsync(colID, indexes[0], id, dataBlockID, IndexNodeResult.Empty, out _);
+            var (last, _) = await indexService.AddNodeAsync(colID, indexes[0], id, dataBlockID, IndexNodeResult.Empty);
 
             for (var i = 1; i < indexes.Count; i++)
             {
@@ -203,7 +202,7 @@ internal class InsertStatement : IEngineStatement
 
                 foreach (var key in keys)
                 {
-                    var node = indexService.AddNode(colID, index, key, dataBlockID, last, out _);
+                    var (node, _) = await indexService.AddNodeAsync(colID, index, key, dataBlockID, last);
 
                     last = node;
                 }

@@ -14,7 +14,7 @@ internal class SortOperation : ISortOperation
     private readonly int _containerSizeLimit;
     private Queue<SortItem>? _sortedItems; // when use less than 1 container
 
-    private byte[]? _containerBuffer = null;
+    private SharedArray<byte> _containerBuffer;
 
     private readonly List<ISortContainer> _containers = new();
 
@@ -36,7 +36,7 @@ internal class SortOperation : ISortOperation
             (CONTAINER_SORT_SIZE_IN_PAGES * 2); // used to store int16 on top of each 8k page
     }
 
-    public void InsertData(IPipeEnumerator enumerator, PipeContext context)
+    public async ValueTask InsertDataAsync(IPipeEnumerator enumerator, PipeContext context)
     {
         var unsortedItems = new List<SortItem>();
         var remaining = new List<SortItem>();
@@ -45,7 +45,7 @@ internal class SortOperation : ISortOperation
 
         while (true)
         {
-            var current = enumerator.MoveNext(context);
+            var current = await enumerator.MoveNextAsync(context);
 
             if (current.IsEmpty) break;
 
@@ -82,15 +82,17 @@ internal class SortOperation : ISortOperation
             // initialize cursor readers
             foreach (var container in _containers)
             {
-                container.MoveNext();
+                await container.MoveNextAsync();
             }
         }
     }
 
     private int CreateNewContainer(List<SortItem> unsortedItems, List<SortItem> remaining)
     {
-        // rent container byffer array
-        _containerBuffer ??= ArrayPool<byte>.Shared.Rent(_containerSize);
+        // initialize in first time use
+        _containerBuffer = _containerBuffer.IsEmpty ? 
+            SharedArray<byte>.Rent(_containerSize) : 
+            _containerBuffer;
 
         // get a new containerID 
         var containerID = _sortService.GetAvailableContainerID();
@@ -115,14 +117,14 @@ internal class SortOperation : ISortOperation
         // position stream in container disk position
         var position = containerID * _containerSize;
 
-        _sortDisk.WriteBufferAsync(_containerBuffer, position);
+        _sortDisk.WriteBufferAsync(_containerBuffer.AsMemory(), position);
 
         _containers.Add(container);
 
         return remainingBytes;
     }
 
-    public SortItem MoveNext()
+    public async ValueTask<SortItem> MoveNextAsync()
     {
         // when use in-memory sort
         if (_sortedItems is not null)
@@ -154,7 +156,7 @@ internal class SortOperation : ISortOperation
 
             var current = next.Current;
 
-            var read = next.MoveNext();
+            var read = await next.MoveNextAsync();
 
             // if there is no more items on container, remove from container list (dispose before)
             if (!read)
@@ -170,16 +172,12 @@ internal class SortOperation : ISortOperation
 
     public void Dispose()
     {
-        // dispose all containers (release PageBuffers)
+        // dispose all containers (release PageMemory)
         foreach(var container in _containers)
         {
             container.Dispose();
         }
 
-        // release container buffer (byte[])
-        if(_containerBuffer is not null)
-        {
-            ArrayPool<byte>.Shared.Return(_containerBuffer);
-        }
+        _containerBuffer.Dispose();
     }
 }

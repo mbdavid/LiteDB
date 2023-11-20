@@ -42,7 +42,7 @@ internal class CreateCollectionStatement : IEngineStatement
         var indexer = factory.CreateIndexService(transaction);
 
         // insert head/tail nodes
-        var (head, tail) = indexer.CreateHeadTailNodesAsync(colID);
+        var (head, tail) = await indexer.CreateHeadTailNodesAsync(colID);
 
         // create new collection in $master and returns a new master document
         master.Collections.Add(_name, new CollectionDocument()
@@ -64,7 +64,7 @@ internal class CreateCollectionStatement : IEngineStatement
         });
 
         // write master collection into pages
-        masterService.WriteCollectionAsync(master, transaction);
+        await masterService.WriteCollectionAsync(master, transaction);
 
         // write all dirty pages into disk
         await transaction.CommitAsync();

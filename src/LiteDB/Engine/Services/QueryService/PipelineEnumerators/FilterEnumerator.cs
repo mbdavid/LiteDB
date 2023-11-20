@@ -21,11 +21,11 @@ internal class FilterEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => _enumerator.Emit;
 
-    public PipeValue MoveNext(PipeContext context)
+    public async ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
         while (!_eof)
         {
-            var item = _enumerator.MoveNext(context);
+            var item = await _enumerator.MoveNextAsync(context);
 
             if (item.IsEmpty)
             {

@@ -42,13 +42,13 @@ internal class AggregateEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => new(indexNodeID: false, dataBlockID: false, value: true);
 
-    public PipeValue MoveNext(PipeContext context)
+    public async ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
         if (_eof) return PipeValue.Empty;
 
         while (!_eof)
         {
-            var item = _enumerator.MoveNext(context);
+            var item = await _enumerator.MoveNextAsync(context);
 
             if (item.IsEmpty)
             {

@@ -1,7 +1,7 @@
 ﻿namespace LiteDB.Engine;
 
 [AutoInterface(typeof(IDisposable))]
-unsafe internal class SortContainer : ISortContainer
+internal class SortContainer : ISortContainer
 {
     // dependency injections
     private readonly Collation _collation;
@@ -10,7 +10,7 @@ unsafe internal class SortContainer : ISortContainer
     private readonly int _containerID;
     private readonly int _order;
 
-    private byte[] _buffer; // 8k page buffe
+    private readonly SharedArray<byte> _buffer; // 8k page buffer
 
     private SortItem _current; // current sorted item
     private int _pageIndex = -1; // current read page
@@ -31,7 +31,7 @@ unsafe internal class SortContainer : ISortContainer
         _sortDisk = sortDisk;
 
         // rent a full 8k buffer in managed memory
-        _buffer = ArrayPool<byte>.Shared.Rent(PAGE_SIZE);
+        _buffer = SharedArray<byte>.Rent(PAGE_SIZE);
     }
 
     /// <summary>
@@ -54,7 +54,7 @@ unsafe internal class SortContainer : ISortContainer
     /// Organized all items in 8k pages, with first 2 bytes to contains how many items this page contains
     /// Remaining items are not inserted in this container e must be returned to be added into a new container
     /// </summary>
-    public int Sort(IEnumerable<SortItem> unsortedItems, byte[] containerBuffer, List<SortItem> remaining)
+    public unsafe int Sort(IEnumerable<SortItem> unsortedItems, SharedArray<byte> containerBuffer, List<SortItem> remaining)
     {
         // order items
         var query = _order == Query.Ascending ?
@@ -115,7 +115,7 @@ unsafe internal class SortContainer : ISortContainer
     /// <summary>
     /// Move "Current" to next item on this container. Returns false if eof
     /// </summary>
-    public bool MoveNext()
+    public async ValueTask<bool> MoveNextAsync()
     {
         if (_containerRemaining == 0) return false;
 
@@ -124,7 +124,7 @@ unsafe internal class SortContainer : ISortContainer
             // get stream position to page position (increment pageIndex before)
             var position = (_containerID * (CONTAINER_SORT_SIZE_IN_PAGES * PAGE_SIZE)) + (++_pageIndex * PAGE_SIZE);
 
-            _sortDisk.ReadBufferAsync(_buffer, position);
+            await _sortDisk.ReadBufferAsync(_buffer.AsMemory(), position);
 
             // set position and read remaining page items
             _position = 2; // for int16
@@ -143,7 +143,7 @@ unsafe internal class SortContainer : ISortContainer
     /// <summary>
     /// Read current item on buffer and return item length
     /// </summary>
-    private int ReadCurrent()
+    private unsafe int ReadCurrent()
     {
         var span = _buffer.AsSpan(_position);
 
@@ -158,6 +158,6 @@ unsafe internal class SortContainer : ISortContainer
 
     public void Dispose()
     {
-        ArrayPool<byte>.Shared.Return(_buffer);
+        _buffer.Dispose();
     }
 }

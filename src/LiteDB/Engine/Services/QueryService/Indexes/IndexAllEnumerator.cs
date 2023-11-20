@@ -23,7 +23,7 @@ internal class IndexAllEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => new(indexNodeID: true, dataBlockID: true, value: _returnKey);
 
-    public unsafe PipeValue MoveNext(PipeContext context)
+    public async ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
         if (_eof) return PipeValue.Empty;
 
@@ -37,10 +37,10 @@ internal class IndexAllEnumerator : IPipeEnumerator
         {
             _init = true;
 
-            var first = indexService.GetNodeAsync(head);
+            var first = await indexService.GetNodeAsync(head);
 
             // get pointer to first element 
-            _next = first[0]->GetNext(_order);
+            _next = first.GetNextID(0, _order);
 
             // check if not empty
             if (_next == tail)
@@ -51,13 +51,13 @@ internal class IndexAllEnumerator : IPipeEnumerator
         }
 
         // go forward
-        var node = indexService.GetNodeAsync(_next);
+        var node = await indexService.GetNodeAsync(_next);
 
-        _next = node[0]->GetNext(_order);
+        _next = node.GetNextID(0, _order);
 
         if (_next == tail) _eof = true;
 
-        var value = _returnKey ? IndexKey.ToBsonValue(node.Key) : BsonValue.Null;
+        var value = _returnKey ? node.ToBsonValue() : BsonValue.Null;
 
         return new PipeValue(node.IndexNodeID, node.DataBlockID, value);
     }

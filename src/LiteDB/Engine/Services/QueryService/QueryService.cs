@@ -32,7 +32,7 @@ internal class QueryService : IQueryService
 
     public bool TryGetCursor(int cursorID, out Cursor cursor) => _openCursors.TryGetValue(cursorID, out cursor);
 
-    public void FetchAsync(Cursor cursor, int fetchSize, PipeContext context, ref Resultset result)
+    public async ValueTask<Resultset> FetchAsync(Cursor cursor, SharedArray<BsonValue> sharedArray, PipeContext context)
     {
         var index = 0;
         var eof = false;
@@ -51,8 +51,10 @@ internal class QueryService : IQueryService
 
         cursor.IsRunning = true;
 
-        var fetchSizeNext = fetchSize + 
+        var fetchSizeNext = sharedArray.Length + 
             (cursor.NextDocument is null ? 1 : 0);
+
+        var result = new Resultset(sharedArray);
 
         if (cursor.NextDocument is not null)
         {
@@ -63,14 +65,14 @@ internal class QueryService : IQueryService
 
         while (index < fetchSizeNext)
         {
-            var item = enumerator.MoveNext(context);
+            var item = await enumerator.MoveNextAsync(context);
 
             if (item.IsEmpty)
             {
                 eof = true;
                 break;
             }
-            else if (index < fetchSize)
+            else if (index < sharedArray.Length)
             {
                 result.Results[index] = item.Value!;
 
@@ -102,6 +104,8 @@ internal class QueryService : IQueryService
         result.To = cursor.Offset += index;
         result.DocumentCount = index;
         result.HasMore = !eof;
+
+        return result;
     }
 
     public override string ToString()

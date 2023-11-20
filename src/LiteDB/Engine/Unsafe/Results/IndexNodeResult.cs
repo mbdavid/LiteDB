@@ -63,9 +63,14 @@ unsafe internal struct IndexNodeResult : IIsEmpty
     public bool IsMinOrMaxValue => this.Key->IsMinValue || this.Key->IsMaxValue;
 
     /// <summary>
-    /// Shortcut for IndexKey.CompareTo(value)
+    /// Shortcut for get if Key->Type == String
     /// </summary>
-    public int KeyCompareTo(BsonValue value, Collation collation) => IndexKey.Compare(this.Key, value, collation);
+    public bool IsStringValue => this.Key->Type == BsonType.String;
+
+    /// <summary>
+    /// Shortcut for IndexKey.ToBsonValue(value)
+    /// </summary>
+    public BsonValue ToBsonValue() => IndexKey.ToBsonValue(this.Key);
 
     #endregion
 

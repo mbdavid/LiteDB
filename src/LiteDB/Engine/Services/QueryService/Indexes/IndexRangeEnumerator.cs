@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Xml.Linq;
+﻿namespace LiteDB.Engine;
 
-namespace LiteDB.Engine;
-
-unsafe internal class IndexRangeEnumerator : IPipeEnumerator
+internal class IndexRangeEnumerator : IPipeEnumerator
 {
     private readonly Collation _collation;
 
@@ -46,7 +43,7 @@ unsafe internal class IndexRangeEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => new(indexNodeID: true, dataBlockID: true, value: _returnKey);
 
-    public unsafe PipeValue MoveNext(PipeContext context)
+    public async ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
         if (_eof) return PipeValue.Empty;
 
@@ -62,19 +59,21 @@ unsafe internal class IndexRangeEnumerator : IPipeEnumerator
 
             // find first indexNode (or get from head/tail if Min/Max value)
             var first =
-                _start.IsMinValue ? indexService.GetNodeAsync(_indexDocument.HeadIndexNodeID) :
-                _start.IsMaxValue ? indexService.GetNodeAsync(_indexDocument.TailIndexNodeID) :
-                indexService.FindAsync(_indexDocument, _start, true, _order);
+                _start.IsMinValue ? await indexService.GetNodeAsync(_indexDocument.HeadIndexNodeID) :
+                _start.IsMaxValue ? await indexService.GetNodeAsync(_indexDocument.TailIndexNodeID) :
+                await indexService.FindAsync(_indexDocument, _start, true, _order);
+
 
             // get pointer to next/prev at level 0
-            _prev = first[0]->GetPrev(_order);
-            _next = first[0]->GetNext(_order);
+            _prev = first.GetPrevID(0, _order);
+            _next = first.GetNextID(0, _order);
 
             if (_startEquals && !first.IsEmpty)
             {
-                if (!first.Key->IsMinValue && !first.Key->IsMaxValue)
+                //**if (!first.Key->IsMinValue && !first.Key->IsMaxValue)
+                if (!first.IsMinOrMaxValue)
                 {
-                    var value = _returnKey ? IndexKey.ToBsonValue(first.Key) : BsonValue.Null;
+                    var value = _returnKey ? first.ToBsonValue() : BsonValue.Null;
 
                     return new PipeValue(first.IndexNodeID, first.DataBlockID, value);
                 }
@@ -84,22 +83,22 @@ unsafe internal class IndexRangeEnumerator : IPipeEnumerator
         // first go forward
         if (_prev.IsEmpty == false)
         {
-            var node = indexService.GetNodeAsync(_prev);
+            var node = await indexService.GetNodeAsync(_prev);
 
             // check for Min/Max bson values index node key
-            if (node.Key->IsMaxValue || node.Key->IsMinValue)
+            if (node.IsMinOrMaxValue)
             {
                 _prev = RowID.Empty;
             }
             else
             {
-                var diff = IndexKey.Compare(_start, node.Key, _collation);
+                var diff = IndexKey.Compare(_start, node, _collation);
 
                 if (diff == (_order * -1 /* -1 */) || (diff == 0 && _startEquals))
                 {
-                    _prev = node[0]->GetPrev(_order);
+                    _prev = node.GetPrevID(0, _order);
 
-                    var value = _returnKey ? IndexKey.ToBsonValue(node.Key) : BsonValue.Null;
+                    var value = _returnKey ? node.ToBsonValue() : BsonValue.Null;
 
                     return new PipeValue(node.IndexNodeID, node.DataBlockID, value);
                 }
@@ -113,18 +112,18 @@ unsafe internal class IndexRangeEnumerator : IPipeEnumerator
         // and than, go backward
         if (_next.IsEmpty == false)
         {
-            var node = indexService.GetNodeAsync(_next);
+            var node = await indexService.GetNodeAsync(_next);
 
             // check for Min/Max bson values index node key
-            if (node.Key->IsMaxValue || node.Key->IsMinValue) return this.Finish();
+            if (node.IsMinOrMaxValue) return this.Finish();
 
-            var diff = IndexKey.Compare(_end, node.Key, _collation);
+            var diff = IndexKey.Compare(_end, node, _collation);
 
             if (diff == (_order /* 1 */) || (diff == 0 && _endEquals))
             {
-                _next = node[0]->GetNext(_order);
+                _next = node.GetNextID(0, _order);
 
-                var value = _returnKey ? IndexKey.ToBsonValue(node.Key) : BsonValue.Null;
+                var value = _returnKey ? node.ToBsonValue() : BsonValue.Null;
 
                 return new PipeValue(node.IndexNodeID, node.DataBlockID, value);
             }

@@ -17,7 +17,7 @@ public class SortService_Tests
 
         var context = new PipeContext();
 
-        var sut = new SortService(sortDisk, factory);
+        var sut = new SortService(factory);
 
         factory.CreateSortOperation(Arg.Any<OrderBy>())
             .Returns(c =>
@@ -48,14 +48,14 @@ public class SortService_Tests
         using var sorter = sut.CreateSort(new OrderBy("name", 1));
 
         // insert all data
-        sorter.InsertData(enumerator, context);
+        await sorter.InsertDataAsync(enumerator, context);
 
         var result = new List<SortItem>();
 
         // loop over result to get sorted order
         while(true)
         {
-            var item = sorter.MoveNext();
+            var item = await sorter.MoveNextAsync();
 
             if (item.IsEmpty) break;
 

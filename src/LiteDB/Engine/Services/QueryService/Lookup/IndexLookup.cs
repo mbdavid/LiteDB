@@ -9,11 +9,11 @@ internal class IndexLookup : IDocumentLookup
         _field = field;
     }
 
-    public BsonDocument Load(PipeValue key, PipeContext context)
+    public ValueTask<BsonDocument> LoadAsync(PipeValue key, PipeContext context)
     {
         var doc = new BsonDocument { [_field] = key.Value! };
 
-        return doc;
+        return new ValueTask<BsonDocument>(doc);
     }
 
     public override string ToString()

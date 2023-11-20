@@ -42,7 +42,7 @@ internal class DropCollectionStatement : IEngineStatement
         master.Collections.Remove(_store.Name);
 
         // write master collection into pages
-        masterService.WriteCollectionAsync(master, transaction);
+        await masterService.WriteCollectionAsync(master, transaction);
 
         // write all dirty pages into disk
         await transaction.CommitAsync();

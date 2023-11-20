@@ -82,12 +82,12 @@ internal partial class ServicesFactory : IServicesFactory
         // other services dependencies
         this.MemoryCache = new MemoryCache(this.MemoryFactory);
         this.DiskService = new DiskService(settings, this.MasterMapper, this.MemoryFactory, this.Disk);
-        this.LogService = new LogService(this.DiskService, this.MemoryCache, this.MemoryFactory, this.WalIndexService, this);
+        this.LogService = new LogService(this.DiskService, this.MemoryCache, this.MemoryFactory, this.WalIndexService);
         this.AllocationMapService = new AllocationMapService(this.DiskService, this.MemoryFactory);
         this.MasterService = new MasterService(this);
         this.MonitorService = new MonitorService(this);
         this.RecoveryService = new RecoveryService(this.MemoryFactory, this.DiskService);
-        this.SortService = new SortService(this.SortDisk, this);
+        this.SortService = new SortService(this);
         this.QueryService = new QueryService(this.WalIndexService, this);
     }
 

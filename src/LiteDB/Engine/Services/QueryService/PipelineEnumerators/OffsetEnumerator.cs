@@ -17,13 +17,13 @@ internal class OffsetEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => _enumerator.Emit;
 
-    public PipeValue MoveNext(PipeContext context)
+    public async ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
         if (_eof) return PipeValue.Empty;
 
         while (_count <= _offset)
         {
-            var skiped = _enumerator.MoveNext(context);
+            var skiped = await _enumerator.MoveNextAsync(context);
 
             if (skiped.IsEmpty)
             {
@@ -35,7 +35,7 @@ internal class OffsetEnumerator : IPipeEnumerator
             _count++;
         }
 
-        var item = _enumerator.MoveNext(context);
+        var item = await _enumerator.MoveNextAsync(context);
 
         if (item.IsEmpty)
         {

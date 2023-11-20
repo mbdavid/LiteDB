@@ -2,5 +2,5 @@
 
 internal interface IDocumentLookup
 {
-    BsonDocument Load(PipeValue key, PipeContext context);
+    ValueTask<BsonDocument> LoadAsync(PipeValue key, PipeContext context);
 }

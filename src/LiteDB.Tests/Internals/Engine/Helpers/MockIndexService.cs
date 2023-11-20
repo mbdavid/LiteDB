@@ -1,4 +1,5 @@
-﻿namespace Internals;
+﻿
+namespace Internals;
 
 internal class MockIndexService : IIndexService
 {
@@ -15,6 +16,45 @@ internal class MockIndexService : IIndexService
 
         new (new RowID(999, 0), BsonValue.MaxValue, RowID.Empty, new RowID(), RowID.Empty)
     };
+
+    public MockIndexService()
+    {
+    }
+
+    public ValueTask<(IndexNodeResult result, bool defrag)> AddNodeAsync(byte colID, IndexDocument index, BsonValue key, RowID dataBlockID, IndexNodeResult last)
+    {
+        throw new NotImplementedException();
+    }
+
+    public ValueTask<(RowID head, RowID tail)> CreateHeadTailNodesAsync(byte colID)
+    {
+        throw new NotImplementedException();
+    }
+
+    public ValueTask DeleteAllAsync(RowID pkIndexNodeID)
+    {
+        throw new NotImplementedException();
+    }
+
+    public ValueTask DropIndexAsync(int slot, RowID pkHeadIndexNodeID, RowID pkTailIndexNodeID)
+    {
+        throw new NotImplementedException();
+    }
+
+    public ValueTask<IndexNodeResult> FindAsync(IndexDocument index, BsonValue key, bool sibling, int order)
+    {
+        throw new NotImplementedException();
+    }
+
+    public int Flip()
+    {
+        throw new NotImplementedException();
+    }
+
+    public ValueTask<IndexNodeResult> GetNodeAsync(RowID indexNodeID)
+    {
+        throw new NotImplementedException();
+    }
 
     //private readonly PageBuffer _page = new PageBuffer(0);
 
@@ -45,44 +85,4 @@ internal class MockIndexService : IIndexService
 
     //    return new ValueTask<IndexNodeResult>(result);
     //}
-
-    public (RowID head, RowID tail) CreateHeadTailNodesAsync(byte colID)
-    {
-        throw new NotImplementedException();
-    }
-
-    public IndexNodeResult AddNode(byte colID, IndexDocument index, BsonValue key, RowID dataBlockID, IndexNodeResult last, out bool defrag)
-    {
-        throw new NotImplementedException();
-    }
-
-    public int Flip()
-    {
-        throw new NotImplementedException();
-    }
-
-    public IndexNodeResult GetNodeAsync(RowID indexNodeID)
-    {
-        throw new NotImplementedException();
-    }
-
-    public IndexNodeResult FindAsync(IndexDocument index, BsonValue key, bool sibling, int order)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void DeleteAll(IndexNodeResult nodeResult)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void DeleteAllAsync(RowID pkIndexNodeID)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void DropIndexAsync(int slot, RowID pkHeadIndexNodeID)
-    {
-        throw new NotImplementedException();
-    }
 }

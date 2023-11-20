@@ -6,7 +6,7 @@ unsafe internal static class PageDump
     {
         var sb = StringBuilderCache.Acquire();
 
-        sb.AppendLine($"# PageBuffer.: {{ UniqueID = {page->UniqueID}, PositionID = {Dump.PageID(page->PositionID)}, SharedCounter = {page->ShareCounter}, IsDirty = {page->IsDirty} }}");
+        sb.AppendLine($"# PageMemory.: {{ PageID = {Dump.PageID(page->PageID)}, PositionID = {Dump.PageID(page->PositionID)}, IsDirty = {page->IsDirty} }}");
 
         sb.AppendLine();
 
@@ -54,7 +54,7 @@ unsafe internal static class PageDump
     {
         var reader = new BsonReader();
 
-        if (page->HighestIndex == ushort.MaxValue)
+        if (page->HighestIndex == -1)
         {
             sb.AppendLine("# No items");
             return;

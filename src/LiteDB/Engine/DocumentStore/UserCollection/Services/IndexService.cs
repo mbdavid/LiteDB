@@ -111,7 +111,7 @@ internal class IndexService : IIndexService
                 var rightNode = await this.GetNodeAsync(right);
 
                 // read next node to compare
-                var diff = rightNode.KeyCompareTo(key, _collation);
+                var diff = IndexKey.Compare(rightNode, key, _collation);
 
                 if (diff == 0 && index.Unique) throw ERR("IndexDuplicateKey(index.Name, key)");
 
@@ -218,7 +218,7 @@ internal class IndexService : IIndexService
             {
                 var rightNode = await this.GetNodeAsync(right);
 
-                var diff = rightNode.KeyCompareTo(key, _collation);
+                var diff = IndexKey.Compare(rightNode, key, _collation);
 
                 if (diff == order && (level > 0 || !sibling)) break; // go down one level
 

@@ -52,7 +52,7 @@ internal partial class Transaction : ITransaction
 
                 await _diskService.ReadPageAsync(walPage, positionID);
 
-                ENSURE(walPage.PageType == PageType.Data || walPage.PageType == PageType.Index, $"Only data/index page on transaction read page: {walPage->PageID}");
+                ENSURE(walPage.PageType == PageType.Data || walPage.PageType == PageType.Index, $"Only data/index page on transaction read page: {walPage.PageID}");
 
                 return walPage;
             }

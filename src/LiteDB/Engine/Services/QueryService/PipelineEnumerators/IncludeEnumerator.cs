@@ -27,11 +27,11 @@ internal class IncludeEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => new(indexNodeID: _enumerator.Emit.IndexNodeID, dataBlockID: _enumerator.Emit.DataBlockID, value: true);
 
-    public PipeValue MoveNext(PipeContext context)
+    public async ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
         if (_eof) return PipeValue.Empty;
 
-        var item = _enumerator.MoveNext(context);
+        var item = await _enumerator.MoveNextAsync(context);
 
         if (item.IsEmpty)
         {
@@ -44,7 +44,7 @@ internal class IncludeEnumerator : IPipeEnumerator
 
         if (value.IsDocument)
         {
-            this.DoInclude(value.AsDocument, context);
+            await this.DoIncludeAsync(value.AsDocument, context);
         }
         else if (value.IsArray)
         {
@@ -54,7 +54,7 @@ internal class IncludeEnumerator : IPipeEnumerator
             {
                 if (!elem.IsDocument) continue;
 
-                this.DoInclude(elem.AsDocument, context);
+                await this.DoIncludeAsync(elem.AsDocument, context);
             }
         }
 
@@ -64,7 +64,7 @@ internal class IncludeEnumerator : IPipeEnumerator
     /// <summary>
     /// Do include changes inner document instance to add all fields from that collection using _id
     /// </summary>
-    private void DoInclude(BsonDocument value, PipeContext context)
+    private async ValueTask DoIncludeAsync(BsonDocument value, PipeContext context)
     {
         // works only if is a document { $id: value, $ref: "col_name" }
         var refId = value["$id"];
@@ -78,11 +78,11 @@ internal class IncludeEnumerator : IPipeEnumerator
 
         if (master.Collections.TryGetValue(refCol.AsString, out var collection))
         {
-            var node = context.IndexService.FindAsync(collection.PK, refId, false, Query.Ascending);
+            var node = await context.IndexService.FindAsync(collection.PK, refId, false, Query.Ascending);
 
             if (!node.IsEmpty)
             {
-                var refDocResult = context.DataService.ReadDocument(node.DataBlockID, Array.Empty<string>());
+                var refDocResult = await context.DataService.ReadDocumentAsync(node.DataBlockID, []);
 
                 if (refDocResult.Fail) throw refDocResult.Exception;
 

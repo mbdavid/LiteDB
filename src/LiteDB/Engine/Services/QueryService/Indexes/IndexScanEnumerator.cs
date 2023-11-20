@@ -26,7 +26,7 @@ internal class IndexScanEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => new(indexNodeID: true, dataBlockID: true, value: _returnKey);
 
-    public unsafe PipeValue MoveNext(PipeContext context)
+    public async ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
         if (_eof) return PipeValue.Empty;
 
@@ -40,10 +40,10 @@ internal class IndexScanEnumerator : IPipeEnumerator
         {
             _init = true;
 
-            var node = indexService.GetNodeAsync(head);
+            var node = await indexService.GetNodeAsync(head);
 
             // get pointer to next at level 0
-            _next = node[0]->GetNext(_order);
+            _next = node.GetNextID(0, _order);
 
             // empty index
             if (_next == tail)
@@ -56,19 +56,19 @@ internal class IndexScanEnumerator : IPipeEnumerator
         // loop until find any func<> = true
         while (true)
         {
-            var node = indexService.GetNodeAsync(_next);
+            var node = await indexService.GetNodeAsync(_next);
 
-            _next = node[0]->GetNext(_order);
+            _next = node.GetNextID(0, _order);
 
             // if next is tail, do not run more than this time
             if (_next == tail) _eof = true;
 
             // get key as BsonValue to run computed function
-            var key = IndexKey.ToBsonValue(node.Key);
+            var key = node.ToBsonValue();
 
             if (_func(key))
             {
-                var value = _returnKey ? IndexKey.ToBsonValue(node.Key) : BsonValue.Null;
+                var value = _returnKey ? key : BsonValue.Null;
 
                 return new PipeValue(node.IndexNodeID, node.DataBlockID, value);
             }

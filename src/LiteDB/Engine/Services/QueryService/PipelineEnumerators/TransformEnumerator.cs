@@ -19,11 +19,11 @@ internal class TransformEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => new(indexNodeID: _enumerator.Emit.IndexNodeID, dataBlockID: _enumerator.Emit.DataBlockID, value: true);
 
-    public PipeValue MoveNext(PipeContext context)
+    public async ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
         if (_eof) return PipeValue.Empty;
 
-        var item = _enumerator.MoveNext(context);
+        var item = await _enumerator.MoveNextAsync(context);
 
         if (item.IsEmpty)
         {

@@ -44,7 +44,7 @@ internal class CreateIndexStatement : IEngineStatement
         var indexService = factory.CreateIndexService(transaction);
 
         // create new index (head/tail)
-        var (head, tail) = indexService.CreateHeadTailNodesAsync(collection.ColID);
+        var (head, tail) = await indexService.CreateHeadTailNodesAsync(collection.ColID);
 
         // get a free index slot
         var freeIndexSlot = (byte)Enumerable.Range(1, INDEX_MAX_LEVELS)
@@ -66,7 +66,7 @@ internal class CreateIndexStatement : IEngineStatement
         collection.Indexes.Add(indexDocument);
 
         // write master collection into pages inside transaction
-        masterService.WriteCollectionAsync(master, transaction);
+        await masterService.WriteCollectionAsync(master, transaction);
 
         // create pipe context
         var pipeContext = new PipeContext(dataService, indexService, BsonDocument.Empty);
@@ -78,16 +78,15 @@ internal class CreateIndexStatement : IEngineStatement
         var counter = 0;
 
         // read all documents based on a full PK scan
-        using (var enumerator = new IndexNodeEnumerator(indexService, collection.PK))
+        await using (var enumerator = new IndexNodeEnumerator(indexService, collection.PK))
         {
-            while (enumerator.MoveNext())
+            while (await enumerator.MoveNextAsync())
             {
                 var pkIndexNode = enumerator.Current;
                 var dataBlockID = pkIndexNode.DataBlockID;
-                var defrag = false;
 
                 // read document fields
-                var docResult = dataService.ReadDocumentAsync(pkIndexNode.DataBlockID, fields);
+                var docResult = await dataService.ReadDocumentAsync(pkIndexNode.DataBlockID, fields);
 
                 if (docResult.Fail) throw docResult.Exception;
 
@@ -99,7 +98,7 @@ internal class CreateIndexStatement : IEngineStatement
 
                 foreach (var key in keys)
                 {
-                    var node = indexService.AddNodeAsync(collection.ColID, indexDocument, key, dataBlockID, last, out defrag);
+                    var (node, defrag) = await indexService.AddNodeAsync(collection.ColID, indexDocument, key, dataBlockID, last);
 
                     // ensure execute reload on indexNode after any defrag
                     if (defrag && pkIndexNode.IndexNodeID.PageID == node.IndexNodeID.PageID)

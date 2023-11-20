@@ -31,7 +31,7 @@ internal class RenameCollectionStatement : IEngineStatement
         var master = masterService.GetMaster(true);
 
         // create a new transaction locking colID = 255 ($master) and colID
-        var transaction = await monitorService.CreateTransactionAsync(new byte[] { MASTER_COL_ID, _store.ColID });
+        var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, _store.ColID]);
 
         // remove collection from $master
         master.Collections.Remove(_store.Name);
@@ -43,7 +43,7 @@ internal class RenameCollectionStatement : IEngineStatement
         master.Collections.Add(_name, collection);
 
         // write master collection into pages
-        masterService.WriteCollectionAsync(master, transaction);
+        await masterService.WriteCollectionAsync(master, transaction);
 
         // write all dirty pages into disk
         await transaction.CommitAsync();

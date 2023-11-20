@@ -1,8 +1,6 @@
-﻿using System.Xml.Linq;
+﻿namespace LiteDB.Engine;
 
-namespace LiteDB.Engine;
-
-unsafe internal class IndexLikeEnumerator : IPipeEnumerator
+internal class IndexLikeEnumerator : IPipeEnumerator
 {
     private readonly Collation _collation;
 
@@ -36,14 +34,14 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => new(indexNodeID: true, dataBlockID: true, value: _returnKey);
 
-    public PipeValue MoveNext(PipeContext context)
+    public ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
-        if (_eof) return PipeValue.Empty;
+        if (_eof) return new ValueTask<PipeValue>(PipeValue.Empty);
 
-        return _startsWith.Length > 0 ? this.ExecuteLike(context) : this.ExecuteFullScan(context);
+        return _startsWith.Length > 0 ? this.ExecuteLikeAsync(context) : this.ExecuteFullScanAsync(context);
     }
 
-    private unsafe PipeValue ExecuteLike(PipeContext context)
+    private async ValueTask<PipeValue> ExecuteLikeAsync(PipeContext context)
     {
         var indexService = context.IndexService;
 
@@ -55,38 +53,38 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
         {
             _init = true;
 
-            var node = indexService.FindAsync(_indexDocument, _startsWith, true, Query.Ascending);
+            var node = await indexService.FindAsync(_indexDocument, _startsWith, true, Query.Ascending);
 
             // if node was not found, end enumerator
-            if (node.IsEmpty || node.Key->Type != BsonType.String) return this.Finish();
+            if (node.IsEmpty || !node.IsStringValue) return this.Finish();
 
             // get start prev (left side)
             var prevID = node.IndexNodeID;
 
             // get next index node
-            _next = node[0]->GetNext(_order);
+            _next = node.GetNextID(0, _order);
 
             // add all prev items into _prevs
             while (true)
             {
-                var nodePrev = indexService.GetNodeAsync(prevID);
+                var nodePrev = await indexService.GetNodeAsync(prevID);
 
-                if (nodePrev.Key->Type != BsonType.String) break;
+                if (!nodePrev.IsStringValue) break;
 
-                var keyPrev = IndexKey.ToBsonValue(nodePrev.Key).AsString;
+                var keyPrev = nodePrev.ToBsonValue().AsString;
 
                 // test if match initial startsWith
                 if (!_collation.StartsWith(keyPrev, _startsWith)) break;
 
                 if (_hasMore == false || keyPrev.SqlLike(_value, _collation))
                 {
-                    var value = _returnKey ? IndexKey.ToBsonValue(nodePrev.Key) : BsonValue.Null;
+                    var value = _returnKey ? nodePrev.ToBsonValue() : BsonValue.Null;
 
                     // push current value
                     _prev.Push(new(nodePrev.IndexNodeID, nodePrev.DataBlockID, value));
                 }
 
-                prevID = nodePrev[0]->GetPrev(_order);
+                prevID = nodePrev.GetPrevID(0, _order);
             }
         }
 
@@ -102,18 +100,18 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
             if (_next == head) return this.Finish();
 
             // get nextNode and test if match
-            var nodeNext = indexService.GetNodeAsync(_next);
+            var nodeNext = await indexService.GetNodeAsync(_next);
 
             // set for next
-            _next = nodeNext[0]->GetNext(_order);
+            _next = nodeNext.GetNextID(0, _order);
 
             if (_next == tail) _eof = true;
 
             // if not string, finish
-            if (nodeNext.Key->Type != BsonType.String) return this.Finish();
+            if (!nodeNext.IsStringValue) return this.Finish();
 
             //get nextKey as string
-            var keyNext = IndexKey.ToBsonValue(nodeNext.Key).AsString;
+            var keyNext = nodeNext.ToBsonValue().AsString;
 
             // test if match initial startsWith
             if (!_collation.StartsWith(keyNext, _startsWith)) break;
@@ -121,7 +119,7 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
             // test if not match
             if (_hasMore == false || keyNext.SqlLike(_value, _collation))
             {
-                var value = _returnKey ? IndexKey.ToBsonValue(nodeNext.Key) : BsonValue.Null;
+                var value = _returnKey ? nodeNext.ToBsonValue() : BsonValue.Null;
 
                 // return current node
                 return new PipeValue(nodeNext.IndexNodeID, nodeNext.DataBlockID, value);
@@ -134,7 +132,7 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
     /// <summary>
     /// Do a full scan over index (head to tail) and return match strings
     /// </summary>
-    private unsafe PipeValue ExecuteFullScan(PipeContext context)
+    private async ValueTask<PipeValue> ExecuteFullScanAsync(PipeContext context)
     {
         var indexService = context.IndexService;
 
@@ -146,9 +144,9 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
         {
             _init = true;
 
-            var node = indexService.GetNodeAsync(head);
+            var node = await indexService.GetNodeAsync(head);
 
-            _next = node[0]->GetNext(_order);
+            _next = node.GetNextID(0, _order);
 
             if (_next == tail)
             {
@@ -161,22 +159,22 @@ unsafe internal class IndexLikeEnumerator : IPipeEnumerator
         // go forward
         while (_eof == false)
         {
-            var node = indexService.GetNodeAsync(_next);
+            var node = await indexService.GetNodeAsync(_next);
 
             // update next node
-            _next = node[0]->GetNext(_order);
+            _next = node.GetNextID(0, _order);
 
             // if next node if tail, finish after return
             if (_next == tail) _eof = true;
 
             // tests only if is string key
-            if (node.Key->Type == BsonType.String)
+            if (node.IsStringValue)
             {
-                var key = IndexKey.ToBsonValue(node.Key).AsString;
+                var key = node.ToBsonValue().AsString;
 
                 if (key.SqlLike(_value, _collation))
                 {
-                    var value = _returnKey ? IndexKey.ToBsonValue(node.Key) : BsonValue.Null;
+                    var value = _returnKey ? node.ToBsonValue() : BsonValue.Null;
 
                     return new PipeValue(node.IndexNodeID, node.DataBlockID, value);
                 }

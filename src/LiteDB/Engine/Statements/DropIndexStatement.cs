@@ -43,19 +43,19 @@ internal class DropIndexStatement : IEngineStatement
         var slot = indexDocument.Slot;
 
         // create a new transaction locking colID = 255 ($master) and colID
-        var transaction = await monitorService.CreateTransactionAsync(new byte[] { MASTER_COL_ID, colID });
+        var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, colID]);
 
         // get index service from store
         var (_, indexService) = _store.GetServices(factory, transaction);
 
         // drop all index nodes for this slot. Scan from pk items
-        indexService.DropIndexAsync(indexDocument.Slot, pkIndex.HeadIndexNodeID);
+        await indexService.DropIndexAsync(indexDocument.Slot, pkIndex.HeadIndexNodeID, pkIndex.TailIndexNodeID);
 
         // remove index from collection on $master
         collection.Indexes.Remove(indexDocument);
 
         // write master collection into pages
-        masterService.WriteCollectionAsync(master, transaction);
+        await masterService.WriteCollectionAsync(master, transaction);
 
         // write all dirty pages into disk
         await transaction.CommitAsync();

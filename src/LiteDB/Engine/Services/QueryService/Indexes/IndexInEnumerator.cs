@@ -1,8 +1,6 @@
-﻿using System.Xml.Linq;
+﻿namespace LiteDB.Engine;
 
-namespace LiteDB.Engine;
-
-unsafe internal class IndexInEnumerator : IPipeEnumerator
+internal class IndexInEnumerator : IPipeEnumerator
 {
     private readonly Collation _collation;
     private readonly IndexDocument _indexDocument;
@@ -30,7 +28,7 @@ unsafe internal class IndexInEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => new(indexNodeID: true, dataBlockID: true, value: _returnKey);
 
-    public unsafe PipeValue MoveNext(PipeContext context)
+    public async ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
         if (_eof) return PipeValue.Empty;
 
@@ -43,11 +41,11 @@ unsafe internal class IndexInEnumerator : IPipeEnumerator
 
             _currentIndex = new IndexEqualsEnumerator(first, _indexDocument, _collation, _returnKey);
             
-            return _currentIndex.MoveNext(context);
+            return await _currentIndex.MoveNextAsync(context);
         }
         else
         {
-            var pipeValue = _currentIndex!.MoveNext(context);
+            var pipeValue = await _currentIndex!.MoveNextAsync(context);
 
             if (pipeValue.IsEmpty)
             {
@@ -63,7 +61,7 @@ unsafe internal class IndexInEnumerator : IPipeEnumerator
 
                 _currentIndex = new IndexEqualsEnumerator(value, _indexDocument, _collation, _returnKey);
 
-                return _currentIndex.MoveNext(context);
+                return await _currentIndex.MoveNextAsync(context);
             }
 
             return pipeValue;

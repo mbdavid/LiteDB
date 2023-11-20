@@ -108,7 +108,7 @@ internal class DiskService : IDiskService
         bsonWriter.WriteDocument(masterBuffer.AsSpan(), masterDoc, out _);
 
         // insert $master document into master page
-        PageMemory.InsertDataBlock(masterPage.Ptr, masterBuffer.AsSpan(), false, out _, out _);
+        PageMemory.InsertDataBlock(masterPage, masterBuffer.AsSpan(), false, out _, out _);
 
         await this.WritePageAsync(mapPage);
         await this.WritePageAsync(masterPage);

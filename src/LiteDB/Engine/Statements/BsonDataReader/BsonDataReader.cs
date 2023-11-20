@@ -8,10 +8,10 @@ public class BsonDataReader : IDataReader
     private readonly IServicesFactory _factory;
 
     private readonly Cursor _cursor;
-    private readonly int _fetchSize;
 
     private int _current = -1;
-    private Resultset _resultset;
+    private int _documentCount;
+    private SharedArray<BsonValue> _sharedArray;
 
     /// <summary>
     /// Initialize data reader with created cursor
@@ -19,15 +19,14 @@ public class BsonDataReader : IDataReader
     internal BsonDataReader(Cursor cursor, int fetchSize, IServicesFactory factory)
     {
         _cursor = cursor;
-        _resultset = new Resultset(fetchSize);
-        _fetchSize = fetchSize;
+        _sharedArray = SharedArray<BsonValue>.Rent(fetchSize);
         _factory = factory;
     }
 
     /// <summary>
     /// Return current value
     /// </summary>
-    public BsonValue Current => _resultset.Results[_current];
+    public BsonValue Current => _sharedArray[_current];
 
     /// <summary>
     /// Return collection name
@@ -53,7 +52,7 @@ public class BsonDataReader : IDataReader
             _current++;
 
             // if exceed, get next resultset
-            if (_current == _resultset.DocumentCount)
+            if (_current == _documentCount)
             {
                 await this.FetchAsync();
 
@@ -83,15 +82,15 @@ public class BsonDataReader : IDataReader
             var (dataService, indexService) = store.GetServices(_factory, transaction);
             var context = new PipeContext(dataService, indexService, _cursor.Parameters);
 
-            /*await*/
-            queryService.FetchAsync(_cursor, _fetchSize, context, ref _resultset);
+            var resultset = await queryService.FetchAsync(_cursor, _sharedArray, context);
 
             transaction.Abort();
 
             monitorService.ReleaseTransaction(transaction);
 
             // start current index in 0
-            _current = _resultset.DocumentCount == 0 ? int.MaxValue : 0;
+            _documentCount = resultset.DocumentCount;
+            _current = _documentCount == 0 ? int.MaxValue : 0;
         }
         catch (Exception ex)
         {
@@ -106,9 +105,10 @@ public class BsonDataReader : IDataReader
 
     public BsonValue this[string field] => _current == -1 || _current == int.MaxValue ? 
         BsonValue.Null :
-        _resultset.Results[_current].AsDocument[field];
+        _sharedArray[_current].AsDocument[field];
 
     public void Dispose()
     {
+        _sharedArray.Dispose();
     }
 }

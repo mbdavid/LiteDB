@@ -25,17 +25,18 @@ internal class OrderByEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => new(indexNodeID: false, dataBlockID: true, value: false);
 
-    public PipeValue MoveNext(PipeContext context)
+    public async ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
         if(_init == false)
         {
             // consume all _enumerator and get ready for new enumerator: _sorter
-            _sorter.InsertData(_enumerator, context);
+            await _sorter.InsertDataAsync(_enumerator, context);
+
             _init = true;
         }
 
         // get next sorted item (returns Empty when EOF)
-        var item = _sorter.MoveNext();
+        var item = await _sorter.MoveNextAsync();
 
         return new PipeValue(RowID.Empty, item.DataBlockID);
     }

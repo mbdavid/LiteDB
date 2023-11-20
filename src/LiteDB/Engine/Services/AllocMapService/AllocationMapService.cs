@@ -12,7 +12,7 @@ internal class AllocationMapService : IAllocationMapService
     /// <summary>
     /// List of all allocation map pages, in pageID order
     /// </summary>
-    private readonly List<nint> _pages = new();
+    private readonly List<PageMemoryResult> _pages = new();
 
     public AllocationMapService(
         IDiskService diskService, 
@@ -34,11 +34,11 @@ internal class AllocationMapService : IAllocationMapService
 
         while (positionID <= lastPositionID)
         {
-            var ptr = _memoryFactory.AllocateNewPage();
+            var page = _memoryFactory.AllocateNewPage();
 
-            await _diskService.ReadPageAsync(ptr, positionID);
+            await _diskService.ReadPageAsync(page, positionID);
 
-            _pages.Add(ptr);
+            _pages.Add(page);
 
             positionID += AM_PAGE_STEP;
         }
@@ -47,12 +47,11 @@ internal class AllocationMapService : IAllocationMapService
     /// <summary>
     /// Get a free PageID based on colID/type. Create extend or new am page if needed. Return isNew if page are empty (must be initialized)
     /// </summary>
-    public unsafe (uint pageID, bool isNew, ExtendLocation next) GetFreeExtend(ExtendLocation current, byte colID, PageType type)
+    public (uint pageID, bool isNew, ExtendLocation next) GetFreeExtend(ExtendLocation current, byte colID, PageType type)
     {
-        var ptr = _pages[current.AllocationMapID];
-        var page = (PageMemory*)ptr;
+        var page = _pages[current.AllocationMapID];
 
-        var (extendIndex, pageIndex, isNew) = PageMemory.GetFreeExtend(ptr, current.ExtendIndex, colID, type);
+        var (extendIndex, pageIndex, isNew) = PageMemory.GetFreeExtend(page.Ptr, current.ExtendIndex, colID, type);
 
         if (extendIndex >= 0)
         {
@@ -74,22 +73,22 @@ internal class AllocationMapService : IAllocationMapService
             var extend = new ExtendLocation(current.AllocationMapID + 1, 0);
 
             // if there is no more free extend in any AM page, let's create a new allocation map page
-            var newPage = (PageMemory*)_memoryFactory.AllocateNewPage();
+            var newPage = _memoryFactory.AllocateNewPage();
 
             ENSURE(_pages.Count > 0);
 
-            var lastPage = (PageMemory*)_pages.Last();
+            var lastPage = _pages.Last();
 
             // get a new PageID based on last AM page
-            var nextPageID = lastPage->PageID + AM_PAGE_STEP;
+            var nextPageID = lastPage.PageID + AM_PAGE_STEP;
 
             // get allocation map position
-            newPage->PositionID = newPage->RecoveryPositionID = nextPageID;
-            newPage->PageID = nextPageID;
-            newPage->PageType = PageType.AllocationMap;
-            newPage->IsDirty = true;
+            newPage.PositionID = newPage.RecoveryPositionID = nextPageID;
+            newPage.PageID = nextPageID;
+            newPage.PageType = PageType.AllocationMap;
+            newPage.IsDirty = true;
 
-            _pages.Add((nint)newPage);
+            _pages.Add(newPage);
 
             // call again this method with this new page
             return this.GetFreeExtend(extend, colID, type);
@@ -101,7 +100,7 @@ internal class AllocationMapService : IAllocationMapService
     /// </summary>
     public unsafe uint GetExtendValue(ExtendLocation extend)
     {
-        var page = (PageMemory*)_pages[extend.AllocationMapID];
+        var page = _pages[extend.AllocationMapID].Page;
 
         return page->Extends[extend.ExtendIndex];
     }
@@ -109,7 +108,7 @@ internal class AllocationMapService : IAllocationMapService
     /// <summary>
     /// Get PageMemory instance for a specific allocationMapID
     /// </summary>
-    public nint GetPageMemory(int allocationMapID)
+    public PageMemoryResult GetPageMemory(int allocationMapID)
     {
         return _pages[allocationMapID];
     }
@@ -117,13 +116,13 @@ internal class AllocationMapService : IAllocationMapService
     /// <summary>
     /// Get all used pages from a single collection
     /// </summary>
-    public unsafe IReadOnlyList<uint> GetAllPages(byte colID)
+    public IReadOnlyList<uint> GetAllPages(byte colID)
     {
         var result = new List<uint>();
 
         for(var i = 0; i < _pages.Count; i++)
         {
-            PageMemory.LoadPageIDFromExtends(_pages[i], i, colID, result);
+            PageMemory.LoadPageIDFromExtends(_pages[i].Ptr, i, colID, result);
         }
 
         return result;
@@ -137,7 +136,7 @@ internal class AllocationMapService : IAllocationMapService
         // loop over all allocation map pages
         for (var i = 0; i < _pages.Count; i++)
         {
-            var page = (PageMemory*)_pages[i];
+            var page = _pages[i].Page;
 
             // and loop over all extend value inside a allocation map page
             for (var j = 0; j < AM_EXTEND_COUNT; j++)
@@ -156,15 +155,15 @@ internal class AllocationMapService : IAllocationMapService
     /// <summary>
     /// Update allocation page map according with header page type and used bytes
     /// </summary>
-    public unsafe void UpdatePageMap(uint pageID, ExtendPageValue pageValue)
+    public void UpdatePageMap(uint pageID, ExtendPageValue pageValue)
     {
         var allocationMapID = (int)(pageID / AM_PAGE_STEP);
         var extendIndex = (int)((pageID - 1 - allocationMapID * AM_PAGE_STEP) / AM_EXTEND_SIZE);
         var pageIndex = (int)pageID - 1 - allocationMapID * AM_PAGE_STEP - extendIndex * AM_EXTEND_SIZE;
 
-        var ptr = _pages[allocationMapID];
+        var page = _pages[allocationMapID];
 
-        PageMemory.UpdateExtendPageValue(ptr, extendIndex, pageIndex, pageValue);
+        PageMemory.UpdateExtendPageValue(page.Ptr, extendIndex, pageIndex, pageValue);
     }
 
     /// <summary>
@@ -176,7 +175,7 @@ internal class AllocationMapService : IAllocationMapService
         {
             var extendLocation = new ExtendLocation(extendValue.Key);
 
-            var page = (PageMemory*)_pages[extendLocation.AllocationMapID];
+            var page = _pages[extendLocation.AllocationMapID].Page;
 
             page->Extends[extendLocation.ExtendIndex] = extendValue.Value;
         }
@@ -187,11 +186,11 @@ internal class AllocationMapService : IAllocationMapService
     /// </summary>
     public async ValueTask WriteAllChangesAsync()
     {
-        foreach(var ptr in _pages)
+        foreach(var page in _pages)
         {
-            if (PageMemory.IsPageDirty(ptr))
+            if (page.IsDirty)
             {
-                await _diskService.WritePageAsync(ptr);
+                await _diskService.WritePageAsync(page);
             }
         }
     }

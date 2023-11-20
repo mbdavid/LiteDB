@@ -4,7 +4,10 @@ unsafe internal partial struct IndexKey
 {
     #region Compare IndexKey* vs IndexKey*
 
-    public static int Compare(IndexKey* left, IndexKey* right, Collation collation)
+    public static int Compare(IndexNodeResult left, IndexNodeResult right, Collation collation)
+        => IndexKey.Compare(left.Key, right.Key, collation);
+
+    private static int Compare(IndexKey* left, IndexKey* right, Collation collation)
     {
         // first, test if types are different
         if (left->Type != right->Type)
@@ -101,7 +104,13 @@ unsafe internal partial struct IndexKey
 
     #region Compare BsonValue vs IndexKey*
 
-    internal static int Compare(BsonValue left, IndexKey* right, Collation collation)
+    public static int Compare(BsonValue left, IndexNodeResult right, Collation collation)
+        => IndexKey.Compare(left, right.Key, collation);
+
+    public static int Compare(IndexNodeResult left, BsonValue right, Collation collation)
+        => IndexKey.Compare(right, left.Key, collation) * -1;
+
+    private static int Compare(BsonValue left, IndexKey* right, Collation collation)
     {
         // first, test if types are different
         if (left.Type != right->Type)
@@ -190,8 +199,6 @@ unsafe internal partial struct IndexKey
         };
     }
 
-    internal static int Compare(IndexKey* left, BsonValue right, Collation collation)
-        => Compare(right, left, collation) * -1;
 
     #endregion
 }

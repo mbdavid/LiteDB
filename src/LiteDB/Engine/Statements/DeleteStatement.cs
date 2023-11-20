@@ -25,7 +25,7 @@ internal class DeleteStatement : IEngineStatement
         _store.Initialize(masterService);
 
         // create a new transaction locking colID
-        var transaction = await monitorService.CreateTransactionAsync(new byte[] { _store.ColID });
+        var transaction = await monitorService.CreateTransactionAsync([_store.ColID]);
 
         // get data/index services
         var (dataService, indexService) = _store.GetServices(factory, transaction);
@@ -34,19 +34,18 @@ internal class DeleteStatement : IEngineStatement
         var count = 0;
 
         // get all pkIndexNodeID + dataBlockID
-        var allNodes = this.GetDeleteEnumerable(factory, transaction, parameters)
-            .ToArray(); // TODO: fix memory allocation
+        var allNodes = this.GetDeleteEnumerable(factory, transaction, parameters);
 
-        foreach(var node in allNodes)
+        await foreach(var node in allNodes)
         {
             // get value before DeleteAsync
             var dataBlockID = node.DataBlockID;
 
             // delete all index nodes starting from PK
-            indexService.DeleteAllAsync(node.IndexNodeID);
+            await indexService.DeleteAllAsync(node.IndexNodeID);
 
             // delete document
-            dataService.DeleteDocumentAsync(dataBlockID);
+            await dataService.DeleteDocumentAsync(dataBlockID);
 
             count++;
 
@@ -66,7 +65,7 @@ internal class DeleteStatement : IEngineStatement
         return count;
     }
 
-    private IEnumerable<PipeValue> GetDeleteEnumerable(IServicesFactory factory, ITransaction transaction, BsonDocument parameters)
+    private async IAsyncEnumerable<PipeValue> GetDeleteEnumerable(IServicesFactory factory, ITransaction transaction, BsonDocument parameters)
     {
         var query = new Query 
         { 
@@ -86,7 +85,7 @@ internal class DeleteStatement : IEngineStatement
 
         while (true)
         {
-            var result = enumerator.MoveNext(context);
+            var result = await enumerator.MoveNextAsync(context);
 
             if (result.IsEmpty) break;
 
@@ -99,7 +98,7 @@ internal class DeleteStatement : IEngineStatement
                 var id = result.Value["_id"];
 
                 // get PK index node based on _id value
-                var node = context.IndexService.FindAsync(pkIndex, id, false, Query.Ascending);
+                var node = await context.IndexService.FindAsync(pkIndex, id, false, Query.Ascending);
 
                 yield return new PipeValue(node.IndexNodeID, node.DataBlockID, id);
             }

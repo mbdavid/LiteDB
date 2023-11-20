@@ -1,6 +1,6 @@
 ﻿namespace LiteDB.Engine;
 
-unsafe internal class IndexEqualsEnumerator : IPipeEnumerator
+internal class IndexEqualsEnumerator : IPipeEnumerator
 {
     private readonly Collation _collation;
 
@@ -28,7 +28,7 @@ unsafe internal class IndexEqualsEnumerator : IPipeEnumerator
 
     public PipeEmit Emit => new(indexNodeID: true, dataBlockID: true, value: _returnKey);
 
-    public unsafe PipeValue MoveNext(PipeContext context)
+    public async ValueTask<PipeValue> MoveNextAsync(PipeContext context)
     {
         if (_eof) return PipeValue.Empty;
 
@@ -43,7 +43,7 @@ unsafe internal class IndexEqualsEnumerator : IPipeEnumerator
         {
             _init = true;
 
-            var node = indexService.FindAsync(_indexDocument, _value, false, Query.Ascending);
+            var node = await indexService.FindAsync(_indexDocument, _value, false, Query.Ascending);
 
             // if node was not found, end enumerator
             if (node.IsEmpty)
@@ -60,15 +60,15 @@ unsafe internal class IndexEqualsEnumerator : IPipeEnumerator
             else
             {
                 // get pointer to next/prev at level 0
-                _prev = node[0]->PrevID;
-                _next = node[0]->NextID;
+                _prev = node.GetPrevID(0);
+                _next = node.GetNextID(0);
 
                 // check for head/tail nodes to set as empty
                 if (_prev == head) _prev = RowID.Empty;
                 if (_next == head) _next = RowID.Empty;
             }
 
-            var value = _returnKey ? IndexKey.ToBsonValue(node.Key) : BsonValue.Null;
+            var value = _returnKey ? node.ToBsonValue() : BsonValue.Null;
 
             // current node to return
             return new PipeValue(node.IndexNodeID, node.DataBlockID, value);
@@ -78,17 +78,17 @@ unsafe internal class IndexEqualsEnumerator : IPipeEnumerator
         if (_prev.IsEmpty == false)
         {
             // do not test head node
-            var node = indexService.GetNodeAsync(_prev);
+            var node = await indexService.GetNodeAsync(_prev);
 
-            var isEqual = IndexKey.Compare(_value, node.Key, _collation) == 0;
+            var isEqual = IndexKey.Compare(_value, node, _collation) == 0;
 
             if (isEqual)
             {
-                _prev = node[0]->PrevID;
+                _prev = node.GetPrevID(0);
 
                 if (_prev == head) _prev = RowID.Empty;
 
-                var value = _returnKey ? IndexKey.ToBsonValue(node.Key) : BsonValue.Null;
+                var value = _returnKey ? node.ToBsonValue() : BsonValue.Null;
 
                 return new PipeValue(node.IndexNodeID, node.DataBlockID, value);
             }
@@ -101,18 +101,18 @@ unsafe internal class IndexEqualsEnumerator : IPipeEnumerator
         // and than go forward
         if (_next.IsEmpty == false)
         {
-            var node = indexService.GetNodeAsync(_next);
+            var node = await indexService.GetNodeAsync(_next);
 
-            //var isEqual = _collation.Equals(_value, node.Key);
-            var isEqual = IndexKey.Compare(_value, node.Key, _collation) == 0;
+            //TODO: create CompareEquals (returns a bool - fast than compare)
+            var isEqual = IndexKey.Compare(_value, node, _collation) == 0;
 
             if (isEqual)
             {
-                _next = node[0]->NextID;
+                _next = node.GetNextID(0);
 
                 if (_next == tail) _eof = true;
 
-                var value = _returnKey ? IndexKey.ToBsonValue(node.Key) : BsonValue.Null;
+                var value = _returnKey ? node.ToBsonValue() : BsonValue.Null;
 
                 return new PipeValue(node.IndexNodeID, node.DataBlockID, value);
             }

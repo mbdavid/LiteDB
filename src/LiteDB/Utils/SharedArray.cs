@@ -1,14 +1,22 @@
-﻿using System;
-
-namespace LiteDB;
+﻿namespace LiteDB;
 
 /// <summary>
 /// A shared byte array to rent and return on dispose
 /// </summary>
-public readonly struct SharedArray<T> : IDisposable
+public readonly struct SharedArray<T> : IIsEmpty, IDisposable
 {
     private readonly T[] _array;
     private readonly int _length;
+
+    public static SharedArray<T> Empty = new();
+
+    public bool IsEmpty => _length == 0;
+
+    public SharedArray()
+    {
+        _array = [];
+        _length = 0;
+    }
 
     private SharedArray(T[] array, int length)
     {
@@ -21,6 +29,8 @@ public readonly struct SharedArray<T> : IDisposable
         get => _array[index];
         set => _array[index] = value;
     }
+
+    public int Length => _length;
 
     public readonly Span<T> AsSpan() => _array.AsSpan(0, _length);
 

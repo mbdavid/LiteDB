@@ -1,6 +1,6 @@
 ﻿namespace LiteDB.Engine;
 
-public struct Resultset : IDisposable
+public struct Resultset
 {
     public int From;
     public int To;
@@ -8,15 +8,10 @@ public struct Resultset : IDisposable
     public bool HasMore;
     public readonly SharedArray<BsonValue> Results;
 
-    public Resultset(int fetchSize)
+    public Resultset(SharedArray<BsonValue> sharedArray)
     {
-        this.Results = SharedArray<BsonValue>.Rent(fetchSize);
+        this.Results = sharedArray;
     }
 
     public override string ToString() => Dump.Object(this);
-
-    public void Dispose()
-    {
-        this.Results.Dispose();
-    }
 }
