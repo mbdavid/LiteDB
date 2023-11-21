@@ -15,7 +15,7 @@ internal class LogService : ILogService
     private uint _lastPageID;
     private uint _logPositionID;
 
-    private readonly List<LogPageHeader> _logPages = new();
+    private readonly ConcurrentQueue<LogPageHeader> _logPages = new();
     private readonly HashSet<int> _confirmedTransactions = new();
 
     public LogService(
@@ -146,7 +146,7 @@ internal class LogService : ILogService
     }
 
     /// <summary>
-    /// Get next positionID in log
+    /// Get next positionID in log (@thread-safe)
     /// </summary>
     private uint GetNextLogPositionID()
     {
@@ -159,24 +159,27 @@ internal class LogService : ILogService
     }
 
     /// <summary>
-    /// Add a page header in log list, to be used in checkpoint operation.
+    /// Add a page header in log list, to be used in checkpoint operation. (@thread-safe)
     /// This page should be added here after write on disk
     /// </summary>
     private void AddLogPage(LogPageHeader header)
     {
-        // if page is confirmed, set transaction as confirmed and ok to override on data file
-        if (header.IsConfirmed)
+        lock(this)
         {
-            _confirmedTransactions.Add(header.TransactionID);
+            // if page is confirmed, set transaction as confirmed and ok to override on data file
+            if (header.IsConfirmed)
+            {
+                _confirmedTransactions.Add(header.TransactionID);
+            }
+
+            // update _lastPageID
+            if (header.PageID > _lastPageID)
+            {
+                _lastPageID = header.PageID;
+            }
         }
 
-        // update _lastPageID
-        if (header.PageID > _lastPageID)
-        {
-            _lastPageID = header.PageID;
-        }
-
-        _logPages.Add(header);
+        _logPages.Enqueue(header);
     }
 
     public ValueTask<int> CheckpointAsync(bool crop, bool addToCache)
