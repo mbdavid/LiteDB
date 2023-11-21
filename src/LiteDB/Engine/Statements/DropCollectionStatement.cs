@@ -13,7 +13,7 @@ internal class DropCollectionStatement : IEngineStatement
 
     public async ValueTask<int> ExecuteAsync(IServicesFactory factory, BsonDocument parameters)
     {
-        using var _pc = PERF_COUNTER(39, nameof(ExecuteAsync), nameof(DropCollectionStatement));
+        using var _pc = PERF_COUNTER(150, nameof(ExecuteAsync), nameof(DropCollectionStatement));
 
         // dependency inejctions
         var masterService = factory.MasterService;
@@ -30,13 +30,13 @@ internal class DropCollectionStatement : IEngineStatement
         var master = masterService.GetMaster(true);
 
         // create a new transaction locking colID = 255 ($master) and colID
-        var transaction = await monitorService.CreateTransactionAsync(new byte[] { MASTER_COL_ID, colID });
+        var transaction = await monitorService.CreateTransactionAsync([ MASTER_COL_ID, colID ]);
 
         // get a list of pageID in this collection
         var pages = allocationMapService.GetAllPages(colID);
 
         // delete all pages writing on log disk
-        transaction.DeletePages(pages);
+        await transaction.DeletePagesAsync(pages);
 
         // remove collection from $master
         master.Collections.Remove(_store.Name);

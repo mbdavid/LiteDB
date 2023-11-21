@@ -10,7 +10,7 @@ internal partial class Transaction : ITransaction
     /// </summary>
     public async ValueTask SafepointAsync()
     {
-        using var _pc = PERF_COUNTER(130, nameof(SafepointAsync), nameof(Transaction));
+        using var _pc = PERF_COUNTER(290, nameof(SafepointAsync), nameof(Transaction));
 
         await this.SafepointInternalAsync();
     }

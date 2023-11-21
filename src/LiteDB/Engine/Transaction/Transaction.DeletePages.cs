@@ -8,9 +8,9 @@ internal partial class Transaction : ITransaction
     /// This operation will write directly into WAL with empty pages.
     /// Used only in DropCollection.
     /// </summary>
-    public unsafe void DeletePages(IReadOnlyList<uint> pages)
+    public ValueTask DeletePagesAsync(IReadOnlyList<uint> pages)
     {
-        using var _pc = PERF_COUNTER(97, nameof(DeletePages), nameof(Transaction));
+        using var _pc = PERF_COUNTER(240, nameof(DeletePagesAsync), nameof(Transaction));
 
         ENSURE(_localPages.Count == 0, "no local pages required");
 
@@ -30,6 +30,6 @@ internal partial class Transaction : ITransaction
         }
 
         // write empty log pages and load _walDrityPages to be added in commit
-        _logService.WriteEmptyLogPagesAsync(pages, this.TransactionID, _walDirtyPages);
+        return _logService.WriteEmptyLogPagesAsync(pages, this.TransactionID, _walDirtyPages);
     }
 }

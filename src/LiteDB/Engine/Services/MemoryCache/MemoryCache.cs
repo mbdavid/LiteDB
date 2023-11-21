@@ -23,7 +23,7 @@ internal class MemoryCache : IMemoryCache
 
     public PageMemoryResult GetPageReadWrite(uint positionID, byte[] writeCollections, out bool writable, out bool found)
     {
-        using var _pc = PERF_COUNTER(101, nameof(GetPageReadWrite), nameof(MemoryCache));
+        using var _pc = PERF_COUNTER(90, nameof(GetPageReadWrite), nameof(MemoryCache));
 
         found = _cache.TryGetValue(positionID, out var page);
 
@@ -34,7 +34,7 @@ internal class MemoryCache : IMemoryCache
             return PageMemoryResult.Empty;
         }
 
-        using var _ph = PERF_COUNTER(102, nameof(GetPageReadWrite) + " (hit)", nameof(MemoryCache));
+        using var _ph = PERF_COUNTER(100, nameof(GetPageReadWrite) + " (hit)", nameof(MemoryCache));
 
         ENSURE(page!.ShareCounter != NO_CACHE);
 

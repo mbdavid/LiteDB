@@ -36,7 +36,7 @@ internal class SelectStatement : IEngineStatement
 
     public ValueTask<IDataReader> ExecuteReaderAsync(IServicesFactory factory, BsonDocument parameters)
     {
-        using var _pc = PERF_COUNTER(31, nameof(ExecuteReaderAsync), nameof(SelectStatement));
+        using var _pc = PERF_COUNTER(210, nameof(ExecuteReaderAsync), nameof(SelectStatement));
 
         // get dependencies
         var walIndexService = factory.WalIndexService;

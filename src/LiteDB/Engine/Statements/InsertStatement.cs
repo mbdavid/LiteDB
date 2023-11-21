@@ -47,7 +47,7 @@ internal class InsertStatement : IEngineStatement
 
     public async ValueTask<int> ExecuteAsync(IServicesFactory factory, BsonDocument parameters)
     {
-        using var _pc = PERF_COUNTER(36, nameof(ExecuteAsync), nameof(InsertStatement));
+        using var _pc = PERF_COUNTER(170, nameof(ExecuteAsync), nameof(InsertStatement));
 
         // dependency injection
         var autoIdService = factory.AutoIdService;
@@ -179,7 +179,7 @@ internal class InsertStatement : IEngineStatement
         IAutoIdService autoIdService, 
         Collation collation)
     {
-        using var _pc = PERF_COUNTER(10, nameof(InsertInternalAsync), nameof(InsertStatement));
+        using var _pc = PERF_COUNTER(180, nameof(InsertInternalAsync), nameof(InsertStatement));
 
         // get/set _id
         var id = autoIdService.SetDocumentID(colID, doc, autoId);

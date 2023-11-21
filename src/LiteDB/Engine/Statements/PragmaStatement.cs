@@ -18,7 +18,7 @@ internal class PragmaStatement : IEngineStatement
 
     public async ValueTask<int> ExecuteAsync(IServicesFactory factory, BsonDocument parameters)
     {
-        using var _pc = PERF_COUNTER(68, nameof(ExecuteAsync), nameof(PragmaStatement));
+        using var _pc = PERF_COUNTER(190, nameof(ExecuteAsync), nameof(PragmaStatement));
 
         var diskService = factory.DiskService;
         var pragmas = factory.Pragmas;

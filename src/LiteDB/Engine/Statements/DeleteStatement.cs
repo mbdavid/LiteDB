@@ -15,7 +15,7 @@ internal class DeleteStatement : IEngineStatement
 
     public async ValueTask<int> ExecuteAsync(IServicesFactory factory, BsonDocument parameters)
     {
-        using var _pc = PERF_COUNTER(71, nameof(ExecuteAsync), nameof(DeleteStatement));
+        using var _pc = PERF_COUNTER(140, nameof(ExecuteAsync), nameof(DeleteStatement));
 
         // dependency injection
         var masterService = factory.MasterService;

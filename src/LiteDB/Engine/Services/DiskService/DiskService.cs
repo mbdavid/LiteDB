@@ -155,7 +155,7 @@ internal class DiskService : IDiskService
     /// </summary>
     public async ValueTask<bool> ReadPageAsync(PageMemoryResult page, uint positionID)
     {
-        using var _pc = PERF_COUNTER(40, nameof(ReadPageAsync), nameof(DiskService));
+        using var _pc = PERF_COUNTER(60, nameof(ReadPageAsync), nameof(DiskService));
 
         ENSURE(positionID != uint.MaxValue, "PositionID should not be empty");
 
@@ -173,7 +173,7 @@ internal class DiskService : IDiskService
 
     public async ValueTask WritePageAsync(PageMemoryResult page)
     {
-        using var _pc = PERF_COUNTER(50, nameof(WritePageAsync), nameof(DiskService));
+        using var _pc = PERF_COUNTER(70, nameof(WritePageAsync), nameof(DiskService));
 
         ENSURE(page.IsDirty);
         ENSURE(page.ShareCounter == NO_CACHE);

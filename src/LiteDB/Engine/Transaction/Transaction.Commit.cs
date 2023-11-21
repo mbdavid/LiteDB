@@ -8,7 +8,7 @@ internal partial class Transaction : ITransaction
     /// </summary>
     public async ValueTask CommitAsync()
     {
-        using var _pc = PERF_COUNTER(140, nameof(CommitAsync), nameof(Transaction));
+        using var _pc = PERF_COUNTER(230, nameof(CommitAsync), nameof(Transaction));
 
         await this.CommitInternal();
     }

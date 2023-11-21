@@ -23,7 +23,7 @@ internal class CreateIndexStatement : IEngineStatement
 
     public async ValueTask<int> ExecuteAsync(IServicesFactory factory, BsonDocument parameters)
     {
-        using var _pc = PERF_COUNTER(33, nameof(ExecuteAsync), nameof(CreateIndexStatement));
+        using var _pc = PERF_COUNTER(130, nameof(ExecuteAsync), nameof(CreateIndexStatement));
 
         // dependency injection
         var autoIdService = factory.AutoIdService;

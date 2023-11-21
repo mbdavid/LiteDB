@@ -10,7 +10,7 @@ internal class CheckpointStatement : IEngineStatement
 
     public async ValueTask<int> ExecuteAsync(IServicesFactory factory, BsonDocument parameters)
     {
-        using var _pc = PERF_COUNTER(37, nameof(ExecuteAsync), nameof(CheckpointStatement));
+        using var _pc = PERF_COUNTER(110, nameof(ExecuteAsync), nameof(CheckpointStatement));
 
         var lockService = factory.LockService;
         var logService = factory.LogService;

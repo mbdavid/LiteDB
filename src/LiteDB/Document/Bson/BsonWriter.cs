@@ -7,7 +7,7 @@ public class BsonWriter : IBsonWriter
 {
     public void WriteDocument(Span<byte> span, BsonDocument document, out int length)
     {
-        using var _pc = PERF_COUNTER(121, nameof(WriteDocument), nameof(BsonWriter));
+        using var _pc = PERF_COUNTER(10, nameof(WriteDocument), nameof(BsonWriter));
 
         var docLength = document.GetBytesCountCached();
 

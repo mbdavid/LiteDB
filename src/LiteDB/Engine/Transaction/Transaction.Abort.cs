@@ -6,7 +6,7 @@ internal partial class Transaction : ITransaction
 {
     public unsafe void Abort()
     {
-        using var _pc = PERF_COUNTER(150, nameof(Abort), nameof(Transaction));
+        using var _pc = PERF_COUNTER(220, nameof(Abort), nameof(Transaction));
 
         // add pages to cache or decrement sharecount
         foreach (var page in _localPages.Values)

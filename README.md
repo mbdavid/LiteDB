@@ -12,6 +12,9 @@ This branch is current development of new version of LiteDB v6.
 # Needs implementation
 
 ## Engine
+- Concurrency checks
+- Error handle in statments (transaction as IDisposable?)
+
 
 ## Index/Query
 - Add exlain plain details about docs read/read_size index_cost

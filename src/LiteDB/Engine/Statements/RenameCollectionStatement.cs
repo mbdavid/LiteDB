@@ -15,7 +15,7 @@ internal class RenameCollectionStatement : IEngineStatement
 
     public async ValueTask<int> ExecuteAsync(IServicesFactory factory, BsonDocument parameters)
     {
-        using var _pc = PERF_COUNTER(57, nameof(ExecuteAsync), nameof(RenameCollectionStatement));
+        using var _pc = PERF_COUNTER(200, nameof(ExecuteAsync), nameof(RenameCollectionStatement));
 
         // dependency inejctions
         var masterService = factory.MasterService;

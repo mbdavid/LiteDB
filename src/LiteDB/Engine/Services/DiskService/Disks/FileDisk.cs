@@ -9,7 +9,7 @@ internal class FileDisk : IDisk
     private readonly string? _password;
     private readonly bool _isTemp;
 
-    private SafeFileHandle? _handle;
+    private FileStream? _stream;
 
     public FileDisk(string filename, string? password, bool isTemp)
     {
@@ -18,7 +18,7 @@ internal class FileDisk : IDisk
         _isTemp = isTemp;
     }
 
-    public bool IsOpen => _handle is not null;
+    public bool IsOpen => _stream is not null;
 
     public string Name => Path.GetFileName(_filename);
 
@@ -30,11 +30,12 @@ internal class FileDisk : IDisk
         var options = FileOptions.RandomAccess;
 
         // create a new file handle
-        _handle = File.OpenHandle(
+        _stream = new FileStream(
             path: _filename,
             mode: FileMode.Open,
             access: FileAccess.ReadWrite,
             share: FileShare.ReadWrite,
+            bufferSize: PAGE_SIZE,
             options);
     }
 
@@ -46,11 +47,12 @@ internal class FileDisk : IDisk
         var options = FileOptions.RandomAccess;
 
         // create a new file handle
-        _handle = File.OpenHandle(
+        _stream = new FileStream(
             path: _filename,
             mode: FileMode.CreateNew,
             access: FileAccess.ReadWrite,
             share: FileShare.ReadWrite,
+            bufferSize: PAGE_SIZE,
             options: _isTemp ? (FileOptions.DeleteOnClose | options) : options);
 
         //if (_password is not null)
@@ -61,7 +63,9 @@ internal class FileDisk : IDisk
 
     public async ValueTask<bool> ReadBufferAsync(Memory<byte> buffer, long position)
     {
-        var read = await RandomAccess.ReadAsync(_handle!, buffer, position);
+        var handle = _stream!.SafeFileHandle;
+
+        var read = await RandomAccess.ReadAsync(handle, buffer, position);
 
         return read == buffer.Length;
     }
@@ -73,28 +77,28 @@ internal class FileDisk : IDisk
             (buffer.Length == PRAGMA_SIZE && position == FILE_HEADER_SIZE) || // pragma update
             (buffer.Length == PAGE_OFFSET && position == 0)); // file init
 
-        //RandomAccess.Write(_handle!, buffer, position);
+        var handle = _stream!.SafeFileHandle;
 
-        return RandomAccess.WriteAsync(_handle!, buffer, position);
+        return RandomAccess.WriteAsync(handle, buffer, position);
     }
 
     public bool Exists()
     {
-        return _handle is not null || File.Exists(_filename);
+        return _stream is not null || File.Exists(_filename);
     }
 
     public long GetLength()
     {
-        var fileLength = _handle is null ?
+        var fileLength = _stream is null ?
             new FileInfo(_filename).Length :
-            RandomAccess.GetLength(_handle);
+            RandomAccess.GetLength(_stream.SafeFileHandle);
 
         return fileLength;
     }
 
     public void SetLength(long position)
     {
-        //_stream!.SetLength(fileLength);
+        _stream!.SetLength(position);
     }
 
     /// <summary>
@@ -102,7 +106,7 @@ internal class FileDisk : IDisk
     /// </summary>
     public void Dispose()
     {
-        _handle?.Dispose();
-        _handle = null;
+        _stream?.Dispose();
+        _stream = null;
     }
 }

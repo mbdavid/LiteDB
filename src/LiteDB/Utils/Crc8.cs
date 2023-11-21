@@ -37,7 +37,7 @@ internal static class Crc8
 
     public static byte ComputeChecksum(Span<byte> span)
     {
-        using var _pc = PERF_COUNTER(170, nameof(ComputeChecksum), nameof(Crc8));
+        using var _pc = PERF_COUNTER(300, nameof(ComputeChecksum), nameof(Crc8));
 
         byte crc = 0;
 

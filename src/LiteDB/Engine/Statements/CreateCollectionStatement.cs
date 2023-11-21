@@ -16,7 +16,7 @@ internal class CreateCollectionStatement : IEngineStatement
 
     public async ValueTask<int> ExecuteAsync(IServicesFactory factory, BsonDocument parameters)
     {
-        using var _pc = PERF_COUNTER(34, nameof(ExecuteAsync), nameof(CreateCollectionStatement));
+        using var _pc = PERF_COUNTER(120, nameof(ExecuteAsync), nameof(CreateCollectionStatement));
 
         // dependency inejctions
         var masterService = factory.MasterService;

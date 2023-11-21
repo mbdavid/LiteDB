@@ -10,7 +10,7 @@ internal partial class Transaction : ITransaction
     /// </summary>
     public async ValueTask<PageMemoryResult> GetPageAsync(uint pageID)
     {
-        using var _pc = PERF_COUNTER(90, nameof(GetPageAsync), nameof(Transaction));
+        using var _pc = PERF_COUNTER(250, nameof(GetPageAsync), nameof(Transaction));
 
         ENSURE(pageID != uint.MaxValue, "PageID must have a value");
 
@@ -34,7 +34,7 @@ internal partial class Transaction : ITransaction
     /// </summary>
     private async ValueTask<PageMemoryResult> ReadPageAsync(uint pageID, int readVersion)
     {
-        using var _pc = PERF_COUNTER(100, nameof(ReadPageAsync), nameof(Transaction));
+        using var _pc = PERF_COUNTER(260, nameof(ReadPageAsync), nameof(Transaction));
 
         var writable = false;
         var found = false;
@@ -86,7 +86,7 @@ internal partial class Transaction : ITransaction
     /// </summary>
     public async ValueTask<PageMemoryResult> GetFreeDataPageAsync(byte colID)
     {
-        using var _pc = PERF_COUNTER(110, nameof(GetFreeDataPageAsync), nameof(Transaction));
+        using var _pc = PERF_COUNTER(270, nameof(GetFreeDataPageAsync), nameof(Transaction));
 
         var colIndex = Array.IndexOf(_writeCollections, colID);
         var currentExtend = _currentDataExtend[colIndex];
@@ -123,7 +123,7 @@ internal partial class Transaction : ITransaction
     /// </summary>
     public async ValueTask<PageMemoryResult> GetFreeIndexPageAsync(byte colID, int indexNodeLength)
     {
-        using var _pc = PERF_COUNTER(120, nameof(GetFreeIndexPageAsync), nameof(Transaction));
+        using var _pc = PERF_COUNTER(280, nameof(GetFreeIndexPageAsync), nameof(Transaction));
 
         var colIndex = Array.IndexOf(_writeCollections, colID);
         var currentExtend = _currentIndexExtend[colIndex];

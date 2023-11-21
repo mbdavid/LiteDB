@@ -15,7 +15,7 @@ internal class DropIndexStatement : IEngineStatement
 
     public async ValueTask<int> ExecuteAsync(IServicesFactory factory, BsonDocument parameters)
     {
-        using var _pc = PERF_COUNTER(28, nameof(ExecuteAsync), nameof(DropIndexStatement));
+        using var _pc = PERF_COUNTER(160, nameof(ExecuteAsync), nameof(DropIndexStatement));
 
         // dependency inejctions
         var masterService = factory.MasterService;

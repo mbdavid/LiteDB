@@ -62,7 +62,7 @@ internal class IndexService : IIndexService
         RowID dataBlockID, 
         IndexNodeResult last)
     {
-        using var _pc = PERF_COUNTER(60, nameof(AddNodeAsync), nameof(IndexService));
+        using var _pc = PERF_COUNTER(40, nameof(AddNodeAsync), nameof(IndexService));
 
         // random level (flip coin mode) - return number between 0-31
         var levels = this.Flip();
@@ -186,7 +186,7 @@ internal class IndexService : IIndexService
     /// </summary>
     public async ValueTask<IndexNodeResult> GetNodeAsync(RowID indexNodeID)
     {
-        using var _pc = PERF_COUNTER(70, nameof(GetNodeAsync), nameof(IndexService));
+        using var _pc = PERF_COUNTER(50, nameof(GetNodeAsync), nameof(IndexService));
 
         ENSURE(!indexNodeID.IsEmpty);
         ENSURE(!(indexNodeID.PageID == 0 && indexNodeID.Index == 0));
@@ -283,7 +283,7 @@ internal class IndexService : IIndexService
     private async ValueTask DeleteSingleNodeAsync(IndexNodeResult node)
     {
         // run over all levels linking prev with next
-        for (int i = node.Levels; i >= 0; i--)
+        for (int i = node.Levels - 1; i >= 0; i--)
         {
             var prevID = node.GetPrevID(i);
             var nextID = node.GetNextID(i);
