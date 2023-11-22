@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\dev_async\src\WebStress\Program.cs" Link="Program.cs" />
+    <Compile Include="..\LiteDB.Tests\Utils\Faker.cs" Link="Utils\Faker.cs" />
+    <Compile Include="..\LiteDB.Tests\Utils\Faker.Names.cs" Link="Utils\Faker.Names.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LiteDB\LiteDB.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utils\" />
+  </ItemGroup>
+
+</Project>
