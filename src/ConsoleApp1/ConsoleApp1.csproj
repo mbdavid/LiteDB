@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\..\dev_async\src\ConsoleApp1\Concurrency.cs" Link="Concurrency.cs" />
     <Compile Include="..\LiteDB.Tests\Utils\Faker.cs" Link="Tests\Faker.cs" />
     <Compile Include="..\LiteDB.Tests\Utils\Faker.Names.cs" Link="Tests\Faker.Names.cs" />
   </ItemGroup>
