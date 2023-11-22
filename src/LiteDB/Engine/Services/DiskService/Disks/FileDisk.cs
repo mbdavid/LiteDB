@@ -66,8 +66,12 @@ internal class FileDisk : IDisk
         var handle = _stream!.SafeFileHandle;
 
         var read = await RandomAccess.ReadAsync(handle, buffer, position);
-
+        
         return read == buffer.Length;
+
+        //RandomAccess.Read(handle, buffer.Span, position);
+        //
+        //return new ValueTask<bool>(true);
     }
 
     public ValueTask WriteBufferAsync(ReadOnlyMemory<byte> buffer, long position)
@@ -78,6 +82,10 @@ internal class FileDisk : IDisk
             (buffer.Length == PAGE_OFFSET && position == 0)); // file init
 
         var handle = _stream!.SafeFileHandle;
+
+        //RandomAccess.Write(handle, buffer.Span, position);
+        
+        //return ValueTask.CompletedTask;
 
         return RandomAccess.WriteAsync(handle, buffer, position);
     }
@@ -108,5 +116,12 @@ internal class FileDisk : IDisk
     {
         _stream?.Dispose();
         _stream = null;
+    }
+
+    public override string ToString()
+    {
+        var len = this.Exists() ? this.GetLength() : 0;
+
+        return Dump.Object(new { _filename, IsOpen, Length = len });
     }
 }

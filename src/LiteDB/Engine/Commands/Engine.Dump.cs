@@ -20,10 +20,11 @@ public partial class LiteEngine : ILiteEngine
         Print("LockService", _factory.LockService.ToString());
         Print("DiskService", _factory.DiskService.ToString());
         Print("LogService", _factory.LogService.ToString());
-        Print("MasterService", _factory.MasterService.ToString());
         Print("MonitorService", _factory.MonitorService.ToString());
-        //Print("SortService", _factory.SortService.ToString());
+        Print("SortDisk", _factory.SortDisk.ToString());
+        Print("SortService", _factory.SortService.ToString());
         Print("QueryService", _factory.QueryService.ToString());
+        Print("MasterService", _factory.MasterService.ToString());
 
         void Print(string title, string json)
         {

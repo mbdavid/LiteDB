@@ -188,7 +188,7 @@ internal class LogService : ILogService
 
         if (logLength == 0 && !crop) return new ValueTask<int>(0);
 
-        ENSURE(logLength > 0, _logPositionID == _logPages.LastOrDefault().PositionID, $"Last log page must be {_logPositionID}", new { logLength, _logPositionID });
+        ENSURE(logLength > 0, _logPositionID == _logPages.OrderBy(x => x.PositionID).LastOrDefault().PositionID, $"Last log page must be {_logPositionID}", new { logLength, _logPositionID });
 
         // temp file start after lastPageID or last log used page
         var startTempPositionID = Math.Max(_lastPageID, _logPositionID) + 1;

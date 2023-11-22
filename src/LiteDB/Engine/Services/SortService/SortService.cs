@@ -37,4 +37,9 @@ internal class SortService : ISortService
         _availableContainersID.Clear();
         _nextContainerID = -1;
     }
+
+    public override string ToString()
+    {
+        return Dump.Object(new { _availableContainersID, _nextContainerID });
+    }
 }

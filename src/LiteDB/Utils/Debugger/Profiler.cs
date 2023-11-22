@@ -49,7 +49,7 @@ internal static class Profiler
         }
     }
 
-    public static void AddResult(string? title, bool reset)
+    public static void AddResult(string? title, bool reset) //TODO: fix reset in multi thread
     {
         var global = Stopwatch.GetTimestamp() - _start;
         var total = $"{TimeSpan.FromTicks(global).TotalMilliseconds:n0} ms";

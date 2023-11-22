@@ -29,6 +29,7 @@ global using static LiteDB.CodeContract;
 global using static LiteDB.Profiler;
 
 [assembly: InternalsVisibleTo("ConsoleApp1")]
+[assembly: InternalsVisibleTo("WebStress")]
 [assembly: InternalsVisibleTo("LiteDB.Tests")]
 [assembly: InternalsVisibleTo("LiteDB.Benchmark")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
