@@ -1,15 +1,17 @@
-﻿namespace Query;
+﻿using System.Linq;
+
+namespace Query;
 
 public class Query_Simple_Tests
 {
 
-    async ValueTask Exec(Func<OrderSet, IEnumerable<BsonDocument>> docs, string query)
+    async ValueTask Exec(Func<OrderSet, IEnumerable<BsonDocument>> docs, string query, BsonValue args0 = null)
     {
         var dataset = new OrderSet(1_000);
         using var db = await TempDB.CreateOrderDBAsync(dataset);
 
         var resultSet = docs(dataset).ToArray();
-        using var reader = await db.ExecuteReaderAsync(query);
+        using var reader = await db.ExecuteReaderAsync(query, args0);
         var resultDB = await reader.ToListAsync();
 
         var isEqual =
@@ -144,6 +146,145 @@ public class Query_Simple_Tests
                 FROM customers
                 GROUP BY lang
                 HAVING count>90");
+    }
+
+    [Fact]
+    public async void Query_After2020Salary10000OrMoreFromBrazil()
+    {
+        await Exec(
+            d => from c in d.Customers
+                 orderby c["_id"]
+                 where c["created"].AsDateTime.Year > 2020 && c["salary"] >= 10_000 && c["country"] == "Brazil"
+                 select new BsonDocument { ["_id"] = c["_id"], ["name"] = c["name"], ["created"] = c["created"], ["salary"] = c["salary"], ["country"] = c["country"] },
+            @"SELECT _id, name, created, salary, country
+                FROM customers
+                WHERE YEAR(created) > 2020 AND salary >= 10000 AND country = 'Brazil'
+               ORDER BY _id");
+    }
+
+    [Fact]
+    public async void Query_Orders()
+    {
+        await Exec(
+            d => from c in d.Orders
+                 orderby c["_id"]
+                 where c["items"].AsArray.Count > 1
+                 select new BsonDocument { ["_id"] = c["_id"], ["name"] = c["customer"].AsDocument["name"], ["job"] = c["customer"].AsDocument["job"], ["ItemsQnt"] = c["items"].AsArray.Count },
+            @"SELECT { _id, name: customer.name, job: customer.job, ItemsQnt: COUNT(items) }
+                FROM orders
+                INCLUDE customer
+                WHERE customer.job = 'Information Systems Manager' AND COUNT(items) > 1
+                ORDER BY _id");
+    }
+
+    [Fact]
+    public async void Query_AverageSalaryBelgium()
+    {
+        await Exec(
+            d => from c in d.Customers
+                      orderby c["country"]
+                      group c by c["country"] into L
+                      where L.Key == "Belgium"
+                      select new BsonDocument { ["Country"] = L.Key, ["AverageSalary"] = L.Average(p => p["salary"].AsDouble) },
+                @"SELECT country AS Country, AVG(salary) AS AverageSalary
+                FROM customers
+                WHERE salary>0
+                GROUP BY country
+                HAVING country = 'Belgium'");
+    }
+
+    [Fact]
+    public async void Query_AverageSalaryBrazil2020()
+    {
+        await Exec(
+                d => from c in d.Customers
+                     orderby c["country"]
+                     where c["created"].AsDateTime.Year == 2020
+                     group c by c["country"] into L
+                     where L.Key == "Brazil"
+                     select new BsonDocument { ["Country"] = L.Key, ["AverageSalary"] = L.Average(p => p["salary"].AsDouble) }, 
+                @"SELECT country AS Country, AVG(salary) AS AverageSalary
+                FROM customers
+                WHERE YEAR(created) = 2020 AND salary>0
+                GROUP BY country
+                HAVING country = 'Brazil'");
+    }
+
+    [Fact]
+    public async void Query_MandarinSpeakerInBelgium()
+    {
+        await Exec(
+                d => from c in d.Customers
+                     orderby c["country"]
+                     where c["lang"] == "Mandarin Chinese"
+                     group c by c["country"] into L
+                     where L.Key == "Belgium"
+                     select new BsonDocument { ["Country"] = L.Key, ["MandarinSpeakers"] = L.Count() },
+                @"SELECT country AS Country, COUNT($) AS MandarinSpeakers
+                FROM customers
+                WHERE lang = 'Mandarin Chinese'
+                GROUP BY country
+                HAVING country = 'Belgium'");
+    }
+
+    [Fact]
+    public async void Query_TotalMandarinSpeaker()
+    {
+        await Exec(
+                d => from c in d.Customers
+                     orderby c["country"]
+                     where c["lang"] == "Mandarin Chinese"
+                     select new BsonDocument { ["MandarinSpeakers"] = d.Customers.Count() },
+                @"SELECT COUNT($) AS MandarinSpeakers
+                FROM customers
+                WHERE lang = 'Mandarin Chinese'");
+    }
+
+    [Fact]
+    public async void Query_MandarinSpeakerBelgiumOrAlbania2019()
+    {
+        await Exec(
+                d => from c in d.Customers
+                     orderby c["country"]
+                     where c["created"].AsDateTime.Year == 2019
+                     group c by c["country"] into L
+                     where L.Key == "Belgium" || L.Key == "Albania"
+                     select new BsonDocument { ["MandarinSpeakers"] = L.Count() },
+                @"SELECT COUNT($) AS MandarinSpeakers
+                FROM customers
+                WHERE YEAR(created) = 2019 AND salary>0
+                GROUP BY country
+                HAVING country = 'Belgium' OR country = 'Albania'");
+    }
+
+    [Fact]
+    public async void Query_GlobalSalaryAverage()
+    {
+        await Exec(
+                d => from c in d.Customers
+                     orderby c["country"]
+                     where c["created"].AsDateTime.Year == 2019
+                     group c by c["country"] into L
+                     where L.Key == "Belgium" || L.Key == "Albania"
+                     select new BsonDocument { ["MandarinSpeakers"] = L.Count() },
+                @"SELECT AVG($.salary) as AvgSalary
+                FROM customers
+                WHERE salary>0");
+    }
+
+    [Fact]
+    public async void Query_MostCommomPrenames()
+    {
+        await Exec(
+                d => from c in d.Customers
+                     orderby c["country"]
+                     group c by c["name"].AsString.Split(' ').First() into L
+                     orderby L.Count() descending
+                     select new BsonDocument { ["Name"] = L.Key, ["Total"] = L.Count() },
+                @"SELECT FIRST(SPLIT(name, ' ')) AS Name, COUNT($) as Total
+                FROM customers
+                GROUP BY FIRST(SPLIT(name, ' '))
+                ORDER BY COUNT($) DESC");
     }
 
 }
