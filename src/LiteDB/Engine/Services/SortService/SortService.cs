@@ -1,17 +1,19 @@
 ﻿namespace LiteDB.Engine;
 
-[AutoInterface(typeof(IDisposable))]
+[AutoInterface]
 internal class SortService : ISortService
 {
+    private readonly IDisk _sortDisk;
     private readonly IServicesFactory _factory;
 
-    private IDiskStream? _stream = null;
     private readonly ConcurrentQueue<int> _availableContainersID = new();
     private int _nextContainerID = -1;
 
     public SortService(
+        IDisk sortDisk,
         IServicesFactory factory)
     {
+        _sortDisk = sortDisk;
         _factory = factory;
     }
 
@@ -20,11 +22,6 @@ internal class SortService : ISortService
         var sorter = _factory.CreateSortOperation(orderBy);
 
         return sorter;
-    }
-
-    public IDiskStream GetSortStream()
-    {
-        return _stream ?? _factory.CreateSortDiskStream();
     }
 
     public int GetAvailableContainerID()
@@ -39,9 +36,6 @@ internal class SortService : ISortService
 
     public void Dispose()
     {
-        _stream?.Dispose();
-        _stream?.Delete();
-
         // clear service states
         _availableContainersID.Clear();
         _nextContainerID = -1;

@@ -11,23 +11,24 @@ public class SortService_Tests
 
         var collation = Collation.Default;
 
-        using var stream = new MemoryStream();
+        using var disk = new MemoryStream();
         using var factory = Substitute.For<IServicesFactory>();
+        using var sortDisk = new MemoryDisk();
 
         var context = new PipeContext();
 
-        using var sut = new SortService(factory);
+        var sut = new SortService(sortDisk, factory);
 
         factory.CreateSortOperation(Arg.Any<OrderBy>())
             .Returns(c =>
             {
-                return new SortOperation(sut, collation, factory, c.Arg<OrderBy>());
+                return new SortOperation(sut, collation, sortDisk, factory, c.Arg<OrderBy>());
             });
 
-        factory.CreateSortContainer(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<IDiskStream>())
+        factory.CreateSortContainer(Arg.Any<int>(), Arg.Any<int>())
             .Returns(c =>
             {
-                return new SortContainer(collation, c.ArgAt<int>(0), c.ArgAt<int>(1), c.Arg<IDiskStream>());
+                return new SortContainer(collation, sortDisk, c.ArgAt<int>(0), c.ArgAt<int>(1));
             });
 
         // create unsorted fake data

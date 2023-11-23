@@ -1,57 +1,57 @@
 ﻿namespace LiteDB.Engine;
 
 /// <summary>
-/// Thread Safe disk access
+/// Thread Safe disk access using RandomAccess (a new class in .NET 6)
 /// </summary>
-[AutoInterface(typeof(IDisposable))]
-unsafe internal class DiskStream : IDiskStream
+unsafe internal class FileDisk : IDisk
 {
     private readonly string _filename;
     private readonly string? _password;
+    private readonly bool _isTemp;
 
     private SafeFileHandle? _handle;
 
-    public DiskStream(string filename, string? password)
+    public FileDisk(string filename, string? password, bool isTemp)
     {
         _filename = filename;
         _password = password;
+        _isTemp = isTemp;
     }
+
+    public bool IsOpen => _handle is not null;
 
     public string Name => Path.GetFileName(_filename);
 
     /// <summary>
-    /// Open datafile and read header/pragma content
+    /// Open datafile
     /// </summary>
-    public void OpenFile(Span<byte> buffer)
+    public void Open()
     {
+        var options = FileOptions.RandomAccess;
+
         // create a new file handle
         _handle = File.OpenHandle(
             path: _filename,
             mode: FileMode.Open,
             access: FileAccess.ReadWrite,
-            share: FileShare.ReadWrite);
-
-        var read = RandomAccess.Read(_handle, buffer, 0);
-
-        ENSURE(read == PAGE_OFFSET, new { read });
+            share: FileShare.ReadWrite,
+            options);
     }
 
     /// <summary>
-    /// Initialize disk creating a new datafile and writing file header
+    /// Create new data disk
     /// </summary>
-    public void CreateNewFile(Span<byte> buffer)
+    public void CreateNew()
     {
-        ENSURE(buffer.Length == PAGE_OFFSET);
+        var options = FileOptions.RandomAccess;
 
         // create a new file handle
         _handle = File.OpenHandle(
             path: _filename,
             mode: FileMode.CreateNew,
             access: FileAccess.ReadWrite,
-            share: FileShare.ReadWrite);
-
-        // write on disk
-        RandomAccess.Write(_handle, buffer, 0);
+            share: FileShare.ReadWrite,
+            options: _isTemp ? (FileOptions.DeleteOnClose | options) : options);
 
         //if (fileHeader.IsEncrypted)
         {
@@ -63,12 +63,15 @@ unsafe internal class DiskStream : IDiskStream
     {
         var read = RandomAccess.Read(_handle!, buffer, position);
 
-        return read == PAGE_SIZE;
+        return read == buffer.Length;
     }
 
     public void WriteBuffer(Span<byte> buffer, long position)
     {
-        ENSURE(buffer.Length == PAGE_SIZE || (buffer.Length == PRAGMA_SIZE && position == FILE_HEADER_SIZE));
+        ENSURE(
+            buffer.Length == PAGE_SIZE || // full page
+            (buffer.Length == PRAGMA_SIZE && position == FILE_HEADER_SIZE) || // pragma update
+            (buffer.Length == PAGE_OFFSET && position == 0)); // file init
 
         RandomAccess.Write(_handle!, buffer, position);
     }
@@ -90,14 +93,6 @@ unsafe internal class DiskStream : IDiskStream
     public void SetLength(long position)
     {
         //_stream!.SetLength(fileLength);
-    }
-
-    public void Delete()
-    {
-        ENSURE(_handle is null);
-
-        //TODO: implementar testes
-        File.Delete(_filename);
     }
 
     /// <summary>

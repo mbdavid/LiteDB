@@ -3,7 +3,7 @@
 internal class CheckpointActions
 {
     public IEnumerable<CheckpointAction> GetActions(
-        IReadOnlyList<LogPageHeader> logPages,
+        IReadOnlyCollection<LogPageHeader> logPages,
         HashSet<int> confirmedTransactions,
         uint lastPageID,
         uint startTempPositionID,
@@ -13,16 +13,19 @@ internal class CheckpointActions
 
         if (logPages.Count == 0) yield break;
 
+        //TODO: perf sort and reuse array
+        var logPagesOrder = logPages.OrderBy(x => x.PositionID).ToArray();
+
         // get last file position ID
         var lastFilePositionID = tempPages.Count > 0 ?
             startTempPositionID + tempPages.Count - 1 :
             logPages.Max(x => x.PositionID);
 
         // get first positionID on log (or temp)
-        var firstPositionID = Math.Min(logPages[0].PositionID, 
-            tempPages.Count > 0 ? tempPages.Select(x => x.PositionID).Min() : logPages[0].PositionID);
+        var firstPositionID = Math.Min(logPagesOrder[0].PositionID, 
+            tempPages.Count > 0 ? tempPages.Select(x => x.PositionID).Min() : logPagesOrder[0].PositionID);
 
-        var lastPositionID = logPages[^1].PositionID;
+        var lastPositionID = logPagesOrder[^1].PositionID;
         var lastTempPositionID = (uint)(startTempPositionID + (tempPages.Count - 1));
 
         // get all log pages and temp pages order by PositionID

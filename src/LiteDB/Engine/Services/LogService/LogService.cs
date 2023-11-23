@@ -16,7 +16,7 @@ internal class LogService : ILogService
     private uint _lastPageID;
     private uint _logPositionID;
 
-    private readonly List<LogPageHeader> _logPages = new();
+    private readonly ConcurrentQueue<LogPageHeader> _logPages = new();
     private readonly HashSet<int> _confirmedTransactions = new();
 
     public LogService(
@@ -183,7 +183,7 @@ internal class LogService : ILogService
             _lastPageID = header.PageID;
         }
 
-        _logPages.Add(header);
+        _logPages.Enqueue(header);
     }
 
     public ValueTask<int> CheckpointAsync(bool crop, bool addToCache)

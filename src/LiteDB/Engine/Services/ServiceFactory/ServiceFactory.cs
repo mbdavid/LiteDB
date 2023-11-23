@@ -29,6 +29,9 @@ internal partial class ServicesFactory : IServicesFactory
     public ISortService SortService { get; }
     public IQueryService QueryService { get; }
 
+    public IDisk Disk { get; }
+    public IDisk SortDisk { get; }
+
     public ILockService LockService { get; }
     public IDiskService DiskService { get; }
     public IRecoveryService RecoveryService { get; }
@@ -63,27 +66,32 @@ internal partial class ServicesFactory : IServicesFactory
         // settings dependency only
         this.LockService = new LockService(settings.Timeout);
 
-        var stream = this.CreateDiskStream();
+        // create disk instances according EngineSettings
+        if (settings.Filename is not null)
+        {
+            this.Disk = new FileDisk(settings.Filename, settings.Password, false);
+            this.SortDisk = new FileDisk(FileHelper.GetSortFile(settings.Filename), null, true);
+        }
+        else if (settings.DataStream is not null)
+        {
+            this.Disk = new MemoryDisk(settings.DataStream);
+            this.SortDisk = new MemoryDisk();
+        }
+        else throw new NotImplementedException();
 
         // other services dependencies
         this.MemoryCache = new MemoryCache(this.MemoryFactory);
-        this.DiskService = new DiskService(settings, this.MasterMapper, this.MemoryFactory, stream);
+        this.DiskService = new DiskService(settings, this.MasterMapper, this.MemoryFactory, this.Disk);
         this.LogService = new LogService(this.DiskService, this.MemoryCache, this.MemoryFactory, this.WalIndexService, this);
         this.AllocationMapService = new AllocationMapService(this.DiskService, this.MemoryFactory);
         this.MasterService = new MasterService(this);
         this.MonitorService = new MonitorService(this);
         this.RecoveryService = new RecoveryService(this.MemoryFactory, this.DiskService);
-        this.SortService = new SortService(this);
+        this.SortService = new SortService(this.SortDisk, this);
         this.QueryService = new QueryService(this.WalIndexService, this);
     }
 
     #region Transient instances ("Create" prefix)
-
-    public IDiskStream CreateDiskStream()
-        => new DiskStream(this.Settings.Filename!, this.Settings.Password);
-
-    public IDiskStream CreateSortDiskStream()
-        => new DiskStream(this.Settings.Filename!, this.Settings.Password);
 
     public IQueryOptimization CreateQueryOptimization()
         => new QueryOptimization(this);
@@ -108,32 +116,41 @@ internal partial class ServicesFactory : IServicesFactory
 
     public IIndexService CreateIndexService(ITransaction transaction) => new IndexService(
         this.FileHeader.Collation,
+        //--
         transaction);
 
     public PipelineBuilder CreatePipelineBuilder(IDocumentStore store, BsonDocument queryParameters) => new PipelineBuilder(
             this.MasterService,
             this.SortService,
             this.FileHeader.Collation,
+            //--
             store,
             queryParameters);
 
     public ISortOperation CreateSortOperation(OrderBy orderBy) => new SortOperation(
         this.SortService,
         this.FileHeader.Collation,
+        this.SortDisk,
         this,
+        //--
         orderBy);
 
-    public ISortContainer CreateSortContainer(int containerID, int order, IDiskStream stream) => new SortContainer(
+    public ISortContainer CreateSortContainer(int containerID, int order) => new SortContainer(
         this.FileHeader.Collation,
+        this.SortDisk,
+        //--
         containerID,
-        order,
-        stream);
+        order);
 
     #endregion
 
     public void Dispose()
     {
         // dispose all instances services to keep all clean (disk/memory)
+
+        // first, close file
+        this.Disk.Dispose();
+        this.SortDisk.Dispose();
 
         // variables/lists only
         this.WalIndexService.Dispose();
@@ -146,7 +163,6 @@ internal partial class ServicesFactory : IServicesFactory
         this.AllocationMapService.Dispose();
         this.MasterService.Dispose();
         this.MonitorService.Dispose();
-        this.DiskService.Dispose();
 
         // dispose buffer pages
         this.MemoryFactory.Dispose();

@@ -3,25 +3,25 @@
 /// <summary>
 /// Singleton (thread safe)
 /// </summary>
-[AutoInterface(typeof(IDisposable))]
+[AutoInterface]
 internal class DiskService : IDiskService
 {
     // dependency injection
     private readonly IEngineSettings _settings;
     private readonly IMasterMapper _masterMapper;
     private readonly IMemoryFactory _memoryFactory;
-    private readonly IDiskStream _stream;
+    private readonly IDisk _disk;
 
     public DiskService(
         IEngineSettings settings,
         IMasterMapper masterMapper,
         IMemoryFactory memoryFactory,
-        IDiskStream stream)
+        IDisk disk)
     {
         _settings = settings;
         _masterMapper = masterMapper;
         _memoryFactory = memoryFactory;
-        _stream = stream;
+        _disk = disk;
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ internal class DiskService : IDiskService
     public async ValueTask<(FileHeader, Pragmas)> InitializeAsync()
     {
         // if file not exists, create empty database
-        if (_stream.Exists() == false)
+        if (_disk.Exists() == false)
         {
             return this.CreateNewDatabase();
         }
@@ -38,8 +38,10 @@ internal class DiskService : IDiskService
         {
             using var buffer = SharedArray<byte>.Rent(PAGE_OFFSET);
 
-            // read header page buffer from start of disk
-            _stream.OpenFile(buffer.AsSpan());
+            // open and read header content
+            _disk.Open();
+
+            _disk.ReadBuffer(buffer.AsSpan(), 0);
 
             var header = new FileHeader(buffer.AsSpan(FILE_HEADER_SIZE));
             var pragmas = new Pragmas(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
@@ -66,7 +68,9 @@ internal class DiskService : IDiskService
         pragmas.Write(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
 
         // write on disk initial header/pragmas
-        _stream.CreateNewFile(buffer.AsSpan());
+        _disk.CreateNew();
+
+        _disk.WriteBuffer(buffer.AsSpan(), 0);
 
         unsafe
         {
@@ -120,7 +124,7 @@ internal class DiskService : IDiskService
     /// </summary>
     public uint GetLastFilePositionID()
     {
-        var fileLength = _stream.GetLength();
+        var fileLength = _disk.GetLength();
 
         // fileLength must be, at least, FILE_HEADER
         if (fileLength <= PAGE_OFFSET) throw ERR($"Invalid datafile. Data file is too small (length = {fileLength}).");
@@ -142,7 +146,7 @@ internal class DiskService : IDiskService
         var fileLength = PAGE_OFFSET +
             ((lastPageID + 1) * PAGE_SIZE);
 
-        _stream.SetLength(fileLength);
+        _disk.SetLength(fileLength);
     }
 
     /// <summary>
@@ -162,7 +166,7 @@ internal class DiskService : IDiskService
         // read uniqueID to restore after read from disk
         var uniqueID = page->UniqueID;
 
-        var read = _stream.ReadBuffer(span, position);
+        var read = _disk.ReadBuffer(span, position);
 
         ENSURE(page->UniqueID == 0);
 
@@ -194,7 +198,7 @@ internal class DiskService : IDiskService
 
         var span = new Span<byte>(page, PAGE_SIZE);
 
-        _stream.WriteBuffer(span, position);
+        _disk.WriteBuffer(span, position);
 
         // clear isDirty flag before write on disk
         page->UniqueID = uniqueID;
@@ -210,7 +214,7 @@ internal class DiskService : IDiskService
         // get real position on stream
         var position = PAGE_OFFSET + (positionID * PAGE_SIZE);
 
-        _stream.WriteBuffer(PAGE_EMPTY, position);
+        _disk.WriteBuffer(PAGE_EMPTY, position);
     }
 
     /// <summary>
@@ -223,7 +227,7 @@ internal class DiskService : IDiskService
             // set real position on stream
             var position = PAGE_OFFSET + (i * PAGE_SIZE);
 
-            _stream.WriteBuffer(PAGE_EMPTY, position);
+            _disk.WriteBuffer(PAGE_EMPTY, position);
         }
     }
 
@@ -238,16 +242,11 @@ internal class DiskService : IDiskService
 
         var position = FILE_HEADER_SIZE; // just after file header
 
-        _stream.WriteBuffer(buffer.AsSpan(), position);
+        _disk.WriteBuffer(buffer.AsSpan(), position);
     }
 
     public override string ToString()
     {
-        return Dump.Object(new { stream = _stream.ToString() });
-    }
-
-    public void Dispose()
-    {
-        _stream.Dispose();
+        return Dump.Object(new { stream = _disk.ToString() });
     }
 }

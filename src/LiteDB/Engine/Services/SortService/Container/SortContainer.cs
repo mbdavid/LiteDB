@@ -4,12 +4,11 @@
 unsafe internal class SortContainer : ISortContainer
 {
     // dependency injections
-    private readonly IMemoryFactory _memoryFactory;
     private readonly Collation _collation;
+    private readonly IDisk _sortDisk;
 
     private readonly int _containerID;
     private readonly int _order;
-    private readonly IDiskStream _stream;
 
     private byte[] _buffer; // 8k page buffe
 
@@ -22,14 +21,14 @@ unsafe internal class SortContainer : ISortContainer
 
     public SortContainer(
         Collation collation,
+        IDisk sortDisk,
         int containerID,
-        int order,
-        IDiskStream stream)
+        int order)
     {
         _collation = collation;
         _containerID = containerID;
         _order = order;
-        _stream = stream;
+        _sortDisk = sortDisk;
 
         // rent a full 8k buffer in managed memory
         _buffer = ArrayPool<byte>.Shared.Rent(PAGE_SIZE);
@@ -125,7 +124,7 @@ unsafe internal class SortContainer : ISortContainer
             // get stream position to page position (increment pageIndex before)
             var position = (_containerID * (CONTAINER_SORT_SIZE_IN_PAGES * PAGE_SIZE)) + (++_pageIndex * PAGE_SIZE);
 
-            _stream.ReadBuffer(_buffer, position);
+            _sortDisk.ReadBuffer(_buffer, position);
 
             // set position and read remaining page items
             _position = 2; // for int16

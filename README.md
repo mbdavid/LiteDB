@@ -3,7 +3,6 @@
 This branch is current development of new version of LiteDB v6.
 
 # Next steps
-- Implement RandomAccess and SafeHandle (thread safe - single DiskStream)
 - Return to async calls in managed memory
 
 # Needs implementation

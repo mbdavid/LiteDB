@@ -6,10 +6,10 @@ internal class SortOperation : ISortOperation
     // dependency injections
     private readonly ISortService _sortService;
     private readonly Collation _collation;
+    private readonly IDisk _sortDisk;
     private readonly IServicesFactory _factory;
     private readonly OrderBy _orderBy;
 
-    private IDiskStream? _stream;
 
     private readonly int _containerSize;
     private readonly int _containerSizeLimit;
@@ -22,12 +22,14 @@ internal class SortOperation : ISortOperation
     public SortOperation(
         ISortService sortService,
         Collation collation,
+        IDisk sortDisk,
         IServicesFactory factory,
         OrderBy orderBy)
     {
         _sortService = sortService;
         _collation = collation;
         _factory = factory;
+        _sortDisk = sortDisk;
         _orderBy = orderBy;
 
         _containerSize = CONTAINER_SORT_SIZE_IN_PAGES * PAGE_SIZE;
@@ -91,14 +93,11 @@ internal class SortOperation : ISortOperation
         // rent container byffer array
         _containerBuffer ??= ArrayPool<byte>.Shared.Rent(_containerSize);
 
-        // get a stream impl to read/write on disk
-        _stream ??= _sortService.GetSortStream();
-
         // get a new containerID 
         var containerID = _sortService.GetAvailableContainerID();
 
         // create new sort container
-        var container = _factory.CreateSortContainer(containerID, _orderBy.Order, _stream);
+        var container = _factory.CreateSortContainer(containerID, _orderBy.Order);
 
         // sort all items into 8k pages and returns "remaining" items if not fit on container size
         var remainingBytes = container.Sort(unsortedItems, _containerBuffer, remaining);
@@ -108,10 +107,16 @@ internal class SortOperation : ISortOperation
         unsortedItems.AddRange(remaining);
         remaining.Clear();
 
+        // checks if sort file already opened
+        if (_sortDisk.IsOpen == false)
+        {
+            _sortDisk.CreateNew();
+        }
+
         // position stream in container disk position
         var position = containerID * _containerSize;
 
-        _stream.WriteBuffer(_containerBuffer, position);
+        _sortDisk.WriteBuffer(_containerBuffer, position);
 
         _containers.Add(container);
 

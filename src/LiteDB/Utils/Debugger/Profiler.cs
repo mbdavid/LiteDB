@@ -5,7 +5,7 @@ internal static class Profiler
     private const char LINE = '=';
     private const int NAME_WIDTH = 50;
     private const int SCREEN_WIDTH = 92;
-    private const int COUNTERS = 200;
+    private const int COUNTERS = 500;
 
     private static long _global = Stopwatch.GetTimestamp();
     private static long _start = Stopwatch.GetTimestamp();
@@ -40,7 +40,7 @@ internal static class Profiler
     {
         _start = Stopwatch.GetTimestamp();
 
-        for(var i = 0; i < COUNTERS; i++)
+        for (var i = 0; i < COUNTERS; i++)
         {
             if (_counters[i] is null) continue;
 
@@ -107,8 +107,14 @@ internal static class Profiler
         }
 
         var maxAllocated = $"{_maxAllocatedBytes / 1024 / 1024:n0} MB";
+        var gen0 = $"{GC.CollectionCount(0)}";
+        var gen1 = $"{GC.CollectionCount(1)}";
+        var gen2 = $"{GC.CollectionCount(2)}";
 
         Console.WriteLine($"{("> Max Memory Allocated".PadRight(NAME_WIDTH, '.'))}: {maxAllocated,10}");
+        Console.WriteLine($"{("> GC Gen0".PadRight(NAME_WIDTH, '.'))}: {gen0,10}");
+        Console.WriteLine($"{("> GC Gen1".PadRight(NAME_WIDTH, '.'))}: {gen1,10}");
+        Console.WriteLine($"{("> GC Gen2".PadRight(NAME_WIDTH, '.'))}: {gen2,10}");
 
         Console.ForegroundColor = ConsoleColor.Gray;
     }
