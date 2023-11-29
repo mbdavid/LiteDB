@@ -48,6 +48,33 @@ namespace LiteDB.Tests.Mapper
                 this.Name = name;
             }
         }
+        
+        public class MultiCtorWithArray
+        {
+            public int Id { get; set; }
+            public string[] StrArr { get; set; }
+            public string Name { get; set; }
+            public string DefinedOnlyInStrArray { get; set; }
+
+            public MultiCtorWithArray()
+            {
+            }
+
+            [BsonCtor]
+            public MultiCtorWithArray(int id, string[] strarr)
+            {
+                this.Id = id;
+                this.StrArr = strarr;
+                this.DefinedOnlyInStrArray = "changed";
+            }
+
+            public MultiCtorWithArray(int id, string[] strarr, string name)
+            {
+                this.Id     = id;
+                this.StrArr = strarr;
+                this.Name   = name;
+            }
+        }
 
         public class MyClass
         {
@@ -108,6 +135,19 @@ namespace LiteDB.Tests.Mapper
             obj.Id.Should().Be(25);
             obj.Name.Should().Be("value-name");
             obj.DefinedOnlyInInt32.Should().Be("changed");
+        }
+        
+        [Fact]
+        public void BsonCtorWithArray_Attribute()
+        {
+            var doc = new BsonDocument { ["_id"] = 25, ["name"] = "value-name", ["strarr"] = new BsonArray() {"foo","bar"} };
+
+            var obj = _mapper.ToObject<MultiCtorWithArray>(doc);
+
+            obj.Id.Should().Be(25);
+            obj.Name.Should().Be("value-name");
+            string.Join(", ", obj.StrArr).Should().Be("foo, bar");
+            obj.DefinedOnlyInStrArray.Should().Be("changed");
         }
 
         [Fact]
