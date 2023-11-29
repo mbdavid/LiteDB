@@ -3,7 +3,9 @@
 This branch is current development of new version of LiteDB v6.
 
 # Next steps
-- Return to async calls in managed memory
+- Review checkpoint
+- Review shutdown/re-open
+- Impl Recovery
 
 # Needs implementation
 
@@ -75,6 +77,7 @@ This branch is current development of new version of LiteDB v6.
 
 
 # Future
+- Remove Reflection/Expressions to run over native x64
 
 ## Query Join
 - DataStore Alias to support SELECT p._id FROM products p

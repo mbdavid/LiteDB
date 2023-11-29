@@ -43,7 +43,7 @@ internal class DiskService : IDiskService
 
             _disk.ReadBuffer(buffer.AsSpan(), 0);
 
-            var header = new FileHeader(buffer.AsSpan(FILE_HEADER_SIZE));
+            var header = new FileHeader(buffer.AsSpan(0, FILE_HEADER_SIZE));
             var pragmas = new Pragmas(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
 
             return (header, pragmas);
