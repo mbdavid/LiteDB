@@ -34,9 +34,9 @@ public partial class LiteEngine : ILiteEngine
                 // do a database recovery
                 recoveryService.DoRecovery();
 
-                diskService.WritePragmas(_factory.Pragmas);
-
                 _factory.Pragmas.IsDirty = false;
+
+                diskService.WritePragmas(_factory.Pragmas);
             }
 
             // initialize log service based on disk

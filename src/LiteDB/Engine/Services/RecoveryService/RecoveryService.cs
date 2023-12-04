@@ -37,6 +37,7 @@ internal class RecoveryService : IRecoveryService
 
         // re-create all allocation map pages based on page info on a second-pass on datafile
         this.RebuildAllocationMap();
+
     }
 
     /// <summary>
@@ -87,6 +88,8 @@ internal class RecoveryService : IRecoveryService
             // check if this pages confirms a transaction (valid only for log/temp pages)
             if (page->IsConfirmed)
             {
+                ENSURE(page->IsPageInLogFile || page->IsPageInTempFile);
+
                 _confirmedTransactions.Add(page->TransactionID);
             }
 
@@ -124,10 +127,15 @@ internal class RecoveryService : IRecoveryService
             positionID++;
         }
 
+        var maxTempPageID = _tempPages.Count > 0 ?
+            _tempPages.Max(x => x.PositionID) : 0;
+
+        var maxLogPageID = _logPages.Count > 0 ?
+            _logPages.Max(x => x.PositionID) : 0;
+
         // update lastPageID for last page on data/log or temp page
-        _lastPageID = Math.Max(
-            Math.Max(_lastPageID, _logPages.Max(x => x.PositionID)),
-            _tempPages.Max(x => x.PositionID));
+        _lastPageID =
+            Math.Max(Math.Max(_lastPageID, maxLogPageID), maxTempPageID);
 
         _memoryFactory.DeallocatePage(page);
     }

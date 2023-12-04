@@ -4,8 +4,6 @@ This branch is current development of new version of LiteDB v6.
 
 # Next steps
 - Review checkpoint
-- Impl Recovery
-    - Recovery report
 
 # Needs implementation
 
@@ -16,6 +14,9 @@ This branch is current development of new version of LiteDB v6.
 - Batch
 - Rebuild
 - Vaccum? (maybe later)
+- Extensions in ILiteEngine (insert/update/....)
+- Recovery report (expose in $recovery)
+
 
 ## Query Engine
 - Create IQuery and split Query in Query/GroupByQuery
