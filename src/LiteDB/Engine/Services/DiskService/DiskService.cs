@@ -27,7 +27,7 @@ internal class DiskService : IDiskService
     /// <summary>
     /// Open (or create) datafile.
     /// </summary>
-    public async ValueTask<(FileHeader, Pragmas)> InitializeAsync()
+    public (FileHeader, Pragmas) Initialize()
     {
         // if file not exists, create empty database
         if (_disk.Exists() == false)

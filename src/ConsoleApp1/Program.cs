@@ -39,9 +39,6 @@ await db.RunAsync($"Create Collection 'col1'", "CREATE COLLECTION col1");
 
 await db.RunAsync($"Insert col1 {insert1.Length:n0}", "INSERT INTO col1 VALUES @0", insert1);
 
-await db.ShutdownAsync(); await db.OpenAsync();
-
-
 await db.RunAsync($"Create Index", "CREATE INDEX idx_age ON col1 ($.age)", insert1);
 
 await db.RunQueryAsync(10, $"Query1", @"SELECT COUNT(_id) contador, contador + 1000 'contador_mais_mil' FROM col1 WHERE age = 32");
@@ -51,8 +48,6 @@ await db.RunAsync($"Rename Collection", "RENAME COLLECTION col1 TO new_col");
 await db.RunQueryAsync(10, $"Query1", @"SELECT COUNT(_id) FROM new_col WHERE age = 32");
 
 await db.RunAsync($"Delete age = 32", "DELETE new_col WHERE age = 32");
-
-await db.ShutdownAsync(); await db.OpenAsync();
 
 await db.RunQueryAsync($"Query1", @"EXPLAIN SELECT COUNT(_id) contador, contador + 1000 'contador_mais_mil' FROM new_col WHERE age = 32");
 

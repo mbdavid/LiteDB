@@ -4,8 +4,8 @@ This branch is current development of new version of LiteDB v6.
 
 # Next steps
 - Review checkpoint
-- Review shutdown/re-open
 - Impl Recovery
+    - Recovery report
 
 # Needs implementation
 
@@ -29,6 +29,7 @@ This branch is current development of new version of LiteDB v6.
 - ErrorHandling review
 - try/catch/deallocate
 - Auto-Rebuid, Flag error
+- CancelationToken 
 
 ## Exception
 - Normalize all exception using ERR_xxx
