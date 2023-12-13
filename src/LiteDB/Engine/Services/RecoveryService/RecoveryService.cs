@@ -55,7 +55,7 @@ internal class RecoveryService : IRecoveryService
 
         var positionID = 0u;
 
-        while(positionID < _lastPositionID)
+        while(positionID <= _lastPositionID)
         {
             // allocation pages will be full rebuilded
             var isAllocationMap = (positionID % AM_MAP_PAGES_COUNT) == 0;
