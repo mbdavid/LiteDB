@@ -164,7 +164,7 @@ unsafe internal class IndexService : IIndexService
     /// <summary>
     /// Flip coin (skipped list): returns how many levels the node will have (starts in 1, max of INDEX_MAX_LEVELS)
     /// </summary>
-    public int Flip()
+    private int Flip()
     {
         byte levels = 1;
 

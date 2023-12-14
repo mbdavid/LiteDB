@@ -35,7 +35,7 @@ internal class CreateIndexStatement : IEngineStatement
         var master = masterService.GetMaster(false);
 
         // if collection do not exists, retruns 0
-        if (!master.Collections.TryGetValue(_collectionName, out var collection)) throw ERR($"colecao {_collectionName} nao encontrada");
+        if (!master.Collections.TryGetValue(_collectionName, out var collection)) throw ERR($"Collection {_collectionName} not found");
 
         // create a new transaction locking colID
         var transaction = await monitorService.CreateTransactionAsync(new byte[] { MASTER_COL_ID, collection.ColID });

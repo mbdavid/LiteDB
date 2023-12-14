@@ -35,7 +35,7 @@ var doc = new BsonDocument
 
 //await db.RunAsync($"Set USER_VERSION", "PRAGMA USER_VERSION = 25");
 
-await db.RunAsync($"Create Collection 'col1'", "CREATE COLLECTION col1");
+//await db.RunAsync($"Create Collection 'col1'", "CREATE COLLECTION col1");
 
 await db.RunAsync($"Insert col1 {insert1.Length:n0}", "INSERT INTO col1 VALUES @0", insert1);
 
@@ -71,7 +71,7 @@ await db.RunQueryAsync(10, $"Query1", @"SELECT COUNT(_id) contador, contador + 1
 
 await db.RunAsync($"Drop Collection", "DROP COLLECTION col1");
 
-await db.RunAsync($"Create Collection 'col2'", "CREATE COLLECTION col2");
+//await db.RunAsync($"Create Collection 'col2'", "CREATE COLLECTION col2");
 
 await db.RunAsync($"Insert col2 {insert1.Length:n0}", "INSERT INTO col2 VALUES @0", insert1);
 

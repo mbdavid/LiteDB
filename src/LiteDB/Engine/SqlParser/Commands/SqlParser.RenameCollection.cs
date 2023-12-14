@@ -14,8 +14,8 @@ internal partial class SqlParser
         _tokenizer.ReadToken(); // read RENAME
         _tokenizer.ReadToken().Expect("COLLECTION");
 
-        // get current collection name
-        var store = this.ParseDocumentStore();
+        // get collection name
+        var oldName = this.ParseUserCollection();
 
         _tokenizer.ReadToken().Expect("TO");
 
@@ -25,6 +25,6 @@ internal partial class SqlParser
         // expect end of statement
         _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-        return new RenameCollectionStatement(store, newName);
+        return new RenameCollectionStatement(oldName, newName);
     }
 }

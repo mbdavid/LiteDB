@@ -7,14 +7,14 @@ internal partial class SqlParser
 {
     /// <summary>
     /// delete_statement::
-    ///     "DELETE" _ document_store
+    ///     "DELETE" _ user_collection
     ///  [_ "WHERE" _ expr_predicate]
     /// </summary>
     private IEngineStatement ParseDelete()
     {
         _tokenizer.ReadToken(); // read DELETE
 
-        var store = this.ParseDocumentStore();
+        var collectionName = this.ParseUserCollection();
 
         var ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
@@ -28,11 +28,11 @@ internal partial class SqlParser
             // expect end of statement
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            return new DeleteStatement(store, where);
+            return new DeleteStatement(collectionName, where);
         }
         else
         {
-            return new DeleteStatement(store, BsonExpression.Empty);
+            return new DeleteStatement(collectionName, BsonExpression.Empty);
         }
     }
 }

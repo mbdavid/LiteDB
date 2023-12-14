@@ -3,7 +3,10 @@
 This branch is current development of new version of LiteDB v6.
 
 # Next steps
-- Review checkpoint
+- IntoPipe
+- Distinct Pipe
+- Virtual collections (IDocumentStore): $master, $pragmas, $file_json, ...
+
 
 # Needs implementation
 

@@ -13,12 +13,12 @@ internal partial class SqlParser
     {
         _tokenizer.ReadToken().Expect("COLLECTION"); // CREATE token already readed
 
-        // create collection name
-        var store = this.ParseDocumentStore();
+        // get collection name
+        var collectionName = this.ParseUserCollection();
 
         // expect end of statement
         _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-        return new DropCollectionStatement(store);
+        return new DropCollectionStatement(collectionName);
     }
 }

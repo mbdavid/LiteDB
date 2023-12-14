@@ -2,14 +2,14 @@
 
 internal class DropIndexStatement : IEngineStatement
 {
-    private readonly IDocumentStore _store;
+    private readonly string _collectionName;
     private readonly string _indexName;
 
     public EngineStatementType StatementType => EngineStatementType.DropIndex;
 
-    public DropIndexStatement(IDocumentStore store, string indexName)
+    public DropIndexStatement(string collectionName, string indexName)
     {
-        _store = store;
+        _collectionName = collectionName;
         _indexName = indexName;
     }
 
@@ -22,31 +22,25 @@ internal class DropIndexStatement : IEngineStatement
         var allocationMapService = factory.AllocationMapService;
         var monitorService = factory.MonitorService;
 
-        // initialize store
-        _store.Initialize(masterService);
-
-        // get colID
-        var colID = _store.ColID;
-
         // get exclusive $master
         var master = masterService.GetMaster(true);
 
-        if (!master.Collections.TryGetValue(_store.Name, out var collection)) throw ERR($"Collection {_store.Name} not found");
+        if (!master.Collections.TryGetValue(_collectionName, out var collection)) throw ERR($"Collection {_collectionName} not found");
 
         // get index
-        var pkIndex = collection.Indexes[0];
+        var (colID, pkIndex) = (collection.ColID, collection.Indexes[0]);
         var indexDocument = collection.Indexes.FirstOrDefault(x => x.Name.Eq(_indexName));
 
-        if (indexDocument is null) throw ERR($"Index {_indexName} not found on {_store.Name}");
+        if (indexDocument is null) throw ERR($"Index {_indexName} not found on {_collectionName}");
 
         // get index slot number
         var slot = indexDocument.Slot;
 
         // create a new transaction locking colID = 255 ($master) and colID
-        var transaction = await monitorService.CreateTransactionAsync(new byte[] { MASTER_COL_ID, colID });
+        var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, colID]);
 
         // get index service from store
-        var (_, indexService) = _store.GetServices(factory, transaction);
+        var indexService = factory.CreateIndexService(transaction);
 
         // drop all index nodes for this slot. Scan from pk items
         indexService.DropIndex(indexDocument.Slot, pkIndex.HeadIndexNodeID);

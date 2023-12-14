@@ -2,13 +2,13 @@
 
 internal class DropCollectionStatement : IEngineStatement
 {
-    private readonly IDocumentStore _store;
+    private readonly string _collectionName;
 
     public EngineStatementType StatementType => EngineStatementType.DropCollection;
 
-    public DropCollectionStatement(IDocumentStore store)
+    public DropCollectionStatement(string collectionName)
     {
-        _store = store;
+        _collectionName = collectionName;
     }
 
     public async ValueTask<int> ExecuteAsync(IServicesFactory factory, BsonDocument parameters)
@@ -20,17 +20,15 @@ internal class DropCollectionStatement : IEngineStatement
         var allocationMapService = factory.AllocationMapService;
         var monitorService = factory.MonitorService;
 
-        // initialize store
-        _store.Initialize(masterService);
-
-        // get colID
-        var colID = _store.ColID;
-
         // get exclusive $master
         var master = masterService.GetMaster(true);
 
+        if (!master.Collections.TryGetValue(_collectionName, out var collection)) throw ERR($"Collection {_collectionName} not found");
+
+        var colID = collection.ColID;
+
         // create a new transaction locking colID = 255 ($master) and colID
-        var transaction = await monitorService.CreateTransactionAsync(new byte[] { MASTER_COL_ID, colID });
+        var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, colID]);
 
         // get a list of pageID in this collection
         var pages = allocationMapService.GetAllPages(colID);
@@ -39,7 +37,7 @@ internal class DropCollectionStatement : IEngineStatement
         transaction.DeletePages(pages);
 
         // remove collection from $master
-        master.Collections.Remove(_store.Name);
+        master.Collections.Remove(_collectionName);
 
         // write master collection into pages
         masterService.WriteCollection(master, transaction);

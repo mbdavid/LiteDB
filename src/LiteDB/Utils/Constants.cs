@@ -114,17 +114,22 @@ internal class Constants
     /// <summary>
     /// Get colID for $master document
     /// </summary>
-    public const byte MASTER_COL_ID = 255;
-
-    /// <summary>
-    /// Get colID for $master document
-    /// </summary>
     public static RowID MASTER_ROW_ID = new(MASTER_PAGE_ID, 0);
 
     /// <summary>
     /// Get max colID for collections to be used by user (1..LIMIT)
     /// </summary>
-    public const int MASTER_COL_LIMIT = 250;
+    public const int MASTER_COL_LIMIT = 200;
+
+    /// <summary>
+    /// Get colID for $master document
+    /// </summary>
+    public const byte MASTER_COL_ID = 255;
+
+    /// <summary>
+    /// Get colID for $master system collection
+    /// </summary>
+    public const byte SYS_MASTER_COL_ID = 201;
 
     /// <summary>
     /// Define when ShareCounter (on PageBuffer) are in cache or not

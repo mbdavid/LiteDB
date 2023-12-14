@@ -26,7 +26,7 @@ internal class CreateCollectionStatement : IEngineStatement
         var master = masterService.GetMaster(true);
 
         // test if already exists
-        if (master.Collections.ContainsKey(_name)) throw ERR($"coleção {_name} já existe");
+        if (master.Collections.ContainsKey(_name)) throw ERR($"Collection {_name} already exists");
 
         // get a new colID
         var colID = (byte)Enumerable.Range(1, MASTER_COL_LIMIT + 1)
