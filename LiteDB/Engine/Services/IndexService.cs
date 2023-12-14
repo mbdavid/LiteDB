@@ -347,7 +347,7 @@ namespace LiteDB.Engine
 
             for (int i = index.MaxLevel - 1; i >= 0; i--)
             {
-                for (; cur.GetNextPrev((byte)i, order).IsEmpty == false; cur = this.GetNode(cur.GetNextPrev((byte)i, order)))
+                for (; NextPrevContaintsData(cur, (byte)i, order); cur = this.GetNode(cur.GetNextPrev((byte)i, order)))
                 {
                     var next = this.GetNode(cur.GetNextPrev((byte)i, order));
                     var diff = next.Key.CompareTo(value, _collation);
@@ -368,6 +368,21 @@ namespace LiteDB.Engine
             }
 
             return null;
+
+            bool NextPrevContaintsData(IndexNode current, byte level, int orderValue)
+            {
+                var nextPrevLength = orderValue == Query.Ascending
+                    ? current.Next.Length
+                    : current.Prev.Length;
+
+                // TODO need to check why some index node stored at this level does not have expected Next and Prev items
+                if (nextPrevLength <= level)
+                {
+                    return false;
+                }
+
+                return current.GetNextPrev(level, order).IsEmpty == false;
+            }
         }
 
         #endregion
