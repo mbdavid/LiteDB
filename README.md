@@ -3,7 +3,10 @@
 This branch is current development of new version of LiteDB v6.
 
 # Next steps
-- Return to async calls in managed memory
+- IntoPipe
+- Distinct Pipe
+- Virtual collections (IDocumentStore): $master, $pragmas, $file_json, ...
+
 
 # Needs implementation
 
@@ -14,6 +17,9 @@ This branch is current development of new version of LiteDB v6.
 - Batch
 - Rebuild
 - Vaccum? (maybe later)
+- Extensions in ILiteEngine (insert/update/....)
+- Recovery report (expose in $recovery)
+
 
 ## Query Engine
 - Create IQuery and split Query in Query/GroupByQuery
@@ -27,6 +33,7 @@ This branch is current development of new version of LiteDB v6.
 - ErrorHandling review
 - try/catch/deallocate
 - Auto-Rebuid, Flag error
+- CancelationToken 
 
 ## Exception
 - Normalize all exception using ERR_xxx
@@ -75,6 +82,7 @@ This branch is current development of new version of LiteDB v6.
 
 
 # Future
+- Remove Reflection/Expressions to run over native x64
 
 ## Query Join
 - DataStore Alias to support SELECT p._id FROM products p

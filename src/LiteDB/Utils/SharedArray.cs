@@ -45,7 +45,7 @@ public readonly struct SharedArray<T> : IDisposable
 
     public void Dispose()
     {
-        ArrayPool<T>.Shared.Return(_array);
+        ArrayPool<T>.Shared.Return(_array/*, true*/);
     }
 
     public override string ToString()

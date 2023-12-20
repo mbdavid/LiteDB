@@ -2,7 +2,7 @@
 
   <PropertyGroup>
 	<TargetFramework>net6</TargetFramework>
-	<LangVersion>11</LangVersion>
+	<LangVersion>12</LangVersion>
 	<AssemblyVersion>6.0.0</AssemblyVersion>
 	<FileVersion>6.0.0</FileVersion>
 	<VersionPrefix>6.0.0</VersionPrefix>

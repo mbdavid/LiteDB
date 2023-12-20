@@ -28,7 +28,7 @@ internal partial class SqlParser
         _tokenizer.ReadToken().Expect("ON");
 
         // get collection name
-        var store = this.ParseDocumentStore();
+        var collectionName = this.ParseUserCollection();
 
         // read (
         _tokenizer.ReadToken().Expect(TokenType.OpenParenthesis);
@@ -42,6 +42,6 @@ internal partial class SqlParser
         // expect end of statement
         _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-        return new CreateIndexStatement(store.Name, indexName, expr, unique);
+        return new CreateIndexStatement(collectionName, indexName, expr, unique);
     }
 }

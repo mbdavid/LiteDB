@@ -8,14 +8,15 @@ internal partial class SqlParser
     /// <summary>
     /// insert_statement:: 
     ///    "INSERT" _ "INTO" _ document_store. [":" auto_id]
-    ///  _ "VALUES" _ (json_document | json_array | sub_query | expr_parameter)
+    ///  _ "VALUES" _ (json_document | json_array | expr_parameter)
     /// </summary>
     private IEngineStatement ParseInsert()
     {
         _tokenizer.ReadToken(); // read INSERT
         _tokenizer.ReadToken().Expect("INTO");
 
-        var store = this.ParseDocumentStore();
+        // get collection name
+        var collectionName = this.ParseUserCollection();
 
         TryParseWithAutoId(out var autoId);
 
@@ -28,19 +29,19 @@ internal partial class SqlParser
         {
             var docExpr = BsonExpression.Create(_tokenizer, false);
 
-            statement = new InsertStatement(store, docExpr, autoId);
+            statement = new InsertStatement(collectionName, docExpr, autoId);
         }
         else if (ahead.Type == TokenType.OpenBrace) // { new json document
         {
             var doc = JsonReaderStatic.ReadDocument(_tokenizer); // read full json_document
 
-            statement = new InsertStatement(store, doc, autoId);
+            statement = new InsertStatement(collectionName, doc, autoId);
         }
         else if (ahead.Type == TokenType.OpenBracket) // [ new json array
         {
             var array = JsonReaderStatic.ReadArray(_tokenizer); // read full json_array
 
-            statement = new InsertStatement(store, array, autoId);
+            statement = new InsertStatement(collectionName, array, autoId);
         }
         else if (ahead.Type == TokenType.OpenParenthesis) // ( new sub_query
         {

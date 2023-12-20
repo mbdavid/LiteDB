@@ -55,7 +55,9 @@ unsafe internal partial struct PageMemory             // 8192 (64 bytes header -
     /// </summary>
     public ExtendPageValue ExtendPageValue => PageMemory.GetExtendPageValue(this.PageType, this.FreeBytes);
 
-    public bool IsPageInLogFile => this.PositionID != this.PageID;
+    public bool IsPageInDataFile => this.PositionID == this.PageID;
+    public bool IsPageInLogFile => this.PositionID != this.PageID && this.RecoveryPositionID == this.PositionID;
+    public bool IsPageInTempFile => this.PositionID != this.PageID && this.RecoveryPositionID != this.PositionID;
     public bool IsPageInCache => this.ShareCounter != NO_CACHE;
 
     public PageMemory()

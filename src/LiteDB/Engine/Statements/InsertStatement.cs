@@ -4,7 +4,7 @@ namespace LiteDB.Engine;
 
 internal class InsertStatement : IEngineStatement
 {
-    private readonly IDocumentStore _store;
+    private readonly string _collectionName;
 
     private readonly BsonDocument _document;
     private readonly BsonArray _documents;
@@ -16,27 +16,27 @@ internal class InsertStatement : IEngineStatement
 
     #region Ctor
 
-    public InsertStatement(IDocumentStore store, BsonDocument document, BsonAutoId autoId)
+    public InsertStatement(string collectionName, BsonDocument document, BsonAutoId autoId)
     {
-        _store = store;
+        _collectionName = collectionName;
         _document = document;
         _documents = BsonArray.Empty;
         _documentExpr = BsonExpression.Empty;
         _autoId = autoId;
     }
 
-    public InsertStatement(IDocumentStore store, BsonArray documents, BsonAutoId autoId)
+    public InsertStatement(string collectionName, BsonArray documents, BsonAutoId autoId)
     {
-        _store = store;
+        _collectionName = collectionName;
         _document = BsonDocument.Empty;
         _documents = documents;
         _documentExpr = BsonExpression.Empty;
         _autoId = autoId;
     }
 
-    public InsertStatement(IDocumentStore store, BsonExpression documentExpr, BsonAutoId autoId)
+    public InsertStatement(string collectionName, BsonExpression documentExpr, BsonAutoId autoId)
     {
-        _store = store;
+        _collectionName = collectionName;
         _document = BsonDocument.Empty;
         _documents = BsonArray.Empty;
         _documentExpr = documentExpr;
@@ -55,30 +55,46 @@ internal class InsertStatement : IEngineStatement
         var monitorService = factory.MonitorService;
         var collation = factory.FileHeader.Collation;
 
-        // initialize document store before
-        _store.Initialize(masterService);
+        // get master 
+        var master = masterService.GetMaster(false);
+
+        if (!master.Collections.TryGetValue(_collectionName, out var collection))
+        {
+            // auto create collection using create statement
+            var create = new CreateCollectionStatement(_collectionName);
+
+            await create.ExecuteAsync(factory, parameters);
+
+            // update master instance with
+            master = masterService.GetMaster(false);
+
+            if (!master.Collections.TryGetValue(_collectionName, out collection))
+            {
+                throw ERR($"Collection {collection} not found");
+            }
+        }
+
+        var (colID, indexes) = (collection.ColID, collection.Indexes);
 
         // create a new transaction locking colID
-        var transaction = await monitorService.CreateTransactionAsync(new byte[] { _store.ColID });
+        var transaction = await monitorService.CreateTransactionAsync([colID]);
 
         // get data/index services from store
-        var (dataService, indexService) = _store.GetServices(factory, transaction);
-
-        // get all indexes this store contains
-        var indexes = _store.GetIndexes();
+        var dataService = factory.CreateDataService(transaction);
+        var indexService = factory.CreateIndexService(transaction);
 
         try
         {
             // initialize autoId if needed
-            if (autoIdService.NeedInitialize(_store.ColID, _autoId))
+            if (autoIdService.NeedInitialize(colID, _autoId))
             {
                 if (indexes.Count > 0)
                 {
-                    autoIdService.Initialize(_store.ColID, indexes[0].TailIndexNodeID, indexService);
+                    autoIdService.Initialize(colID, indexes[0].TailIndexNodeID, indexService);
                 }
                 else
                 {
-                    autoIdService.Initialize(_store.ColID);
+                    autoIdService.Initialize(colID);
                 }
             }
 
@@ -88,7 +104,7 @@ internal class InsertStatement : IEngineStatement
             {
                 // insert document and all indexes for this document (based on collection indexes)
                 InsertInternal(
-                    _store.ColID,
+                    colID,
                     doc,
                     _autoId,
                     indexes,

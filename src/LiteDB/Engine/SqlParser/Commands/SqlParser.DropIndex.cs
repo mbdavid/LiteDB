@@ -13,8 +13,8 @@ internal partial class SqlParser
     {
         _tokenizer.ReadToken().Expect("INDEX"); // CREATE token already readed
 
-        // create collection name
-        var store = this.ParseDocumentStore();
+        // get collection name
+        var collectionName = this.ParseUserCollection();
 
         // expect .
         _tokenizer.ReadToken().Expect(TokenType.Period);
@@ -24,6 +24,6 @@ internal partial class SqlParser
         // expect end of statement
         _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-        return new DropIndexStatement(store, indexName.Value);
+        return new DropIndexStatement(collectionName, indexName.Value);
     }
 }

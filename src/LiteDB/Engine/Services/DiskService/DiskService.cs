@@ -27,7 +27,7 @@ internal class DiskService : IDiskService
     /// <summary>
     /// Open (or create) datafile.
     /// </summary>
-    public async ValueTask<(FileHeader, Pragmas)> InitializeAsync()
+    public (FileHeader, Pragmas) Initialize()
     {
         // if file not exists, create empty database
         if (_disk.Exists() == false)
@@ -43,7 +43,7 @@ internal class DiskService : IDiskService
 
             _disk.ReadBuffer(buffer.AsSpan(), 0);
 
-            var header = new FileHeader(buffer.AsSpan(FILE_HEADER_SIZE));
+            var header = new FileHeader(buffer.AsSpan(0, FILE_HEADER_SIZE));
             var pragmas = new Pragmas(buffer.AsSpan(FILE_HEADER_SIZE, PRAGMA_SIZE));
 
             return (header, pragmas);

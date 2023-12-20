@@ -11,9 +11,9 @@ internal class RecoveryService : IRecoveryService
     private readonly List<LogPageHeader> _tempPages = new();
     private readonly HashSet<int> _confirmedTransactions = new();
 
-    private int _startTempPositionID;
-    private int _lastPageID;
-    private int _lastPositionID;
+    private uint _startTempPositionID;
+    private uint _lastPageID;
+    private uint _lastPositionID;
 
     public RecoveryService(
         IMemoryFactory memoryFactory, 
@@ -23,239 +23,269 @@ internal class RecoveryService : IRecoveryService
         _diskService = diskService;
     }
 
-    public async ValueTask DoRecoveryAsync()
+    public void DoRecovery()
     {
-        //// read all data information on disk on a first-pass (log/temp pages/crc)
-        //await this.ReadDatafileAsync();
+        // read all data information on disk on a first-pass (log/temp pages/crc)
+        this.ReadDatafile();
 
-        //// if there is log pages to copy to data
-        //if (_logPages.Count + _tempPages.Count > 0)
-        //{
-        //    // do checkpoint operation direct on disk
-        //    await this.CheckpointAsync();
-        //}
+        // if there is log pages to copy to data
+        if (_logPages.Count + _tempPages.Count > 0)
+        {
+            // do checkpoint operation direct on disk
+            this.RecoveryCheckpoint();
+        }
 
-        //// re-create all allocation map pages based on page info on a second-pass on datafile
-        //await this.RebuildAllocationMap();
+        // re-create all allocation map pages based on page info on a second-pass on datafile
+        this.RebuildAllocationMap();
 
     }
 
-    ///// <summary>
-    ///// Read all pages from database to find log pages and temp pages
-    ///// </summary>
-    //private async ValueTask ReadDatafileAsync()
-    //{
-    //    var page = _bufferFactory.AllocateNewPage();
-    //    var writer = _diskService.GetDiskWriter();
+    /// <summary>
+    /// Read all pages from database to find log pages and temp pages
+    /// </summary>
+    private unsafe void ReadDatafile()
+    {
+        var page = _memoryFactory.AllocateNewPage();
 
-    //    // get last position from disk
-    //    _lastPositionID = writer.GetLastFilePositionID();
+        // get last position from disk
+        _lastPositionID = _diskService.GetLastFilePositionID();
 
-    //    // init temp file at end of file (will check if need be before)
-    //    _startTempPositionID = _lastPositionID + 1;
+        // init temp file at end of file (will check if need be before)
+        _startTempPositionID = _lastPositionID + 1;
 
-    //    var positionID = 0;
+        var positionID = 0u;
 
-    //    while(positionID < _lastPositionID)
-    //    {
-    //        var read = await writer.ReadPageAsync(positionID, page);
+        while(positionID <= _lastPositionID)
+        {
+            // allocation pages will be full rebuilded
+            var isAllocationMap = (positionID % AM_MAP_PAGES_COUNT) == 0;
 
-    //        // skip empty pages
-    //        if (page.IsHeaderEmpty())
-    //        {
-    //            positionID++;
-    //            continue;
-    //        }
+            if (isAllocationMap)
+            {
+                positionID++;
+                continue;
+            }
 
-    //        // calculate real crc8 over data from disk
-    //        var crc = page.ComputeCrc8();
+            var read = _diskService.ReadPage(page, positionID);
 
-    //        // check if this pages confirms a transaction (valid only for log/temp pages)
-    //        if (page.Header.IsConfirmed)
-    //        {
-    //            _confirmedTransactions.Add(page.Header.TransactionID);
-    //        }
+            // skip empty pages
+            if (MarshalEx.IsFullZero(page))
+            {
+                positionID++;
+                continue;                 //TODO: report
+            }
 
-    //        // read data page and check crc
-    //        if (page.IsDataFile)
-    //        {
-    //            // get last PageID (consider here only data pages - log pages will be consider later)
-    //            _lastPageID = Math.Max(_lastPageID, page.Header.PageID);
-    //        }
-    //        // read page from logfile
-    //        else if (page.IsLogFile)
-    //        {
-    //            _logPages.Add(page.Header);
-    //        }
-    //        // read temp page
-    //        else if (page.IsTempFile)
-    //        {
-    //            // set first temp positionID
-    //            if (positionID < _startTempPositionID)
-    //            {
-    //                _startTempPositionID = page.PositionID;
-    //            }
+            // calculate real crc32 over data from disk
+            var crc32 = Crc32.ComputeChecksum(page);
 
-    //            _tempPages.Add(page.Header);
-    //        }
-    //        else
-    //        {
-    //            throw new NotSupportedException();
-    //        }
+            if (crc32 != page->Crc32)
+            {
+                // skip crc32 error pages
+                positionID++;
+                continue;                 //TODO: report
+            }
 
-    //        positionID++;
-    //    }
+            // check if this pages confirms a transaction (valid only for log/temp pages)
+            if (page->IsConfirmed)
+            {
+                ENSURE(page->IsPageInLogFile || page->IsPageInTempFile);
 
-    //    // update lastPageID for last page on data/log or temp page
-    //    _lastPageID = Math.Max(
-    //        Math.Max(_lastPageID, _logPages.Max(x => x.PositionID)),
-    //        _tempPages.Max(x => x.PositionID));
+                _confirmedTransactions.Add(page->TransactionID);
+            }
 
-    //    _bufferFactory.DeallocatePage(page);
-    //}
+            // read data page and check crc
+            if (page->IsPageInDataFile)
+            {
+                // get last PageID (consider here only data pages - log pages will be consider later)
+                _lastPageID = Math.Max(_lastPageID, page->PageID);
+            }
+            // read page from logfile
+            else if (page->IsPageInLogFile)
+            {
+                var header = new LogPageHeader(page);
 
-    ///// <summary>
-    ///// Do a in-disk checkpoint, with no cache and single page allocation
-    ///// </summary>
-    //private async ValueTask CheckpointAsync()
-    //{
-    //    // get all checkpoint actions based on log/temp pages
-    //    var actions = new __CheckpointActions()
-    //        .GetActions(
-    //            _logPages,
-    //            _confirmedTransactions,
-    //            _lastPageID,
-    //            _startTempPositionID,
-    //            _tempPages).ToArray();
+                _logPages.Add(header);
+            }
+            // read temp page
+            else if (page->IsPageInTempFile)
+            {
+                // set first temp positionID
+                if (positionID < _startTempPositionID)
+                {
+                    _startTempPositionID = page->PositionID;
+                }
 
-    //    var page = _bufferFactory.AllocateNewPage();
-    //    var writer = _diskService.GetDiskWriter();
-    //    var counter = 0;
+                var header = new LogPageHeader(page);
 
-    //    foreach (var action in actions)
-    //    {
-    //        if (action.Action == CheckpointActionType.ClearPage)
-    //        {
-    //            // clear page position
-    //            await writer.WriteEmptyAsync(action.PositionID);
-    //            continue;
-    //        }
+                _tempPages.Add(header);
+            }
+            else
+            {
+                //TODO: report
+            }
 
-    //        // get page from file position ID (log or data)
-    //        await writer.ReadPageAsync(action.PositionID, page);
+            positionID++;
+        }
 
-    //        if (action.Action == CheckpointActionType.CopyToDataFile)
-    //        {
-    //            // transform this page into a data file page
-    //            page.PositionID = page.Header.PositionID = page.Header.PageID = action.TargetPositionID;
-    //            page.Header.TransactionID = 0;
-    //            page.Header.IsConfirmed = false;
-    //            page.IsDirty = true;
+        var maxTempPageID = _tempPages.Count > 0 ?
+            _tempPages.Max(x => x.PositionID) : 0;
 
-    //            await writer.WritePageAsync(page);
+        var maxLogPageID = _logPages.Count > 0 ?
+            _logPages.Max(x => x.PositionID) : 0;
 
-    //            // increment checkpoint counter page
-    //            counter++;
-    //        }
-    //        else if (action.Action == CheckpointActionType.CopyToTempFile)
-    //        {
-    //            // transform this page into a log temp file (keeps Header.PositionID in original value)
-    //            page.PositionID = action.TargetPositionID;
-    //            page.Header.IsConfirmed = true; // mark all pages to true in temp disk (to recovery)
-    //            page.IsDirty = true;
+        // update lastPageID for last page on data/log or temp page
+        _lastPageID =
+            Math.Max(Math.Max(_lastPageID, maxLogPageID), maxTempPageID);
 
-    //            await writer.WritePageAsync(page);
-    //        }
+        _memoryFactory.DeallocatePage(page);
+    }
 
-    //        // after copy page, checks if page need to be clean on disk
-    //        if (action.MustClear)
-    //        {
-    //            await writer.WriteEmptyAsync(action.PositionID);
-    //        }
-    //    }
+    /// <summary>
+    /// Do a in-disk checkpoint, with no cache and single page allocation
+    /// </summary>
+    private unsafe void RecoveryCheckpoint()
+    {
+        // get all checkpoint actions based on log/temp pages
+        var actions = new CheckpointActions()
+            .GetActions(
+                _logPages,
+                _confirmedTransactions,
+                _lastPageID,
+                _startTempPositionID,
+                _tempPages).ToArray();
 
-    //    _bufferFactory.DeallocatePage(page);
+        var page = _memoryFactory.AllocateNewPage();
+        var counter = 0;
 
-    //    // crop file after last pageID
-    //    writer.SetSize(_lastPageID);
-    //}
+        foreach (var action in actions)
+        {
+            if (action.Action == CheckpointActionType.ClearPage)
+            {
+                // clear page position
+                _diskService.WriteEmptyPage(action.PositionID);
+                continue;
+            }
 
-    ///// <summary>
-    ///// Create all new AllocationMap pages based on a all datafile pages read. Writes direct on disk
-    ///// </summary>
-    //private async ValueTask RebuildAllocationMap()
-    //{
-    //    var readPage = _bufferFactory.AllocateNewPage();
-    //    var amPage = _bufferFactory.AllocateNewPage();
+            // get page from file position ID (log or data)
+            _diskService.ReadPage(page, action.PositionID);
 
-    //    var amPageID = __AM_FIRST_PAGE_ID;
-    //    var positionID = 0;
-    //    var eof = false;
+            if (action.Action == CheckpointActionType.CopyToDataFile)
+            {
+                // transform this page into a data file page
+                page->PositionID = page->PageID = action.TargetPositionID;
+                page->TransactionID = 0;
+                page->IsConfirmed = false;
+                page->IsDirty = true;
 
-    //    var stream = _diskService.GetDiskWriter();
+                _diskService.WritePage(page);
 
-    //    while (!eof)
-    //    {
-    //        var pageMap = new __AllocationMapPage(amPageID, amPage);
+                // increment checkpoint counter page
+                counter++;
+            }
+            else if (action.Action == CheckpointActionType.CopyToTempFile)
+            {
+                // transform this page into a log temp file (keeps Header.PositionID in original value)
+                page->PositionID = action.TargetPositionID;
+                page->IsConfirmed = true; // mark all pages to true in temp disk (to recovery)
+                page->IsDirty = true;
 
-    //        // update buffer with current positionID
-    //        amPage.PositionID = positionID;
+                _diskService.WritePage(page);
+            }
 
-    //        // skip created allocation map page position
-    //        positionID++;
+            // after copy page, checks if page need to be clean on disk
+            if (action.MustClear)
+            {
+                _diskService.WriteEmptyPage(action.PositionID);
+            }
+        }
 
-    //        for(var extendIndex = 0; extendIndex < AM_EXTEND_COUNT && !eof; extendIndex++)
-    //        {
-    //            // each extend contains 8 pages for only 1 collection
-    //            byte colID = 0;
+        _memoryFactory.DeallocatePage(page);
 
-    //            for(var pageIndex = 0; pageIndex < AM_EXTEND_SIZE && !eof; pageIndex++)
-    //            {
-    //                var read = await stream.ReadPageAsync(positionID, readPage);
+        // crop file after last pageID
+        _diskService.SetLength(_lastPageID);
+    }
 
-    //                if (!read)
-    //                {
-    //                    eof = true;
-    //                    break;
-    //                }
+    /// <summary>
+    /// Create all new AllocationMap pages based on a all datafile pages read. Writes direct on disk
+    /// </summary>
+    private unsafe void RebuildAllocationMap()
+    {
+        var readPage = _memoryFactory.AllocateNewPage();
+        var amPage = _memoryFactory.AllocateNewPage();
 
-    //                // when read first page with colID > 0, update page buffer with colID value
-    //                if (colID == 0 && readPage.Header.ColID > 0)
-    //                {
-    //                    colID = readPage.Header.ColID;
+        var amPageID = AM_FIRST_PAGE_ID;
+        var positionID = 0u;
+        var eof = false;
 
-    //                    // get position, on page, where this colID must be setted in current extend
-    //                    var colIDLocation = PAGE_HEADER_SIZE +
-    //                        (extendIndex * AM_EXTEND_SIZE);
+        while (!eof)
+        {
+            // initialize page as AllocationMap page
+            amPage->PageID = amPageID;
+            amPage->PositionID = positionID;
+            amPage->PageType = PageType.AllocationMap;
 
-    //                    readPage.AsSpan(colIDLocation, 1)[0] = colID;
-    //                }
-    //                else
-    //                {
-    //                    ENSURE(readPage.Header.ColID > 0, readPage.Header.ColID == colID, "All pages in an extend must be from same collection", new { readPage, colID });
-    //                }
+            // skip created allocation map page position
+            positionID++;
 
-    //                // get allocation value for each page
-    //                var value = __AllocationMapPage.GetExtendPageValue(readPage.Header.PageType, readPage.Header.FreeBytes);
+            for(var extendIndex = 0; extendIndex < AM_EXTEND_COUNT && !eof; extendIndex++)
+            {
+                // each extend contains 8 pages for only 1 collection
+                byte colID = 0;
 
-    //                // update page allocation free space
-    //                pageMap.UpdateExtendPageValue(extendIndex, pageIndex, value);
+                for(var pageIndex = 0; pageIndex < AM_EXTEND_SIZE && !eof; pageIndex++)
+                {
+                    var read = _diskService.ReadPage(readPage, positionID);
 
-    //                // move no next position
-    //                positionID++;
-    //            }
-    //        }
+                    if (!read)
+                    {
+                        eof = true;
+                        break;
+                    }
 
-    //        // write allocation map on disk
-    //        await stream.WritePageAsync(amPage);
+                    // when read first page with colID > 0, update page buffer with colID value
+                    if (colID == 0 && readPage->ColID > 0)
+                    {
+                        colID = readPage->ColID;
 
-    //        // increment allocation pageID
-    //        amPageID++;
-    //    }
+                        //** get position, on page, where this colID must be setted in current extend
+                        //**var colIDLocation = PAGE_HEADER_SIZE +
+                        //**    (extendIndex * AM_EXTEND_SIZE);
+                        //**
+                        //**readPage->ColID = colID;
+                        //**readPage.AsSpan(colIDLocation, 1)[0] = colID;
+                    }
+                    else
+                    {
+                        ENSURE(readPage->ColID > 0, readPage->ColID == colID, "All pages in an extend must be from same collection", new { colID });
+                    }
 
-    //    _bufferFactory.DeallocatePage(readPage);
-    //    _bufferFactory.DeallocatePage(amPage);
-    //}
+                    // get allocation value for each page
+                    var value = PageMemory.GetExtendPageValue(readPage->PageType, readPage->FreeBytes);
+
+                    // update page allocation free space
+                    PageMemory.UpdateExtendPageValue(amPage, extendIndex, pageIndex, value);
+
+                    // move no next position
+                    positionID++;
+
+                    if (positionID > _lastPositionID)
+                    {
+                        eof = true;
+                        break;
+                    }
+                }
+            }
+
+            // write allocation map on disk
+            _diskService.WritePage(amPage);
+
+            // increment allocation pageID
+            amPageID++;
+        }
+
+        _memoryFactory.DeallocatePage(readPage);
+        _memoryFactory.DeallocatePage(amPage);
+    }
 
     public void Dispose()
     {

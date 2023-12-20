@@ -7,8 +7,6 @@ internal class UserCollectionStore : IDocumentStore
 
     public byte ColID => _collection?.ColID ?? 0;
     public string Name => _name;
-    public IReadOnlyList<IndexDocument> Indexes => _collection?.Indexes ?? (IReadOnlyList<IndexDocument>)Array.Empty<IndexDocument>();
-
 
     public UserCollectionStore(string name)
     {
@@ -28,7 +26,6 @@ internal class UserCollectionStore : IDocumentStore
             throw ERR($"Collection {_name} does not exist");
         }
     }
-    public byte GetColID() => _collection!.ColID;
 
     public CollectionDocument GetCollection() => _collection!;
 

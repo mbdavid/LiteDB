@@ -2,15 +2,15 @@
 
 internal class RenameCollectionStatement : IEngineStatement
 {
-    private readonly IDocumentStore _store;
-    private readonly string _name;
+    private readonly string _oldName;
+    private readonly string _newName;
 
     public EngineStatementType StatementType => EngineStatementType.RenameCollection;
 
-    public RenameCollectionStatement(IDocumentStore store, string newName)
+    public RenameCollectionStatement(string oldName, string newName)
     {
-        _store = store;
-        _name = newName;
+        _oldName = oldName;
+        _newName = newName;
     }
 
     public async ValueTask<int> ExecuteAsync(IServicesFactory factory, BsonDocument parameters)
@@ -21,26 +21,25 @@ internal class RenameCollectionStatement : IEngineStatement
         var masterService = factory.MasterService;
         var monitorService = factory.MonitorService;
 
-        // initialize store
-        _store.Initialize(masterService);
-
-        // get collection
-        var collection = _store.GetCollection();
-
         // get exclusive $master
         var master = masterService.GetMaster(true);
 
+        if (!master.Collections.TryGetValue(_oldName, out var collection)) throw ERR($"Collection {_oldName} doesn't exists");
+
+        // test if new name already exists
+        if (master.Collections.ContainsKey(_newName)) throw ERR($"Collection {_newName} already exists");
+
         // create a new transaction locking colID = 255 ($master) and colID
-        var transaction = await monitorService.CreateTransactionAsync(new byte[] { MASTER_COL_ID, _store.ColID });
+        var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, collection.ColID]);
 
         // remove collection from $master
-        master.Collections.Remove(_store.Name);
+        master.Collections.Remove(_oldName);
 
         // update collection name
-        collection.Name = _name;
+        collection.Name = _newName;
 
         // re-insert with new name
-        master.Collections.Add(_name, collection);
+        master.Collections.Add(_newName, collection);
 
         // write master collection into pages
         masterService.WriteCollection(master, transaction);

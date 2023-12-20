@@ -24,7 +24,7 @@ public partial class LiteEngine : ILiteEngine
         try
         {
             // open/create data file and returns file header
-            (_factory.FileHeader, _factory.Pragmas) = await diskService.InitializeAsync();
+            (_factory.FileHeader, _factory.Pragmas) = diskService.Initialize();
 
             // checks if datafile was finish correctly
             if (_factory.Pragmas.IsDirty)
@@ -32,11 +32,11 @@ public partial class LiteEngine : ILiteEngine
                 _factory.State = EngineState.Recovery;
 
                 // do a database recovery
-                await recoveryService.DoRecoveryAsync();
-
-                diskService.WritePragmas(_factory.Pragmas);
+                recoveryService.DoRecovery();
 
                 _factory.Pragmas.IsDirty = false;
+
+                diskService.WritePragmas(_factory.Pragmas);
             }
 
             // initialize log service based on disk

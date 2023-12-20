@@ -90,7 +90,7 @@ internal class LogService : ILogService
             _diskService.WritePage(page);
 
             // create a log header structure with needed information about this page on checkpoint
-            var header = new LogPageHeader { PositionID = page->PositionID, PageID = page->PageID, TransactionID = page->TransactionID, IsConfirmed = page->IsConfirmed };
+            var header = new LogPageHeader(page);
 
             // add page header only into log memory list
             this.AddLogPage(header);
@@ -143,7 +143,7 @@ internal class LogService : ILogService
             _diskService.WritePage(page);
 
             // create a log header structure with needed information about this page on checkpoint
-            var header = new LogPageHeader { PositionID = page->PositionID, PageID = page->PageID, TransactionID = page->TransactionID, IsConfirmed = page->IsConfirmed };
+            var header = new LogPageHeader(page);
 
             // add page header only into log memory list
             this.AddLogPage(header);
@@ -196,14 +196,13 @@ internal class LogService : ILogService
 
         // temp file start after lastPageID or last log used page
         var startTempPositionID = Math.Max(_lastPageID, _logPositionID) + 1;
-        var tempPages = Array.Empty<LogPageHeader>();
 
-        var result = this.CheckpointInternal(startTempPositionID, tempPages, crop, addToCache);
+        var result = this.CheckpointInternal(startTempPositionID, crop, addToCache);
 
         return new ValueTask<int>(result);
     }
 
-    private unsafe int CheckpointInternal(uint startTempPositionID, IList<LogPageHeader> tempPages, bool crop, bool addToCache)
+    private unsafe int CheckpointInternal(uint startTempPositionID, bool crop, bool addToCache)
     {
         // get all actions that checkpoint must do with all pages
         var actions = new CheckpointActions().GetActions(
@@ -211,7 +210,7 @@ internal class LogService : ILogService
             _confirmedTransactions,
             _lastPageID,
             startTempPositionID, 
-            tempPages).ToArray();
+            []).ToArray();
 
         // get writer stream from disk service
         var counter = 0;
@@ -221,9 +220,9 @@ internal class LogService : ILogService
             if (action.Action == CheckpointActionType.ClearPage)
             {
                 // if this page are in cache, remove and deallocate
-                if (_memoryCache.TryRemove(action.PositionID, out var pagePtr))
+                if (_memoryCache.TryRemove(action.PositionID, out var cachedPage))
                 {
-                    _memoryFactory.DeallocatePage(pagePtr);
+                    _memoryFactory.DeallocatePage(cachedPage);
                 }
 
                 // write an empty page at position
@@ -295,11 +294,12 @@ internal class LogService : ILogService
         else
         {
             // get last page (from log or from temp file)
-            var lastFilePositionID = tempPages.Count > 0 ?
-                startTempPositionID * tempPages.Count :
-                _logPositionID;
+            //**var lastFilePositionID = tempPages.Count > 0 ?
+            //**    startTempPositionID * tempPages.Count :
+            //**    _logPositionID;
 
-            _diskService.WriteEmptyPages(_lastPageID + 1, (uint)lastFilePositionID);
+            //**_diskService.WriteEmptyPages(_lastPageID + 1, (uint)lastFilePositionID);
+            _diskService.WriteEmptyPages(_lastPageID + 1, _logPositionID);
         }
 
         // reset initial log position
