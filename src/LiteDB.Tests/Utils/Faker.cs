@@ -78,7 +78,7 @@
         var now = DateTime.Now.Ticks;
         var range = now - oldest;
 
-        var date = new DateTime(oldest + _random.NextLong(0, range));
+        var date = new DateTime(oldest + _random.NextLong(0, range)).Date;
 
         return date;
     }

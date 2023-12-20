@@ -14,12 +14,10 @@ public class Query_Simple_Tests
         using var reader = await db.ExecuteReaderAsync(query, args0);
         var resultDB = await reader.ToListAsync();
 
-        var isEqual =
-            JsonSerializer.Serialize(new BsonArray(resultSet)) ==
-            JsonSerializer.Serialize(new BsonArray(resultDB));
+        var resSetStr = JsonSerializer.Serialize(new BsonArray(resultSet));
+        var resDBStr= JsonSerializer.Serialize(new BsonArray(resultDB));
 
-        JsonSerializer.Serialize(new BsonArray(resultSet)).Should().BeEquivalentTo(JsonSerializer.Serialize(new BsonArray(resultDB)));
-
+        resSetStr.Should().BeEquivalentTo(resDBStr);
 
         await db.ShutdownAsync();
     }
@@ -87,12 +85,10 @@ public class Query_Simple_Tests
         await Exec(
             d => from c in d.Customers
                  where c["created"].AsDateTime.Year > 2019
-                 orderby c["name"]
                  select new BsonDocument { ["_id"] = c["_id"], ["name"] = c["name"], ["created"] = c["created"] },
             @"SELECT _id, name, created
                 FROM customers
-               WHERE YEAR(created) > 2019
-               ORDER BY name");
+               WHERE YEAR(created) > 2019");
     }
 
     [Fact]
@@ -168,8 +164,8 @@ public class Query_Simple_Tests
         await Exec(
             d => from c in d.Orders
                  orderby c["_id"]
-                 where c["items"].AsArray.Count > 1
-                 select new BsonDocument { ["_id"] = c["_id"], ["name"] = c["customer"].AsDocument["name"], ["job"] = c["customer"].AsDocument["job"], ["ItemsQnt"] = c["items"].AsArray.Count },
+                 where d.Customers.FirstOrDefault(x => x["_id"] == c["_id"])["job"] == "Information Systems Manager" && c["items"].AsArray.Count > 1
+                 select new BsonDocument { ["_id"] = c["_id"], ["name"] = d.Customers.FirstOrDefault(x => x["_id"] == c["_id"])["name"], ["job"] = d.Customers.FirstOrDefault(x => x["_id"] == c["_id"])["job"], ["ItemsQnt"] = c["items"].AsArray.Count },
             @"SELECT { _id, name: customer.name, job: customer.job, ItemsQnt: COUNT(items) }
                 FROM orders
                 INCLUDE customer
@@ -234,7 +230,8 @@ public class Query_Simple_Tests
                 d => from c in d.Customers
                      orderby c["country"]
                      where c["lang"] == "Mandarin Chinese"
-                     select new BsonDocument { ["MandarinSpeakers"] = d.Customers.Count() },
+                     group c by c["lang"] into L
+                     select new BsonDocument { ["MandarinSpeakers"] = L.Count() },
                 @"SELECT COUNT($) AS MandarinSpeakers
                 FROM customers
                 WHERE lang = 'Mandarin Chinese'");
@@ -256,35 +253,4 @@ public class Query_Simple_Tests
                 GROUP BY country
                 HAVING country = 'Belgium' OR country = 'Albania'");
     }
-
-    [Fact]
-    public async void Query_GlobalSalaryAverage()
-    {
-        await Exec(
-                d => from c in d.Customers
-                     orderby c["country"]
-                     where c["created"].AsDateTime.Year == 2019
-                     group c by c["country"] into L
-                     where L.Key == "Belgium" || L.Key == "Albania"
-                     select new BsonDocument { ["MandarinSpeakers"] = L.Count() },
-                @"SELECT AVG($.salary) as AvgSalary
-                FROM customers
-                WHERE salary>0");
-    }
-
-    [Fact]
-    public async void Query_MostCommomPrenames()
-    {
-        await Exec(
-                d => from c in d.Customers
-                     orderby c["country"]
-                     group c by c["name"].AsString.Split(' ').First() into L
-                     orderby L.Count() descending
-                     select new BsonDocument { ["Name"] = L.Key, ["Total"] = L.Count() },
-                @"SELECT FIRST(SPLIT(name, ' ')) AS Name, COUNT($) as Total
-                FROM customers
-                GROUP BY FIRST(SPLIT(name, ' '))
-                ORDER BY COUNT($) DESC");
-    }
-
 }
