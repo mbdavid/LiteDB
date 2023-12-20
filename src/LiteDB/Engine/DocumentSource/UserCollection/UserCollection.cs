@@ -1,6 +1,6 @@
 ﻿namespace LiteDB.Engine;
 
-internal class UserCollectionStore : IDocumentStore
+internal class UserCollection : IDocumentSource
 {
     private readonly string _name;
     private CollectionDocument? _collection; // will load on Initialize()
@@ -8,7 +8,7 @@ internal class UserCollectionStore : IDocumentStore
     public byte ColID => _collection?.ColID ?? 0;
     public string Name => _name;
 
-    public UserCollectionStore(string name)
+    public UserCollection(string name)
     {
         _name = name;
     }

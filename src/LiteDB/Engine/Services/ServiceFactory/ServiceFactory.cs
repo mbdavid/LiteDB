@@ -18,7 +18,6 @@ internal partial class ServicesFactory : IServicesFactory
     public IBsonWriter BsonWriter { get; }
 
     public IMemoryFactory MemoryFactory { get; }
-    public IDocumentStoreFactory StoreFactory { get; }
 
 
     public IMemoryCache MemoryCache { get; }
@@ -59,7 +58,6 @@ internal partial class ServicesFactory : IServicesFactory
         this.BsonWriter = new BsonWriter();
         this.WalIndexService = new WalIndexService();
         this.MemoryFactory = new MemoryFactory();
-        this.StoreFactory = new DocumentStoreFactory();
         this.MasterMapper = new MasterMapper();
         this.AutoIdService = new AutoIdService();
 
@@ -100,6 +98,7 @@ internal partial class ServicesFactory : IServicesFactory
         => new BsonDataReader(cursor, fetchSize, factory);
 
     public ITransaction CreateTransaction(int transactionID, byte[] writeCollections, int readVersion) => new Transaction(
+        this.MonitorService,
         this.DiskService,
         this.LogService,
         this.MemoryFactory,
@@ -107,11 +106,15 @@ internal partial class ServicesFactory : IServicesFactory
         this.WalIndexService,
         this.AllocationMapService,
         this.LockService,
-        transactionID, writeCollections, readVersion);
+        //--
+        transactionID, 
+        writeCollections, 
+        readVersion);
 
     public IDataService CreateDataService(ITransaction transaction) => new DataService(
         this.BsonReader, 
         this.BsonWriter, 
+        //--
         transaction);
 
     public IIndexService CreateIndexService(ITransaction transaction) => new IndexService(
@@ -119,7 +122,7 @@ internal partial class ServicesFactory : IServicesFactory
         //--
         transaction);
 
-    public PipelineBuilder CreatePipelineBuilder(IDocumentStore store, BsonDocument queryParameters) => new PipelineBuilder(
+    public PipelineBuilder CreatePipelineBuilder(IDocumentSource store, BsonDocument queryParameters) => new PipelineBuilder(
             this.MasterService,
             this.SortService,
             this.FileHeader.Collation,

@@ -6,6 +6,7 @@
 internal partial class Transaction : ITransaction
 {
     // dependency injection
+    private readonly IMonitorService _monitorService;
     private readonly IDiskService _diskService;
     private readonly ILogService _logService;
     private readonly IWalIndexService _walIndexService;
@@ -49,6 +50,7 @@ internal partial class Transaction : ITransaction
     public int PagesUsed => _localPages.Count;
 
     public Transaction(
+        IMonitorService monitorService,
         IDiskService diskService,
         ILogService logService,
         IMemoryFactory memoryFactory,
@@ -58,6 +60,7 @@ internal partial class Transaction : ITransaction
         ILockService lockService,
         int transactionID, byte[] writeCollections, int readVersion)
     {
+        _monitorService = monitorService;
         _diskService = diskService;
         _logService = logService;
         _memoryFactory = memoryFactory;
@@ -122,5 +125,8 @@ internal partial class Transaction : ITransaction
 
         ENSURE(_localPages.Count == 0, $"Missing dispose pages in transaction", new { _localPages });
         ENSURE(_lockCounter == 0, $"Missing release lock in transaction", new { _localPages, _lockCounter });
+
+        // release monitor resources
+        _monitorService.Release(this.TransactionID);
     }
 }

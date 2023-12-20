@@ -37,7 +37,7 @@ internal class DropIndexStatement : IEngineStatement
         var slot = indexDocument.Slot;
 
         // create a new transaction locking colID = 255 ($master) and colID
-        var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, colID]);
+        using var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, colID]);
 
         // get index service from store
         var indexService = factory.CreateIndexService(transaction);
@@ -56,9 +56,6 @@ internal class DropIndexStatement : IEngineStatement
 
         // update master document (only after commit completed)
         masterService.SetMaster(master);
-
-        // release transaction
-        monitorService.ReleaseTransaction(transaction);
 
         return 1;
     }

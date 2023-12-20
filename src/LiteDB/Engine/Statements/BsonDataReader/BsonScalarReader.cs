@@ -29,7 +29,7 @@ public class BsonScalarReader : IDataReader
     /// <summary>
     /// Return collection name
     /// </summary>
-    public string Collection => _collection;
+    public string Source => _collection;
 
     /// <summary>
     /// Move cursor to next result. Returns true if read was possible

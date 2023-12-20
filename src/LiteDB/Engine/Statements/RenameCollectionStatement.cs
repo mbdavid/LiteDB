@@ -30,7 +30,7 @@ internal class RenameCollectionStatement : IEngineStatement
         if (master.Collections.ContainsKey(_newName)) throw ERR($"Collection {_newName} already exists");
 
         // create a new transaction locking colID = 255 ($master) and colID
-        var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, collection.ColID]);
+        using var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, collection.ColID]);
 
         // remove collection from $master
         master.Collections.Remove(_oldName);
@@ -49,9 +49,6 @@ internal class RenameCollectionStatement : IEngineStatement
 
         // update master document (only after commit completed)
         masterService.SetMaster(master);
-
-        // release transaction
-        monitorService.ReleaseTransaction(transaction);
 
         return 1;
     }

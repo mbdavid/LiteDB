@@ -1,6 +1,6 @@
 ﻿namespace LiteDB.Engine;
 
-internal interface IDocumentStore : IDisposable
+internal interface IDocumentSource : IDisposable
 {
     byte ColID { get; }
 
@@ -16,6 +16,8 @@ internal interface IDocumentStore : IDisposable
     IReadOnlyList<IndexDocument> GetIndexes();
 
     (IDataService dataService, IIndexService indexService) GetServices(IServicesFactory factory, ITransaction transaction);
+
+
 
     // Dipose will be run in statement dispose
 }

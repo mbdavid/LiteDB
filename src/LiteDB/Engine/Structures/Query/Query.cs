@@ -18,7 +18,16 @@ public class Query
 
     #endregion
 
-    public required string Collection { get; init; }
+    public Query(string from)
+    {
+    }
+
+    internal Query(IDocumentSource source)
+    {
+        this.From = source;
+    }
+
+    internal IDocumentSource From { get; }
     public SelectFields Select { get; init; } = SelectFields.Root;
     public bool Distinct { get; init; } = false;
     public Into Into { get; init; } = Into.Empty;

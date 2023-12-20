@@ -32,7 +32,7 @@ internal class QueryService : IQueryService
 
     public bool TryGetCursor(int cursorID, out Cursor cursor) => _openCursors.TryGetValue(cursorID, out cursor);
 
-    public void FetchAsync(Cursor cursor, int fetchSize, PipeContext context, ref Resultset result)
+    public void Fetch(Cursor cursor, int fetchSize, PipeContext context, ref Resultset result)
     {
         var index = 0;
         var eof = false;

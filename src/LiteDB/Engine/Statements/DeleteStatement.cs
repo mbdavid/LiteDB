@@ -27,7 +27,7 @@ internal class DeleteStatement : IEngineStatement
         if (!master.Collections.TryGetValue(_collectionName, out var collection)) throw ERR($"Collection {_collectionName} not found");
 
         // create a new transaction locking colID
-        var transaction = await monitorService.CreateTransactionAsync([collection.ColID]);
+        using var transaction = await monitorService.CreateTransactionAsync([collection.ColID]);
 
         // get data/index services
         var pkIndex = collection.Indexes[0];
@@ -64,9 +64,6 @@ internal class DeleteStatement : IEngineStatement
         // write all dirty pages into disk
         await transaction.CommitAsync();
 
-        // release transaction
-        monitorService.ReleaseTransaction(transaction);
-
         return count;
     }
 
@@ -76,9 +73,8 @@ internal class DeleteStatement : IEngineStatement
         IServicesFactory factory, 
         BsonDocument parameters)
     {
-        var query = new Query 
+        var query = new Query(new UserCollection(_collectionName))
         { 
-            Collection = _collectionName, 
             Select = SelectFields.Id, 
             Where = _whereExpr
         };

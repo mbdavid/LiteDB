@@ -38,7 +38,7 @@ internal class CreateIndexStatement : IEngineStatement
         if (!master.Collections.TryGetValue(_collectionName, out var collection)) throw ERR($"Collection {_collectionName} not found");
 
         // create a new transaction locking colID
-        var transaction = await monitorService.CreateTransactionAsync(new byte[] { MASTER_COL_ID, collection.ColID });
+        using var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, collection.ColID]);
 
         var dataService = factory.CreateDataService(transaction);
         var indexService = factory.CreateIndexService(transaction);
@@ -124,9 +124,6 @@ internal class CreateIndexStatement : IEngineStatement
 
         // write all dirty pages into disk
         await transaction.CommitAsync();
-
-        // release transaction
-        monitorService.ReleaseTransaction(transaction);
 
         // TODO: retornar em formato de array? quem sabe a entrada pode ser um BsonValue (array/document) e o retorno o mesmo
         return counter;

@@ -7,7 +7,7 @@ internal partial class SqlParser
 {
     /// <summary>
     /// insert_statement:: 
-    ///    "INSERT" _ "INTO" _ document_store. [":" auto_id]
+    ///    "INSERT" _ "INTO" _ user_collection [":" auto_id]
     ///  _ "VALUES" _ (json_document | json_array | expr_parameter)
     /// </summary>
     private IEngineStatement ParseInsert()

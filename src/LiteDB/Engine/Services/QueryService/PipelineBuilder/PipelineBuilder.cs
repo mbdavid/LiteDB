@@ -1,6 +1,4 @@
-﻿using System.Net.Sockets;
-
-namespace LiteDB.Engine;
+﻿namespace LiteDB.Engine;
 
 internal class PipelineBuilder
 {
@@ -9,7 +7,7 @@ internal class PipelineBuilder
     private ISortService _sortService;
     private Collation _collation;
 
-    private IDocumentStore _store;
+    private IDocumentSource _source;
 
     private BsonDocument _queryParameters;
     private IPipeEnumerator? _enumerator;
@@ -18,13 +16,13 @@ internal class PipelineBuilder
         IMasterService masterService,
         ISortService sortService,
         Collation collation,
-        IDocumentStore store, 
+        IDocumentSource source, 
         BsonDocument queryParameters)
     {
         _masterService = masterService;
         _sortService = sortService;
         _collation = collation;
-        _store = store;
+        _source = source;
         _queryParameters = queryParameters;
     }
 
@@ -56,7 +54,7 @@ internal class PipelineBuilder
         else
         {
             // full index scan eg: "$._id"
-            var indexDocument = _store.GetIndexes().FirstOrDefault(x => x.Expression == expr) ??
+            var indexDocument = _source.GetIndexes().FirstOrDefault(x => x.Expression == expr) ??
                 throw ERR($"No index found for this expression: {expr}");
 
             _enumerator = new IndexAllEnumerator(indexDocument, order, returnKey);
@@ -71,7 +69,7 @@ internal class PipelineBuilder
     private void AddIndexPredicate(BinaryBsonExpression predicate, int order, bool returnKey)
     {
         // try get index from left
-        var indexes = _store.GetIndexes();
+        var indexes = _source.GetIndexes();
         var indexDocument = indexes.FirstOrDefault(x => x.Expression == predicate.Left);
 
         if (indexDocument is not null)

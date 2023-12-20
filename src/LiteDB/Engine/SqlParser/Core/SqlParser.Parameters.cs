@@ -6,9 +6,9 @@ internal partial class SqlParser
     /// collection_parameters::
     ///   "(" [ . json_value [ . "," . json_value ] ] . ")"
     /// </summary>
-    private bool TryParseParameters(out IReadOnlyList<BsonValue> parameters)
+    internal static bool TryParseParameters(Tokenizer tokenizer, out IReadOnlyList<BsonValue> parameters)
     {
-        var ahead = _tokenizer.LookAhead();
+        var ahead = tokenizer.LookAhead();
 
         if (ahead.Type != TokenType.OpenParenthesis)
         {
@@ -16,21 +16,21 @@ internal partial class SqlParser
             return false;
         }
 
-        var token = _tokenizer.ReadToken(); // read "("
+        var token = tokenizer.ReadToken(); // read "("
 
         var result = new List<BsonValue>();
 
         while (token.Type != TokenType.CloseParenthesis)
         {
-            var value = JsonReaderStatic.ReadValue(_tokenizer);
+            var value = JsonReaderStatic.ReadValue(tokenizer);
 
             result.Add(value);
 
-            token = _tokenizer.ReadToken(); // read <next>, "," or ")"
+            token = tokenizer.ReadToken(); // read <next>, "," or ")"
 
             if (token.Type == TokenType.Comma)
             {
-                token = _tokenizer.ReadToken();
+                token = tokenizer.ReadToken();
             }
         }
 

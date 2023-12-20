@@ -51,13 +51,12 @@ internal class MonitorService : IMonitorService
 
     /// <summary>
     /// </summary>
-    public void ReleaseTransaction(ITransaction transaction)
+    public void Release(int transactionID)
     {
-        // dispose current transaction
-        transaction.Dispose();
-
         // remove from "open transaction" list
-        _transactions.TryRemove(transaction.TransactionID, out _);
+        _transactions.TryRemove(transactionID, out _);
+
+        // can be stored in-memory for plugins extensions
     }
 
     /// <summary>

@@ -2,17 +2,23 @@
 
 public struct Into : IIsEmpty
 {
-    public readonly static Into Empty = new ("", BsonAutoId.ObjectId);
+    public readonly static Into Empty = new ((IDocumentSource)null, BsonAutoId.ObjectId);
 
-    public readonly string Collection;
+    internal readonly IDocumentSource? Source;
     public readonly BsonAutoId AutoId;
 
-    public Into(string store, BsonAutoId autoId)
+    public Into(string source, BsonAutoId autoId)
     {
-        this.Collection = store;
+        this.Source = SqlParser.ParseDocumentStore(new Tokenizer(source));
         this.AutoId = autoId;
     }
 
-    public bool IsEmpty => string.IsNullOrEmpty(Collection);
+    internal Into(IDocumentSource? source, BsonAutoId autoId)
+    {
+        this.Source = source;
+        this.AutoId = autoId;
+    }
+
+    public bool IsEmpty => this.Source is null;
 
 }

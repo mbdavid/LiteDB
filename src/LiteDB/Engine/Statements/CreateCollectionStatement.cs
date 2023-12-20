@@ -36,7 +36,7 @@ internal class CreateCollectionStatement : IEngineStatement
         if (colID > MASTER_COL_LIMIT) throw ERR("acima do limite");
 
         // create a new transaction locking colID = 255 ($master)
-        var transaction = await monitorService.CreateTransactionAsync(new byte[] { MASTER_COL_ID, colID });
+        using var transaction = await monitorService.CreateTransactionAsync(new byte[] { MASTER_COL_ID, colID });
 
         // get index service
         var indexer = factory.CreateIndexService(transaction);
@@ -71,9 +71,6 @@ internal class CreateCollectionStatement : IEngineStatement
 
         // update master document (only after commit completed)
         masterService.SetMaster(master);
-
-        // release transaction
-        monitorService.ReleaseTransaction(transaction);
 
         return 1;
     }

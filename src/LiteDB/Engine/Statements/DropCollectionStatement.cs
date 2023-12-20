@@ -28,7 +28,7 @@ internal class DropCollectionStatement : IEngineStatement
         var colID = collection.ColID;
 
         // create a new transaction locking colID = 255 ($master) and colID
-        var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, colID]);
+        using var transaction = await monitorService.CreateTransactionAsync([MASTER_COL_ID, colID]);
 
         // get a list of pageID in this collection
         var pages = allocationMapService.GetAllPages(colID);
@@ -50,9 +50,6 @@ internal class DropCollectionStatement : IEngineStatement
 
         // update master document (only after commit completed)
         masterService.SetMaster(master);
-
-        // release transaction
-        monitorService.ReleaseTransaction(transaction);
 
         return 1;
     }

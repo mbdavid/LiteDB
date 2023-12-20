@@ -77,7 +77,7 @@ internal class InsertStatement : IEngineStatement
         var (colID, indexes) = (collection.ColID, collection.Indexes);
 
         // create a new transaction locking colID
-        var transaction = await monitorService.CreateTransactionAsync([colID]);
+        using var transaction = await monitorService.CreateTransactionAsync([colID]);
 
         // get data/index services from store
         var dataService = factory.CreateDataService(transaction);
@@ -123,17 +123,10 @@ internal class InsertStatement : IEngineStatement
             // write all dirty pages into disk
             await transaction.CommitAsync();
 
-            monitorService.ReleaseTransaction(transaction);
-
         }
         catch (Exception ex)
         {
-            transaction.Abort();
-
-            monitorService.ReleaseTransaction(transaction);
-
             ex.HandleError(factory);
-
             throw;
         }
 

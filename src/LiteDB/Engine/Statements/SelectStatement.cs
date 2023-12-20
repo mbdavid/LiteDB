@@ -50,7 +50,7 @@ internal class SelectStatement : IEngineStatement
 
         // create concrete class to reader cursor
         IDataReader reader = _explain ? 
-                new BsonScalarReader(cursor.Query.Collection, cursor.GetExplainPlan()) : // for explain plain
+                new BsonScalarReader(cursor.Query.From.Name, cursor.GetExplainPlan()) : // for explain plain
                 factory.CreateDataReader(cursor, _fetchSize, factory);
 
         return ValueTask.FromResult(reader);

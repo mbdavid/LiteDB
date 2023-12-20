@@ -7,7 +7,7 @@ internal class QueryOptimization : IQueryOptimization
     protected readonly IServicesFactory _factory;
 
     // fields filled by all query optimization proccess
-    protected IDocumentStore? _store;
+    protected IDocumentSource? _source;
 
     // SlitWhere
     protected List<BinaryBsonExpression> _terms = new();
@@ -44,9 +44,9 @@ internal class QueryOptimization : IQueryOptimization
     public virtual IPipeEnumerator ProcessQuery(Query query, BsonDocument queryParameters)
     {
         // get document store and initialize
-        _store = _factory.StoreFactory.GetUserCollection(query.Collection);
+        _source = query.From;
 
-        _store.Initialize(_factory.MasterService);
+        _source.Initialize(_factory.MasterService);
 
         // split where expressions into TERMs (splited by AND operator)
         this.SplitWhereInTerms(query.Where);
@@ -72,7 +72,7 @@ internal class QueryOptimization : IQueryOptimization
 
     private IPipeEnumerator CreatePipeEnumerator(Query query, BsonDocument queryParameters)
     {
-        var pipe = _factory.CreatePipelineBuilder(_store!, queryParameters);
+        var pipe = _factory.CreatePipelineBuilder(_source!, queryParameters);
 
         pipe.AddIndex(_indexExpression!, _indexOrder, _documentLookup is IndexLookup);
 
@@ -163,7 +163,7 @@ internal class QueryOptimization : IQueryOptimization
         // from term predicate list, get lower term that can be use as best index option
         var (lowerCost, lowerExpr, lowerIndex, lowerIndexDocument) = this.GetLowerCostIndex();
 
-        var allIndexes = _store!.GetIndexes();
+        var allIndexes = _source!.GetIndexes();
 
         _indexCost = lowerCost;
 
@@ -202,7 +202,7 @@ internal class QueryOptimization : IQueryOptimization
         var lowerIndexTerm = -1;
         var lowerIndexDocument = (IndexDocument?)null;
 
-        var indexes = _store!.GetIndexes();
+        var indexes = _source!.GetIndexes();
         BinaryBsonExpression? lowerExpr = null;
 
         for(var i = 0; i < _terms.Count; i++)

@@ -8,8 +8,8 @@ internal partial class SqlParser
     /// <summary>
     /// select_statement::
     ///      "SELECT" [ _ "DISTINCT" ] _ {select-fields}
-    ///    [ _ "INTO" _ document_store [ ":" auto_id ] ] // remover? usar o INSERT INTO com sub query
-    ///    [ _ "FROM" _ document_store
+    ///    [ _ "INTO" _ document_source [ ":" auto_id ] ] // remover? usar o INSERT INTO com sub query
+    ///    [ _ "FROM" _ document_source
     /// [ _ "INCLUDE" _ expr_single [ . "," . expr_single ]* ]
     ///   [ _ "WHERE" _ expr_predicate ]
     ///   [ _ "GROUP" _ "BY" _ expr_single
@@ -53,11 +53,11 @@ internal partial class SqlParser
         }
         else if (from.Match("INTO"))
         {
-            var intoStore = this.ParseDocumentStore();
+            var intoSource = ParseDocumentStore(_tokenizer);
 
             this.TryParseWithAutoId(out var intoAutoId);
 
-            _into = new Into(intoStore.Name, intoAutoId);
+            _into = new Into(intoSource, intoAutoId);
 
             _tokenizer.ReadToken().Expect("FROM");
         }
@@ -67,7 +67,7 @@ internal partial class SqlParser
         }
 
         // read FROM <name>
-        var fromStore = this.ParseDocumentStore();
+        var fromSource = ParseDocumentStore(_tokenizer);
 
         var ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
@@ -155,9 +155,8 @@ internal partial class SqlParser
         _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
         // create query object instance
-        var query = new Query
+        var query = new Query(fromSource)
         {
-            Collection = fromStore.Name,
             Select = _select,
             Distinct = _distinct,
             Into = _into,
