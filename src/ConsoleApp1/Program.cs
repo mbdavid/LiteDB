@@ -1,6 +1,6 @@
 ﻿// SETUP //////////////////
 const string VER = "v6";
-var INSERT_1 = new Range(1, 10_000);
+var INSERT_1 = new Range(1, 1_00_000);
 var DELETE_1 = new Range(1, 40_000);
 var INSERT_2 = new Range(1, 30_000);
 ////////////////////////
@@ -33,13 +33,21 @@ var doc = new BsonDocument
 
 // RUN 
 
-//await db.RunAsync($"Set USER_VERSION", "PRAGMA USER_VERSION = 25");
+await db.RunAsync($"Set USER_VERSION", "PRAGMA USER_VERSION = 25");
 
-//await db.RunAsync($"Create Collection 'col1'", "CREATE COLLECTION col1");
+await db.RunAsync($"Create Collection 'col1'", "CREATE COLLECTION col1");
 
 await db.RunAsync($"Insert col1 {insert1.Length:n0}", "INSERT INTO col1 VALUES @0", insert1);
 
-//await db.RunAsync($"Create Index", "CREATE INDEX idx_age ON col1 ($.age)", insert1);
+//await db.RunAsync($"Create Index", "CREATE INDEX idx_age ON col1 ($.age + 5))", insert1);
+
+//await db.RunAsync($"Create Index", "CREATE INDEX idx_name ON col1 (name)", insert1);
+
+await db.RunQueryAsync($"Query0", @"SELECT _id, name, age FROM col1 WHERE name LIKE 'Jo%'");
+
+
+
+//
 //
 //await db.RunQueryAsync(10, $"Query1", @"SELECT COUNT(_id) contador, contador + 1000 'contador_mais_mil' FROM col1 WHERE age = 32");
 //
@@ -60,29 +68,31 @@ await db.RunAsync($"Insert col1 {insert1.Length:n0}", "INSERT INTO col1 VALUES @
 //await db.RunAsync($"Checkpoint", "CHECKPOINT");
 //
 //await db.RunAsync($"Drop Collection", "DROP COLLECTION new_col");
-
-
-db.Dispose();
-db = new LiteEngine(settings);
-await db.OpenAsync();
-
-
-await db.RunQueryAsync(10, $"Query1", @"SELECT COUNT(_id) contador, contador + 1000 'contador_mais_mil' FROM col1 WHERE age = 32");
-
-await db.RunAsync($"Drop Collection", "DROP COLLECTION col1");
-
+//
+//
+//db.Dispose();
+//db = new LiteEngine(settings);
+//await db.OpenAsync();
+//
+//await db.RunAsync($"Insert col1 {insert1.Length:n0}", "INSERT INTO col1 VALUES @0", insert1);
+//
+//
+//await db.RunQueryAsync(10, $"Query1", @"SELECT COUNT(_id) contador, contador + 1000 'contador_mais_mil' FROM col1 WHERE age = 32");
+//
+//await db.RunAsync($"Drop Collection", "DROP COLLECTION col1");
+//
 //await db.RunAsync($"Create Collection 'col2'", "CREATE COLLECTION col2");
-
-await db.RunAsync($"Insert col2 {insert1.Length:n0}", "INSERT INTO col2 VALUES @0", insert1);
-
-
-db.Dispose();
-db = new LiteEngine(settings);
-await db.OpenAsync();
-
-//await db.RunQueryAsync(10, $"Query2", @"SELECT COUNT(_id) contador, contador + 1000 'contador_mais_mil' FROM col2 WHERE age = 32");
-await db.RunQueryAsync(10, $"Query2", @"SELECT $ FROM col2");
-
+//
+//await db.RunAsync($"Insert col2 {insert1.Length:n0}", "INSERT INTO col2 VALUES @0", insert1);
+//
+//
+//db.Dispose();
+//db = new LiteEngine(settings);
+//await db.OpenAsync();
+//
+////await db.RunQueryAsync(10, $"Query2", @"SELECT COUNT(_id) contador, contador + 1000 'contador_mais_mil' FROM col2 WHERE age = 32");
+//await db.RunQueryAsync(10, $"Query2", @"SELECT $ FROM col2");
+//
 
 //db.Dump();
 

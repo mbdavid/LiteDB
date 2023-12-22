@@ -7,7 +7,6 @@ This branch is current development of new version of LiteDB v6.
 - Distinct Pipe
 - Virtual collections (IDocumentStore): $master, $pragmas, $file_json, ...
 
-
 # Needs implementation
 
 ## Engine
@@ -16,7 +15,7 @@ This branch is current development of new version of LiteDB v6.
 - Update
 - Batch
 - Rebuild
-- Vaccum? (maybe later)
+- Vaccum? (maybe later
 - Extensions in ILiteEngine (insert/update/....)
 - Recovery report (expose in $recovery)
 

@@ -64,6 +64,17 @@ internal class PipelineBuilder
     }
 
     /// <summary>
+    /// Start pipe with a virtual index node that uses a external IEnumerator data source. 
+    /// Has no index node, value are stored in PipeValue only
+    /// </summary>
+    internal PipelineBuilder AddVirtualIndex(SystemCollection collection, int order)
+    {
+        _enumerator = new IndexVirtualEnumerator(collection, order);
+
+        return this;
+    }
+
+    /// <summary>
     /// Add a predicate index based on left/right expression sides to look for this index expression on collection
     /// </summary>
     private void AddIndexPredicate(BinaryBsonExpression predicate, int order, bool returnKey)
@@ -100,7 +111,7 @@ internal class PipelineBuilder
         }
     }
 
-    public IPipeEnumerator CreateIndex(IndexDocument indexDocument, BsonValue value, BsonExpressionType exprType, int order, bool returnKey)
+    private IPipeEnumerator CreateIndex(IndexDocument indexDocument, BsonValue value, BsonExpressionType exprType, int order, bool returnKey)
     {
         return (exprType, value.Type) switch
         {

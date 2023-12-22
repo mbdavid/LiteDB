@@ -34,7 +34,7 @@ internal partial class SqlParser
         _tokenizer.ReadToken().Expect(TokenType.OpenParenthesis);
 
         // read index expression
-        var expr = BsonExpression.Create(_tokenizer, false);
+        var expr = BsonExpression.Create(_tokenizer, true);
 
         // read )
         _tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
