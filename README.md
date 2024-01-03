@@ -7,6 +7,15 @@ This branch is current development of new version of LiteDB v6.
 - Distinct Pipe
 - Virtual collections (IDocumentStore): $master, $pragmas, $file_json, ...
 
+# IDocumentSource
+- UserCollection        \w+         (r,w)
+- VirtualCollection     $\w+        (r)
+- Function              $\w+(...)   (r)
+- Stream                "uri"       (r/w)
+- SubQuery              (...)       (r)
+- TempCollection        #\w+        (r/w)
+
+
 # Needs implementation
 
 ## Engine
