@@ -266,7 +266,7 @@ namespace LiteDB.Engine
                 }
             }
 
-            // dispose all snapshosts
+            // dispose all snapshots
             foreach (var snapshot in _snapshots.Values)
             {
                 snapshot.Dispose();
@@ -291,7 +291,7 @@ namespace LiteDB.Engine
                 this.ReturnNewPages();
             }
 
-            // dispose all snaphosts
+            // dispose all snapshots
             foreach (var snapshot in _snapshots.Values)
             {
                 // but first, if writable, discard changes

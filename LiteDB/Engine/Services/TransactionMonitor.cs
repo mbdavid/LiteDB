@@ -171,7 +171,7 @@ namespace LiteDB.Engine
             {
                 var sum = 0;
 
-                // if there is no avaiable pages, reduce all open transactions
+                // if there is no available pages, reduce all open transactions
                 foreach (var trans in _transactions.Values)
                 {
                     //TODO: revisar estas contas, o reduce tem que fechar 1000

@@ -25,9 +25,9 @@ namespace LiteDB.Engine
                 Collation = collation
             };
 
-            var backup = FileHelper.GetSufixFile(filename, "-backup", true);
+            var backup = FileHelper.GetSuffixFile(filename, "-backup", true);
 
-            settings.Filename = FileHelper.GetSufixFile(filename, "-temp", true);
+            settings.Filename = FileHelper.GetSuffixFile(filename, "-temp", true);
 
             var buffer = new byte[PAGE_SIZE * 2];
             IFileReader reader;
