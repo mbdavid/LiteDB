@@ -88,5 +88,38 @@ namespace LiteDB.Tests.Database
                 }
             }
         }
+
+        [Fact]
+        public void Migrage_From_V4_Stream()
+        {
+            // v5 upgrades only from v4!
+
+            var original = "../../../Utils/Legacy/v4.db";
+
+            using (FileStream fs = new FileStream(original, FileMode.Open, FileAccess.Read))
+            using (MemoryStream ms = new MemoryStream())
+            {
+                fs.CopyTo(ms);
+                ms.Flush();
+                ms.Seek(0, SeekOrigin.Begin);
+
+                using (var db = new LiteDatabase(ms, upgrade:true))
+                {
+                    // convert and open database
+                    var col1 = db.GetCollection("col1");
+
+                    col1.Count().Should().Be(3);
+                }
+
+                ms.Seek(0, SeekOrigin.Begin);
+                using (var db = new LiteDatabase(ms, upgrade: true))
+                {
+                    // database already converted
+                    var col1 = db.GetCollection("col1");
+
+                    col1.Count().Should().Be(3);
+                }
+            }
+        }
     }
 }
