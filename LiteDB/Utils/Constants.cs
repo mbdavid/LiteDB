@@ -1,8 +1,6 @@
 ﻿using LiteDB.Engine;
 using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Threading;
 
 #if DEBUG
 [assembly: InternalsVisibleTo("LiteDB.Tests")]
@@ -95,28 +93,6 @@ namespace LiteDB
         /// </summary>
         public const int CONTAINER_SORT_SIZE = 100 * PAGE_SIZE;
         
-        /// <summary>
-        /// Log a message using Debug.WriteLine
-        /// </summary>
-        [DebuggerHidden]
-        [Conditional("DEBUG")]
-        public static void LOG(string message, string category)
-        {
-            //Debug.WriteLine is too slow in multi-threads
-            //var threadID = Environment.CurrentManagedThreadId;
-            //Debug.WriteLine(message, threadID + "|" + category);
-        }
-
-        /// <summary>
-        /// Log a message using Debug.WriteLine only if conditional = true
-        /// </summary>
-        [DebuggerHidden]
-        [Conditional("DEBUG")]
-        public static void LOG(bool conditional, string message, string category)
-        {
-            if (conditional) LOG(message, category);
-        }
-
         /// <summary>
         /// Ensure condition is true, otherwise throw exception (check contract)
         /// </summary>

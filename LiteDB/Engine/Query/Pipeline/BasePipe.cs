@@ -161,7 +161,7 @@ namespace LiteDB.Engine
             {
                 sorter.Insert(keyValues);
 
-                LOG($"sort {sorter.Count} keys in {sorter.Containers.Count} containers", "SORT");
+                Logging.LOG($"sort {sorter.Count} keys in {sorter.Containers.Count} containers", "SORT");
 
                 var result = sorter.Sort().Skip(offset).Take(limit);
 

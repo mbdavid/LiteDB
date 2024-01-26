@@ -24,7 +24,7 @@ namespace LiteDB.Engine
                 var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
                 var data = new DataService(snapshot);
 
-                LOG($"insert `{collection}`", "COMMAND");
+                Logging.LOG($"insert `{collection}`", "COMMAND");
 
                 foreach (var doc in docs)
                 {

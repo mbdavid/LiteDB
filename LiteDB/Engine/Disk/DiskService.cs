@@ -48,7 +48,7 @@ namespace LiteDB.Engine
             // create new database if not exist yet
             if (isNew)
             {
-                LOG($"creating new database: '{Path.GetFileName(_dataFactory.Name)}'", "DISK");
+                Logging.LOG($"creating new database: '{Path.GetFileName(_dataFactory.Name)}'", "DISK");
 
                 this.Initialize(_dataPool.Writer, settings.Collation, settings.InitialSize);
             }

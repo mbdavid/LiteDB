@@ -24,7 +24,7 @@ namespace LiteDB.Engine
 
                 if (collectionPage == null) return 0;
 
-                LOG($"delete `{collection}`", "COMMAND");
+                Logging.LOG($"delete `{collection}`", "COMMAND");
 
                 var count = 0;
                 var pk = collectionPage.PK;

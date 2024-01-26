@@ -62,7 +62,7 @@ namespace LiteDB.Engine
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-            LOG($"start initializing{(_settings.ReadOnly ? " (readonly)" : "")}", "ENGINE");
+            Logging.LOG($"start initializing{(_settings.ReadOnly ? " (readonly)" : "")}", "ENGINE");
 
             try
             {
@@ -104,11 +104,11 @@ namespace LiteDB.Engine
                 // register system collections
                 this.InitializeSystemCollections();
 
-                LOG("initialization completed", "ENGINE");
+                Logging.LOG("initialization completed", "ENGINE");
             }
             catch (Exception ex)
             {
-                LOG(ex.Message, "ERROR");
+                Logging.LOG(ex, "ERROR");
 
                 // explicit dispose (but do not run shutdown operation)
                 this.Dispose(true);
@@ -171,7 +171,7 @@ namespace LiteDB.Engine
                 _locker?.Dispose();
             }
 
-            LOG("engine disposed", "ENGINE");
+            Logging.LOG("engine disposed", "ENGINE");
 
             _disposed = true;
         }

@@ -119,7 +119,7 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
+            Logging.LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
 
             _shouldClose = true;
             _queueHasItems.Set(); // unblock the running loop in case there are no items
