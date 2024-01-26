@@ -21,13 +21,12 @@ namespace LiteDB.Engine
 
         private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
         private readonly object _queueSync = new object();
-        private readonly ManualResetEventSlim _queueHasItems = new ManualResetEventSlim(false);
+        private readonly AsyncManualResetEvent _queueHasItems = new AsyncManualResetEvent();
         private readonly ManualResetEventSlim _queueIsEmpty = new ManualResetEventSlim(true);
 
         public DiskWriterQueue(Stream stream)
         {
             _stream = stream;
-            _task = Task.Run(ExecuteQueue);
         }
 
         /// <summary>
@@ -47,6 +46,11 @@ namespace LiteDB.Engine
                 _queueIsEmpty.Reset();
                 _queue.Enqueue(page);
                 _queueHasItems.Set();
+
+                if (_task == null)
+                {
+                    _task = Task.Factory.StartNew(ExecuteQueue, TaskCreationOptions.LongRunning);
+                }
             }
         }
 
@@ -62,7 +66,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Execute all items in queue sync
         /// </summary>
-        private void ExecuteQueue()
+        private async Task ExecuteQueue()
         {
             while (true)
             {
@@ -72,15 +76,16 @@ namespace LiteDB.Engine
                 }
                 else
                 {
-                    _stream.FlushToDisk();
                     lock (_queueSync)
                     {
                         if (_queue.Count > 0) continue;
                         _queueIsEmpty.Set();
+                        _queueHasItems.Reset();
+                        if (_shouldClose) return;
                     }
+                    _stream.FlushToDisk();
 
-                    _queueHasItems.Wait();
-                    if (_shouldClose) return;
+                    await _queueHasItems.WaitAsync();
                 }
             }
         }
@@ -105,6 +110,7 @@ namespace LiteDB.Engine
             LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
 
             _shouldClose = true;
+            _queueHasItems.Set(); // unblock the running loop in case there are no items
             
             // run all items in queue before dispose
             this.Wait();
