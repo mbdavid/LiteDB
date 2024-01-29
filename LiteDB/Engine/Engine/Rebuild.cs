@@ -64,7 +64,7 @@ namespace LiteDB.Engine
                 _disk.Write(new[] { _header.UpdateBuffer() }, FileOrigin.Data);
 
                 // set new fileLength
-                _disk.SetLength((_header.LastPageID + 1) * PAGE_SIZE, FileOrigin.Data);
+                _disk.SetLength((long)(_header.LastPageID + 1) * PAGE_SIZE, FileOrigin.Data);
 
                 // get new filelength to compare
                 var newLength = _disk.GetVirtualLength(FileOrigin.Data);
