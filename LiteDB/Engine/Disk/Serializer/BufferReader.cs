@@ -154,7 +154,7 @@ namespace LiteDB.Engine
             // if fits in current segment, use inner array - otherwise copy from multiples segments
             if (_currentPosition + count <= _current.Count)
             {
-                value = Encoding.UTF8.GetString(_current.Array, _current.Offset + _currentPosition, count);
+                value = StringEncoding.UTF8.GetString(_current.Array, _current.Offset + _currentPosition, count);
 
                 this.MoveForward(count);
             }
@@ -165,7 +165,7 @@ namespace LiteDB.Engine
 
                 this.Read(buffer, 0, count);
 
-                value = Encoding.UTF8.GetString(buffer, 0, count);
+                value = StringEncoding.UTF8.GetString(buffer, 0, count);
 
                 BufferPool.Return(buffer);
             }
@@ -204,7 +204,7 @@ namespace LiteDB.Engine
 
                     this.MoveForward(1); // +1 to '\0'
 
-                    return Encoding.UTF8.GetString(mem.ToArray());
+                    return StringEncoding.UTF8.GetString(mem.ToArray());
                 }
             }
         }
@@ -220,7 +220,7 @@ namespace LiteDB.Engine
             {
                 if (_current[pos] == 0x00)
                 {
-                    value = Encoding.UTF8.GetString(_current.Array, _current.Offset + _currentPosition, count);
+                    value = StringEncoding.UTF8.GetString(_current.Array, _current.Offset + _currentPosition, count);
                     this.MoveForward(count + 1); // +1 means '\0'	
                     return true;
                 }

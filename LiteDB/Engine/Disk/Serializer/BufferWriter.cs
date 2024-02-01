@@ -152,13 +152,13 @@ namespace LiteDB.Engine
         {
             if (value.IndexOf('\0') > -1) throw LiteException.InvalidNullCharInString();
 
-            var bytesCount = Encoding.UTF8.GetByteCount(value);
+            var bytesCount = StringEncoding.UTF8.GetByteCount(value);
             var available = _current.Count - _currentPosition; // avaiable in current segment
 
             // can write direct in current segment (use < because need +1 \0)
             if (bytesCount < available)
             {
-                Encoding.UTF8.GetBytes(value, 0, value.Length, _current.Array, _current.Offset + _currentPosition);
+                StringEncoding.UTF8.GetBytes(value, 0, value.Length, _current.Array, _current.Offset + _currentPosition);
 
                 _current[_currentPosition + bytesCount] = 0x00;
 
@@ -168,7 +168,7 @@ namespace LiteDB.Engine
             {
                 var buffer = BufferPool.Rent(bytesCount);
 
-                Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
+                StringEncoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
 
                 this.Write(buffer, 0, bytesCount);
 
@@ -186,7 +186,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void WriteString(string value, bool specs)
         {
-            var count = Encoding.UTF8.GetByteCount(value);
+            var count = StringEncoding.UTF8.GetByteCount(value);
 
             if (specs)
             {
@@ -195,7 +195,7 @@ namespace LiteDB.Engine
 
             if (count <= _current.Count - _currentPosition)
             {
-                Encoding.UTF8.GetBytes(value, 0, value.Length, _current.Array, _current.Offset + _currentPosition);
+                StringEncoding.UTF8.GetBytes(value, 0, value.Length, _current.Array, _current.Offset + _currentPosition);
 
                 this.MoveForward(count);
             }
@@ -204,7 +204,7 @@ namespace LiteDB.Engine
                 // rent a buffer to be re-usable
                 var buffer = BufferPool.Rent(count);
 
-                Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
+                StringEncoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
 
                 this.Write(buffer, 0, count);
 
