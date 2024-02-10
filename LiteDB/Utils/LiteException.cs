@@ -55,6 +55,7 @@ namespace LiteDB
         public const int AVOID_USE_OF_PROCESS = 215;
         public const int NOT_ENCRYPTED = 216;
         public const int INVALID_PASSWORD = 217;
+        public const int INVALID_INDEXING = 218;
 
         #endregion
 
@@ -328,6 +329,11 @@ namespace LiteDB
         internal static LiteException AvoidUseOfProcess()
         {
             return new LiteException(AVOID_USE_OF_PROCESS, $"LiteDB do not accept System.Diagnostics.Process class in deserialize mapper");
+        }
+
+        internal static LiteException LoopDetectedException()
+        {
+            return new LiteException(INVALID_INDEXING, $"Detected Loop in CollectionIndex");
         }
 
         #endregion

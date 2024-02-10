@@ -316,14 +316,38 @@ namespace LiteDB.Engine
             this.GetNode(index.Tail).Page.DeleteIndexNode(index.Tail.Index);
         }
 
+        /// <summary>
+        ///  detect if there is a loop in the CollectionIndex
+        /// </summary>
+        public bool DetectLoop(IndexNode head, int order)
+        {
+            IndexNode slowPointer = head, fastPointer = head;
+
+            while (slowPointer != null && fastPointer != null && this.GetNode(fastPointer.GetNextPrev(0,order)) != null )
+            {
+                slowPointer = this.GetNode(slowPointer.GetNextPrev(0, order));
+                fastPointer = this.GetNode(this.GetNode(fastPointer.GetNextPrev(0, order)).GetNextPrev(0,order));
+                if (slowPointer!= null && fastPointer != null && slowPointer.Position == fastPointer.Position)
+                    return true;
+            }
+
+            return false;
+        }
+
+
         #region Find
-        
+
         /// <summary>
         /// Return all index nodes from an index
         /// </summary>
         public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
         {
             var cur = order == Query.Ascending ? this.GetNode(index.Head) : this.GetNode(index.Tail);
+
+            if(DetectLoop(cur, order))
+            {
+                throw LiteException.LoopDetectedException();
+            }
 
             while (!cur.GetNextPrev(0, order).IsEmpty)
             {
