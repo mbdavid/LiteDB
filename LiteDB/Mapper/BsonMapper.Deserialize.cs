@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -158,7 +158,10 @@ namespace LiteDB
                 {
                     type = Type.GetType(typeField.AsString);
 
-                    if (type == null) throw LiteException.InvalidTypedName(typeField.AsString);
+                    if (actualType == null) throw LiteException.InvalidTypedName(typeField.AsString);
+                    if (!type.IsAssignableFrom(actualType)) throw LiteException.DataTypeNotAssignable(type.FullName, actualType.FullName);
+
+                    type = actualType;
                 }
                 // when complex type has no definition (== typeof(object)) use Dictionary<string, object> to better set values
                 else if (type == typeof(object))
