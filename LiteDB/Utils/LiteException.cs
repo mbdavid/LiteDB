@@ -38,6 +38,12 @@ namespace LiteDB
         public const int INVALID_TYPED_NAME = 207;
         public const int NEED_RECOVER = 208;
         public const int PROPERTY_READ_WRITE = 209;
+        public const int INITIALSIZE_CRYPTO_NOT_SUPPORTED = 210;
+        public const int INVALID_INITIALSIZE = 211;
+        public const int INVALID_NULL_CHAR_STRING = 212;
+        public const int INVALID_FREE_SPACE_PAGE = 213;
+        public const int DATA_TYPE_NOT_ASSIGNABLE = 214;
+        public const int AVOID_USE_OF_PROCESS = 215;
 
         #endregion
 
@@ -205,6 +211,44 @@ namespace LiteDB
                 Line = s.Source,
                 Position = s.Index
             };
+        }
+
+        internal static LiteException InvalidInitialSize()
+        {
+            return new LiteException(INVALID_INITIALSIZE, "Initial Size must be a multiple of page size ({0} bytes).", PAGE_SIZE);
+        }
+
+        internal static LiteException InvalidNullCharInString()
+        {
+            return new LiteException(INVALID_NULL_CHAR_STRING, "Invalid null character (\\0) was found in the string");
+        }
+
+        internal static LiteException InvalidPageType(PageType pageType, BasePage page)
+        {
+            var sb = new StringBuilder($"Invalid {pageType} on {page.PageID}. ");
+
+            sb.Append($"Full zero: {page.Buffer.All(0)}. ");
+            sb.Append($"Page Type: {page.PageType}. ");
+            sb.Append($"Prev/Next: {page.PrevPageID}/{page.NextPageID}. ");
+            sb.Append($"UniqueID: {page.Buffer.UniqueID}. ");
+            sb.Append($"ShareCounter: {page.Buffer.ShareCounter}. ");
+
+            return new LiteException(0, sb.ToString());
+        }
+
+        internal static LiteException InvalidFreeSpacePage(uint pageID, int freeBytes, int length)
+        {
+            return new LiteException(INVALID_FREE_SPACE_PAGE, $"An operation that would corrupt page {pageID} was prevented. The operation required {length} free bytes, but the page had only {freeBytes} available.");
+        }
+
+        internal static LiteException DataTypeNotAssignable(string type1, string type2)
+        {
+            return new LiteException(DATA_TYPE_NOT_ASSIGNABLE, $"Data type {type1} is not assignable from data type {type2}");
+        }
+
+        internal static LiteException AvoidUseOfProcess()
+        {
+            return new LiteException(AVOID_USE_OF_PROCESS, $"LiteDB do not accept System.Diagnostics.Process class in deserialize mapper");
         }
 
         #endregion
