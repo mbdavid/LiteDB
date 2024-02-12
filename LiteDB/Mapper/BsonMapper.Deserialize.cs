@@ -168,8 +168,7 @@ namespace LiteDB
 
                     // avoid use of "System.Diagnostics.Process" in object type definition
                     // using String test to work in .netstandard 1.3
-                    if (actualType.FullName.Equals("System.Diagnostics.Process", StringComparison.OrdinalIgnoreCase) &&
-                        actualType.Assembly.GetName().Name.Equals("System", StringComparison.OrdinalIgnoreCase))
+                    if (actualType.FullName.Equals("System.Diagnostics.Process", StringComparison.OrdinalIgnoreCase))
                     {
                         throw LiteException.AvoidUseOfProcess();
                     }
