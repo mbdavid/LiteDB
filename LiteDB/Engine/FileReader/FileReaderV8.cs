@@ -26,8 +26,15 @@ namespace LiteDB.Engine
 
         private readonly Dictionary<string, uint> _collections = new Dictionary<string, uint>();
         private readonly Dictionary<string, List<IndexInfo>> _indexes = new Dictionary<string, List<IndexInfo>>();
-        private readonly Dictionary<string, BsonValue> _pragmas = new Dictionary<string, BsonValue>();
         private readonly Dictionary<uint, List<uint>> _collectionsDataPages = new Dictionary<uint, List<uint>>();
+        private readonly Dictionary<string, BsonValue> _pragmas = new Dictionary<string, BsonValue>
+        {
+            [Pragmas.USER_VERSION] = 0,
+            [Pragmas.CHECKPOINT] = 1000,
+            [Pragmas.TIMEOUT] = 60,
+            [Pragmas.UTC_DATE] = true,
+            [Pragmas.LIMIT_SIZE] = long.MaxValue,
+        };
 
         private Stream _dataStream;
         private Stream _logStream;
@@ -96,7 +103,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read all indexes from all collection pages (except _id index)
         /// </summary>
-        public IEnumerable<IndexInfo> GetIndexes(string collection) => _indexes[collection];
+        public IEnumerable<IndexInfo> GetIndexes(string collection) => _indexes.ContainsKey(collection) ? _indexes[collection] : new List<IndexInfo>();
 
         /// <summary>
         /// Read all documents from current collection with NO index use - read direct from free lists
@@ -104,7 +111,12 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<BsonDocument> GetDocuments(string collection)
         {
+            if (!_collections.ContainsKey(collection)) yield break;
+
             var colID = _collections[collection];
+
+            if (!_collectionsDataPages.ContainsKey(colID)) yield break;
+            
             var dataPages = _collectionsDataPages[colID];
             var uniqueIDs = new HashSet<BsonValue>();
 
@@ -235,8 +247,6 @@ namespace LiteDB.Engine
         /// </summary>
         private void LoadPragmas()
         {
-            if (_disposed) return;
-
             var result = this.ReadPage(0, out var pageInfo);
 
             if (result.Ok)
@@ -260,8 +270,6 @@ namespace LiteDB.Engine
         /// </summary>
         private void LoadDataPages()
         {
-            if (_disposed) return;
-
             var header = this.ReadPage(0, out var pageInfo).GetValue();
             var lastPageID = header.Buffer.ReadUInt32(HeaderPage.P_LAST_PAGE_ID);
 
@@ -299,8 +307,6 @@ namespace LiteDB.Engine
         /// </summary>
         private void LoadCollections()
         {
-            if (_disposed) return;
-
             var header = this.ReadPage(0, out var pageInfo).GetValue();
 
             var area = header.Buffer.Slice(HeaderPage.P_COLLECTIONS, HeaderPage.COLLECTIONS_SIZE);
@@ -350,8 +356,6 @@ namespace LiteDB.Engine
         /// </summary>
         private void LoadIndexes()
         {
-            if (_disposed) return;
-
             foreach (var collection in _collections)
             {
                 var result = this.ReadPage(collection.Value, out var pageInfo);
@@ -546,7 +550,7 @@ namespace LiteDB.Engine
 
                 read = stream.Read(pageBuffer.Array, pageBuffer.Offset, pageBuffer.Count);
 
-                ENSURE(read == PAGE_SIZE, $"Page position {_logStream.Position} read only than {read} bytes (instead {PAGE_SIZE})");
+                ENSURE(read == PAGE_SIZE, $"Page position {stream.Position} read only than {read} bytes (instead {PAGE_SIZE})");
 
                 var page = new BasePage(pageBuffer);
 

@@ -34,8 +34,8 @@ namespace LiteDB.Engine
 
         public long Rebuild(RebuildOptions options)
         {
-            var backupFilename = FileHelper.GetSufixFile(_settings.Filename, "-backup", true);
-            var tempFilename = FileHelper.GetSufixFile(_settings.Filename, "-temp", true);
+            var backupFilename = FileHelper.GetSuffixFile(_settings.Filename, "-backup", true);
+            var tempFilename = FileHelper.GetSuffixFile(_settings.Filename, "-temp", true);
 
             // open file reader
             using (var reader = _fileVersion == 7 ?

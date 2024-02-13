@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -41,7 +42,6 @@ namespace LiteDB.Engine
         public void EnqueuePage(PageBuffer page)
         {
             ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
-
             lock (_queueSync)
             {
                 _queueIsEmpty.Reset();
@@ -62,16 +62,6 @@ namespace LiteDB.Engine
         {
             _queueIsEmpty.Wait();
             ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
-        }
-
-        /// <summary>
-        /// Clear all items on queue (stop running)
-        /// </summary>
-        public void Abort()
-        {
-            _aborted = true;
-            while (_queue.TryDequeue(out _)) ; // clear?!?
-            _task?.Wait();
         }
 
         /// <summary>
@@ -122,11 +112,7 @@ namespace LiteDB.Engine
             // set stream position according to page
             _stream.Position = page.Position;
 
-            // write on disk only if not aborted process
-            if (!_aborted)
-            {
-                _stream.Write(page.Array, page.Offset, PAGE_SIZE);
-            }
+            _stream.Write(page.Array, page.Offset, PAGE_SIZE);
 
             // release page here (no page use after this)
             page.Release();
@@ -138,7 +124,7 @@ namespace LiteDB.Engine
 
             _shouldClose = true;
             _queueHasItems.Set(); // unblock the running loop in case there are no items
-            
+
             // run all items in queue before dispose
             this.Wait();
             _task?.Wait();

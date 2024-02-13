@@ -23,17 +23,19 @@ reader.Open();
 
 var pragmas = reader.GetPragmas();
 var cols = reader.GetCollections().ToArray();
+var indexes = reader.GetIndexes(cols[0]);
 
 var docs = reader.GetDocuments("hubData$AppOperations").ToArray();
 */
 
+// /*
 var db = new LiteEngine(settings);
 
 db.Rebuild();
 
 
 
-//var reader = db.Query("hubData$AppOperations", Query.All());
-//var data = reader.ToList();
-
+var reader = db.Query("hubData$AppOperations", Query.All());
+var data = reader.ToList();
+// */
 Console.ReadKey();

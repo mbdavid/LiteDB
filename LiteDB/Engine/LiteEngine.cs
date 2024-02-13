@@ -109,20 +109,15 @@ namespace LiteDB.Engine
                     _disk.Dispose();
                     _disk = null;
 
-                    // rebuild database, create -backup file and include $rebuild_errors
-                    this.Rebuild(new RebuildOptions
-                    {
-                        Password = _settings.Password,
-                        Collation = _settings.Collation,
-                        IncludeErrorReport = true
-                    });
+                    // rebuild database, create -backup file and include _rebuild_errors collection
+                    this.Recovery();
 
                     // re-initialize disk service
                     _disk = new DiskService(_settings, MEMORY_SEGMENT_SIZES);
 
                     // read buffer page again
                     buffer = _disk.ReadFull(FileOrigin.Data).First();
-                };
+                }
 
                 _header = new HeaderPage(buffer);
 
@@ -220,7 +215,7 @@ namespace LiteDB.Engine
             var tc = new TryCatch(ex);
 
             // stop running queue to write
-            tc.Catch(() => _disk?.Queue.Abort());
+            //**tc.Catch(() => _disk?.Queue.Abort());
 
             // close disks streams
             tc.Catch(() => _disk?.Dispose());

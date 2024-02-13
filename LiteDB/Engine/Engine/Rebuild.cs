@@ -10,12 +10,31 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
+        /// Recovery datafile using a rebuild process. Run only on "Open" database
+        /// </summary>
+        private void Recovery()
+        {
+            // run build service
+            var rebuilder = new RebuildService(_settings);
+            var options = new RebuildOptions
+            {
+                Collation = new Collation(this.Pragma(Pragmas.COLLATION)),
+                Password = _settings.Password,
+                IncludeErrorReport = true
+            };
+
+            // run rebuild process
+            rebuilder.Rebuild(options);
+        }
+
+        /// <summary>
         /// Implement a full rebuild database. A backup copy will be created with -backup extention. All data will be readed and re created in another database
         /// </summary>
         public long Rebuild(RebuildOptions options)
         {
-            // enter database in exclusive mode
-            var mustExit = _locker.EnterExclusive();
+            if (_disposed) return 0;
+
+            this.Close();
 
             // run build service
             var rebuilder = new RebuildService(_settings);
@@ -26,10 +45,9 @@ namespace LiteDB.Engine
             // return how many bytes of diference from original/rebuild version
             var diff = rebuilder.Rebuild(options);
 
-            //re-open?
+            this.Open();
 
-            // release locker
-            if (mustExit) _locker.ExitExclusive();
+            _disposed = false;
 
             return diff;
         }

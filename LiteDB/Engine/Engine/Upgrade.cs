@@ -49,7 +49,7 @@ namespace LiteDB.Engine
                 if (Encoding.UTF8.GetString(buffer, 25, HeaderPage.HEADER_INFO.Length) == HeaderPage.HEADER_INFO &&
                     buffer[52] == 7)
                 {
-                    reader = new FileReaderV7(stream, password);
+                    reader = new FileReaderV7(settings);
                 }
                 else
                 {
@@ -69,8 +69,10 @@ namespace LiteDB.Engine
                     // re-enable auto-checkpoint pragma
                     engine.Pragma(Pragmas.CHECKPOINT, 1000);
 
+                    var userVersion = reader.GetPragmas()["USER_VERSION"].AsInt32;
+
                     // copy userVersion from old datafile
-                    engine.Pragma("USER_VERSION", (reader as FileReaderV7).UserVersion);
+                    engine.Pragma("USER_VERSION", userVersion);
                 }
             }
 

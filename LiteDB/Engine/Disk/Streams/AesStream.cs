@@ -160,7 +160,6 @@ namespace LiteDB.Engine
         /// </summary>
         public override int Read(byte[] array, int offset, int count)
         {
-            ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
             ENSURE(this.Position % PAGE_SIZE == 0, $"AesRead: position must be in PAGE_SIZE module. Position={this.Position}, File={_name}");
 
             var r = _reader.Read(array, offset, count);
