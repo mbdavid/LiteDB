@@ -121,8 +121,8 @@ namespace LiteDB.Engine
             return
                 1 + // Slot
                 1 + // IndexType
-                Encoding.UTF8.GetByteCount(name) + 1 + // Name + \0
-                Encoding.UTF8.GetByteCount(expr) + 1 + // Expression + \0
+                StringEncoding.UTF8.GetByteCount(name) + 1 + // Name + \0
+                StringEncoding.UTF8.GetByteCount(expr) + 1 + // Expression + \0
                 1 + // Unique
                 PageAddress.SIZE + // Head
                 PageAddress.SIZE + // Tail
