@@ -186,8 +186,6 @@ namespace LiteDB.Engine
                 count++;
             }
 
-            _queue.Value.Run();
-
             return count;
         }
 

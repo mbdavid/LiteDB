@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using static LiteDB.Constants;
@@ -18,11 +17,12 @@ namespace LiteDB.Engine
 
         // async thread controls
         private Task _task;
+        private bool _shouldClose = false;
 
         private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
-
-        private bool _aborted = false;
-        private int _running = 0;
+        private readonly object _queueSync = new object();
+        private readonly AsyncManualResetEvent _queueHasItems = new AsyncManualResetEvent();
+        private readonly ManualResetEventSlim _queueIsEmpty = new ManualResetEventSlim(true);
 
         public DiskWriterQueue(Stream stream)
         {
@@ -42,27 +42,15 @@ namespace LiteDB.Engine
         {
             ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
 
-            if (_aborted) return;
-
-            _queue.Enqueue(page);
-        }
-
-        /// <summary>
-        /// If queue contains pages and are not running, starts run queue again now
-        /// </summary>
-        public void Run()
-        {
-            lock (_queue)
+            lock (_queueSync)
             {
-                if (_queue.Count == 0 || _aborted) return;
+                _queueIsEmpty.Reset();
+                _queue.Enqueue(page);
+                _queueHasItems.Set();
 
-                var oldValue = Interlocked.CompareExchange(ref _running, 1, 0);
-
-                if (oldValue == 0)
+                if (_task == null)
                 {
-                    // schedule a new thread to process the pages in the queue.
-                    // https://blog.stephencleary.com/2013/08/startnew-is-dangerous.html
-                    _task = Task.Run(ExecuteQueue);
+                    _task = Task.Factory.StartNew(ExecuteQueue, TaskCreationOptions.LongRunning);
                 }
             }
         }
@@ -72,16 +60,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Wait()
         {
-            lock (_queue)
-            {
-                if (_task != null)
-                {
-                    _task.Wait();
-                }
-
-                Run();
-            }
-
+            _queueIsEmpty.Wait();
             ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
         }
 
@@ -98,37 +77,40 @@ namespace LiteDB.Engine
         /// <summary>
         /// Execute all items in queue sync
         /// </summary>
-        private void ExecuteQueue()
+        private async Task ExecuteQueue()
         {
-            do
+            while (true)
             {
                 if (_queue.TryDequeue(out var page))
                 {
                     WritePageToStream(page);
                 }
-
-                while (page == null)
+                else
                 {
-                    _stream.FlushToDisk();
-                    Volatile.Write(ref _running, 0);
-
-                    if (!_queue.Any()) return;
-
-                    // Another item was added to the queue after we detected it was empty.
-                    var oldValue = Interlocked.CompareExchange(ref _running, 1, 0);
-
-                    if (oldValue == 1)
+                    lock (_queueSync)
                     {
-                        // A new thread was already scheduled for execution, this thread can return.
-                        return;
+                        if (_queue.Count > 0) continue;
+                        _queueIsEmpty.Set();
+                        _queueHasItems.Reset();
+                        if (_shouldClose) return;
                     }
+                    TryFlushStream();
 
-                    // This thread will continue to process the queue as a new thread was not scheduled.
-                    _queue.TryDequeue(out page);
-                    WritePageToStream(page);
+                    await _queueHasItems.WaitAsync();
                 }
+            }
+        }
 
-            } while (true);
+        private void TryFlushStream()
+        {
+            try
+            {
+                _stream.FlushToDisk();
+            }
+            catch (IOException)
+            {
+                // Disk is probably full. This may be unrecoverable problem but until we have enough space in the buffer we may be ok.
+            }
         }
 
         private void WritePageToStream(PageBuffer page)
@@ -154,8 +136,13 @@ namespace LiteDB.Engine
         {
             LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
 
+            _shouldClose = true;
+            _queueHasItems.Set(); // unblock the running loop in case there are no items
+            
             // run all items in queue before dispose
             this.Wait();
+            _task?.Wait();
+            _task = null;
         }
     }
 }
