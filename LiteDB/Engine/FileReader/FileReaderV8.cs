@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,10 +12,18 @@ using static LiteDB.Constants;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Internal class to read all datafile documents - use only Stream - no cache system (database are modified during this read - shrink)
+    /// Internal class to read all datafile documents - use only Stream - no cache system. Read log file (read commited transtraction)
     /// </summary>
     internal class FileReaderV8 : IFileReader
     {
+        private struct PageInfo
+        {
+            public uint PageID;
+            public FileOrigin Origin;
+            public PageType PageType;
+            public long Position;
+        }
+
         private readonly Dictionary<string, uint> _collections = new Dictionary<string, uint>();
         private readonly Dictionary<string, List<IndexInfo>> _indexes = new Dictionary<string, List<IndexInfo>>();
         private readonly Dictionary<string, BsonValue> _pragmas = new Dictionary<string, BsonValue>();
@@ -23,13 +32,12 @@ namespace LiteDB.Engine
         private Stream _dataStream;
         private Stream _logStream;
         private readonly IDictionary<uint, long> _logIndexMap = new Dictionary<uint, long>();
+        private uint _maxPageID; // a file-length based max pageID to be tested
 
-        private bool _disposedValue;
+        private bool _disposed;
 
         private readonly EngineSettings _settings;
         private readonly IList<FileReaderError> _errors;
-
-        public IDictionary<string, BsonValue> GetPragmas() => _pragmas;
 
         public FileReaderV8(EngineSettings settings, IList<FileReaderError> errors)
         {
@@ -37,28 +45,189 @@ namespace LiteDB.Engine
             _errors = errors;
         }
 
+        /// <summary>
+        /// Open data file and log file, read header and collection pages
+        /// </summary>
         public void Open()
         {
-            var dataFactory = _settings.CreateDataFactory();
-            var logFactory = _settings.CreateLogFactory();
-
-            _dataStream = dataFactory.GetStream(true, true, false);
-
-            _dataStream.Position = 0;
-
-            if (logFactory.Exists())
+            try
             {
-                _logStream = logFactory.GetStream(false, false, true);
+                var dataFactory = _settings.CreateDataFactory();
+                var logFactory = _settings.CreateLogFactory();
 
-                this.LoadIndexMap();
+                // get maxPageID based on both file length
+                _maxPageID = (uint)((dataFactory.GetLength() + logFactory.GetLength()) / PAGE_SIZE);
+
+                _dataStream = dataFactory.GetStream(true, true, false);
+
+                _dataStream.Position = 0;
+
+                if (logFactory.Exists())
+                {
+                    _logStream = logFactory.GetStream(false, false, true);
+
+                    this.LoadIndexMap();
+                }
+
+                this.LoadPragmas();
+
+                this.LoadDataPages();
+
+                this.LoadCollections();
+
+                this.LoadIndexes();
             }
+            catch (Exception ex)
+            {
+                this.HandleError(ex, new PageInfo());
+            }
+        }
 
-            this.LoadPragmas();
+        /// <summary>
+        /// Read all pragma values
+        /// </summary>
+        public IDictionary<string, BsonValue> GetPragmas() => _pragmas;
 
-            this.LoadCollections();
+        /// <summary>
+        /// Read all collection based on header page
+        /// </summary>
+        public IEnumerable<string> GetCollections() => _collections.Keys;
 
+        /// <summary>
+        /// Read all indexes from all collection pages (except _id index)
+        /// </summary>
+        public IEnumerable<IndexInfo> GetIndexes(string collection) => _indexes[collection];
 
+        /// <summary>
+        /// Read all documents from current collection with NO index use - read direct from free lists
+        /// There is no document order
+        /// </summary>
+        public IEnumerable<BsonDocument> GetDocuments(string collection)
+        {
+            var colID = _collections[collection];
+            var dataPages = _collectionsDataPages[colID];
+            var uniqueIDs = new HashSet<BsonValue>();
 
+            foreach(var dataPage in dataPages)
+            {
+                var page = this.ReadPage(dataPage, out var pageInfo);
+
+                if (page.Fail)
+                {
+                    this.HandleError(page.Exception, pageInfo);
+                    continue;
+                }
+
+                var buffer = page.Value.Buffer;
+                var itemsCount = page.Value.ItemsCount;
+                var highestIndex = page.Value.HighestIndex;
+
+                // no items
+                if (itemsCount == 0 || highestIndex == byte.MaxValue) continue;
+
+                for (byte i = 0; i <= highestIndex; i++)
+                {
+                    BsonDocument doc;
+
+                    // try/catch block per dataBlock extend=false
+                    try
+                    {
+                        // resolve slot address
+                        var positionAddr = BasePage.CalcPositionAddr(i);
+                        var lengthAddr = BasePage.CalcLengthAddr(i);
+
+                        // read segment position/length
+                        var position = buffer.ReadUInt16(positionAddr);
+                        var length = buffer.ReadUInt16(lengthAddr);
+
+                        // empty slot
+                        if (length == 0) continue;
+
+                        // get segment slice
+                        var segment = buffer.Slice(position, length);
+                        var extend = segment.ReadBool(DataBlock.P_EXTEND);
+                        var nextBlock = segment.ReadPageAddress(DataBlock.P_NEXT_BLOCK);
+                        var data = segment.Slice(DataBlock.P_BUFFER, segment.Count - DataBlock.P_BUFFER);
+
+                        if (extend) continue; // ignore extend block (start only in first data block)
+
+                        // merge all data block content into a single memory stream and read bson document
+                        using (var mem = new MemoryStream())
+                        {
+                            // write first block
+                            mem.Write(data.Array, data.Offset, data.Count);
+
+                            while (nextBlock.IsEmpty == false)
+                            {
+                                // read next page block
+                                var nextPage = this.ReadPage(nextBlock.PageID, out pageInfo);
+
+                                if (nextPage.Fail) throw nextPage.Exception;
+
+                                var nextBuffer = nextPage.Value.Buffer;
+
+                                // make page validations
+                                ENSURE(nextPage.Value.PageType == PageType.Data, $"Invalid PageType (excepted Data, get {nextPage.Value.PageType})");
+                                ENSURE(nextPage.Value.ColID == colID, $"Invalid ColID in this page (expected {colID}, get {nextPage.Value.ColID})");
+                                ENSURE(nextPage.Value.ItemsCount > 0, "Page with no items count");
+
+                                // read slot address
+                                positionAddr = BasePage.CalcPositionAddr(i);
+                                lengthAddr = BasePage.CalcLengthAddr(i);
+
+                                // read segment position/length
+                                position = nextBuffer.ReadUInt16(positionAddr);
+                                length = nextBuffer.ReadUInt16(lengthAddr);
+
+                                // empty slot
+                                ENSURE(length > 0, $"Last DataBlock request a next extend to {nextBlock}, but this block are empty footer");
+
+                                // get segment slice
+                                segment = nextBuffer.Slice(position, length);
+                                extend = segment.ReadBool(DataBlock.P_EXTEND);
+                                nextBlock = segment.ReadPageAddress(DataBlock.P_NEXT_BLOCK);
+                                data = segment.Slice(DataBlock.P_BUFFER, segment.Count - DataBlock.P_BUFFER);
+
+                                ENSURE(extend == true, $"Next datablock always be an extend. Invalid data block {nextBlock}");
+
+                                // write data on memorystream
+
+                                mem.Write(data.Array, data.Offset, data.Count);
+                            }
+
+                            // read all data array in bson document
+                            using (var r = new BufferReader(mem.ToArray(), false))
+                            {
+                                var docResult = r.ReadDocument();
+                                var id = docResult.Value["_id"];
+
+                                ENSURE(!(id == BsonValue.Null || id == BsonValue.MinValue || id == BsonValue.MaxValue), $"Invalid _id value: {id}");
+                                ENSURE(uniqueIDs.Contains(id) == false, $"Duplicated _id value: {id}");
+
+                                uniqueIDs.Add(id);
+
+                                if (docResult.Fail)
+                                {
+                                    this.HandleError(docResult.Exception, pageInfo);
+                                }
+
+                                doc = docResult.Value;
+                            }
+                        }
+                    }
+                    // try/catch block per dataBlock extend=false
+                    catch (Exception ex)
+                    {
+                        this.HandleError(ex, pageInfo);
+                        doc = null;
+                    }
+
+                    if (doc != null)
+                    {
+                        yield return doc;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -66,14 +235,13 @@ namespace LiteDB.Engine
         /// </summary>
         private void LoadPragmas()
         {
-            var origin = FileOrigin.None;
-            var position = 0L;
+            if (_disposed) return;
 
-            try
+            var result = this.ReadPage(0, out var pageInfo);
+
+            if (result.Ok)
             {
-                var header = this.ReadPage(0, out origin, out position);
-
-                var buffer = header.Buffer;
+                var buffer = result.Value.Buffer;
 
                 _pragmas[Pragmas.USER_VERSION] = buffer.ReadInt32(EnginePragmas.P_USER_VERSION);
                 _pragmas[Pragmas.CHECKPOINT] = buffer.ReadInt32(EnginePragmas.P_CHECKPOINT);
@@ -81,17 +249,9 @@ namespace LiteDB.Engine
                 _pragmas[Pragmas.UTC_DATE] = buffer.ReadBool(EnginePragmas.P_UTC_DATE);
                 _pragmas[Pragmas.LIMIT_SIZE] = buffer.ReadInt64(EnginePragmas.P_LIMIT_SIZE);
             }
-            catch (Exception ex)
+            else
             {
-                _errors.Add(new FileReaderError
-                {
-                    Origin = origin,
-                    Position = position,
-                    PageID = 0,
-                    Code = 1,
-                    Message = $"Header pragmas could not be loaded",
-                    Exception = ex
-                });
+                this.HandleError(result.Exception, pageInfo);
             }
         }
 
@@ -100,24 +260,36 @@ namespace LiteDB.Engine
         /// </summary>
         private void LoadDataPages()
         {
-            var header = ReadPage(0, out _, out _);
+            if (_disposed) return;
 
+            var header = this.ReadPage(0, out var pageInfo).GetValue();
             var lastPageID = header.Buffer.ReadUInt32(HeaderPage.P_LAST_PAGE_ID);
+
+            ENSURE(lastPageID <= _maxPageID, $"LastPageID {lastPageID} should be less or equals to maxPageID {_maxPageID}");
 
             for (uint i = 0; i < lastPageID; i++)
             {
-                var page = ReadPage(i, out _, out _);
+                var result = this.ReadPage(i, out pageInfo);
 
-                if (page.PageType == PageType.Data)
+                if (result.Ok)
                 {
-                    if (_collectionsDataPages.TryGetValue(page.ColID, out var list))
+                    var page = result.Value;
+
+                    if (page.PageType == PageType.Data)
                     {
-                        list.Add(page.PageID);
+                        if (_collectionsDataPages.TryGetValue(page.ColID, out var list))
+                        {
+                            list.Add(page.PageID);
+                        }
+                        else
+                        {
+                            _collectionsDataPages[page.ColID] = new List<uint> { page.PageID };
+                        }
                     }
-                    else
-                    {
-                        _collectionsDataPages[page.ColID] = new List<uint> { page.PageID };
-                    }
+                }
+                else
+                {
+                    this.HandleError(result.Exception, pageInfo);
                 }
             }
         }
@@ -127,37 +299,48 @@ namespace LiteDB.Engine
         /// </summary>
         private void LoadCollections()
         {
-            try
+            if (_disposed) return;
+
+            var header = this.ReadPage(0, out var pageInfo).GetValue();
+
+            var area = header.Buffer.Slice(HeaderPage.P_COLLECTIONS, HeaderPage.COLLECTIONS_SIZE);
+
+            using (var r = new BufferReader(new[] { area }, false))
             {
-                var header = this.ReadPage(0, out _, out _);
+                var result = r.ReadDocument();
 
-                var area = header.Buffer.Slice(HeaderPage.P_COLLECTIONS, HeaderPage.COLLECTIONS_SIZE);
+                // can't be fully read
+                var collections = result.Value;
 
-                using (var r = new BufferReader(new[] { area }, false))
+                foreach (var key in collections.Keys)
                 {
-                    var collections = r.ReadDocument();
+                    // collections.key = collection name
+                    // collections.value = collection PageID
+                    var colID = collections[key];
 
-                    foreach (var key in collections.Keys)
+                    if (colID.IsNumber == false)
                     {
-                        // collections.key = collection name
-                        // collections.value = collection PageID
+                        this.HandleError($"ColID expect a number but get {colID}", pageInfo);
+                    }
+                    else
+                    {
                         _collections[key] = (uint)collections[key].AsInt32;
                     }
                 }
 
-                // for each collection loaded by datapages, check if exists in _collections
-                foreach(var collection in _collectionsDataPages)
+                if (result.Fail)
                 {
-                    if (!_collections.ContainsValue(collection.Key))
-                    {
-                        _collections["col_" + collection.Key] = collection.Key;
-                    }
+                    this.HandleError(result.Exception, pageInfo);
                 }
-
             }
-            catch (Exception ex)
-            {
 
+            // for each collection loaded by datapages, check if exists in _collections
+            foreach(var collection in _collectionsDataPages)
+            {
+                if (!_collections.ContainsValue(collection.Key))
+                {
+                    _collections["col_" + collection.Key] = collection.Key;
+                }
             }
 
         }
@@ -167,57 +350,75 @@ namespace LiteDB.Engine
         /// </summary>
         private void LoadIndexes()
         {
-            foreach(var collection in _collections)
+            if (_disposed) return;
+
+            foreach (var collection in _collections)
             {
-                var page = ReadPage(collection.Value, out _, out _);
+                var result = this.ReadPage(collection.Value, out var pageInfo);
+
+                if (result.Fail)
+                {
+                    this.HandleError(result.Exception, pageInfo);
+                    continue;
+                }
+
+                var page = result.Value;
                 var buffer = page.Buffer;
 
                 var count = buffer.ReadByte(CollectionPage.P_INDEXES); // 1 byte
                 var position = CollectionPage.P_INDEXES + 1;
 
-                for (var i = 0; i < count; i++)
+                // handle error per collection
+                try
                 {
-                    position += 2; // skip: slot (1 byte) + indexType (1 byte)
-                    
-                    var name = buffer.ReadCString(position, out var nameLength);
-                    // depois de ler, validar se a position ainda é válida (se é < 8192)
-                    // validar o tamanho do nome do índice para ver se o nome lido é válido
-
-                    position += nameLength;
-
-                    var expr = buffer.ReadCString(position, out var exprLength);
-                    // depois de ler, validar se a position ainda é válida (se é < 8192)
-                    // validar se a expr é válida
-
-                    position += exprLength;
-
-                    var unique = buffer.ReadBool(position);
-                    // depois de ler, validar se a position ainda é válida (se é < 8192)
-
-                    position += 15; // head 5 bytes, tail 5 bytes, maxLevel 1 byte, freeIndexPageList 4 bytes
-
-                    var indexInfo = new IndexInfo
+                    for (var i = 0; i < count; i++)
                     {
-                        Collection = collection.Key,
-                        Name = name,
-                        Expression = expr,
-                        Unique = unique
-                    };
+                        position += 2; // skip: slot (1 byte) + indexType (1 byte)
 
-                    // ignore _id index
-                    if (name == "_id") continue;
+                        var name = buffer.ReadCString(position, out var nameLength);
+                        // depois de ler, validar se a position ainda é válida (se é < 8192)
+                        // validar o tamanho do nome do índice para ver se o nome lido é válido
 
-                    if (_indexes.TryGetValue(collection.Key, out var indexInfos))
-                    {
-                        indexInfos.Add(indexInfo);
-                    }
-                    else
-                    {
-                        _indexes[collection.Key] = new List<IndexInfo> { indexInfo };
+                        position += nameLength;
+
+                        var expr = buffer.ReadCString(position, out var exprLength);
+                        // depois de ler, validar se a position ainda é válida (se é < 8192)
+                        // validar se a expr é válida
+
+                        position += exprLength;
+
+                        var unique = buffer.ReadBool(position);
+                        // depois de ler, validar se a position ainda é válida (se é < 8192)
+
+                        position += 15; // head 5 bytes, tail 5 bytes, maxLevel 1 byte, freeIndexPageList 4 bytes
+
+                        var indexInfo = new IndexInfo
+                        {
+                            Collection = collection.Key,
+                            Name = name,
+                            Expression = expr,
+                            Unique = unique
+                        };
+
+                        // ignore _id index
+                        if (name == "_id") continue;
+
+                        if (_indexes.TryGetValue(collection.Key, out var indexInfos))
+                        {
+                            indexInfos.Add(indexInfo);
+                        }
+                        else
+                        {
+                            _indexes[collection.Key] = new List<IndexInfo> { indexInfo };
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    this.HandleError(ex, pageInfo);
+                    continue;
+                }
             }
-
         }
 
         /// <summary>
@@ -236,30 +437,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read all collection based on header page
-        /// </summary>
-        public IEnumerable<string> GetCollections() => _collections.Keys;
-
-        /// <summary>
-        /// Read all indexes from all collection pages (except _id index)
-        /// </summary>
-        public IEnumerable<IndexInfo> GetIndexes(string collection) => _indexes[collection];
-
-        /// <summary>
-        /// Read all documents from current collection with NO index use - read direct from free lists
-        /// There is no document order
-        /// </summary>
-        public IEnumerable<BsonDocument> GetDocuments(string collection)
-        {
-            var colPageID = _collections[collection];
-            var dataPages = _collectionsDataPages[colPageID];
-
-            // varrer tudo a partir dos dataPages
-
-            return null;
-        }
-
-        /// <summary>
         /// Load log file to build index map (wal map index)
         /// </summary>
         private void LoadIndexMap()
@@ -268,6 +445,7 @@ namespace LiteDB.Engine
             var transactions = new Dictionary<uint, List<PagePosition>>();
             var confirmedTransactions = new List<uint>();
             var currentPosition = 0L;
+            var pageInfo = new PageInfo { Origin = FileOrigin.Log };
 
             _logStream.Position = 0;
 
@@ -281,44 +459,45 @@ namespace LiteDB.Engine
                     continue;
                 }
 
-                _logStream.Position = currentPosition;
+                _logStream.Position = pageInfo.Position = currentPosition;
 
-                var read = _logStream.Read(buffer.Array, buffer.Offset, PAGE_SIZE);
-
-                var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
-                var isConfirmed = buffer.ReadBool(BasePage.P_IS_CONFIRMED);
-                var transactionID = buffer.ReadUInt32(BasePage.P_TRANSACTION_ID);
-
-                if (read != PAGE_SIZE)
+                try
                 {
-                    _errors.Add(new FileReaderError
+                    var read = _logStream.Read(buffer.Array, buffer.Offset, PAGE_SIZE);
+
+                    var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
+                    var isConfirmed = buffer.ReadBool(BasePage.P_IS_CONFIRMED);
+                    var transactionID = buffer.ReadUInt32(BasePage.P_TRANSACTION_ID);
+
+                    pageInfo.PageID = pageID;
+
+                    ENSURE(read == PAGE_SIZE, $"Page position {_logStream} read only than {read} bytes (instead {PAGE_SIZE})");
+
+                    var position = new PagePosition(pageID, currentPosition);
+
+                    if (transactions.TryGetValue(transactionID, out var list))
                     {
-                        Origin = FileOrigin.Log,
-                        Position = _logStream.Position,
-                        PageID = pageID,
-                        Code = 1,
-                        Message = $"Page position {_logStream} read only than {read} bytes (instead {PAGE_SIZE})"
-                    });
+                        list.Add(position);
+                    }
+                    else
+                    {
+                        transactions[transactionID] = new List<PagePosition> { position };
+                    }
+
+                    // when page confirm transaction, add to confirmed transaction list
+                    if (isConfirmed)
+                    {
+                        confirmedTransactions.Add(transactionID);
+                    }
                 }
-
-                var position = new PagePosition(pageID, currentPosition);
-
-                if (transactions.TryGetValue(transactionID, out var list))
+                catch (Exception ex)
                 {
-                    list.Add(position);
+                    this.HandleError(ex, pageInfo);
                 }
-                else
+                finally
                 {
-                    transactions[transactionID] = new List<PagePosition> { position };
+                    currentPosition += PAGE_SIZE;
                 }
-
-                // when page confirm transaction, add to confirmed transaction list
-                if (isConfirmed)
-                {
-                    confirmedTransactions.Add(transactionID);
-                }
-
-                currentPosition += PAGE_SIZE;
             }
 
             // now, log index map using only confirmed transactions (override with last transactionID)
@@ -335,41 +514,86 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read page from stream
+        /// Read page from data/log stream (checks in logIndexMap file/position). Capture any exception here, but don't call HandleError
         /// </summary>
-        private BasePage ReadPage(uint pageID, out FileOrigin origin, out long position)
+        private Result<BasePage> ReadPage(uint pageID, out PageInfo pageInfo)
         {
-            var pageBuffer = new PageBuffer(new byte[PAGE_SIZE], 0, PAGE_SIZE);
+            pageInfo = new PageInfo { PageID = pageID };
 
-            // get data from log file or original file
-            if (_logIndexMap.TryGetValue(pageID, out position))
+            try
             {
-                origin = FileOrigin.Log;
+                ENSURE(pageID <= _maxPageID, $"PageID: {pageID} should be less then or equals to maxPageID: {_maxPageID}");
 
-                _logStream.Position = position;
-                _logStream.Read(pageBuffer.Array, pageBuffer.Offset, pageBuffer.Count);
+                var pageBuffer = new PageBuffer(new byte[PAGE_SIZE], 0, PAGE_SIZE);
+                Stream stream;
+                int read;
+
+                // get data from log file or original file
+                if (_logIndexMap.TryGetValue(pageID, out pageInfo.Position))
+                {
+                    pageInfo.Origin = FileOrigin.Log;
+                    stream = _logStream;
+                }
+                else
+                {
+                    pageInfo.Origin = FileOrigin.Data;
+                    pageInfo.Position = BasePage.GetPagePosition(pageID);
+
+                    stream = _dataStream;
+                }
+
+                stream.Position = pageInfo.Position;
+
+                read = stream.Read(pageBuffer.Array, pageBuffer.Offset, pageBuffer.Count);
+
+                ENSURE(read == PAGE_SIZE, $"Page position {_logStream.Position} read only than {read} bytes (instead {PAGE_SIZE})");
+
+                var page = new BasePage(pageBuffer);
+
+                ENSURE(page.PageID == pageID, $"Expect read pageID: {pageID} but header contains pageID: {page.PageID}");
+
+                return page;
             }
-            else
+            catch (Exception ex)
             {
-                origin = FileOrigin.Data;
-                position = BasePage.GetPagePosition(pageID);
-
-                _dataStream.Position = position;
-                _dataStream.Read(pageBuffer.Array, pageBuffer.Offset, pageBuffer.Count);
+                return new Result<BasePage>(null, ex);
             }
-
-            var page = new BasePage(pageBuffer);
-
-            return page;
         }
+
+        /// <summary>
+        /// Handle any error avoiding throw exceptions during process. If exception must stop process (ioexceptions), throw exception
+        /// Add errors to log and continue reading data file
+        /// </summary>
+        private void HandleError(Exception ex, PageInfo pageInfo)
+        {
+            _errors.Add(new FileReaderError
+            {
+                Position = pageInfo.Position,
+                Origin = pageInfo.Origin,
+                PageID = pageInfo.PageID,
+                PageType = pageInfo.PageType,
+                Message = ex.Message,
+                Exception = ex,
+            });
+
+            if (ex is IOException)
+            {
+                // Código de erros HResult do IOException
+                // https://learn.microsoft.com/pt-br/windows/win32/debug/system-error-codes--0-499-
+
+                throw ex;
+            }
+        }
+
+        private void HandleError(string message, PageInfo pageInfo) => this.HandleError(new Exception(message), pageInfo);
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!_disposedValue)
+            if (!_disposed)
             {
                 _dataStream?.Dispose();
                 _logStream?.Dispose();
-                _disposedValue = true;
+                _disposed = true;
             }
         }
 

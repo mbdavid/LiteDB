@@ -114,7 +114,7 @@ namespace LiteDB
                 }
             }
 
-            return Encoding.UTF8.GetString(buffer.Array, buffer.Offset + offset, length);
+            return Encoding.UTF8.GetString(buffer.Array, buffer.Offset + offset, length - 1);
         }
 
         /// <summary>
@@ -142,13 +142,13 @@ namespace LiteDB
                     using (var r = new BufferReader(buffer))
                     {
                         r.Skip(offset); // skip first byte for value.Type
-                        return r.ReadDocument();
+                        return r.ReadDocument().GetValue();
                     }
                 case BsonType.Array:
                     using (var r = new BufferReader(buffer))
                     {
                         r.Skip(offset); // skip first byte for value.Type
-                        return r.ReadArray();
+                        return r.ReadArray().GetValue();
                     }
 
                 case BsonType.Binary:

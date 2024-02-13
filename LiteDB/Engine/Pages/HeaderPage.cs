@@ -131,7 +131,7 @@ namespace LiteDB.Engine
 
             using (var r = new BufferReader(new[] { area }, false))
             {
-                _collections = r.ReadDocument();
+                _collections = r.ReadDocument().GetValue();
             }
 
             _isCollectionsChanged = false;

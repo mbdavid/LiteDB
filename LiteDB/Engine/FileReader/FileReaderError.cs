@@ -8,14 +8,13 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// </summary>
-    public class FileReaderError
+    internal class FileReaderError
     {
         public DateTime Created { get; } = DateTime.Now;
         public FileOrigin Origin { get; set; }
         public long Position { get; set;  }
         public uint? PageID { get; set; }
-        public int Code { get; set; }
-        public string Field { get; set; }
+        public PageType PageType { get; set; }
         public string Message { get; set; }
         public Exception Exception { get; set; }
     }

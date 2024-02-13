@@ -6,6 +6,7 @@ using System.Threading;
 
 #if DEBUG
 [assembly: InternalsVisibleTo("LiteDB.Tests")]
+[assembly: InternalsVisibleTo("ConsoleApp1")]
 #endif
 
 namespace LiteDB

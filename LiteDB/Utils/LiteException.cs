@@ -82,6 +82,11 @@ namespace LiteDB
             this.ErrorCode = code;
         }
 
+        /// <summary>
+        /// Critical error should be stop engine and release data files and all memory allocation
+        /// </summary>
+        public bool IsCritical => this.ErrorCode >= 900;
+
         #endregion
 
         #region Method Errors
@@ -332,7 +337,7 @@ namespace LiteDB
         {
             return new LiteException(INVALID_DATAFILE_STATE, "LiteDB found inconsistency in data or memory pages. " + 
                 "Your database may be corrupted. On the next opening a rebuild process will be executed. " + 
-                "Add parameter AutoRebuild=true in LiteDatabase initialization. " + 
+                "Add parameter AutoRebuild=true in LiteDatabase connection string initialization. " + 
                 "Inner message:" + message);
         }
         #endregion

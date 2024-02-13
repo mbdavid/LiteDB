@@ -10,11 +10,11 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Implement a full database export/import. Database should be closed before Rebuild
+        /// Implement a full rebuild database. A backup copy will be created with -backup extention. All data will be readed and re created in another database
         /// </summary>
         public long Rebuild(RebuildOptions options)
         {
-            if (_isOpen) throw LiteException.InvalidEngineState(false, "REBUILD");
+            this.Close();
 
             // run build service
             var rebuilder = new RebuildService(_settings);
@@ -23,7 +23,23 @@ namespace LiteDB.Engine
             options.Errors.Clear();
 
             // return how many bytes of diference from original/rebuild version
-            return rebuilder.Rebuild(options);
+            var diff = rebuilder.Rebuild(options);
+
+            // re-open database
+            this.Open();
+
+            return diff;
+        }
+
+        /// <summary>
+        /// Implement a full rebuild database. A backup copy will be created with -backup extention. All data will be readed and re created in another database
+        /// </summary>
+        public long Rebuild()
+        {
+            var collation = new Collation(this.Pragma(Pragmas.COLLATION));
+            var password = _settings.Password;
+
+            return this.Rebuild(new RebuildOptions { Password = password, Collation = collation });
         }
 
         /// <summary>

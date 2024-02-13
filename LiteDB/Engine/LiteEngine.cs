@@ -1,4 +1,6 @@
-﻿using System;
+﻿using LiteDB.Utils;
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -34,9 +36,9 @@ namespace LiteDB.Engine
         private readonly EngineSettings _settings;
 
         /// <summary>
-        /// Indicate that database is open or not (auto-open in Ctor)
+        /// Indicate this instance already called Dispose() and no more actions can be done
         /// </summary>
-        private bool _isOpen = false;
+        private bool _disposed = false;
 
         /// <summary>
         /// All system read-only collections for get metadata database information
@@ -49,8 +51,6 @@ namespace LiteDB.Engine
         private ConcurrentDictionary<string, long> _sequences;
 
         #endregion
-
-        public bool IsOpen => _isOpen;
 
         #region Ctor
 
@@ -84,11 +84,8 @@ namespace LiteDB.Engine
 
         #region Open & Close
 
-        public bool Open()
+        private bool Open()
         {
-            // do not re-open database
-            if (_isOpen) return false;
-
             LOG($"start initializing{(_settings.ReadOnly ? " (readonly)" : "")}", "ENGINE");
 
             _systemCollections = new Dictionary<string, SystemCollection>(StringComparer.OrdinalIgnoreCase);
@@ -158,8 +155,6 @@ namespace LiteDB.Engine
 
                 LOG("initialization completed", "ENGINE");
 
-                _isOpen = true;
-
                 return true;
             }
             catch (Exception ex)
@@ -179,36 +174,33 @@ namespace LiteDB.Engine
         /// - Close disks
         /// - Clean variables
         /// </summary>
-        public bool Close()
+        public List<Exception> Close()
         {
-            if (_isOpen == false)
+            if (_disposed) return new List<Exception>();
 
-            _isOpen = false;
+            _disposed = true;
 
-            try
+            var tc = new TryCatch();
+
+            // stop running all transactions
+            tc.Catch(() => _monitor?.Dispose());
+
+            if (_header?.Pragmas.Checkpoint > 0)
             {
-                // stop running all transactions
-                _monitor?.Dispose();
-
                 // do a soft checkpoint (only if exclusive lock is possible)
-                if (_header?.Pragmas.Checkpoint > 0) _walIndex?.TryCheckpoint();
-
-                // close all disk streams (and delete log if empty)
-                _disk?.Dispose();
-
-                // delete sort temp file
-                _sortDisk?.Dispose();
-
-                // dispose lockers
-                _locker?.Dispose();
-            }
-            finally
-            {
-                this.CleanServiceFields();
+                tc.Catch(() => _walIndex?.TryCheckpoint());
             }
 
-            return true;
+            // close all disk streams (and delete log if empty)
+            tc.Catch(() => _disk?.Dispose());
 
+            // delete sort temp file
+            tc.Catch(() => _sortDisk?.Dispose());
+
+            // dispose lockers
+            tc.Catch(() => _locker?.Dispose());
+
+            return tc.Exceptions;
         }
 
         /// <summary>
@@ -219,48 +211,34 @@ namespace LiteDB.Engine
         /// - Checks Exception type for DataCorruped to auto rebuild on open
         /// - Clean variables
         /// </summary>
-        internal void Close(Exception ex)
+        internal List<Exception> Close(Exception ex)
         {
-            _isOpen = false;
+            if (_disposed) return new List<Exception>();
+
+            _disposed = true;
+
+            var tc = new TryCatch(ex);
 
             // stop running queue to write
-            _disk?.Queue.Abort();
+            tc.Catch(() => _disk?.Queue.Abort());
 
-            try
+            // close disks streams
+            tc.Catch(() => _disk?.Dispose());
+
+            tc.Catch(() => _monitor?.Dispose());
+
+            tc.Catch(() => _sortDisk?.Dispose());
+
+            tc.Catch(() => _locker.Dispose());
+
+            if (tc.InvalidDatafileState)
             {
-                // close disks streams
-                _disk?.Dispose();
-
-                _monitor?.Dispose();
-
-                _sortDisk?.Dispose();
-
-                _locker.Dispose();
+                // mark byte = 1 in HeaderPage.P_INVALID_DATAFILE_STATE - will open in auto-rebuild
+                // this method will throw no errors
+                tc.Catch(() => new RebuildService(_settings).MarkAsInvalidState());
             }
-            finally
-            {
-                if (ex is LiteException liteEx && liteEx.ErrorCode == LiteException.INVALID_DATAFILE_STATE)
-                {
-                    // mark byte = 1 in HeaderPage.P_INVALID_DATAFILE_STATE - will open in auto-rebuild
-                    // this method will throw no errors
-                    new RebuildService(_settings).MarkAsInvalidState();
-                }
 
-                this.CleanServiceFields();
-            }
-        }
-
-        internal void CleanServiceFields()
-        {
-            // clear all field member (to work if open method)
-            _disk = null;
-            _header = null;
-            _locker = null;
-            _walIndex = null;
-            _sortDisk = null;
-            _monitor = null;
-            _systemCollections = null;
-            _sequences = null;
+            return tc.Exceptions;
         }
 
         #endregion

@@ -38,57 +38,48 @@ namespace LiteDB.Engine
             var tempFilename = FileHelper.GetSufixFile(_settings.Filename, "-temp", true);
 
             // open file reader
-            var reader = _fileVersion == 7 ? 
-                new FileReaderV7(_settings) : 
-                (IFileReader)new FileReaderV8(_settings, options.Errors);
-
-            // open file reader and ready to import to new temp engine instance
-            reader.Open();
-
-            // open new engine to recive all data readed from FileReader
-            using (var engine = new LiteEngine(new EngineSettings
+            using (var reader = _fileVersion == 7 ?
+                new FileReaderV7(_settings) :
+                (IFileReader)new FileReaderV8(_settings, options.Errors))
             {
-                Filename = tempFilename,
-                Collation = options.Collation,
-                Password = options.Password
-            }))
-            {
-                // copy all database to new Log file with NO checkpoint during all rebuild
-                engine.Pragma(Pragmas.CHECKPOINT, 0);
+                // open file reader and ready to import to new temp engine instance
+                reader.Open();
 
-                // rebuild all content from reader into new engine
-                engine.RebuildContent(reader);
-
-                // insert error report
-                if (options.IncludeErrorReport && options.Errors.Count > 0)
+                // open new engine to recive all data readed from FileReader
+                using (var engine = new LiteEngine(new EngineSettings
                 {
-                    // a random buildId to group by event
-                    var buildId = Guid.NewGuid().ToString("d").ToLower().Substring(6);
+                    Filename = tempFilename,
+                    Collation = options.Collation,
+                    Password = options.Password
+                }))
+                {
+                    // copy all database to new Log file with NO checkpoint during all rebuild
+                    engine.Pragma(Pragmas.CHECKPOINT, 0);
 
-                    var docs = options.Errors.Select(x => new BsonDocument
+                    // rebuild all content from reader into new engine
+                    engine.RebuildContent(reader);
+
+                    // insert error report
+                    if (options.IncludeErrorReport && options.Errors.Count > 0)
                     {
-                        ["buildId"] = buildId,
-                        ["created"] = x.Created,
-                        ["pageID"] = (int)x.PageID,
-                        ["code"] = x.Code,
-                        ["field"] = x.Field,
-                        ["message"] = x.Message,
-                    });
+                        var report = options.GetErrorReport();
 
-                    engine.Insert("_rebuild_errors", docs, BsonAutoId.Int32);
+                        engine.Insert("_rebuild_errors", report, BsonAutoId.Int32);
+                    }
+
+                    // update pragmas
+                    var pragmas = reader.GetPragmas();
+
+                    engine.Pragma(Pragmas.CHECKPOINT, pragmas[Pragmas.CHECKPOINT]);
+                    engine.Pragma(Pragmas.TIMEOUT, pragmas[Pragmas.TIMEOUT]);
+                    engine.Pragma(Pragmas.LIMIT_SIZE, pragmas[Pragmas.LIMIT_SIZE]);
+                    engine.Pragma(Pragmas.UTC_DATE, pragmas[Pragmas.UTC_DATE]);
+                    engine.Pragma(Pragmas.USER_VERSION, pragmas[Pragmas.USER_VERSION]);
+
+                    // after rebuild, copy log bytes into data file
+                    engine.Checkpoint();
                 }
 
-                // update pragmas
-                var pragmas = reader.GetPragmas();
-
-                engine.Pragma(Pragmas.CHECKPOINT, pragmas[Pragmas.CHECKPOINT]);
-                engine.Pragma(Pragmas.TIMEOUT, pragmas[Pragmas.TIMEOUT]);
-                engine.Pragma(Pragmas.LIMIT_SIZE, pragmas[Pragmas.LIMIT_SIZE]);
-                engine.Pragma(Pragmas.UTC_DATE, pragmas[Pragmas.UTC_DATE]);
-                engine.Pragma(Pragmas.USER_VERSION, pragmas[Pragmas.USER_VERSION]);
-
-                // after rebuild, copy log bytes into data file
-                engine.Checkpoint();
             }
 
             // rename source filename to backup name

@@ -14,7 +14,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool BeginTrans()
         {
-            if (!_isOpen) throw LiteException.InvalidEngineState(true, "TRANSACTION");
+            if (_disposed) throw LiteException.InvalidEngineState(true, "TRANSACTION");
 
             var transacion = _monitor.GetTransaction(true, false, out var isNew);
 
@@ -32,7 +32,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Commit()
         {
-            if (!_isOpen) throw LiteException.InvalidEngineState(true, "TRANSACTION");
+            if (_disposed) throw LiteException.InvalidEngineState(true, "TRANSACTION");
 
             var transaction = _monitor.GetTransaction(false, false, out _);
 
@@ -57,7 +57,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Rollback()
         {
-            if (!_isOpen) throw LiteException.InvalidEngineState(true, "TRANSACTION");
+            if (_disposed) throw LiteException.InvalidEngineState(true, "TRANSACTION");
 
             var transaction = _monitor.GetTransaction(false, false, out _);
 
@@ -78,7 +78,7 @@ namespace LiteDB.Engine
         /// </summary>
         private T AutoTransaction<T>(Func<TransactionService, T> fn)
         {
-            if (!_isOpen) throw LiteException.InvalidEngineState(true, "TRANSACTION");
+            if (_disposed) throw LiteException.InvalidEngineState(true, "TRANSACTION");
 
             var transaction = _monitor.GetTransaction(true, false, out var isNew);
 

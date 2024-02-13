@@ -16,19 +16,13 @@ namespace LiteDB
     {
         private readonly EngineSettings _settings;
         private readonly Mutex _mutex;
-        private readonly LiteEngine _engine;
+        private LiteEngine _engine;
         private int _stack = 0;
 
-        public bool IsOpen => _engine.IsOpen;
 
         public SharedEngine(EngineSettings settings)
         {
             _settings = settings;
-
-            // kepp control over open/close engine
-            _settings.AutoOpen = false;
-
-            _engine = new LiteEngine(_settings);
 
             var name = Path.GetFullPath(settings.Filename).ToLower().Sha1();
 
@@ -71,7 +65,7 @@ namespace LiteDB
 
                     try
                     {
-                        _engine.Open();
+                        _engine = new LiteEngine(_settings);
                     }
                     catch
                     {
@@ -95,22 +89,12 @@ namespace LiteDB
                 if (_stack == 0)
                 {
                     _engine.Close();
+                    _engine = null;
 
                     _mutex.ReleaseMutex();
                 }
             }
         }
-
-        public bool Open()
-        {
-            return true; // controlled by OpenDatabase() - no external need
-        }
-
-        public bool Close()
-        {
-            return true; // controlled by CloseDatabase() - no external need
-        }
-
 
         #region Transaction Operations
 
