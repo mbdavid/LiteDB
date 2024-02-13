@@ -21,6 +21,7 @@ namespace LiteDB.Engine
 
         private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
 
+        private bool _aborted = false;
         private int _running = 0;
 
         public DiskWriterQueue(Stream stream)
@@ -41,6 +42,8 @@ namespace LiteDB.Engine
         {
             ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
 
+            if (_aborted) return;
+
             _queue.Enqueue(page);
         }
 
@@ -51,13 +54,13 @@ namespace LiteDB.Engine
         {
             lock (_queue)
             {
-                if (_queue.Count == 0) return;
+                if (_queue.Count == 0 || _aborted) return;
 
                 var oldValue = Interlocked.CompareExchange(ref _running, 1, 0);
 
                 if (oldValue == 0)
                 {
-                    // Schedule a new thread to process the pages in the queue.
+                    // schedule a new thread to process the pages in the queue.
                     // https://blog.stephencleary.com/2013/08/startnew-is-dangerous.html
                     _task = Task.Run(ExecuteQueue);
                 }
@@ -83,39 +86,51 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Clear all items on queue (stop running)
+        /// </summary>
+        public void Abort()
+        {
+            _aborted = true;
+            while (_queue.TryDequeue(out _)) ; // clear?!?
+            _task?.Wait();
+        }
+
+        /// <summary>
         /// Execute all items in queue sync
         /// </summary>
         private void ExecuteQueue()
         {
             do
             {
+                // remove element from queue
                 if (_queue.TryDequeue(out var page))
                 {
+                    // write to log stream
                     WritePageToStream(page);
                 }
 
                 while (page == null)
                 {
-                    _stream.FlushToDisk();
                     Volatile.Write(ref _running, 0);
 
-                    if (!_queue.Any()) return;
+                    if (!_queue.Any()) break;
 
-                    // Another item was added to the queue after we detected it was empty.
+                    // another item was added to the queue after we detected it was empty.
                     var oldValue = Interlocked.CompareExchange(ref _running, 1, 0);
 
-                    if (oldValue == 1)
-                    {
-                        // A new thread was already scheduled for execution, this thread can return.
-                        return;
-                    }
+                    // a new thread was already scheduled for execution, this thread can return.
+                    if (oldValue == 1) break;
 
-                    // This thread will continue to process the queue as a new thread was not scheduled.
+                    // this thread will continue to process the queue as a new thread was not scheduled.
                     _queue.TryDequeue(out page);
+
+                    // write page into stream or do nothing if page == null
                     WritePageToStream(page);
                 }
 
-            } while (true);
+            };
+
+            _stream.FlushToDisk();
         }
 
         private void WritePageToStream(PageBuffer page)
@@ -127,7 +142,11 @@ namespace LiteDB.Engine
             // set stream position according to page
             _stream.Position = page.Position;
 
-            _stream.Write(page.Array, page.Offset, PAGE_SIZE);
+            // write on disk only if not aborted process
+            if (!_aborted)
+            {
+                _stream.Write(page.Array, page.Offset, PAGE_SIZE);
+            }
 
             // release page here (no page use after this)
             page.Release();

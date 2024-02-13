@@ -17,6 +17,7 @@ namespace LiteDB
         private LiteEngine _engine;
         private bool _transactionRunning = false;
 
+
         public SharedEngine(EngineSettings settings)
         {
             _settings = settings;

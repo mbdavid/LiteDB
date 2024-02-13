@@ -6,6 +6,7 @@ using System.Threading;
 
 #if DEBUG
 [assembly: InternalsVisibleTo("LiteDB.Tests")]
+[assembly: InternalsVisibleTo("ConsoleApp1")]
 #endif
 
 namespace LiteDB
@@ -130,7 +131,7 @@ namespace LiteDB
                     Debug.Fail(message);
                 }
                 
-                throw new Exception("LiteDB ENSURE: " + message);
+                throw LiteException.InvalidDatafileState(message);
             }
         }
 
@@ -146,8 +147,8 @@ namespace LiteDB
                 {
                     Debug.Fail(message);
                 }
-                
-                throw new Exception("LiteDB ENSURE: " + message);
+
+                throw LiteException.InvalidDatafileState(message);
             }
         }
 
@@ -164,8 +165,8 @@ namespace LiteDB
                 {
                     Debug.Fail(message);
                 }
-                
-                throw new Exception("LiteDB DEBUG: " + message);
+
+                throw LiteException.InvalidDatafileState(message);
             }
         }
     }

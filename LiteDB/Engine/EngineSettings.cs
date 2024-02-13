@@ -57,6 +57,11 @@ namespace LiteDB.Engine
         public bool ReadOnly { get; set; } = false;
 
         /// <summary>
+        /// After a Close with exception do a database rebuild
+        /// </summary>
+        public bool AutoRebuild { get; set; } = false;
+
+        /// <summary>
         /// Create new IStreamFactory for datafile
         /// </summary>
         internal IStreamFactory CreateDataFactory()
