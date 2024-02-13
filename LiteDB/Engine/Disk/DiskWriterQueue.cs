@@ -83,10 +83,22 @@ namespace LiteDB.Engine
                         _queueHasItems.Reset();
                         if (_shouldClose) return;
                     }
-                    _stream.FlushToDisk();
+                    TryFlushStream();
 
                     await _queueHasItems.WaitAsync();
                 }
+            }
+        }
+
+        private void TryFlushStream()
+        {
+            try
+            {
+                _stream.FlushToDisk();
+            }
+            catch (IOException)
+            {
+                // Disk is probably full. This may be unrecoverable problem but until we have enough space in the buffer we may be ok.
             }
         }
 
