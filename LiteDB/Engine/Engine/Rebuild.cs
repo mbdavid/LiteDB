@@ -17,16 +17,6 @@ namespace LiteDB.Engine
             // enter database in exclusive mode
             var mustExit = _locker.EnterExclusive();
 
-            // get a header backup/savepoint before change
-            PageBuffer savepoint = null;
-
-            try
-            {
-                // do a checkpoint before starts
-                _walIndex.Checkpoint();
-
-                var originalLength = _disk.GetVirtualLength(FileOrigin.Data);
-
             // run build service
             var rebuilder = new RebuildService(_settings);
 
@@ -36,9 +26,11 @@ namespace LiteDB.Engine
             // return how many bytes of diference from original/rebuild version
             var diff = rebuilder.Rebuild(options);
 
-            // re-open database
-            this.Open();
-              
+            //re-open?
+
+            // release locker
+            if (mustExit) _locker.ExitExclusive();
+
             return diff;
         }
 

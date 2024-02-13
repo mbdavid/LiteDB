@@ -102,35 +102,33 @@ namespace LiteDB.Engine
         {
             do
             {
-                // remove element from queue
                 if (_queue.TryDequeue(out var page))
                 {
-                    // write to log stream
                     WritePageToStream(page);
                 }
 
                 while (page == null)
                 {
+                    _stream.FlushToDisk();
                     Volatile.Write(ref _running, 0);
 
-                    if (!_queue.Any()) break;
+                    if (!_queue.Any()) return;
 
-                    // another item was added to the queue after we detected it was empty.
+                    // Another item was added to the queue after we detected it was empty.
                     var oldValue = Interlocked.CompareExchange(ref _running, 1, 0);
 
-                    // a new thread was already scheduled for execution, this thread can return.
-                    if (oldValue == 1) break;
+                    if (oldValue == 1)
+                    {
+                        // A new thread was already scheduled for execution, this thread can return.
+                        return;
+                    }
 
-                    // this thread will continue to process the queue as a new thread was not scheduled.
+                    // This thread will continue to process the queue as a new thread was not scheduled.
                     _queue.TryDequeue(out page);
-
-                    // write page into stream or do nothing if page == null
                     WritePageToStream(page);
                 }
 
-            };
-
-            _stream.FlushToDisk();
+            } while (true);
         }
 
         private void WritePageToStream(PageBuffer page)
