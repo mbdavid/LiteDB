@@ -16,7 +16,7 @@ namespace LiteDB
         /// <summary>
         /// Create a temp filename based on original filename - checks if file exists (if exists, append counter number)
         /// </summary>
-        public static string GetSufixFile(string filename, string suffix = "-temp", bool checkIfExists = true)
+        public static string GetSuffixFile(string filename, string suffix = "-temp", bool checkIfExists = true)
         {
             var count = 0;
             var temp = Path.Combine(Path.GetDirectoryName(filename), 
@@ -37,12 +37,12 @@ namespace LiteDB
         /// <summary>
         /// Get LOG file based on data file
         /// </summary>
-        public static string GetLogFile(string filename) => GetSufixFile(filename, "-log", false);
+        public static string GetLogFile(string filename) => GetSuffixFile(filename, "-log", false);
 
         /// <summary>
         /// Get TEMP file based on data file
         /// </summary>
-        public static string GetTempFile(string filename) => GetSufixFile(filename, "-tmp", false);
+        public static string GetTempFile(string filename) => GetSuffixFile(filename, "-tmp", false);
 
         /// <summary>
         /// Test if file are used by any process
