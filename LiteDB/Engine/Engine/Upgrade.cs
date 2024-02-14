@@ -13,6 +13,7 @@ namespace LiteDB.Engine
         /// Upgrade old version of LiteDB into new LiteDB file structure. Returns true if database was completed converted
         /// If database already in current version just return false
         /// </summary>
+        [Obsolete("Upgrade your LiteDB v4 datafiles using Upgrade=true in EngineSettings. You can use upgrade=true in connection string.")]
         public static bool Upgrade(string filename, string password = null, Collation collation = null)
         {
             if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(filename));
@@ -22,65 +23,14 @@ namespace LiteDB.Engine
             {
                 Filename = filename,
                 Password = password,
-                Collation = collation
+                Collation = collation,
+                Upgrade = true
             };
 
-            var backup = FileHelper.GetSuffixFile(filename, "-backup", true);
-
-            settings.Filename = FileHelper.GetSuffixFile(filename, "-temp", true);
-
-            var buffer = new byte[PAGE_SIZE * 2];
-            IFileReader reader;
-
-            using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            using (var db = new LiteEngine(settings))
             {
-                // read first 16k
-                stream.Read(buffer, 0, buffer.Length);
-
-                // checks if v8 plain data or encrypted (first byte = 1)
-                if ((Encoding.UTF8.GetString(buffer, HeaderPage.P_HEADER_INFO, HeaderPage.HEADER_INFO.Length) == HeaderPage.HEADER_INFO &&
-                    buffer[HeaderPage.P_FILE_VERSION] == HeaderPage.FILE_VERSION) ||
-                    buffer[0] == 1)
-                {
-                    return false;
-                }
-
-                // checks if v7 (plain or encrypted)
-                if (Encoding.UTF8.GetString(buffer, 25, HeaderPage.HEADER_INFO.Length) == HeaderPage.HEADER_INFO &&
-                    buffer[52] == 7)
-                {
-                    reader = new FileReaderV7(settings);
-                }
-                else
-                {
-                    throw new LiteException(0, "Invalid data file format to upgrade");
-                }
-
-                using (var engine = new LiteEngine(settings))
-                {
-                    // copy all database to new Log file with NO checkpoint during all rebuild
-                    engine.Pragma(Pragmas.CHECKPOINT, 0);
-
-                    engine.RebuildContent(reader);
-
-                    // after rebuild, copy log bytes into data file
-                    engine.Checkpoint();
-
-                    // re-enable auto-checkpoint pragma
-                    engine.Pragma(Pragmas.CHECKPOINT, 1000);
-
-                    var userVersion = reader.GetPragmas()["USER_VERSION"].AsInt32;
-
-                    // copy userVersion from old datafile
-                    engine.Pragma("USER_VERSION", userVersion);
-                }
+                // database are now converted to v5
             }
-
-            // rename source filename to backup name
-            File.Move(filename, backup);
-
-            // rename temp file into filename
-            File.Move(settings.Filename, filename);
 
             return true;
         }

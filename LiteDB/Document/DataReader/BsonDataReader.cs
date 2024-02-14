@@ -13,12 +13,14 @@ namespace LiteDB
     public class BsonDataReader : IBsonDataReader
     {
         private readonly IEnumerator<BsonValue> _source = null;
+        private readonly EngineState _state = null;
         private readonly string _collection = null;
         private readonly bool _hasValues;
 
         private BsonValue _current = null;
         private bool _isFirst;
         private bool _disposed = false;
+
 
         /// <summary>
         /// Initialize with no value
@@ -41,10 +43,11 @@ namespace LiteDB
         /// <summary>
         /// Initialize with an IEnumerable data source
         /// </summary>
-        internal BsonDataReader(IEnumerable<BsonValue> values, string collection)
+        internal BsonDataReader(IEnumerable<BsonValue> values, string collection, EngineState state)
         {
-            _source = values.GetEnumerator();
             _collection = collection;
+            _source = values.GetEnumerator();
+            _state = state;
 
             if (_source.MoveNext())
             {
@@ -84,9 +87,19 @@ namespace LiteDB
             {
                 if (_source != null)
                 {
-                    var read = _source.MoveNext();
-                    _current = _source.Current;
-                    return read;
+                    _state.Validate(); // checks if engine still open
+
+                    try
+                    {
+                        var read = _source.MoveNext(); // can throw any error here
+                        _current = _source.Current;
+                        return read;
+                    }
+                    catch(Exception ex)
+                    {
+                        _state.Handle(ex);
+                        throw;
+                    }
                 }
                 else
                 {

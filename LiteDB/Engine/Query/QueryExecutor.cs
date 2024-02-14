@@ -11,6 +11,7 @@ namespace LiteDB.Engine
     internal class QueryExecutor
     {
         private readonly LiteEngine _engine;
+        private readonly EngineState _state;
         private readonly TransactionMonitor _monitor;
         private readonly SortDisk _sortDisk;
         private readonly EnginePragmas _pragmas;
@@ -19,9 +20,18 @@ namespace LiteDB.Engine
         private readonly Query _query;
         private readonly IEnumerable<BsonDocument> _source;
 
-        public QueryExecutor(LiteEngine engine, TransactionMonitor monitor, SortDisk sortDisk, EnginePragmas pragmas, string collection, Query query, IEnumerable<BsonDocument> source)
+        public QueryExecutor(
+            LiteEngine engine, 
+            EngineState state,
+            TransactionMonitor monitor, 
+            SortDisk sortDisk, 
+            EnginePragmas pragmas, 
+            string collection, 
+            Query query, 
+            IEnumerable<BsonDocument> source)
         {
             _engine = engine;
+            _state = state;
             _monitor = monitor;
             _sortDisk = sortDisk;
             _pragmas = pragmas;
@@ -59,7 +69,7 @@ namespace LiteDB.Engine
             transaction.OpenCursors.Add(_cursor);
 
             // return new BsonDataReader with IEnumerable source
-            return new BsonDataReader(RunQuery(), _collection);
+            return new BsonDataReader(RunQuery(), _collection, _state);
 
             IEnumerable<BsonDocument> RunQuery()
             {

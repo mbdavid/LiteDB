@@ -38,7 +38,7 @@ namespace LiteDB
         public const int COLLECTION_ALREADY_EXIST = 134;
         public const int INDEX_ALREADY_EXIST = 135;
         public const int INVALID_UPDATE_FIELD = 136;
-        public const int INVALID_ENGINE_STATE = 137;
+        public const int ENGINE_DISPOSED = 137;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -295,11 +295,9 @@ namespace LiteDB
             return new LiteException(INVALID_INITIALSIZE, "Initial Size must be a multiple of page size ({0} bytes).", PAGE_SIZE);
         }
 
-        internal static LiteException InvalidEngineState(bool expected, string commandName)
+        internal static LiteException EngineDisposed()
         {
-            return new LiteException(INVALID_ENGINE_STATE, expected ?
-                "Database should be open before run this command: " + commandName : 
-                "Database should be closed before run this command: " + commandName, PAGE_SIZE);
+            return new LiteException(ENGINE_DISPOSED, "This engine instance already disposed.");
         }
 
         internal static LiteException InvalidNullCharInString()

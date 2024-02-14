@@ -29,6 +29,8 @@ namespace LiteDB.Engine
 
                 foreach (var doc in docs)
                 {
+                    _state.Validate();
+
                     transaction.Safepoint();
 
                     if (this.UpdateDocument(snapshot, collectionPage, doc, indexer, data))

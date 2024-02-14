@@ -44,6 +44,11 @@ namespace LiteDB
         public bool Upgrade { get; set; } = false;
 
         /// <summary>
+        /// "auto-rebuild": If last close database exception result a invalid data state, rebuild datafile on next open (default: false)
+        /// </summary>
+        public bool AutoRebuild { get; set; } = false;
+
+        /// <summary>
         /// "collation": Set default collaction when database creation (default: "[CurrentCulture]/IgnoreCase")
         /// </summary>
         public Collation Collation { get; set; }
@@ -91,6 +96,7 @@ namespace LiteDB
             this.Collation = _values.ContainsKey("collation") ? new Collation(_values.GetValue<string>("collation")) : this.Collation;
 
             this.Upgrade = _values.GetValue("upgrade", this.Upgrade);
+            this.AutoRebuild = _values.GetValue("auto-rebuild", this.AutoRebuild);
         }
 
         /// <summary>
@@ -109,7 +115,9 @@ namespace LiteDB
                 Password = this.Password,
                 InitialSize = this.InitialSize,
                 ReadOnly = this.ReadOnly,
-                Collation = this.Collation
+                Collation = this.Collation,
+                Upgrade = this.Upgrade,
+                AutoRebuild = this.AutoRebuild,
             };
 
             // create engine implementation as Connection Type

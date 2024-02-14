@@ -375,5 +375,20 @@ namespace LiteDB
                 }
             }
         }
+
+        public bool Open()
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<Exception> Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<Exception> Close(Exception ex)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

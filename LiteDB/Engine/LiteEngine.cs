@@ -32,13 +32,10 @@ namespace LiteDB.Engine
 
         private SortDisk _sortDisk;
 
+        private EngineState _state;
+
         // immutable settings
         private readonly EngineSettings _settings;
-
-        /// <summary>
-        /// Indicate this instance already called Dispose() and no more actions can be done
-        /// </summary>
-        private bool _disposed = false;
 
         /// <summary>
         /// All system read-only collections for get metadata database information
@@ -84,7 +81,7 @@ namespace LiteDB.Engine
 
         #region Open & Close
 
-        private bool Open()
+        public bool Open()
         {
             LOG($"start initializing{(_settings.ReadOnly ? " (readonly)" : "")}", "ENGINE");
 
@@ -93,8 +90,14 @@ namespace LiteDB.Engine
 
             try
             {
+                // initialize engine state 
+                _state = new EngineState(this);
+
+                // before initilize, try if must be upgrade
+                if (_settings.Upgrade) this.TryUpgrade();
+
                 // initialize disk service (will create database if needed)
-                _disk = new DiskService(_settings, MEMORY_SEGMENT_SIZES);
+                _disk = new DiskService(_settings, _state, MEMORY_SEGMENT_SIZES);
 
                 // read page with no cache ref (has a own PageBuffer) - do not Release() support
                 var buffer = _disk.ReadFull(FileOrigin.Data).First();
@@ -102,9 +105,11 @@ namespace LiteDB.Engine
                 // if first byte are 1 this datafile are encrypted but has do defined password to open
                 if (buffer[0] == 1) throw new LiteException(0, "This data file is encrypted and needs a password to open");
 
-                // if database is set to invalid state, try auto rebuild
-                if (buffer[HeaderPage.P_INVALID_DATAFILE_STATE] != 0 && _settings.AutoRebuild)
+                // if database is set to invalid state, need rebuild
+                if (buffer[HeaderPage.P_INVALID_DATAFILE_STATE] != 0)
                 {
+                    if (_settings.AutoRebuild == false) throw new LiteException(0, "This database are marked with invalid state and need to be rebuild. Use 'auto-rebuild=true' in connection string to repair this database");
+
                     // dispose disk access to rebuild process
                     _disk.Dispose();
                     _disk = null;
@@ -113,7 +118,7 @@ namespace LiteDB.Engine
                     this.Recovery();
 
                     // re-initialize disk service
-                    _disk = new DiskService(_settings, MEMORY_SEGMENT_SIZES);
+                    _disk = new DiskService(_settings, _state, MEMORY_SEGMENT_SIZES);
 
                     // read buffer page again
                     buffer = _disk.ReadFull(FileOrigin.Data).First();
@@ -171,14 +176,20 @@ namespace LiteDB.Engine
         /// </summary>
         public List<Exception> Close()
         {
-            if (_disposed) return new List<Exception>();
+            if (_state.Disposed) return new List<Exception>();
 
-            _disposed = true;
+            _state.Disposed = true;
 
             var tc = new TryCatch();
 
             // stop running all transactions
             tc.Catch(() => _monitor?.Dispose());
+
+            // wait for writer queue
+            if (_disk != null && _disk.Queue.IsValueCreated)
+            {
+                tc.Catch(() => _disk.Queue.Value.Wait());
+            }
 
             if (_header?.Pragmas.Checkpoint > 0)
             {
@@ -202,28 +213,34 @@ namespace LiteDB.Engine
         /// Exception close database:
         /// - Stop diskQueue
         /// - Stop any disk read/write (dispose)
-        /// - Dispos
-        /// - Checks Exception type for DataCorruped to auto rebuild on open
-        /// - Clean variables
+        /// - Dispose sort disk
+        /// - Dispose locker
+        /// - Checks Exception type for INVALID_DATAFILE_STATE to auto rebuild on open
         /// </summary>
-        internal List<Exception> Close(Exception ex)
+        public List<Exception> Close(Exception ex)
         {
-            if (_disposed) return new List<Exception>();
+            if (_state.Disposed) return new List<Exception>();
 
-            _disposed = true;
+            _state.Disposed = true;
 
             var tc = new TryCatch(ex);
 
             // stop running queue to write
-            //**tc.Catch(() => _disk?.Queue.Abort());
+            if (_disk != null && _disk.Queue.IsValueCreated)
+            {
+                tc.Catch(() => _disk?.Queue.Value.Dispose());
+            }
 
             // close disks streams
             tc.Catch(() => _disk?.Dispose());
 
+            // close transaction monitor
             tc.Catch(() => _monitor?.Dispose());
 
+            // close sort disk service
             tc.Catch(() => _sortDisk?.Dispose());
 
+            // close engine lock service
             tc.Catch(() => _locker.Dispose());
 
             if (tc.InvalidDatafileState)
@@ -258,6 +275,5 @@ namespace LiteDB.Engine
         {
             this.Close();
         }
-
     }
 }

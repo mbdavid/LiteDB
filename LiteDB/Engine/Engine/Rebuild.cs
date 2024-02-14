@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -9,6 +10,35 @@ namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
+        /// <summary>
+        /// If Upgrade=true, run this before open Disk service
+        /// </summary>
+        private void TryUpgrade()
+        {
+            var filename = _settings.Filename;
+
+            // if file not exists, just exit
+            if (!File.Exists(filename)) return;
+
+            using (var stream = new FileStream(
+                _settings.Filename,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read, 1024))
+            {
+                var buffer = new byte[1024];
+
+                stream.Position = 0;
+                stream.Read(buffer, 0, buffer.Length);
+
+                if (FileReaderV7.IsVersion(buffer) == false) return;
+            }
+
+            // run rebuild process
+            this.Recovery();
+
+        }
+
         /// <summary>
         /// Recovery datafile using a rebuild process. Run only on "Open" database
         /// </summary>
@@ -28,26 +58,24 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Implement a full rebuild database. A backup copy will be created with -backup extention. All data will be readed and re created in another database
+        /// Implement a full rebuild database. Engine will be closed and re-created in another instance.
+        /// A backup copy will be created with -backup extention. All data will be readed and re created in another database
+        /// After run, will re-open database
         /// </summary>
         public long Rebuild(RebuildOptions options)
         {
-            if (_disposed) return 0;
-
             this.Close();
 
             // run build service
             var rebuilder = new RebuildService(_settings);
 
-            // create a new error report 
-            options.Errors.Clear();
-
             // return how many bytes of diference from original/rebuild version
             var diff = rebuilder.Rebuild(options);
 
+            // re-open engine
             this.Open();
 
-            _disposed = false;
+            _state.Disposed = false;
 
             return diff;
         }

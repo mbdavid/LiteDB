@@ -67,6 +67,8 @@ namespace LiteDB.Engine
                         // adding index node for each value
                         foreach (var key in keys)
                         {
+                            _state.Validate();
+
                             // insert new index node
                             var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
 

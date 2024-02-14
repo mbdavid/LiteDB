@@ -296,11 +296,11 @@ namespace LiteDB.Engine
             LOG($"checkpoint", "WAL");
 
             // wait all pages write on disk
-            _disk.Queue.Wait();
+            _disk.Queue.Value.Wait();
 
             var counter = 0;
 
-            ENSURE(_disk.Queue.Length == 0, "no pages on queue when checkpoint");
+            ENSURE(_disk.Queue.Value.Length == 0, "no pages on queue when checkpoint");
 
             // getting all "good" pages from log file to be copied into data file
             IEnumerable<PageBuffer> source()

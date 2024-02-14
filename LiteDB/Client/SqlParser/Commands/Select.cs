@@ -50,7 +50,8 @@ namespace LiteDB
 
                 var defaultName = "expr";
 
-                return new BsonDataReader(result.Select(x => x.IsDocument ? x.AsDocument : new BsonDocument { [defaultName] = x }), null);
+                throw new NotSupportedException("TODO missing");
+                //return new BsonDataReader(result.Select(x => x.IsDocument ? x.AsDocument : new BsonDocument { [defaultName] = x }), null);
             }
             else if (from.Is("INTO"))
             {

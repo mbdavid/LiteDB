@@ -15,6 +15,7 @@ namespace LiteDB.Engine
     internal class DiskWriterQueue : IDisposable
     {
         private readonly Stream _stream;
+        private readonly EngineState _state;
 
         // async thread controls
         private Task _task;
@@ -25,9 +26,12 @@ namespace LiteDB.Engine
         private readonly AsyncManualResetEvent _queueHasItems = new AsyncManualResetEvent();
         private readonly ManualResetEventSlim _queueIsEmpty = new ManualResetEventSlim(true);
 
-        public DiskWriterQueue(Stream stream)
+        private Exception _exception = null; // store last exception in async running task
+
+        public DiskWriterQueue(Stream stream, EngineState state)
         {
             _stream = stream;
+            _state = state;
         }
 
         /// <summary>
@@ -42,6 +46,10 @@ namespace LiteDB.Engine
         public void EnqueuePage(PageBuffer page)
         {
             ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
+
+            // throw last exception that stop running queue
+            if (_exception != null) throw _exception;
+
             lock (_queueSync)
             {
                 _queueIsEmpty.Reset();
@@ -61,6 +69,7 @@ namespace LiteDB.Engine
         public void Wait()
         {
             _queueIsEmpty.Wait();
+
             ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
         }
 
@@ -69,37 +78,37 @@ namespace LiteDB.Engine
         /// </summary>
         private async Task ExecuteQueue()
         {
-            while (true)
-            {
-                if (_queue.TryDequeue(out var page))
-                {
-                    WritePageToStream(page);
-                }
-                else
-                {
-                    lock (_queueSync)
-                    {
-                        if (_queue.Count > 0) continue;
-                        _queueIsEmpty.Set();
-                        _queueHasItems.Reset();
-                        if (_shouldClose) return;
-                    }
-                    TryFlushStream();
-
-                    await _queueHasItems.WaitAsync();
-                }
-            }
-        }
-
-        private void TryFlushStream()
-        {
             try
             {
-                _stream.FlushToDisk();
+                while (true)
+                {
+                    if (_queue.TryDequeue(out var page))
+                    {
+                        WritePageToStream(page);
+                    }
+                    else
+                    {
+                        lock (_queueSync)
+                        {
+                            if (_queue.Count > 0) continue;
+
+                            _queueIsEmpty.Set();
+                            _queueHasItems.Reset();
+
+                            if (_shouldClose) return;
+                        }
+
+                        _stream.FlushToDisk();
+
+                        await _queueHasItems.WaitAsync();
+                    }
+                }
             }
-            catch (IOException)
+            catch (Exception ex)
             {
-                // Disk is probably full. This may be unrecoverable problem but until we have enough space in the buffer we may be ok.
+                _state.Handle(ex);
+
+                _exception = ex;
             }
         }
 

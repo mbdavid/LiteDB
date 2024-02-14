@@ -28,6 +28,8 @@ namespace LiteDB.Engine
 
                 foreach (var doc in docs)
                 {
+                    _state.Validate();
+
                     transaction.Safepoint();
 
                     this.InsertDocument(snapshot, doc, autoId, indexer, data);

@@ -28,6 +28,8 @@ namespace LiteDB.Engine
 
                 foreach (var doc in docs)
                 {
+                    _state.Validate();
+
                     transaction.Safepoint();
 
                     // first try update document (if exists _id), if not found, do insert

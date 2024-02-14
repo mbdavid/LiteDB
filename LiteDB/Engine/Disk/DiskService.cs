@@ -28,7 +28,10 @@ namespace LiteDB.Engine
         private long _dataLength;
         private long _logLength;
 
-        public DiskService(EngineSettings settings, int[] memorySegmentSizes)
+        public DiskService(
+            EngineSettings settings, 
+            EngineState state,
+            int[] memorySegmentSizes)
         {
             _cache = new MemoryCache(memorySegmentSizes);
 
@@ -43,7 +46,7 @@ namespace LiteDB.Engine
             var isNew = _dataFactory.GetLength() == 0L;
 
             // create lazy async writer queue for log file
-            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer));
+            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer, state));
 
             // create new database if not exist yet
             if (isNew)
@@ -56,7 +59,7 @@ namespace LiteDB.Engine
             // if not readonly, force open writable datafile
             if (settings.ReadOnly == false)
             {
-                var dummy = _dataPool.Writer.CanRead;
+                _ = _dataPool.Writer.CanRead;
             }
 
             // get initial data file length
@@ -76,7 +79,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get async queue writer
         /// </summary>
-        public DiskWriterQueue Queue => _queue.Value;
+        public Lazy<DiskWriterQueue> Queue => _queue;
 
         /// <summary>
         /// Get memory cache instance

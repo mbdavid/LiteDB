@@ -1,8 +1,36 @@
 ﻿using LiteDB;
 using LiteDB.Engine;
 
+
+using(var d = new LiteEngine(new EngineSettings
+{
+    DataStream = new MemoryStream(),
+}))
+{
+    d.Insert("col1", new BsonDocument[]
+    {
+        new BsonDocument { ["_id"] = 1, ["name"] = "John Doe", ["age"] = 39 },
+        new BsonDocument { ["_id"] = 2, ["name"] = "Bascar", ["age"] = 28 },
+        new BsonDocument { ["_id"] = 3, ["name"] = "Collin Doe", ["age"] = 45 },
+
+    }, BsonAutoId.Guid);
+
+    var results = d.Query("col1", Query.All()).ToList();
+
+    ;
+}
+
+
+return;
+
+
+
+
+
+
+
 var password= "bzj2NplCbVH/bB8fxtjEC7u0unYdKHJVSmdmPgArRBwmmGw0+Wd2tE+b2zRMFcHAzoG71YIn/2Nq1EMqa5JKcQ==";
-var original = "C:\\LiteDB\\Examples\\Original.db";
+var original = "C:\\LiteDB\\Examples\\TestCacheDb.db";
 var path = $"C:\\LiteDB\\Examples\\TestCacheDb_{DateTime.Now.Ticks}.db";
 
 File.Copy(original, path);

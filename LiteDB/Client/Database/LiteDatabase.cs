@@ -44,12 +44,6 @@ namespace LiteDB
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-            if (connectionString.Upgrade == true)
-            {
-                // try upgrade if need
-                // LiteEngine.Upgrade(connectionString.Filename, connectionString.Password, connectionString.Collation);
-            }
-
             _engine = connectionString.CreateEngine();
             _mapper = mapper ?? BsonMapper.Global;
             _disposeOnClose = true;

@@ -50,7 +50,7 @@ namespace LiteDB.Engine
                 {
                     Filename = tempFilename,
                     Collation = options.Collation,
-                    Password = options.Password
+                    Password = options.Password,
                 }))
                 {
                     // copy all database to new Log file with NO checkpoint during all rebuild

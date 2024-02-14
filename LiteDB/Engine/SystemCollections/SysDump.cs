@@ -75,7 +75,6 @@ namespace LiteDB.Engine
                         ["unique"] = x.Unique,
                         ["head"] = x.Head.ToBsonValue(),
                         ["tail"] = x.Tail.ToBsonValue(),
-                        ["maxLevel"] = (int)x.MaxLevel,
                         ["freeIndexPageList"] = (int)x.FreeIndexPageList,                        
                     }));
                 }
