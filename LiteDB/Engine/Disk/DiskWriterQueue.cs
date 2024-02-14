@@ -121,6 +121,10 @@ namespace LiteDB.Engine
             // set stream position according to page
             _stream.Position = page.Position;
 
+#if DEBUG
+            _state.SimulateDiskWriteFail?.Invoke(page);
+#endif
+
             _stream.Write(page.Array, page.Offset, PAGE_SIZE);
 
             // release page here (no page use after this)
