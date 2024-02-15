@@ -6,9 +6,9 @@ var path = $"C:\\LiteDB\\Examples\\CrashDB_{DateTime.Now.Ticks}.db";
 
 var settings = new EngineSettings
 {
-    AutoRebuild = true,
+    //AutoRebuild = true,
     Filename = path,
-    Password = password
+//    Password = password
 };
 
 var data = Enumerable.Range(1, 1000).Select(i => new BsonDocument

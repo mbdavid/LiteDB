@@ -241,7 +241,7 @@ namespace LiteDB.Engine
             tc.Catch(() => _sortDisk?.Dispose());
 
             // close engine lock service
-            tc.Catch(() => _locker.Dispose());
+            tc.Catch(() => _locker?.Dispose());
 
             if (tc.InvalidDatafileState)
             {
