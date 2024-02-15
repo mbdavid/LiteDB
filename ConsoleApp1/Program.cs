@@ -6,9 +6,9 @@ var path = $"C:\\LiteDB\\Examples\\CrashDB_{DateTime.Now.Ticks}.db";
 
 var settings = new EngineSettings
 {
-    //AutoRebuild = true,
+    AutoRebuild = true,
     Filename = path,
-//    Password = password
+    Password = password
 };
 
 var data = Enumerable.Range(1, 1000).Select(i => new BsonDocument
@@ -29,12 +29,15 @@ try
         {
             if (page.Position == 8192 * 50)
             {
-                throw new IOException("Simulated disk write failure");
+                page.Write((long)123123123, 8192 - 8);
             }
         };
 
         db.Insert("col1", data, BsonAutoId.Int32);
         db.Insert("col2", data, BsonAutoId.Int32);
+
+        var col1 = db.Query("col1", Query.All()).ToList().Count;
+        var col2 = db.Query("col2", Query.All()).ToList().Count;
     }
 }
 catch (Exception ex)
@@ -50,7 +53,11 @@ using (var db = new LiteEngine(settings))
     var col2 = db.Query("col2", Query.All()).ToList().Count;
 
     Console.WriteLine($"Col1: {col1}");
-    Console.WriteLine($"Col1: {col2}");
+    Console.WriteLine($"Col2: {col2}");
+
+    var errors = new BsonArray(db.Query("_rebuild_errors", Query.All()).ToList()).ToString();
+
+    Console.WriteLine("Errors: ", errors);
 
 }
 

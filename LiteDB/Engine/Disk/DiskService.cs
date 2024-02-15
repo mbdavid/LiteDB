@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -211,31 +212,23 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Clear data file, close any data stream pool, change password and re-create data factory
+        /// Mark a file with a single signal to next open do auto-rebuild. Used only when closing database (after close files)
         /// </summary>
-        public void ChangePassword(string password, EngineSettings settings)
+        internal void MarkAsInvalidState()
         {
-            if (settings.Password == password) return;
+            var timeout = TimeSpan.FromSeconds(60);
 
-            // empty data file
-            this.SetLength(0, FileOrigin.Data);
-
-            // close all streams
-            _dataPool.Dispose();
-
-            // delete data file
-            _dataFactory.Delete();
-
-            settings.Password = password;
-
-            // new datafile will be created with new password
-            _dataFactory = settings.CreateDataFactory();
-
-            // create stream pool
-            _dataPool = new StreamPool(_dataFactory, false);
-
-            // get initial data file length
-            _dataLength = -PAGE_SIZE;
+            FileHelper.TryExec(() =>
+            {
+                using (var stream = _dataFactory.GetStream(true, true, true))
+                {
+                    var buffer = new byte[PAGE_SIZE];
+                    stream.Read(buffer, 0, PAGE_SIZE);
+                    buffer[HeaderPage.P_INVALID_DATAFILE_STATE] = 1;
+                    stream.Position = 0;
+                    stream.Write(buffer, 0, PAGE_SIZE);
+                }
+            }, timeout);
         }
 
         #region Sync Read/Write operations

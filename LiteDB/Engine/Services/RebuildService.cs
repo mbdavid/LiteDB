@@ -95,25 +95,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Mark a file with a single signal to next open do auto-rebuild
-        /// </summary>
-        public void MarkAsInvalidState()
-        {
-            var factory = _settings.CreateDataFactory();
-            var timeout = TimeSpan.FromSeconds(60);
-
-            FileHelper.TryExec(() =>
-            {
-                using (var stream = factory.GetStream(true, true, true))
-                {
-                    stream.Position = HeaderPage.P_INVALID_DATAFILE_STATE;
-                    stream.Write(new byte[] { 1 }, 0, 1);
-                    stream.FlushToDisk();
-                }
-            }, timeout);
-        }
-
-        /// <summary>
         /// Read first 16kb (2 PAGES) in bytes
         /// </summary>
         private byte[] ReadFirstBytes()

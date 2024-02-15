@@ -91,7 +91,7 @@ namespace LiteDB.Engine
             try
             {
                 // initialize engine state 
-                _state = new EngineState(this);
+                _state = new EngineState(this, _settings);
 
                 // before initilize, try if must be upgrade
                 if (_settings.Upgrade) this.TryUpgrade();
@@ -105,11 +105,12 @@ namespace LiteDB.Engine
                 // if first byte are 1 this datafile are encrypted but has do defined password to open
                 if (buffer[0] == 1) throw new LiteException(0, "This data file is encrypted and needs a password to open");
 
-                // if database is set to invalid state, need rebuild
-                if (buffer[HeaderPage.P_INVALID_DATAFILE_STATE] != 0)
-                {
-                    if (_settings.AutoRebuild == false) throw new LiteException(0, "This database are marked with invalid state and need to be rebuild. Use 'auto-rebuild=true' in connection string to repair this database");
+                // read header database page
+                _header = new HeaderPage(buffer);
 
+                // if database is set to invalid state, need rebuild
+                if (buffer[HeaderPage.P_INVALID_DATAFILE_STATE] != 0 && _settings.AutoRebuild)
+                {
                     // dispose disk access to rebuild process
                     _disk.Dispose();
                     _disk = null;
@@ -120,11 +121,11 @@ namespace LiteDB.Engine
                     // re-initialize disk service
                     _disk = new DiskService(_settings, _state, MEMORY_SEGMENT_SIZES);
 
-                    // read buffer page again
+                    // read buffer header page again
                     buffer = _disk.ReadFull(FileOrigin.Data).First();
-                }
 
-                _header = new HeaderPage(buffer);
+                    _header = new HeaderPage(buffer);
+                }
 
                 // test for same collation
                 if (_settings.Collation != null && _settings.Collation.ToString() != _header.Pragmas.Collation.ToString())
@@ -247,7 +248,7 @@ namespace LiteDB.Engine
             {
                 // mark byte = 1 in HeaderPage.P_INVALID_DATAFILE_STATE - will open in auto-rebuild
                 // this method will throw no errors
-                tc.Catch(() => new RebuildService(_settings).MarkAsInvalidState());
+                tc.Catch(() => _disk.MarkAsInvalidState());
             }
 
             return tc.Exceptions;

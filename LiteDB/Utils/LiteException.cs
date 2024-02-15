@@ -345,10 +345,9 @@ namespace LiteDB
 
         internal static LiteException InvalidDatafileState(string message)
         {
-            return new LiteException(INVALID_DATAFILE_STATE, "LiteDB found inconsistency in data or memory pages. " + 
-                "Your database may be corrupted. On the next opening a rebuild process will be executed. " + 
-                "Add parameter AutoRebuild=true in LiteDatabase connection string initialization. " + 
-                "Inner message:" + message);
+            return new LiteException(INVALID_DATAFILE_STATE, message + 
+                ". LiteDB found inconsistency in data or memory pages and your data may be corrupted. " + 
+                "Use auto-rebuild=true in connection string.");
         }
         #endregion
     }

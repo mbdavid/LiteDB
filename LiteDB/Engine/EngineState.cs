@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,20 +17,22 @@ namespace LiteDB.Engine
         public bool Disposed = false;
         private Exception _exception;
         private readonly ILiteEngine _engine; // can be null for unit tests
+        private readonly EngineSettings _settings;
 
 #if DEBUG
         public Action<PageBuffer> SimulateDiskReadFail = null;
         public Action<PageBuffer> SimulateDiskWriteFail = null;
 #endif
 
-        public EngineState(ILiteEngine engine)
+        public EngineState(ILiteEngine engine, EngineSettings settings)
         { 
             _engine = engine;
+            _settings = settings;
         }
 
         public void Validate()
         {
-            if (this.Disposed) throw _exception != null ? _exception : LiteException.EngineDisposed();
+            if (this.Disposed) throw _exception ?? LiteException.EngineDisposed();
         }
 
         public void Handle(Exception ex)

@@ -49,10 +49,20 @@ namespace LiteDB
             _source = values.GetEnumerator();
             _state = state;
 
-            if (_source.MoveNext())
+            try
             {
-                _hasValues = _isFirst = true;
-                _current = _source.Current;
+                _state.Validate();
+
+                if (_source.MoveNext())
+                {
+                    _hasValues = _isFirst = true;
+                    _current = _source.Current;
+                }
+            }
+            catch(Exception ex)
+            {
+                _state.Handle(ex);
+                throw;
             }
         }
 

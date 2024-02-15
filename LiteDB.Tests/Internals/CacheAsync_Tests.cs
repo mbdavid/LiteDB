@@ -28,7 +28,7 @@ namespace LiteDB.Internals
             }
 
             var settings = new EngineSettings { DataStream = new MemoryStream() };
-            var state = new EngineState(null);
+            var state = new EngineState(null, settings);
             var disk = new DiskService(settings, state, new int[] { 10 });
 
             var ta = new Task(() =>

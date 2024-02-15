@@ -20,7 +20,7 @@ namespace LiteDB.Internals
                 LogStream = new MemoryStream()
             };
 
-            var state = new EngineState(null);
+            var state = new EngineState(null, settings);
             var disk = new DiskService(settings, state, new int[] { 10 });
             var pages = new List<PageBuffer>();
 
