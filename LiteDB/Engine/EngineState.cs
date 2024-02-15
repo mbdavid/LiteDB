@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,7 @@ namespace LiteDB.Engine
     internal class EngineState
     {
         public bool Disposed = false;
+        private Exception _exception;
         private readonly ILiteEngine _engine; // can be null for unit tests
 
 #if DEBUG
@@ -27,13 +29,9 @@ namespace LiteDB.Engine
 
         public void Validate()
         {
-            if (this.Disposed) throw LiteException.EngineDisposed();
+            if (this.Disposed) throw _exception != null ? _exception : LiteException.EngineDisposed();
         }
 
-        /// <summary>
-        ///  
-        /// </summary>
-        /// <param name="ex"></param>
         public void Handle(Exception ex)
         {
             LOG(ex.Message, "ERROR");
@@ -41,6 +39,8 @@ namespace LiteDB.Engine
             if (ex is IOException || 
                 (ex is LiteException lex && lex.ErrorCode == LiteException.INVALID_DATAFILE_STATE))
             {
+                _exception = ex;
+
                 _engine?.Close(ex);
 
                 throw ex;

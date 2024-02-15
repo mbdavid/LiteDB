@@ -258,6 +258,8 @@ namespace LiteDB.Engine
 #if DEBUG
         // exposes for unit tests
         internal TransactionMonitor GetMonitor() => _monitor;
+        internal Action<PageBuffer> SimulateDiskReadFail { set => _state.SimulateDiskReadFail = value; }
+        internal Action<PageBuffer> SimulateDiskWriteFail { set => _state.SimulateDiskWriteFail = value; }
 #endif
 
         /// <summary>

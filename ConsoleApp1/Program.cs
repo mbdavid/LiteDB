@@ -1,69 +1,58 @@
 ﻿using LiteDB;
 using LiteDB.Engine;
 
-
-using(var d = new LiteEngine(new EngineSettings
-{
-    DataStream = new MemoryStream(),
-}))
-{
-    d.Insert("col1", new BsonDocument[]
-    {
-        new BsonDocument { ["_id"] = 1, ["name"] = "John Doe", ["age"] = 39 },
-        new BsonDocument { ["_id"] = 2, ["name"] = "Bascar", ["age"] = 28 },
-        new BsonDocument { ["_id"] = 3, ["name"] = "Collin Doe", ["age"] = 45 },
-
-    }, BsonAutoId.Guid);
-
-    var results = d.Query("col1", Query.All()).ToList();
-
-    ;
-}
-
-
-return;
-
-
-
-
-
-
-
-var password= "bzj2NplCbVH/bB8fxtjEC7u0unYdKHJVSmdmPgArRBwmmGw0+Wd2tE+b2zRMFcHAzoG71YIn/2Nq1EMqa5JKcQ==";
-var original = "C:\\LiteDB\\Examples\\TestCacheDb.db";
-var path = $"C:\\LiteDB\\Examples\\TestCacheDb_{DateTime.Now.Ticks}.db";
-
-File.Copy(original, path);
+var password = "bzj2NplCbVH/bB8fxtjEC7u0unYdKHJVSmdmPgArRBwmmGw0+Wd2tE+b2zRMFcHAzoG71YIn/2Nq1EMqa5JKcQ==";
+var path = $"C:\\LiteDB\\Examples\\CrashDB_{DateTime.Now.Ticks}.db";
 
 var settings = new EngineSettings
 {
-    //AutoRebuild = true,
+    AutoRebuild = true,
     Filename = path,
     Password = password
 };
 
-/*
-var errors = new List<FileReaderError>();
+var data = Enumerable.Range(1, 1000).Select(i => new BsonDocument
+{
+    ["_id"] = i,
+    ["name"] = Faker.Fullname(),
+    ["age"] = Faker.Age(),
+    ["created"] = Faker.Birthday(),
+    ["lorem"] = Faker.Lorem(10, 30)
+}).ToArray();
 
-using var reader = new FileReaderV8(settings, errors);
+try
+{
+    // forcando erro de escrita no disco
+    using (var db = new LiteEngine(settings))
+    {
+        db.SimulateDiskWriteFail = (page) =>
+        {
+            if (page.Position == 8192 * 50)
+            {
+                throw new IOException("Simulated disk write failure");
+            }
+        };
 
-reader.Open();
+        db.Insert("col1", data, BsonAutoId.Int32);
+        db.Insert("col2", data, BsonAutoId.Int32);
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine("ERROR: " + ex.Message);
+}
 
-var pragmas = reader.GetPragmas();
-var cols = reader.GetCollections().ToArray();
-var indexes = reader.GetIndexes(cols[0]);
+Console.WriteLine("Recovering database...");
 
-var docs = reader.GetDocuments("hubData$AppOperations").ToArray();
-*/
+using (var db = new LiteEngine(settings))
+{
+    var col1 = db.Query("col1", Query.All()).ToList().Count;
+    var col2 = db.Query("col2", Query.All()).ToList().Count;
 
-// /*
-var db = new LiteEngine(settings);
+    Console.WriteLine($"Col1: {col1}");
+    Console.WriteLine($"Col1: {col2}");
 
-db.Rebuild();
+}
 
 
-
-var reader = db.Query("hubData$AppOperations", Query.All());
-var data = reader.ToList();
-// */
 Console.ReadKey();

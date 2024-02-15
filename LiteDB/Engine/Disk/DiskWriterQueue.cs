@@ -138,8 +138,6 @@ namespace LiteDB.Engine
             _shouldClose = true;
             _queueHasItems.Set(); // unblock the running loop in case there are no items
 
-            // run all items in queue before dispose
-            this.Wait();
             _task?.Wait();
             _task = null;
         }

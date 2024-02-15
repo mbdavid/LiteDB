@@ -18,6 +18,7 @@ namespace LiteDB.Engine
     {
         private readonly MemoryCache _cache;
         private readonly Lazy<DiskWriterQueue> _queue;
+        private readonly EngineState _state;
 
         private IStreamFactory _dataFactory;
         private readonly IStreamFactory _logFactory;
@@ -34,6 +35,7 @@ namespace LiteDB.Engine
             int[] memorySegmentSizes)
         {
             _cache = new MemoryCache(memorySegmentSizes);
+            _state = state;
 
             // get new stream factory based on settings
             _dataFactory = settings.CreateDataFactory();
@@ -122,7 +124,7 @@ namespace LiteDB.Engine
         /// </summary>
         public DiskReader GetReader()
         {
-            return new DiskReader(_cache, _dataPool, _logPool);
+            return new DiskReader(_state, _cache, _dataPool, _logPool);
         }
 
         /// <summary>
