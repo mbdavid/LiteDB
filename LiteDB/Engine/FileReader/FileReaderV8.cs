@@ -277,7 +277,7 @@ namespace LiteDB.Engine
         private void LoadDataPages()
         {
             var header = this.ReadPage(0, out var pageInfo).GetValue();
-            var lastPageID = header.Buffer.ReadUInt32(HeaderPage.P_LAST_PAGE_ID);
+            var lastPageID = header.Buffer.ReadUInt32(HeaderPage.P_LAST_PAGE_ID); //TOFO: tentar não usar esse valor como referencia (varrer tudo)
 
             ENSURE(lastPageID <= _maxPageID, $"LastPageID {lastPageID} should be less or equals to maxPageID {_maxPageID}");
 

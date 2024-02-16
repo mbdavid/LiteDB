@@ -80,7 +80,6 @@ namespace LiteDB.Engine
                     // after rebuild, copy log bytes into data file
                     engine.Checkpoint();
                 }
-
             }
 
             // if log file exists, rename as backup file
