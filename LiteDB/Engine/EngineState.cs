@@ -35,7 +35,7 @@ namespace LiteDB.Engine
             if (this.Disposed) throw _exception ?? LiteException.EngineDisposed();
         }
 
-        public void Handle(Exception ex)
+        public bool Handle(Exception ex)
         {
             LOG(ex.Message, "ERROR");
 
@@ -46,8 +46,10 @@ namespace LiteDB.Engine
 
                 _engine?.Close(ex);
 
-                throw ex;
+                return false;
             }
+
+            return true;
         }
     }
 }

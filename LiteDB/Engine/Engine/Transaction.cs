@@ -94,11 +94,12 @@ namespace LiteDB.Engine
             }
             catch(Exception ex)
             {
-                _state.Handle(ex);
+                if (_state.Handle(ex))
+                {
+                    transaction.Rollback();
 
-                transaction.Rollback();
-
-                _monitor.ReleaseTransaction(transaction);
+                    _monitor.ReleaseTransaction(transaction);
+                }
 
                 throw;
             }

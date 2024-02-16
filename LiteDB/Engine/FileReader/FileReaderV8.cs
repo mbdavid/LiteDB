@@ -22,6 +22,7 @@ namespace LiteDB.Engine
             public FileOrigin Origin;
             public PageType PageType;
             public long Position;
+            public uint ColID;
         }
 
         private readonly Dictionary<string, uint> _collections = new Dictionary<string, uint>();
@@ -120,7 +121,7 @@ namespace LiteDB.Engine
             var dataPages = _collectionsDataPages[colID];
             var uniqueIDs = new HashSet<BsonValue>();
 
-            foreach(var dataPage in dataPages)
+            foreach (var dataPage in dataPages)
             {
                 var page = this.ReadPage(dataPage, out var pageInfo);
 
@@ -137,7 +138,7 @@ namespace LiteDB.Engine
                 // no items
                 if (itemsCount == 0 || highestIndex == byte.MaxValue) continue;
 
-                for (byte i = 0; i <= highestIndex; i++)
+                for (int i = 0; i <= highestIndex; i++)
                 {
                     BsonDocument doc;
 
@@ -145,15 +146,18 @@ namespace LiteDB.Engine
                     try
                     {
                         // resolve slot address
-                        var positionAddr = BasePage.CalcPositionAddr(i);
-                        var lengthAddr = BasePage.CalcLengthAddr(i);
+                        var positionAddr = BasePage.CalcPositionAddr((byte)i);
+                        var lengthAddr = BasePage.CalcLengthAddr((byte)i);
 
                         // read segment position/length
                         var position = buffer.ReadUInt16(positionAddr);
                         var length = buffer.ReadUInt16(lengthAddr);
 
                         // empty slot
-                        if (length == 0) continue;
+                        if (position == 0) continue;
+
+                        ENSURE(position > 0 && length > 0, $"Invalid footer ref position {position} with length {length}");
+                        ENSURE(position + length < PAGE_SIZE, $"Invalid footer ref position {position} with length {length}");
 
                         // get segment slice
                         var segment = buffer.Slice(position, length);
@@ -184,8 +188,8 @@ namespace LiteDB.Engine
                                 ENSURE(nextPage.Value.ItemsCount > 0, "Page with no items count");
 
                                 // read slot address
-                                positionAddr = BasePage.CalcPositionAddr(i);
-                                lengthAddr = BasePage.CalcLengthAddr(i);
+                                positionAddr = BasePage.CalcPositionAddr(nextBlock.Index);
+                                lengthAddr = BasePage.CalcLengthAddr(nextBlock.Index);
 
                                 // read segment position/length
                                 position = nextBuffer.ReadUInt16(positionAddr);
@@ -207,8 +211,10 @@ namespace LiteDB.Engine
                                 mem.Write(data.Array, data.Offset, data.Count);
                             }
 
+                            var docBytes = mem.ToArray();
+
                             // read all data array in bson document
-                            using (var r = new BufferReader(mem.ToArray(), false))
+                            using (var r = new BufferReader(docBytes, false))
                             {
                                 var docResult = r.ReadDocument();
                                 var id = docResult.Value["_id"];
@@ -275,7 +281,7 @@ namespace LiteDB.Engine
 
             ENSURE(lastPageID <= _maxPageID, $"LastPageID {lastPageID} should be less or equals to maxPageID {_maxPageID}");
 
-            for (uint i = 0; i < lastPageID; i++)
+            for (uint i = 0; i <= lastPageID; i++)
             {
                 var result = this.ReadPage(i, out pageInfo);
 
@@ -380,21 +386,21 @@ namespace LiteDB.Engine
                         position += 2; // skip: slot (1 byte) + indexType (1 byte)
 
                         var name = buffer.ReadCString(position, out var nameLength);
-                        // depois de ler, validar se a position ainda é válida (se é < 8192)
-                        // validar o tamanho do nome do índice para ver se o nome lido é válido
 
                         position += nameLength;
 
                         var expr = buffer.ReadCString(position, out var exprLength);
-                        // depois de ler, validar se a position ainda é válida (se é < 8192)
-                        // validar se a expr é válida
 
                         position += exprLength;
 
                         var unique = buffer.ReadBool(position);
-                        // depois de ler, validar se a position ainda é válida (se é < 8192)
 
-                        position += 15; // head 5 bytes, tail 5 bytes, maxLevel 1 byte, freeIndexPageList 4 bytes
+                        position++;
+
+                        position += 15; // head 5 bytes, tail 5 bytes, reserved 1 byte, freeIndexPageList 4 bytes
+
+                        ENSURE(!string.IsNullOrEmpty(name), $"Index name can't be empty (collection {collection.Key} - index: {i})");
+                        ENSURE(!string.IsNullOrEmpty(expr), $"Index expression can't be empty (collection {collection.Key} - index: {i})");
 
                         var indexInfo = new IndexInfo
                         {
@@ -455,25 +461,26 @@ namespace LiteDB.Engine
 
             while (_logStream.Position < _logStream.Length)
             {
-                if (buffer.IsBlank())
-                {
-                    // this should not happen, but if it does, it means there's a zeroed page in the file
-                    // just skip it
-                    currentPosition += PAGE_SIZE;
-                    continue;
-                }
-
-                _logStream.Position = pageInfo.Position = currentPosition;
-
                 try
                 {
+                    _logStream.Position = pageInfo.Position = currentPosition;
+
                     var read = _logStream.Read(buffer.Array, buffer.Offset, PAGE_SIZE);
+
+                    if (buffer.IsBlank())
+                    {
+                        // this should not happen, but if it does, it means there's a zeroed page in the file
+                        // just skip it
+                        currentPosition += PAGE_SIZE;
+                        continue;
+                    }
 
                     var pageID = buffer.ReadUInt32(BasePage.P_PAGE_ID);
                     var isConfirmed = buffer.ReadBool(BasePage.P_IS_CONFIRMED);
                     var transactionID = buffer.ReadUInt32(BasePage.P_TRANSACTION_ID);
 
                     pageInfo.PageID = pageID;
+                    pageInfo.ColID = buffer.ReadUInt32(BasePage.P_COL_ID);
 
                     ENSURE(read == PAGE_SIZE, $"Page position {_logStream} read only than {read} bytes (instead {PAGE_SIZE})");
 
@@ -554,6 +561,8 @@ namespace LiteDB.Engine
 
                 var page = new BasePage(pageBuffer);
 
+                pageInfo.ColID = page.ColID;
+
                 ENSURE(page.PageID == pageID, $"Expect read pageID: {pageID} but header contains pageID: {page.PageID}");
 
                 return page;
@@ -570,12 +579,15 @@ namespace LiteDB.Engine
         /// </summary>
         private void HandleError(Exception ex, PageInfo pageInfo)
         {
+            var collection = _collections.FirstOrDefault(x => x.Value == pageInfo.ColID).Key;
+
             _errors.Add(new FileReaderError
             {
                 Position = pageInfo.Position,
                 Origin = pageInfo.Origin,
                 PageID = pageInfo.PageID,
                 PageType = pageInfo.PageType,
+                Collection = collection,
                 Message = ex.Message,
                 Exception = ex,
             });

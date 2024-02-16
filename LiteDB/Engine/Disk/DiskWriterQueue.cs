@@ -107,7 +107,6 @@ namespace LiteDB.Engine
             catch (Exception ex)
             {
                 _state.Handle(ex);
-
                 _exception = ex;
             }
         }

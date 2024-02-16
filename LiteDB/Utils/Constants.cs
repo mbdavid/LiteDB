@@ -99,7 +99,11 @@ namespace LiteDB
         /// <summary>
         /// Initial seed for Random
         /// </summary>
-        public const int RANDOMIZER_SEED = 2024;
+#if DEBUG
+        public const int RANDOMIZER_SEED = 3131;
+#else
+        public const int RANDOMIZER_SEED = 0;
+#endif
 
         /// <summary>
         /// Log a message using Debug.WriteLine

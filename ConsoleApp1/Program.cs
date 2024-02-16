@@ -1,6 +1,9 @@
 ﻿using LiteDB;
 using LiteDB.Engine;
 
+using System.Reflection.Emit;
+using System.Reflection.PortableExecutable;
+
 var password = "bzj2NplCbVH/bB8fxtjEC7u0unYdKHJVSmdmPgArRBwmmGw0+Wd2tE+b2zRMFcHAzoG71YIn/2Nq1EMqa5JKcQ==";
 var path = $"C:\\LiteDB\\Examples\\CrashDB_{DateTime.Now.Ticks}.db";
 
@@ -11,14 +14,16 @@ var settings = new EngineSettings
     Password = password
 };
 
-var data = Enumerable.Range(1, 1000).Select(i => new BsonDocument
+var data = Enumerable.Range(1, 10_000).Select(i => new BsonDocument
 {
     ["_id"] = i,
     ["name"] = Faker.Fullname(),
     ["age"] = Faker.Age(),
     ["created"] = Faker.Birthday(),
-    ["lorem"] = Faker.Lorem(10, 30)
+    ["lorem"] = Faker.Lorem(500, 2500)
 }).ToArray();
+
+var x =  data[3].GetBytesCount(true);
 
 try
 {
@@ -27,17 +32,26 @@ try
     {
         db.SimulateDiskWriteFail = (page) =>
         {
-            if (page.Position == 8192 * 50)
+            var p = new BasePage(page);
+
+            if (p.PageID == 248)
             {
-                page.Write((long)123123123, 8192 - 8);
+                //page.Write((uint)123123123, 0);
             }
         };
+
+        db.Pragma("USER_VERSION", 123);
+
+        db.EnsureIndex("col1", "idx_age", "$.age", false);
 
         db.Insert("col1", data, BsonAutoId.Int32);
         db.Insert("col2", data, BsonAutoId.Int32);
 
-        var col1 = db.Query("col1", Query.All()).ToList().Count;
-        var col2 = db.Query("col2", Query.All()).ToList().Count;
+        //var col1 = db.Query("col1", Query.All()).ToList().Count;
+        //var col2 = db.Query("col2", Query.All()).ToList().Count;
+        //
+        //Console.WriteLine("Inserted Col1: " + col1);
+        //Console.WriteLine("Inserted Col2: " + col2);
     }
 }
 catch (Exception ex)
@@ -46,7 +60,7 @@ catch (Exception ex)
 }
 
 Console.WriteLine("Recovering database...");
-
+/*
 using (var db = new LiteEngine(settings))
 {
     var col1 = db.Query("col1", Query.All()).ToList().Count;
@@ -59,7 +73,26 @@ using (var db = new LiteEngine(settings))
 
     Console.WriteLine("Errors: ", errors);
 
-}
+}*/
+
+var errors = new List<FileReaderError>();
+var fr = new FileReaderV8(settings, errors);
+
+fr.Open();
+var pragmas = fr.GetPragmas();
+var cols = fr.GetCollections().ToArray();
+var indexes = fr.GetIndexes(cols[0]);
+
+var docs1 = fr.GetDocuments("col1").ToArray();
+var docs2 = fr.GetDocuments("col2").ToArray();
 
 
+Console.WriteLine("Recovered Col1: " + docs1.Length);
+Console.WriteLine("Recovered Col2: " + docs2.Length);
+
+Console.WriteLine("# Errors: ");
+errors.ForEach(x => Console.WriteLine($"PageID: {x.PageID}/{x.Origin}/#{x.Position}[{x.Collection}]: " + x.Message));
+
+
+Console.WriteLine("\n\nEnd.");
 Console.ReadKey();

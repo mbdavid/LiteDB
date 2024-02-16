@@ -35,6 +35,7 @@ namespace LiteDB.Engine
         public long Rebuild(RebuildOptions options)
         {
             var backupFilename = FileHelper.GetSuffixFile(_settings.Filename, "-backup", true);
+            var backupLogFilename = FileHelper.GetSuffixFile(FileHelper.GetLogFile(_settings.Filename), "-backup", true);
             var tempFilename = FileHelper.GetSuffixFile(_settings.Filename, "-temp", true);
 
             // open file reader
@@ -80,6 +81,14 @@ namespace LiteDB.Engine
                     engine.Checkpoint();
                 }
 
+            }
+
+            // if log file exists, rename as backup file
+            var logFile = FileHelper.GetLogFile(_settings.Filename);
+
+            if (File.Exists(logFile))
+            {
+                File.Move(logFile, backupLogFilename);
             }
 
             // rename source filename to backup name
