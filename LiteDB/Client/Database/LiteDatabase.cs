@@ -279,7 +279,7 @@ namespace LiteDB
         /// </summary>
         public long Rebuild(RebuildOptions options = null)
         {
-            return _engine.Rebuild(options);
+            return _engine.Rebuild(options ?? new RebuildOptions());
         }
 
         #endregion

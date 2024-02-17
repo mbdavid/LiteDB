@@ -17,7 +17,6 @@ namespace LiteDB
         private LiteEngine _engine;
         private bool _transactionRunning = false;
 
-
         public SharedEngine(EngineSettings settings)
         {
             _settings = settings;
@@ -374,21 +373,6 @@ namespace LiteDB
                     _mutex.ReleaseMutex();
                 }
             }
-        }
-
-        public bool Open()
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<Exception> Close()
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<Exception> Close(Exception ex)
-        {
-            throw new NotImplementedException();
         }
     }
 }

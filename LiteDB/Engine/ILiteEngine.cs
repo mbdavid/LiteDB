@@ -5,10 +5,6 @@ namespace LiteDB.Engine
 {
     public interface ILiteEngine : IDisposable
     {
-        bool Open();
-        List<Exception> Close();
-        List<Exception> Close(Exception ex);
-
         int Checkpoint();
         long Rebuild(RebuildOptions options);
 

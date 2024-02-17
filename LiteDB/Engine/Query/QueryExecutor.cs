@@ -120,35 +120,53 @@ namespace LiteDB.Engine
                 // get current query pipe: normal or groupby pipe
                 var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas);
 
-                try
-                {
-                    // start cursor elapsed timer
-                    _cursor.Elapsed.Start();
+                // start cursor elapsed timer
+                _cursor.Elapsed.Start();
 
-                    // call safepoint just before return each document
-                    foreach (var doc in pipe.Pipe(nodes, queryPlan))
+                using (var enumerator = pipe.Pipe(nodes, queryPlan).GetEnumerator())
+                {
+                    var read = false;
+
+                    try
+                    {
+                        read = enumerator.MoveNext();
+                    }
+                    catch (Exception ex)
+                    {
+                        _state.Handle(ex);
+                    }
+
+                    while (read)
                     {
                         _cursor.Fetched++;
                         _cursor.Elapsed.Stop();
 
-                        yield return doc;
+                        yield return enumerator.Current;
 
                         if (transaction.State != TransactionState.Active) throw new LiteException(0, $"There is no more active transaction for this cursor: {_cursor.Query.ToSQL(_cursor.Collection)}");
 
                         _cursor.Elapsed.Start();
+
+                        try
+                        {
+                            read = enumerator.MoveNext();
+                        }
+                        catch (Exception ex)
+                        {
+                            _state.Handle(ex);
+                            read = false; // stop loop
+                        }
                     }
                 }
-                finally
+
+                // stop cursor elapsed
+                _cursor.Elapsed.Stop();
+
+                transaction.OpenCursors.Remove(_cursor);
+
+                if (isNew)
                 {
-                    // stop cursor elapsed
-                    _cursor.Elapsed.Stop();
-
-                    transaction.OpenCursors.Remove(_cursor);
-
-                    if (isNew)
-                    {
-                        _monitor.ReleaseTransaction(transaction);
-                    }
+                    _monitor.ReleaseTransaction(transaction);
                 }
             };
         }

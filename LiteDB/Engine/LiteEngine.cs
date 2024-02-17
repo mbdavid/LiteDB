@@ -81,7 +81,7 @@ namespace LiteDB.Engine
 
         #region Open & Close
 
-        public bool Open()
+        internal bool Open()
         {
             LOG($"start initializing{(_settings.ReadOnly ? " (readonly)" : "")}", "ENGINE");
 
@@ -116,7 +116,7 @@ namespace LiteDB.Engine
                     _disk = null;
 
                     // rebuild database, create -backup file and include _rebuild_errors collection
-                    this.Recovery();
+                    this.Recovery(_header.Pragmas.Collation);
 
                     // re-initialize disk service
                     _disk = new DiskService(_settings, _state, MEMORY_SEGMENT_SIZES);
@@ -175,7 +175,7 @@ namespace LiteDB.Engine
         /// - Close disks
         /// - Clean variables
         /// </summary>
-        public List<Exception> Close()
+        internal List<Exception> Close()
         {
             if (_state.Disposed) return new List<Exception>();
 
@@ -218,7 +218,7 @@ namespace LiteDB.Engine
         /// - Dispose locker
         /// - Checks Exception type for INVALID_DATAFILE_STATE to auto rebuild on open
         /// </summary>
-        public List<Exception> Close(Exception ex)
+        internal List<Exception> Close(Exception ex)
         {
             if (_state.Disposed) return new List<Exception>();
 

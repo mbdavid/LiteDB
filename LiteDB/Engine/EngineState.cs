@@ -16,7 +16,7 @@ namespace LiteDB.Engine
     {
         public bool Disposed = false;
         private Exception _exception;
-        private readonly ILiteEngine _engine; // can be null for unit tests
+        private readonly LiteEngine _engine; // can be null for unit tests
         private readonly EngineSettings _settings;
 
 #if DEBUG
@@ -24,7 +24,7 @@ namespace LiteDB.Engine
         public Action<PageBuffer> SimulateDiskWriteFail = null;
 #endif
 
-        public EngineState(ILiteEngine engine, EngineSettings settings)
+        public EngineState(LiteEngine engine, EngineSettings settings)
         { 
             _engine = engine;
             _settings = settings;

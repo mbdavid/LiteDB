@@ -61,15 +61,6 @@ namespace LiteDB.Engine
                     var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
                     var data = new DataService(snapshot);
 
-                    // first create all user indexes (exclude _id index)
-                    foreach (var index in reader.GetIndexes(collection))
-                    {
-                        this.EnsureIndex(collection,
-                            index.Name,
-                            BsonExpression.Create(index.Expression),
-                            index.Unique);
-                    }
-
                     // get all documents from current collection
                     var docs = reader.GetDocuments(collection);
 
@@ -79,6 +70,15 @@ namespace LiteDB.Engine
                         transaction.Safepoint();
 
                         this.InsertDocument(snapshot, doc, BsonAutoId.ObjectId, indexer, data);
+                    }
+
+                    // first create all user indexes (exclude _id index)
+                    foreach (var index in reader.GetIndexes(collection))
+                    {
+                        this.EnsureIndex(collection,
+                            index.Name,
+                            BsonExpression.Create(index.Expression),
+                            index.Unique);
                     }
                 }
 

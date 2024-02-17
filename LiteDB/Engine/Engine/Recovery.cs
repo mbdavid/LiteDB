@@ -13,13 +13,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// Recovery datafile using a rebuild process. Run only on "Open" database
         /// </summary>
-        private void Recovery()
+        private void Recovery(Collation collation)
         {
             // run build service
             var rebuilder = new RebuildService(_settings);
             var options = new RebuildOptions
             {
-                Collation = new Collation(this.Pragma(Pragmas.COLLATION)),
+                Collation = collation,
                 Password = _settings.Password,
                 IncludeErrorReport = true
             };

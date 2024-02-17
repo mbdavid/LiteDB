@@ -354,7 +354,6 @@ namespace LiteDB.Engine
                     _collections["col_" + collection.Key] = collection.Key;
                 }
             }
-
         }
 
         /// <summary>

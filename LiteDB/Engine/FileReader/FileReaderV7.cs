@@ -30,6 +30,9 @@ namespace LiteDB.Engine
         {
             { Pragmas.USER_VERSION, _header["userVersion"].AsInt32 },
             { Pragmas.CHECKPOINT, 1000 },
+            { Pragmas.TIMEOUT, 60 },
+            { Pragmas.LIMIT_SIZE, long.MaxValue },
+            { Pragmas.UTC_DATE, true },
         };
 
         public FileReaderV7(EngineSettings settings)
