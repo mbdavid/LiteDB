@@ -91,10 +91,14 @@ namespace LiteDB.Engine
             }
 
             // rename source filename to backup name
-            File.Move(_settings.Filename, backupFilename);
+            FileHelper.Exec(5, () =>
+            {
+                File.Move(_settings.Filename, backupFilename);
+            });
 
             // rename temp file into filename
             File.Move(tempFilename, _settings.Filename);
+
 
             // get difference size
             return 

@@ -17,6 +17,8 @@ namespace LiteDB.Engine
         /// </summary>
         public long Rebuild(RebuildOptions options)
         {
+            if (string.IsNullOrEmpty(_settings.Filename)) return 0; // works only with os file
+
             this.Close();
 
             // run build service

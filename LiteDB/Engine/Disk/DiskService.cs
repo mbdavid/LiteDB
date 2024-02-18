@@ -216,9 +216,7 @@ namespace LiteDB.Engine
         /// </summary>
         internal void MarkAsInvalidState()
         {
-            var timeout = TimeSpan.FromSeconds(60);
-
-            FileHelper.TryExec(() =>
+            FileHelper.TryExec(60, () =>
             {
                 using (var stream = _dataFactory.GetStream(true, true, true))
                 {
@@ -228,7 +226,7 @@ namespace LiteDB.Engine
                     stream.Position = 0;
                     stream.Write(buffer, 0, PAGE_SIZE);
                 }
-            }, timeout);
+            });
         }
 
         #region Sync Read/Write operations

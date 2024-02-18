@@ -226,17 +226,15 @@ namespace LiteDB.Engine
 
             var tc = new TryCatch(ex);
 
-            // stop running queue to write
+            tc.Catch(() => _monitor?.Dispose());
+
             if (_disk != null && _disk.Queue.IsValueCreated)
             {
-                tc.Catch(() => _disk?.Queue.Value.Dispose());
+                tc.Catch(() => _disk.Queue.Value.Dispose());
             }
 
             // close disks streams
             tc.Catch(() => _disk?.Dispose());
-
-            // close transaction monitor
-            tc.Catch(() => _monitor?.Dispose());
 
             // close sort disk service
             tc.Catch(() => _sortDisk?.Dispose());

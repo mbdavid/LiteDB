@@ -137,9 +137,9 @@ namespace LiteDB
             {
                 if (Debugger.IsAttached)
                 {
-                    Debug.Fail(message);
+                    Debugger.Break();
                 }
-                
+
                 throw LiteException.InvalidDatafileState(message);
             }
         }
@@ -154,7 +154,7 @@ namespace LiteDB
             {
                 if (Debugger.IsAttached)
                 {
-                    Debug.Fail(message);
+                    Debugger.Break();
                 }
 
                 throw LiteException.InvalidDatafileState(message);
@@ -172,7 +172,7 @@ namespace LiteDB
             {
                 if (Debugger.IsAttached)
                 {
-                    Debug.Fail(message);
+                    Debugger.Break();
                 }
 
                 throw LiteException.InvalidDatafileState(message);

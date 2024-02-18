@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -24,6 +25,7 @@ namespace LiteDB.Utils
             ex is LiteException liteEx && 
             liteEx.ErrorCode == LiteException.INVALID_DATAFILE_STATE);
 
+        [DebuggerHidden]
         public void Catch(Action action)
         {
             try

@@ -54,16 +54,18 @@ namespace LiteDB.Tests.Engine
                         db.Insert("col1", data, BsonAutoId.Int32);
                         db.Insert("col2", data, BsonAutoId.Int32);
 
+                        db.Checkpoint();
+
                         // will fail
                         var col1 = db.Query("col1", Query.All()).ToList().Count;
 
                         // never run here
-                        true.Should().BeFalse();
+                        //Assert.Fail("should get error in query");
                     }
                 }
                 catch (Exception ex)
                 {
-                    //Console.WriteLine("ERROR: " + ex.Message);
+                    Assert.True(ex is LiteException lex && lex.ErrorCode == 999);
                 }
 
                 //Console.WriteLine("Recovering database...");
