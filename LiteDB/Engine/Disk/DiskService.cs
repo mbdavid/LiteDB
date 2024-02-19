@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,7 @@ namespace LiteDB.Engine
     {
         private readonly MemoryCache _cache;
         private readonly Lazy<DiskWriterQueue> _queue;
+        private readonly EngineState _state;
 
         private IStreamFactory _dataFactory;
         private readonly IStreamFactory _logFactory;
@@ -28,9 +30,13 @@ namespace LiteDB.Engine
         private long _dataLength;
         private long _logLength;
 
-        public DiskService(EngineSettings settings, int[] memorySegmentSizes)
+        public DiskService(
+            EngineSettings settings, 
+            EngineState state,
+            int[] memorySegmentSizes)
         {
             _cache = new MemoryCache(memorySegmentSizes);
+            _state = state;
 
             // get new stream factory based on settings
             _dataFactory = settings.CreateDataFactory();
@@ -43,7 +49,7 @@ namespace LiteDB.Engine
             var isNew = _dataFactory.GetLength() == 0L;
 
             // create lazy async writer queue for log file
-            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer));
+            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer, state));
 
             // create new database if not exist yet
             if (isNew)
@@ -56,7 +62,7 @@ namespace LiteDB.Engine
             // if not readonly, force open writable datafile
             if (settings.ReadOnly == false)
             {
-                var dummy = _dataPool.Writer.CanRead;
+                _ = _dataPool.Writer.CanRead;
             }
 
             // get initial data file length
@@ -76,7 +82,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get async queue writer
         /// </summary>
-        public DiskWriterQueue Queue => _queue.Value;
+        public Lazy<DiskWriterQueue> Queue => _queue;
 
         /// <summary>
         /// Get memory cache instance
@@ -119,7 +125,7 @@ namespace LiteDB.Engine
         /// </summary>
         public DiskReader GetReader()
         {
-            return new DiskReader(_cache, _dataPool, _logPool);
+            return new DiskReader(_state, _cache, _dataPool, _logPool);
         }
 
         /// <summary>
@@ -206,31 +212,21 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Clear data file, close any data stream pool, change password and re-create data factory
+        /// Mark a file with a single signal to next open do auto-rebuild. Used only when closing database (after close files)
         /// </summary>
-        public void ChangePassword(string password, EngineSettings settings)
+        internal void MarkAsInvalidState()
         {
-            if (settings.Password == password) return;
-
-            // empty data file
-            this.SetLength(0, FileOrigin.Data);
-
-            // close all streams
-            _dataPool.Dispose();
-
-            // delete data file
-            _dataFactory.Delete();
-
-            settings.Password = password;
-
-            // new datafile will be created with new password
-            _dataFactory = settings.CreateDataFactory();
-
-            // create stream pool
-            _dataPool = new StreamPool(_dataFactory, false);
-
-            // get initial data file length
-            _dataLength = -PAGE_SIZE;
+            FileHelper.TryExec(60, () =>
+            {
+                using (var stream = _dataFactory.GetStream(true, true))
+                {
+                    var buffer = new byte[PAGE_SIZE];
+                    stream.Read(buffer, 0, PAGE_SIZE);
+                    buffer[HeaderPage.P_INVALID_DATAFILE_STATE] = 1;
+                    stream.Position = 0;
+                    stream.Write(buffer, 0, PAGE_SIZE);
+                }
+            });
         }
 
         #region Sync Read/Write operations

@@ -62,5 +62,18 @@ namespace LiteDB.Tests.QueryTest
 
             r.Should().HaveCount(1000);
         }
+
+        [Fact]
+        public void Query_With_No_Collection()
+        {
+            using (var r = db.Execute("SELECT DAY(NOW()) as DIA"))
+            {
+                while(r.Read())
+                {
+                    r.Current["DIA"].Should().Be(DateTime.Now.Day);
+                }
+            }
+
+        }
     }
 }

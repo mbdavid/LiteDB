@@ -27,7 +27,9 @@ namespace LiteDB.Internals
                 toBlock?.Wait();
             }
 
-            var disk = new DiskService(new EngineSettings { DataStream = new MemoryStream() }, new int[] { 10 });
+            var settings = new EngineSettings { DataStream = new MemoryStream() };
+            var state = new EngineState(null, settings);
+            var disk = new DiskService(settings, state, new int[] { 10 });
 
             var ta = new Task(() =>
             {
@@ -43,7 +45,7 @@ namespace LiteDB.Internals
                 serialize(wa, wb);
                 // (2 <-) continue from thread B
 
-                disk.Queue.Wait();
+                disk.Queue.Value.Wait();
 
                 // (3 ->) jump to thread B
                 serialize(wa, wb);

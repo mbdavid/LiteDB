@@ -36,6 +36,8 @@ namespace LiteDB.Engine
                     // if pk not found, continue
                     if (pkNode == null) continue;
 
+                    _state.Validate();
+
                     // remove object data
                     data.Delete(pkNode.DataBlock);
 

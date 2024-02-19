@@ -38,15 +38,19 @@ namespace LiteDB.Engine
         {
             var write = canWrite && (_readonly == false);
 
+            var fileMode = _readonly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate;
+            var fileAccess = write ? FileAccess.ReadWrite : FileAccess.Read;
+            var fileShare = write ? FileShare.Read : FileShare.ReadWrite;
+            var fileOptions = sequencial ? FileOptions.SequentialScan : FileOptions.RandomAccess;
+
             var isNewFile = write && this.Exists() == false;
 
-            var stream = new FileStream(
-                _filename,
-                _readonly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
-                write ? FileAccess.ReadWrite : FileAccess.Read,
-                write ? FileShare.Read : FileShare.ReadWrite,
+            var stream = new FileStream(_filename,
+                fileMode,
+                fileAccess,
+                fileShare,
                 PAGE_SIZE,
-                sequencial ? FileOptions.SequentialScan : FileOptions.RandomAccess);
+                fileOptions);
 
             if (isNewFile && _hidden)
             {

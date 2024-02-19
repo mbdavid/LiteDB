@@ -282,8 +282,8 @@ namespace LiteDB.Engine
             var position = _buffer.ReadUInt16(positionAddr);
             var length = _buffer.ReadUInt16(lengthAddr);
 
-            ENSURE(this.IsValidPos(position), "invalid segment position");
-            ENSURE(this.IsValidLen(length), "invalid segment length");
+            ENSURE(this.IsValidPos(position), $"invalid segment position in index footer: {ToString()}/{index}");
+            ENSURE(this.IsValidLen(length), $"invalid segment length in index footer: {ToString()}/{index}");
 
             // return buffer slice with content only data
             return _buffer.Slice(position, length);

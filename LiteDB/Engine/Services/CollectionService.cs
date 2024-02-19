@@ -31,9 +31,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get collection page instance (or create a new one)
+        /// Get collection page instance (or create a new one). Returns true if a new collection was created
         /// </summary>
-        public void Get(string name, bool addIfNotExists, ref CollectionPage collectionPage)
+        public bool Get(string name, bool addIfNotExists, ref CollectionPage collectionPage)
         {
             // get collection pageID from header
             var pageID = _header.GetCollectionPageID(name);
@@ -41,11 +41,17 @@ namespace LiteDB.Engine
             if (pageID != uint.MaxValue)
             {
                 collectionPage = _snapshot.GetPage<CollectionPage>(pageID);
+
+                return false;
             }
             else if (addIfNotExists)
             {
                 this.Add(name, ref collectionPage);
+
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>

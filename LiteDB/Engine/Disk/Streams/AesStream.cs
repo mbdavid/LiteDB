@@ -160,7 +160,6 @@ namespace LiteDB.Engine
         /// </summary>
         public override int Read(byte[] array, int offset, int count)
         {
-            ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
             ENSURE(this.Position % PAGE_SIZE == 0, $"AesRead: position must be in PAGE_SIZE module. Position={this.Position}, File={_name}");
 
             var r = _reader.Read(array, offset, count);
@@ -181,8 +180,8 @@ namespace LiteDB.Engine
         /// </summary>
         public override void Write(byte[] array, int offset, int count)
         {
-            ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
-            ENSURE(this.Position % PAGE_SIZE == 0, $"AesWrite: position must be in PAGE_SIZE module. Position={this.Position}, File={_name}");
+            ENSURE(count == PAGE_SIZE || count == 1, "buffer size must be PAGE_SIZE");
+            ENSURE(this.Position == HeaderPage.P_INVALID_DATAFILE_STATE || this.Position % PAGE_SIZE == 0, $"AesWrite: position must be in PAGE_SIZE module. Position={this.Position}, File={_name}");
 
             _writer.Write(array, offset, count);
         }

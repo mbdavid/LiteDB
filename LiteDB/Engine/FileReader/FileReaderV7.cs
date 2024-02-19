@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,31 +18,50 @@ namespace LiteDB.Engine
         // v7 uses 4k page size
         private const int V7_PAGE_SIZE = 4096;
 
-        private readonly Stream _stream;
-        private readonly AesEncryption _aes;
-        private readonly BsonDocument _header;
+        private readonly EngineSettings _settings;
+        private Stream _stream;
+        private AesEncryption _aes;
+        private BsonDocument _header;
 
         private byte[] _buffer = new byte[V7_PAGE_SIZE];
+        private bool _disposedValue;
 
-        public FileReaderV7(Stream stream, string password)
+        public IDictionary<string, BsonValue> GetPragmas() => new Dictionary<string, BsonValue>()
         {
-            _stream = stream;
+            { Pragmas.USER_VERSION, _header["userVersion"].AsInt32 },
+            { Pragmas.CHECKPOINT, 1000 },
+            { Pragmas.TIMEOUT, 60 },
+            { Pragmas.LIMIT_SIZE, long.MaxValue },
+            { Pragmas.UTC_DATE, true },
+        };
+
+        public FileReaderV7(EngineSettings settings)
+        {
+            _settings = settings;
+        }
+
+        public void Open()
+        {
+            var streamFactory = _settings.CreateDataFactory();
+
+            // open datafile from stream factory
+            _stream = streamFactory.GetStream(true, true);
 
             // only userVersion was avaiable in old file format versions
             _header = this.ReadPage(0);
 
-            if (password == null && _header["salt"].AsBinary.IsFullZero() == false)
+            if (_settings.Password == null && _header["salt"].AsBinary.IsFullZero() == false)
             {
                 throw LiteException.InvalidPassword();
             }
-            else if (password != null)
+            else if (_settings.Password != null)
             {
                 if (_header["salt"].AsBinary.IsFullZero())
                 {
                     throw LiteException.FileNotEncrypted();
                 }
 
-                var hash = AesEncryption.HashSHA1(password);
+                var hash = AesEncryption.HashSHA1(_settings.Password);
 
                 if (hash.SequenceEqual(_header["password"].AsBinary) == false)
                 {
@@ -49,9 +69,20 @@ namespace LiteDB.Engine
                 }
             }
 
-            _aes = password == null ?
+            _aes = _settings.Password == null ?
                 null :
-                new AesEncryption(password, _header["salt"].AsBinary);
+                new AesEncryption(_settings.Password, _header["salt"].AsBinary);
+        }
+
+        /// <summary>
+        /// Check header slots to test if data file is a LiteDB FILE_VERSION = v7
+        /// </summary>
+        public static bool IsVersion(byte[] buffer)
+        {
+            var header = Encoding.UTF8.GetString(buffer, 25, HeaderPage.HEADER_INFO.Length);
+            var version = buffer[52];
+
+            return (header == HeaderPage.HEADER_INFO && version == 7);
         }
 
         /// <summary>
@@ -344,8 +375,6 @@ namespace LiteDB.Engine
             return page;
         }
 
-        public int UserVersion => (int)_header["userVersion"];
-
         /// <summary>
         /// Read extend data block
         /// </summary>
@@ -400,6 +429,26 @@ namespace LiteDB.Engine
             }
 
             return visited;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    _stream.Dispose();
+                    _aes?.Dispose();
+                }
+
+                _disposedValue = true; // no external resources
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

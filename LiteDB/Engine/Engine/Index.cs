@@ -55,7 +55,7 @@ namespace LiteDB.Engine
                 {
                     using (var reader = new BufferReader(data.Read(pkNode.DataBlock)))
                     {
-                        var doc = reader.ReadDocument(expression.Fields);
+                        var doc = reader.ReadDocument(expression.Fields).GetValue();
 
                         // first/last node in this document that will be added
                         IndexNode last = null;
@@ -67,6 +67,8 @@ namespace LiteDB.Engine
                         // adding index node for each value
                         foreach (var key in keys)
                         {
+                            _state.Validate();
+
                             // insert new index node
                             var node = indexer.AddNode(index, key, pkNode.DataBlock, last);
 

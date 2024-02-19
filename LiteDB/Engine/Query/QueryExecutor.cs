@@ -11,6 +11,7 @@ namespace LiteDB.Engine
     internal class QueryExecutor
     {
         private readonly LiteEngine _engine;
+        private readonly EngineState _state;
         private readonly TransactionMonitor _monitor;
         private readonly SortDisk _sortDisk;
         private readonly EnginePragmas _pragmas;
@@ -19,9 +20,18 @@ namespace LiteDB.Engine
         private readonly Query _query;
         private readonly IEnumerable<BsonDocument> _source;
 
-        public QueryExecutor(LiteEngine engine, TransactionMonitor monitor, SortDisk sortDisk, EnginePragmas pragmas, string collection, Query query, IEnumerable<BsonDocument> source)
+        public QueryExecutor(
+            LiteEngine engine, 
+            EngineState state,
+            TransactionMonitor monitor, 
+            SortDisk sortDisk, 
+            EnginePragmas pragmas, 
+            string collection, 
+            Query query, 
+            IEnumerable<BsonDocument> source)
         {
             _engine = engine;
+            _state = state;
             _monitor = monitor;
             _sortDisk = sortDisk;
             _pragmas = pragmas;
@@ -59,7 +69,7 @@ namespace LiteDB.Engine
             transaction.OpenCursors.Add(_cursor);
 
             // return new BsonDataReader with IEnumerable source
-            return new BsonDataReader(RunQuery(), _collection);
+            return new BsonDataReader(RunQuery(), _collection, _state);
 
             IEnumerable<BsonDocument> RunQuery()
             {
@@ -110,35 +120,54 @@ namespace LiteDB.Engine
                 // get current query pipe: normal or groupby pipe
                 var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas);
 
-                try
-                {
-                    // start cursor elapsed timer
-                    _cursor.Elapsed.Start();
+                // start cursor elapsed timer
+                _cursor.Elapsed.Start();
 
-                    // call safepoint just before return each document
-                    foreach (var doc in pipe.Pipe(nodes, queryPlan))
+                using (var enumerator = pipe.Pipe(nodes, queryPlan).GetEnumerator())
+                {
+                    var read = false;
+
+                    try
+                    {
+                        read = enumerator.MoveNext();
+                    }
+                    catch (Exception ex)
+                    {
+                        _state.Handle(ex);
+                        throw ex;
+                    }
+
+                    while (read)
                     {
                         _cursor.Fetched++;
                         _cursor.Elapsed.Stop();
 
-                        yield return doc;
+                        yield return enumerator.Current;
 
                         if (transaction.State != TransactionState.Active) throw new LiteException(0, $"There is no more active transaction for this cursor: {_cursor.Query.ToSQL(_cursor.Collection)}");
 
                         _cursor.Elapsed.Start();
+
+                        try
+                        {
+                            read = enumerator.MoveNext();
+                        }
+                        catch (Exception ex)
+                        {
+                            _state.Handle(ex);
+                            throw ex;
+                        }
                     }
                 }
-                finally
+
+                // stop cursor elapsed
+                _cursor.Elapsed.Stop();
+
+                transaction.OpenCursors.Remove(_cursor);
+
+                if (isNew)
                 {
-                    // stop cursor elapsed
-                    _cursor.Elapsed.Stop();
-
-                    transaction.OpenCursors.Remove(_cursor);
-
-                    if (isNew)
-                    {
-                        _monitor.ReleaseTransaction(transaction);
-                    }
+                    _monitor.ReleaseTransaction(transaction);
                 }
             };
         }

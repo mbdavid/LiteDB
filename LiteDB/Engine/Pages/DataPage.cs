@@ -16,7 +16,7 @@ namespace LiteDB.Engine
         public DataPage(PageBuffer buffer)
             : base(buffer)
         {
-            ENSURE(this.PageType == PageType.Data, "page type must be data page");
+            ENSURE(this.PageType == PageType.Data, $"Page type must be data page: {PageType}");
 
             if (this.PageType != PageType.Data) throw LiteException.InvalidPageType(PageType.Data, this);
         }
@@ -108,7 +108,7 @@ namespace LiteDB.Engine
         /// <returns>A slot number between 0 and 4</returns>
         public static byte FreeIndexSlot(int freeBytes)
         {
-            ENSURE(freeBytes >= 0, "freeBytes must be positive");
+            ENSURE(freeBytes >= 0, $"FreeBytes must be positive: {freeBytes}");
 
             for (var i = 0; i < _freePageSlots.Length; i++)
             {

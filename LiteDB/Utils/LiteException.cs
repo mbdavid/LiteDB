@@ -38,6 +38,7 @@ namespace LiteDB
         public const int COLLECTION_ALREADY_EXIST = 134;
         public const int INDEX_ALREADY_EXIST = 135;
         public const int INVALID_UPDATE_FIELD = 136;
+        public const int ENGINE_DISPOSED = 137;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -55,6 +56,8 @@ namespace LiteDB
         public const int AVOID_USE_OF_PROCESS = 215;
         public const int NOT_ENCRYPTED = 216;
         public const int INVALID_PASSWORD = 217;
+
+        public const int INVALID_DATAFILE_STATE = 999;
 
         #endregion
 
@@ -80,6 +83,11 @@ namespace LiteDB
         {
             this.ErrorCode = code;
         }
+
+        /// <summary>
+        /// Critical error should be stop engine and release data files and all memory allocation
+        /// </summary>
+        public bool IsCritical => this.ErrorCode >= 900;
 
         #endregion
 
@@ -287,6 +295,11 @@ namespace LiteDB
             return new LiteException(INVALID_INITIALSIZE, "Initial Size must be a multiple of page size ({0} bytes).", PAGE_SIZE);
         }
 
+        internal static LiteException EngineDisposed()
+        {
+            return new LiteException(ENGINE_DISPOSED, "This engine instance already disposed.");
+        }
+
         internal static LiteException InvalidNullCharInString()
         {
             return new LiteException(INVALID_NULL_CHAR_STRING, "Invalid null character (\\0) was found in the string");
@@ -330,6 +343,10 @@ namespace LiteDB
             return new LiteException(AVOID_USE_OF_PROCESS, $"LiteDB do not accept System.Diagnostics.Process class in deserialize mapper");
         }
 
+        internal static LiteException InvalidDatafileState(string message)
+        {
+            return new LiteException(INVALID_DATAFILE_STATE, message);
+        }
         #endregion
     }
 }

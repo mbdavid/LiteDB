@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -14,6 +15,7 @@ namespace LiteDB.Engine
     internal class DiskWriterQueue : IDisposable
     {
         private readonly Stream _stream;
+        private readonly EngineState _state;
 
         // async thread controls
         private Task _task;
@@ -24,9 +26,12 @@ namespace LiteDB.Engine
         private readonly AsyncManualResetEvent _queueHasItems = new AsyncManualResetEvent();
         private readonly ManualResetEventSlim _queueIsEmpty = new ManualResetEventSlim(true);
 
-        public DiskWriterQueue(Stream stream)
+        private Exception _exception = null; // store last exception in async running task
+
+        public DiskWriterQueue(Stream stream, EngineState state)
         {
             _stream = stream;
+            _state = state;
         }
 
         /// <summary>
@@ -41,6 +46,10 @@ namespace LiteDB.Engine
         public void EnqueuePage(PageBuffer page)
         {
             ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
+
+            // throw last exception that stop running queue
+            if (_exception != null) throw _exception;
+
             lock (_queueSync)
             {
                 _queueIsEmpty.Reset();
@@ -60,6 +69,7 @@ namespace LiteDB.Engine
         public void Wait()
         {
             _queueIsEmpty.Wait();
+
             ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
         }
 
@@ -68,37 +78,36 @@ namespace LiteDB.Engine
         /// </summary>
         private async Task ExecuteQueue()
         {
-            while (true)
-            {
-                if (_queue.TryDequeue(out var page))
-                {
-                    WritePageToStream(page);
-                }
-                else
-                {
-                    lock (_queueSync)
-                    {
-                        if (_queue.Count > 0) continue;
-                        _queueIsEmpty.Set();
-                        _queueHasItems.Reset();
-                        if (_shouldClose) return;
-                    }
-                    TryFlushStream();
-
-                    await _queueHasItems.WaitAsync();
-                }
-            }
-        }
-
-        private void TryFlushStream()
-        {
             try
             {
-                _stream.FlushToDisk();
+                while (true)
+                {
+                    if (_queue.TryDequeue(out var page))
+                    {
+                        WritePageToStream(page);
+                    }
+                    else
+                    {
+                        lock (_queueSync)
+                        {
+                            if (_queue.Count > 0) continue;
+
+                            _queueIsEmpty.Set();
+                            _queueHasItems.Reset();
+
+                            if (_shouldClose) return;
+                        }
+
+                        _stream.FlushToDisk();
+
+                        await _queueHasItems.WaitAsync();
+                    }
+                }
             }
-            catch (IOException)
+            catch (Exception ex)
             {
-                // Disk is probably full. This may be unrecoverable problem but until we have enough space in the buffer we may be ok.
+                _state.Handle(ex);
+                _exception = ex;
             }
         }
 
@@ -110,6 +119,10 @@ namespace LiteDB.Engine
 
             // set stream position according to page
             _stream.Position = page.Position;
+
+#if DEBUG
+            _state.SimulateDiskWriteFail?.Invoke(page);
+#endif
 
             _stream.Write(page.Array, page.Offset, PAGE_SIZE);
 
@@ -123,9 +136,7 @@ namespace LiteDB.Engine
 
             _shouldClose = true;
             _queueHasItems.Set(); // unblock the running loop in case there are no items
-            
-            // run all items in queue before dispose
-            this.Wait();
+
             _task?.Wait();
             _task = null;
         }
