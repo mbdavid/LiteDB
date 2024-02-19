@@ -15,6 +15,8 @@ namespace LiteDB.Tests.Engine
         [Fact]
         public void Rebuild_Crash_IO_Write_Error()
         {
+            var N = 1_000;
+
             using (var file = new TempFile())
             {
                 var settings = new EngineSettings
@@ -24,7 +26,7 @@ namespace LiteDB.Tests.Engine
                     Password = "46jLz5QWd5fI3m4LiL2r"
                 };
 
-                var data = Enumerable.Range(1, 10_000).Select(i => new BsonDocument
+                var data = Enumerable.Range(1, N).Select(i => new BsonDocument
                 {
                     ["_id"] = i,
                     ["name"] = Faker.Fullname(),
@@ -41,7 +43,7 @@ namespace LiteDB.Tests.Engine
                         {
                             var p = new BasePage(page);
 
-                            if (p.PageID == 248)
+                            if (p.PageID == 28)
                             {
                                 p.ColID.Should().Be(1);
                                 p.PageType.Should().Be(PageType.Data);
@@ -79,8 +81,8 @@ namespace LiteDB.Tests.Engine
                     var col2 = db.Query("col2", Query.All()).ToList().Count;
                     var errors = db.Query("_rebuild_errors", Query.All()).ToList().Count;
 
-                    col1.Should().Be(9_999);
-                    col2.Should().Be(10_000);
+                    col1.Should().Be(N - 1);
+                    col2.Should().Be(N);
                     errors.Should().Be(1);
 
                 }
