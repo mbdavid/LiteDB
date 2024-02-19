@@ -213,27 +213,9 @@ namespace LiteDB
             };
         }
 
-        internal static LiteException InvalidInitialSize()
-        {
-            return new LiteException(INVALID_INITIALSIZE, "Initial Size must be a multiple of page size ({0} bytes).", PAGE_SIZE);
-        }
-
         internal static LiteException InvalidNullCharInString()
         {
             return new LiteException(INVALID_NULL_CHAR_STRING, "Invalid null character (\\0) was found in the string");
-        }
-
-        internal static LiteException InvalidPageType(PageType pageType, BasePage page)
-        {
-            var sb = new StringBuilder($"Invalid {pageType} on {page.PageID}. ");
-
-            sb.Append($"Full zero: {page.Buffer.All(0)}. ");
-            sb.Append($"Page Type: {page.PageType}. ");
-            sb.Append($"Prev/Next: {page.PrevPageID}/{page.NextPageID}. ");
-            sb.Append($"UniqueID: {page.Buffer.UniqueID}. ");
-            sb.Append($"ShareCounter: {page.Buffer.ShareCounter}. ");
-
-            return new LiteException(0, sb.ToString());
         }
 
         internal static LiteException InvalidFreeSpacePage(uint pageID, int freeBytes, int length)

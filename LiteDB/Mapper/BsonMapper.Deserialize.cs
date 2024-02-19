@@ -150,13 +150,18 @@ namespace LiteDB
             // if value is document, deserialize as document
             else if (value.IsDocument)
             {
-                BsonValue typeField;
+                // if type is anonymous use special handler
+                if (type.IsAnonymousType())
+                {
+                    return this.DeserializeAnonymousType(type, value.AsDocument);
+                }
+
                 var doc = value.AsDocument;
 
                 // test if value is object and has _type
-                if (doc.RawValue.TryGetValue("_type", out typeField))
+                if (doc.TryGetValue("_type", out var typeField) && typeField.IsString)
                 {
-                    type = Type.GetType(typeField.AsString);
+                    var actualType = Type.GetType(typeField.AsString);
 
                     if (actualType == null) throw LiteException.InvalidTypedName(typeField.AsString);
 
@@ -274,6 +279,23 @@ namespace LiteDB
                     }
                 }
             }
+        }
+
+        private object DeserializeAnonymousType(Type type, BsonDocument value)
+        {
+            var args = new List<object>();
+            var ctor = type.GetConstructors()[0];
+
+            foreach (var par in ctor.GetParameters())
+            {
+                var arg = this.Deserialize(par.ParameterType, value[par.Name]);
+
+                args.Add(arg);
+            }
+
+            var obj = Activator.CreateInstance(type, args.ToArray());
+
+            return obj;
         }
     }
 }
