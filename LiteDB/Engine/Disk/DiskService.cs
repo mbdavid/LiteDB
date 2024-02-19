@@ -218,7 +218,7 @@ namespace LiteDB.Engine
         {
             FileHelper.TryExec(60, () =>
             {
-                using (var stream = _dataFactory.GetStream(true, true, true))
+                using (var stream = _dataFactory.GetStream(true, true))
                 {
                     var buffer = new byte[PAGE_SIZE];
                     stream.Read(buffer, 0, PAGE_SIZE);

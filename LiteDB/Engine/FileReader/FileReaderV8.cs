@@ -66,13 +66,13 @@ namespace LiteDB.Engine
                 // get maxPageID based on both file length
                 _maxPageID = (uint)((dataFactory.GetLength() + logFactory.GetLength()) / PAGE_SIZE);
 
-                _dataStream = dataFactory.GetStream(true, true, false);
+                _dataStream = dataFactory.GetStream(true, false);
 
                 _dataStream.Position = 0;
 
                 if (logFactory.Exists())
                 {
-                    _logStream = logFactory.GetStream(false, false, true);
+                    _logStream = logFactory.GetStream(false, true);
 
                     this.LoadIndexMap();
                 }

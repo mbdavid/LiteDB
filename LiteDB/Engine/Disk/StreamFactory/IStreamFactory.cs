@@ -20,7 +20,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get new Stream instance
         /// </summary>
-        Stream GetStream(bool canWrite, bool exclusive, bool sequencial);
+        Stream GetStream(bool canWrite, bool sequencial);
 
         /// <summary>
         /// Get file length

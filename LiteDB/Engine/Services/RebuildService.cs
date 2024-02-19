@@ -114,7 +114,7 @@ namespace LiteDB.Engine
             var buffer = new byte[PAGE_SIZE * 2];
             var factory = _settings.CreateDataFactory();
 
-            using (var stream = factory.GetStream(false, false, true))
+            using (var stream = factory.GetStream(false, true))
             {
                 stream.Position = 0;
                 stream.Read(buffer, 0, buffer.Length);

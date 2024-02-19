@@ -26,7 +26,7 @@ namespace LiteDB.Engine
         {
             _factory = factory;
 
-            _writer = new Lazy<Stream>(() => _factory.GetStream(true, false, appendOnly), true);
+            _writer = new Lazy<Stream>(() => _factory.GetStream(true, appendOnly), true);
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace LiteDB.Engine
         {
             if (!_pool.TryTake(out var stream))
             {
-                stream = _factory.GetStream(false, false, false);
+                stream = _factory.GetStream(false, false);
             }
 
             return stream;

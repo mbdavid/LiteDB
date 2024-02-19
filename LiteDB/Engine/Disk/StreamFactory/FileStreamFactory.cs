@@ -34,7 +34,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new data file FileStream instance based on filename
         /// </summary>
-        public Stream GetStream(bool canWrite, bool exclusive, bool sequencial)
+        public Stream GetStream(bool canWrite, bool sequencial)
         {
             var write = canWrite && (_readonly == false);
 

@@ -30,7 +30,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Use ConcurrentStream wrapper to support multi thread in same Stream (using lock control)
         /// </summary>
-        public Stream GetStream(bool canWrite, bool exclusive, bool sequencial)
+        public Stream GetStream(bool canWrite, bool sequencial)
         {
             if (_password == null)
             {

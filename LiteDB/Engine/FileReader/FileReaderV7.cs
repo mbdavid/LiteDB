@@ -45,7 +45,7 @@ namespace LiteDB.Engine
             var streamFactory = _settings.CreateDataFactory();
 
             // open datafile from stream factory
-            _stream = streamFactory.GetStream(true, true, true);
+            _stream = streamFactory.GetStream(true, true);
 
             // only userVersion was avaiable in old file format versions
             _header = this.ReadPage(0);
