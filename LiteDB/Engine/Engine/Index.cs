@@ -29,7 +29,7 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
                 var collectionPage = snapshot.CollectionPage;
-                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation, _header.LastPageID);
                 var data = new DataService(snapshot);
 
                 // check if index already exists
@@ -108,7 +108,7 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var col = snapshot.CollectionPage;
-                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation, _header.LastPageID);
             
                 // no collection, no index
                 if (col == null) return false;

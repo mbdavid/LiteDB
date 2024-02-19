@@ -20,7 +20,7 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
                 var collectionPage = snapshot.CollectionPage;
-                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation, _header.LastPageID);
                 var data = new DataService(snapshot);
                 var count = 0;
 

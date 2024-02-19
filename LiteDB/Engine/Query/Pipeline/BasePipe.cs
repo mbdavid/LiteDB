@@ -96,7 +96,7 @@ namespace LiteDB.Engine
 
                     // initialize services
                     snapshot = _transaction.CreateSnapshot(LockMode.Read, last, false);
-                    indexer = new IndexService(snapshot, _pragmas.Collation);
+                    indexer = new IndexService(snapshot, _pragmas.Collation, );
                     data = new DataService(snapshot);
 
                     lookup = new DatafileLookup(data, _pragmas.UtcDate, null);
