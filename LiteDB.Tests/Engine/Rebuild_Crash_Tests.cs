@@ -43,6 +43,9 @@ namespace LiteDB.Tests.Engine
 
                             if (p.PageID == 248)
                             {
+                                p.ColID.Should().Be(1);
+                                p.PageType.Should().Be(PageType.Data);
+
                                 page.Write((uint)123123123, 8192 - 4);
                             }
                         };
@@ -60,7 +63,7 @@ namespace LiteDB.Tests.Engine
                         var col1 = db.Query("col1", Query.All()).ToList().Count;
 
                         // never run here
-                        //Assert.Fail("should get error in query");
+                        Assert.Fail("should get error in query");
                     }
                 }
                 catch (Exception ex)
