@@ -21,7 +21,7 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
                 var count = 0;
-                var indexer = new IndexService(snapshot, _header.Pragmas.Collation, _header.LastPageID);
+                var indexer = new IndexService(snapshot, _header.Pragmas.Collation);
                 var data = new DataService(snapshot);
 
                 LOG($"insert `{collection}`", "COMMAND");

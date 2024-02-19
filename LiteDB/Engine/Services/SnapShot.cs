@@ -564,7 +564,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void DropCollection(Action safePoint)
         {
-            var indexer = new IndexService(this, _header.Pragmas.Collation, _header.LastPageID);
+            var indexer = new IndexService(this, _header.Pragmas.Collation);
 
             // CollectionPage will be last deleted page (there is no NextPageID from CollectionPage)
             _transPages.FirstDeletedPageID = _collectionPage.PageID;

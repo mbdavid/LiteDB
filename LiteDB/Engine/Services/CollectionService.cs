@@ -70,7 +70,7 @@ namespace LiteDB.Engine
             _transPages.Commit += (h) => h.InsertCollection(name, pageID);
 
             // create first index (_id pk) (must pass collectionPage because snapshot contains null in CollectionPage prop)
-            var indexer = new IndexService(_snapshot, _header.Pragmas.Collation, _header.LastPageID);
+            var indexer = new IndexService(_snapshot, _header.Pragmas.Collation);
 
             indexer.CreateIndex("_id", "$._id", true);
         }

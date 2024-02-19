@@ -14,17 +14,11 @@ namespace LiteDB.Engine
     {
         private readonly Snapshot _snapshot;
         private readonly Collation _collation;
-        private readonly uint _maxCount = uint.MaxValue;
 
-        public IndexService(Snapshot snapshot, Collation collation, uint lastPageID)
+        public IndexService(Snapshot snapshot, Collation collation)
         {
             _snapshot = snapshot;
             _collation = collation;
-
-            // use maxCount to prevent infinite loops
-            // consider max of 255 document per page
-            // and will consider all pages as DataPages and in a single collection
-            _maxCount = 255 * (lastPageID + 1);
         }
 
         public Collation Collation => _collation;
@@ -332,7 +326,6 @@ namespace LiteDB.Engine
         public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
         {
             var cur = order == Query.Ascending ? this.GetNode(index.Head) : this.GetNode(index.Tail);
-            var count = 0;
 
             while (!cur.GetNextPrev(0, order).IsEmpty)
             {
@@ -342,8 +335,6 @@ namespace LiteDB.Engine
                 if (cur.Key.IsMinValue || cur.Key.IsMaxValue) yield break;
 
                 yield return cur;
-
-                ENSURE(count++ < _maxCount, $"A possible infinite loop was detected when returning documents in FindAll({index.Name})");
             }
         }
 
@@ -355,7 +346,6 @@ namespace LiteDB.Engine
         public IndexNode Find(CollectionIndex index, BsonValue value, bool sibling, int order)
         {
             var leftNode = order == Query.Ascending ? this.GetNode(index.Head) : this.GetNode(index.Tail);
-            var count = 0;
 
             for (int level = MAX_LEVEL_LENGTH - 1; level >= 0; level--)
             {
@@ -383,8 +373,6 @@ namespace LiteDB.Engine
 
                     leftNode = rightNode;
                     right = rightNode.GetNextPrev((byte)level, order);
-
-                    ENSURE(count++ < _maxCount, $"A possible infinite loop was detected when returning documents in Find({index.Name})");
                 }
             }
 
