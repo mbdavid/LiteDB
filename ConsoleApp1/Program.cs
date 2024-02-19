@@ -27,6 +27,7 @@ try
 {
     using (var db = new LiteEngine(settings))
     {
+#if DEBUG
         db.SimulateDiskWriteFail = (page) =>
         {
             var p = new BasePage(page);
@@ -36,6 +37,7 @@ try
                 page.Write((uint)123123123, 8192-4);
             }
         };
+#endif
 
         db.Pragma("USER_VERSION", 123);
 
