@@ -153,7 +153,7 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 - F# Support: https://github.com/Zaid-Ajaj/LiteDB.FSharp (v4)
 - UltraLiteDB (for Unity or IOT): https://github.com/rejemy/UltraLiteDB
 - OneBella - cross platform (windows, macos, linux) GUI tool : https://github.com/namigop/OneBella
-
+- LiteDB.Migration: Framework that makes schema migrations easier: https://github.com/JKamsker/LiteDb.Migration/
 
 ## Changelog
 
