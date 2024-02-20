@@ -67,6 +67,11 @@ namespace LiteDB.Engine
         public bool Upgrade { get; set; } = false;
 
         /// <summary>
+        /// If a upgrade is made a backup database is created.
+        /// </summary>
+        public bool CreateBackupOnUpgrade { get; set; } = true;
+
+        /// <summary>
         /// Create new IStreamFactory for datafile
         /// </summary>
         internal IStreamFactory CreateDataFactory()

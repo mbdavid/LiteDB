@@ -34,7 +34,7 @@ namespace LiteDB.Engine
             }
 
             // run rebuild process
-            this.Recovery(_settings.Collation);
+            this.Recovery(_settings.Collation, _settings.CreateBackupOnUpgrade);
         }
 
         /// <summary>
