@@ -39,7 +39,8 @@ LiteDB is a small, fast and lightweight .NET NoSQL embedded database.
 
 New UI to manage and visualize your database:
 
-![LiteDB.Studio](https://camo.githubusercontent.com/61465032cd9df0ccb7c0ff4a2d4f1cf772cdaa14/68747470733a2f2f7062732e7477696d672e636f6d2f6d656469612f454f58564b7674583041412d6c64793f666f726d61743d6a7067266e616d653d6d656469756d)
+
+![LiteDB.Studio](https://www.litedb.org/images/banner.gif)
 
 ## Documentation
 
