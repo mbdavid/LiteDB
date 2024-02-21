@@ -194,6 +194,11 @@ namespace LiteDB
 
                 var entity = this.GetEntityMapper(type);
 
+                if (entity.CTor)
+                {
+	                return entity.CreateInstance(doc);
+                }
+
                 // initialize CreateInstance
                 if (entity.CreateInstance == null)
                 {
