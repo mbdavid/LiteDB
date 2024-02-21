@@ -10,12 +10,29 @@ namespace LiteDB.Tests
         public TempFile()
         {
             var path = Path.GetTempPath();
-            var name = "test-" + Guid.NewGuid().ToString("d").Substring(0, 5) + ".db";
+            var name = "litedb-" + Guid.NewGuid().ToString("d").Substring(0, 5) + ".db";
 
             this.Filename = Path.Combine(path, name);
         }
 
+        public TempFile(string original)
+        {
+            var rnd = "-" + Guid.NewGuid().ToString("d").Substring(0, 5);
+            var path = Path.GetTempPath();
+            var name = "litedb-" + Path.GetFileName(FileHelper.GetSuffixFile(original, rnd));
+            var filename = Path.Combine(path, name);
+
+            File.Copy(original, filename, true);
+
+            this.Filename = filename;
+        }
+
         #region Dispose
+
+        public static implicit operator String(TempFile value)
+        {
+            return value.Filename;
+        }
 
         private bool _disposed;
 
@@ -43,7 +60,7 @@ namespace LiteDB.Tests
 
             // check file integrity
 
-            File.Delete(this.Filename);
+            FileHelper.TryExec(5, () => File.Delete(this.Filename));
 
             _disposed = true;
         }
@@ -53,5 +70,7 @@ namespace LiteDB.Tests
         public long Size => new FileInfo(this.Filename).Length;
 
         public string ReadAsText() => File.ReadAllText(this.Filename);
+
+        public override string ToString() => this.Filename;
     }
 }
