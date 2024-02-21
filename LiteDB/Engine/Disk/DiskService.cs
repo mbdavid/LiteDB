@@ -2,8 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -127,6 +125,13 @@ namespace LiteDB.Engine
         {
             return new DiskReader(_state, _cache, _dataPool, _logPool);
         }
+
+        /// <summary>
+        /// This method calculates the maximum number of items (documents or IndexNodes) that this database can have.
+        /// The result is used to prevent infinite loops in case of problems with pointers
+        /// Each page support max of 255 items. Use 10 pages offset (avoid empty disk)
+        /// </summary>
+        public uint MAX_ITEMS_COUNT => (uint)(((_dataLength + _logLength) / PAGE_SIZE) + 10) * byte.MaxValue;
 
         /// <summary>
         /// When a page are requested as Writable but not saved in disk, must be discard before release

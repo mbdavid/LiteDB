@@ -22,13 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Utils\Json\person.json" />
-    <None Remove="Utils\Json\zip.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Utils\Json\person.json" />
-    <EmbeddedResource Include="Utils\Json\zip.json" />
+    <EmbeddedResource Include="Resources\person.json" />
+    <EmbeddedResource Include="Resources\zip.json" />
   </ItemGroup>
 
   <ItemGroup>

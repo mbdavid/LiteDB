@@ -89,7 +89,7 @@ namespace LiteDB.Engine
         {
             ENSURE(_state == TransactionState.Active, "transaction must be active to create new snapshot");
 
-            Snapshot create() => new Snapshot(mode, collection, _header, _transactionID, _transPages, _locker, _walIndex, _reader, addIfNotExists);
+            Snapshot create() => new Snapshot(mode, collection, _header, _transactionID, _transPages, _locker, _walIndex, _reader, _disk, addIfNotExists);
 
             if (_snapshots.TryGetValue(collection, out var snapshot))
             {

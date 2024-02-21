@@ -48,7 +48,7 @@ try
 
         var col1 = db.Query("col1", Query.All()).ToList().Count;
         var col2 = db.Query("col2", Query.All()).ToList().Count;
-        
+
         Console.WriteLine("Inserted Col1: " + col1);
         Console.WriteLine("Inserted Col2: " + col2);
     }

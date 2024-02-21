@@ -9,13 +9,15 @@ namespace LiteDB.Engine
     internal class CollectionService
     {
         private readonly HeaderPage _header;
+        private readonly DiskService _disk;
         private readonly Snapshot _snapshot;
         private readonly TransactionPages _transPages;
 
-        public CollectionService(HeaderPage header, Snapshot snapshot, TransactionPages transPages)
+        public CollectionService(HeaderPage header, DiskService disk, Snapshot snapshot, TransactionPages transPages)
         {
-            _snapshot = snapshot;
             _header = header;
+            _disk = disk;
+            _snapshot = snapshot;
             _transPages = transPages;
         }
 
@@ -70,7 +72,7 @@ namespace LiteDB.Engine
             _transPages.Commit += (h) => h.InsertCollection(name, pageID);
 
             // create first index (_id pk) (must pass collectionPage because snapshot contains null in CollectionPage prop)
-            var indexer = new IndexService(_snapshot, _header.Pragmas.Collation);
+            var indexer = new IndexService(_snapshot, _header.Pragmas.Collation, _disk.MAX_ITEMS_COUNT);
 
             indexer.CreateIndex("_id", "$._id", true);
         }

@@ -14,11 +14,13 @@ namespace LiteDB.Engine
     {
         private readonly Snapshot _snapshot;
         private readonly Collation _collation;
+        private readonly uint _maxItemsCount;
 
-        public IndexService(Snapshot snapshot, Collation collation)
+        public IndexService(Snapshot snapshot, Collation collation, uint maxItemsCount)
         {
             _snapshot = snapshot;
             _collation = collation;
+            _maxItemsCount = maxItemsCount;
         }
 
         public Collation Collation => _collation;
@@ -96,6 +98,7 @@ namespace LiteDB.Engine
 
             // now, let's link my index node on right place
             var leftNode = this.GetNode(index.Head);
+            var counter = 0u;
 
             // scan from top left
             for (int currentLevel = MAX_LEVEL_LENGTH - 1; currentLevel >= 0; currentLevel--)
@@ -105,6 +108,8 @@ namespace LiteDB.Engine
                 // while: scan from left to right
                 while (right.IsEmpty == false && right != index.Tail)
                 {
+                    ENSURE(counter++ < _maxItemsCount, $"Detected loop in AddNode({node.Position})");
+
                     var rightNode = this.GetNode(right);
 
                     // read next node to compare
@@ -197,9 +202,12 @@ namespace LiteDB.Engine
         public IEnumerable<IndexNode> GetNodeList(PageAddress nodeAddress)
         {
             var node = this.GetNode(nodeAddress);
+            var counter = 0u;
 
             while (node != null)
             {
+                ENSURE(counter++ < _maxItemsCount, $"Detected loop in GetNodeList({nodeAddress})");
+
                 yield return node;
 
                 node = this.GetNode(node.NextNode);
@@ -213,9 +221,12 @@ namespace LiteDB.Engine
         {
             var node = this.GetNode(pkAddress);
             var indexes = _snapshot.CollectionPage.GetCollectionIndexesSlots();
+            var counter = 0u;
 
             while (node != null)
             {
+                ENSURE(counter++ < _maxItemsCount, $"Detected loop in DeleteAll({pkAddress})");
+
                 this.DeleteSingleNode(node, indexes[node.Slot]);
 
                 // move to next node
@@ -231,9 +242,12 @@ namespace LiteDB.Engine
             var last = this.GetNode(pkAddress);
             var node = this.GetNode(last.NextNode); // starts in first node after PK
             var indexes = _snapshot.CollectionPage.GetCollectionIndexesSlots();
+            var counter = 0u;
 
             while (node != null)
             {
+                ENSURE(counter++ < _maxItemsCount, $"Detected loop in DeleteList({pkAddress})");
+
                 if (toDelete.Contains(node.Position))
                 {
                     this.DeleteSingleNode(node, indexes[node.Slot]);
@@ -326,9 +340,12 @@ namespace LiteDB.Engine
         public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
         {
             var cur = order == Query.Ascending ? this.GetNode(index.Head) : this.GetNode(index.Tail);
+            var counter = 0u;
 
             while (!cur.GetNextPrev(0, order).IsEmpty)
             {
+                ENSURE(counter++ < _maxItemsCount, $"Detected loop in FindAll({index.Name})");
+
                 cur = this.GetNode(cur.GetNextPrev(0, order));
 
                 // stop if node is head/tail
@@ -346,6 +363,7 @@ namespace LiteDB.Engine
         public IndexNode Find(CollectionIndex index, BsonValue value, bool sibling, int order)
         {
             var leftNode = order == Query.Ascending ? this.GetNode(index.Head) : this.GetNode(index.Tail);
+            var counter = 0u;
 
             for (int level = MAX_LEVEL_LENGTH - 1; level >= 0; level--)
             {
@@ -353,6 +371,8 @@ namespace LiteDB.Engine
 
                 while (right.IsEmpty == false)
                 {
+                    ENSURE(counter++ < _maxItemsCount, $"Detected loop in Find({index.Name}, {value})");
+
                     var rightNode = this.GetNode(right);
 
                     var diff = rightNode.Key.CompareTo(value, _collation);

@@ -17,6 +17,7 @@ namespace LiteDB.Engine
         private readonly HeaderPage _header;
         private readonly LockService _locker;
         private readonly DiskReader _reader;
+        private readonly DiskService _disk;
         private readonly WalIndexService _walIndex;
 
         // instances from transaction
@@ -48,6 +49,7 @@ namespace LiteDB.Engine
             LockService locker, 
             WalIndexService walIndex, 
             DiskReader reader, 
+            DiskService disk,
             bool addIfNotExists)
         {
             _mode = mode;
@@ -58,6 +60,7 @@ namespace LiteDB.Engine
             _locker = locker;
             _walIndex = walIndex;
             _reader = reader;
+            _disk = disk;
 
             // enter in lock mode according initial mode
             if (mode == LockMode.Write)
@@ -68,7 +71,7 @@ namespace LiteDB.Engine
             // get lastest read version from wal-index
             _readVersion = _walIndex.CurrentReadVersion;
 
-            var srv = new CollectionService(_header, this, _transPages);
+            var srv = new CollectionService(_header, _disk, this, _transPages);
 
             // read collection (create if new - load virtual too)
             srv.Get(_collectionName, addIfNotExists, ref _collectionPage);
@@ -564,7 +567,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void DropCollection(Action safePoint)
         {
-            var indexer = new IndexService(this, _header.Pragmas.Collation);
+            var indexer = new IndexService(this, _header.Pragmas.Collation, _disk.MAX_ITEMS_COUNT);
 
             // CollectionPage will be last deleted page (there is no NextPageID from CollectionPage)
             _transPages.FirstDeletedPageID = _collectionPage.PageID;

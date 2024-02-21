@@ -347,6 +347,7 @@ namespace LiteDB
         {
             return new LiteException(INVALID_DATAFILE_STATE, message);
         }
+
         #endregion
     }
 }

@@ -14,7 +14,7 @@ namespace LiteDB.Tests.Database
         {
             // v5 upgrades only from v4!
 
-            var original = "../../../Utils/Legacy/v4.db";
+            var original = "../../../Resources/v4.db";
             var copy = original.Replace(".db", "-copy.db");
                 
             File.Copy(original, copy, true);
@@ -54,7 +54,7 @@ namespace LiteDB.Tests.Database
         {
             // v5 upgrades only from v4!
 
-            var original = "../../../Utils/Legacy/v4.db";
+            var original = "../../../Resources/v4.db";
             var copy = original.Replace(".db", "-copy");
 
             File.Copy(original, copy, true);

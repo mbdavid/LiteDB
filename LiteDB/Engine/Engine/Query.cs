@@ -36,6 +36,7 @@ namespace LiteDB.Engine
                 _state,
                 _monitor, 
                 _sortDisk, 
+                _disk,
                 _header.Pragmas, 
                 collection, 
                 query, 

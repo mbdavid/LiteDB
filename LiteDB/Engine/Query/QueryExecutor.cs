@@ -14,6 +14,7 @@ namespace LiteDB.Engine
         private readonly EngineState _state;
         private readonly TransactionMonitor _monitor;
         private readonly SortDisk _sortDisk;
+        private readonly DiskService _disk;
         private readonly EnginePragmas _pragmas;
         private readonly CursorInfo _cursor;
         private readonly string _collection;
@@ -25,6 +26,7 @@ namespace LiteDB.Engine
             EngineState state,
             TransactionMonitor monitor, 
             SortDisk sortDisk, 
+            DiskService disk,
             EnginePragmas pragmas, 
             string collection, 
             Query query, 
@@ -34,6 +36,7 @@ namespace LiteDB.Engine
             _state = state;
             _monitor = monitor;
             _sortDisk = sortDisk;
+            _disk = disk;
             _pragmas = pragmas;
             _collection = collection;
             _query = query;
@@ -99,6 +102,8 @@ namespace LiteDB.Engine
 
                 var queryPlan = optimizer.ProcessQuery();
 
+                var plan = queryPlan.GetExecutionPlan();
+
                 // if execution is just to get explan plan, return as single document result
                 if (executionPlan)
                 {
@@ -115,10 +120,10 @@ namespace LiteDB.Engine
                 }
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
-                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot, _pragmas.Collation));
+                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, new IndexService(snapshot, _pragmas.Collation, _disk.MAX_ITEMS_COUNT));
 
                 // get current query pipe: normal or groupby pipe
-                var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas);
+                var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas, _disk.MAX_ITEMS_COUNT);
 
                 // start cursor elapsed timer
                 _cursor.Elapsed.Start();
