@@ -17,9 +17,9 @@ namespace LiteDB.Tests
 
         public TempFile(string original)
         {
-            var rnd = "-" + Guid.NewGuid().ToString("d").Substring(0, 5);
+            var rnd = Guid.NewGuid().ToString("d").Substring(0, 5);
             var path = Path.GetTempPath();
-            var name = "litedb-" + Path.GetFileName(FileHelper.GetSuffixFile(original, rnd));
+            var name = $"litedb-{rnd}.db";
             var filename = Path.Combine(path, name);
 
             File.Copy(original, filename, true);
@@ -60,7 +60,7 @@ namespace LiteDB.Tests
 
             // check file integrity
 
-            FileHelper.TryExec(5, () => File.Delete(this.Filename));
+            File.Delete(this.Filename);
 
             _disposed = true;
         }
