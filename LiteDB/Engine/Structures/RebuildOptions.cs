@@ -27,6 +27,11 @@ namespace LiteDB.Engine
         public Collation Collation { get; set; } = null;
 
         /// <summary>
+        /// Should the rebuild create a backup
+        /// </summary>
+        public bool CreateBackup { get; set; } = true;
+
+        /// <summary>
         /// When set true, if any problem occurs in rebuild, a _rebuild_errors collection
         /// will contains all errors found
         /// </summary>

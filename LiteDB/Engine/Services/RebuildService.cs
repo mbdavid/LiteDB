@@ -101,9 +101,16 @@ namespace LiteDB.Engine
 
 
             // get difference size
-            return 
-                new FileInfo(backupFilename).Length -
+            var diff = new FileInfo(backupFilename).Length -
                 new FileInfo(_settings.Filename).Length;
+
+            if (!options.CreateBackup)
+            {
+                // Delete the backup file
+                File.Delete(backupFilename);
+            }
+
+            return diff;
         }
 
         /// <summary>
