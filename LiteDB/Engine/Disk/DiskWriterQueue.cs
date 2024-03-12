@@ -58,7 +58,7 @@ namespace LiteDB.Engine
 
                 if (_task == null)
                 {
-                    _task = Task.Factory.StartNew(ExecuteQueue, TaskCreationOptions.LongRunning);
+                    _task = Task.Factory.StartNew(ExecuteQueue, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
                 }
             }
         }
@@ -100,7 +100,7 @@ namespace LiteDB.Engine
 
                         _stream.FlushToDisk();
 
-                        await _queueHasItems.WaitAsync();
+                        await _queueHasItems.WaitAsync().ConfigureAwait(false);
                     }
                 }
             }
