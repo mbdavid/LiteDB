@@ -29,7 +29,7 @@ namespace LiteDB.Engine
         private long _logLength;
 
         public DiskService(
-            EngineSettings settings, 
+            EngineSettings settings,
             EngineState state,
             int[] memorySegmentSizes)
         {
@@ -261,7 +261,7 @@ namespace LiteDB.Engine
 
                     var bytesRead = stream.Read(buffer, 0, PAGE_SIZE);
 
-                    ENSURE(bytesRead == PAGE_SIZE, $"ReadFull must read PAGE_SIZE bytes [{bytesRead}]");
+                    ENSURE(bytesRead == PAGE_SIZE, () => $"ReadFull must read PAGE_SIZE bytes [{bytesRead}]");
 
                     yield return new PageBuffer(buffer, 0, 0)
                     {

@@ -165,7 +165,7 @@ namespace LiteDB.Engine
 
             while (address != PageAddress.Empty)
             {
-                ENSURE(counter++ < _maxItemsCount, $"Detected loop in data Read({address})");
+                ENSURE(counter++ < _maxItemsCount, () => $"Detected loop in data Read({address})");
 
                 var dataPage = _snapshot.GetPage<DataPage>(address.PageID);
 

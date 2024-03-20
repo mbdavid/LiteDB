@@ -144,6 +144,20 @@ namespace LiteDB
             }
         }
 
+        [DebuggerHidden]
+        public static void ENSURE(bool conditional, Func<string> messageProvider)
+        {
+            if (conditional == false)
+            {
+                if (Debugger.IsAttached)
+                {
+                    Debugger.Break();
+                }
+
+                throw LiteException.InvalidDatafileState(messageProvider());
+            }
+        }
+
         /// <summary>
         /// If ifTest are true, ensure condition is true, otherwise throw ensure exception (check contract)
         /// </summary>
