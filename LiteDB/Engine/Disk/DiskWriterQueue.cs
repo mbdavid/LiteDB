@@ -8,6 +8,8 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
+    using LiteDB.Utils.Extensions;
+
     /// <summary>
     /// Implement disk write queue and async writer thread - used only for write on LOG file
     /// [ThreadSafe]
@@ -23,7 +25,7 @@ namespace LiteDB.Engine
 
         private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
         private readonly object _queueSync = new object();
-        private readonly AsyncManualResetEvent _queueHasItems = new AsyncManualResetEvent();
+        private readonly ManualResetEventSlim _queueHasItems = new ManualResetEventSlim();
         private readonly ManualResetEventSlim _queueIsEmpty = new ManualResetEventSlim(true);
 
         private Exception _exception = null; // store last exception in async running task
@@ -100,7 +102,7 @@ namespace LiteDB.Engine
 
                         _stream.FlushToDisk();
 
-                        await _queueHasItems.WaitAsync();
+                        await _queueHasItems.WaitHandle.WaitAsync().ConfigureAwait(false);
                     }
                 }
             }
