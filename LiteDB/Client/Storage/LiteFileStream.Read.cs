@@ -42,23 +42,40 @@ namespace LiteDB
                 .FindOne("_id = { f: @0, n: @1 }", _fileId, index);
 
             // if chunk is null there is no more chunks
-            return chunk?["data"].AsBinary;
+            byte[] result = chunk?["data"].AsBinary;
+            if (result != null) {
+                _chunkLengths[index] = result.Length;
+            }
+            return result;
         }
 
         private void SetReadStreamPosition(long newPosition)
         {
-            if (newPosition < 0 && newPosition > Length)
+            if (newPosition < 0 || newPosition > Length)
             {
                 throw new ArgumentOutOfRangeException();
             }
             _streamPosition = newPosition;
 
             // calculate new chunk position
-            _currentChunkIndex = (int)_streamPosition / MAX_CHUNK_SIZE;
-            _positionInChunk = (int)_streamPosition % MAX_CHUNK_SIZE;
-
-            // get current chunk
-            _currentChunkData = this.GetChunkData(_currentChunkIndex);
+            long seekStreamPosition = 0;
+            int loadedChunk = _currentChunkIndex;
+            int newChunkIndex = 0;
+            while (seekStreamPosition <= _streamPosition) {
+                if (!_chunkLengths.ContainsKey(newChunkIndex)) {
+                    loadedChunk = newChunkIndex;
+                    _currentChunkData = GetChunkData(newChunkIndex);
+                }
+                seekStreamPosition += _chunkLengths[newChunkIndex];
+                newChunkIndex++;
+            }
+            newChunkIndex--;
+            seekStreamPosition -= _chunkLengths[newChunkIndex];
+            _positionInChunk = (int)(_streamPosition - seekStreamPosition);
+            _currentChunkIndex = newChunkIndex;
+            if (loadedChunk != _currentChunkIndex) {
+                _currentChunkData = GetChunkData(_currentChunkIndex);
+            }
         }
     }
 }

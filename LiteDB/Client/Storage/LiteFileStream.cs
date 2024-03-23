@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using static LiteDB.Constants;
@@ -23,6 +24,7 @@ namespace LiteDB
         private byte[] _currentChunkData = null;
         private int _positionInChunk = 0;
         private MemoryStream _buffer;
+        private Dictionary<int, long> _chunkLengths = new Dictionary<int, long>();
 
         internal LiteFileStream(ILiteCollection<LiteFileInfo<TFileId>> files, ILiteCollection<BsonDocument> chunks, LiteFileInfo<TFileId> file, BsonValue fileId, FileAccess mode)
         {
