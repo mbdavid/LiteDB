@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -29,7 +26,7 @@ namespace LiteDB.Engine
         private long _logLength;
 
         public DiskService(
-            EngineSettings settings, 
+            EngineSettings settings,
             EngineState state,
             int[] memorySegmentSizes)
         {
@@ -261,7 +258,7 @@ namespace LiteDB.Engine
 
                     var bytesRead = stream.Read(buffer, 0, PAGE_SIZE);
 
-                    ENSURE(bytesRead == PAGE_SIZE, $"ReadFull must read PAGE_SIZE bytes [{bytesRead}]");
+                    ENSURE(bytesRead == PAGE_SIZE, "ReadFull must read PAGE_SIZE bytes [{0}]", bytesRead);
 
                     yield return new PageBuffer(buffer, 0, 0)
                     {

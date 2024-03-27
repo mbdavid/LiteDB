@@ -117,7 +117,7 @@ namespace LiteDB.Engine
             var colID = _collections[collection];
 
             if (!_collectionsDataPages.ContainsKey(colID)) yield break;
-            
+
             var dataPages = _collectionsDataPages[colID];
             var uniqueIDs = new HashSet<BsonValue>();
 
@@ -156,8 +156,8 @@ namespace LiteDB.Engine
                         // empty slot
                         if (position == 0) continue;
 
-                        ENSURE(position > 0 && length > 0, $"Invalid footer ref position {position} with length {length}");
-                        ENSURE(position + length < PAGE_SIZE, $"Invalid footer ref position {position} with length {length}");
+                        ENSURE(position > 0 && length > 0, "Invalid footer ref position {0} with length {1}", position, length);
+                        ENSURE(position + length < PAGE_SIZE, "Invalid footer ref position {0} with length {1}", position, length);
 
                         // get segment slice
                         var segment = buffer.Slice(position, length);
@@ -183,8 +183,8 @@ namespace LiteDB.Engine
                                 var nextBuffer = nextPage.Value.Buffer;
 
                                 // make page validations
-                                ENSURE(nextPage.Value.PageType == PageType.Data, $"Invalid PageType (excepted Data, get {nextPage.Value.PageType})");
-                                ENSURE(nextPage.Value.ColID == colID, $"Invalid ColID in this page (expected {colID}, get {nextPage.Value.ColID})");
+                                ENSURE(nextPage.Value.PageType == PageType.Data, "Invalid PageType (excepted Data, get {0})", nextPage.Value.PageType);
+                                ENSURE(nextPage.Value.ColID == colID, "Invalid ColID in this page (expected {0}, get {1})", colID, nextPage.Value.ColID);
                                 ENSURE(nextPage.Value.ItemsCount > 0, "Page with no items count");
 
                                 // read slot address
@@ -196,7 +196,7 @@ namespace LiteDB.Engine
                                 length = nextBuffer.ReadUInt16(lengthAddr);
 
                                 // empty slot
-                                ENSURE(length > 0, $"Last DataBlock request a next extend to {nextBlock}, but this block are empty footer");
+                                ENSURE(length > 0, "Last DataBlock request a next extend to {0}, but this block are empty footer", nextBlock);
 
                                 // get segment slice
                                 segment = nextBuffer.Slice(position, length);
@@ -204,7 +204,7 @@ namespace LiteDB.Engine
                                 nextBlock = segment.ReadPageAddress(DataBlock.P_NEXT_BLOCK);
                                 data = segment.Slice(DataBlock.P_BUFFER, segment.Count - DataBlock.P_BUFFER);
 
-                                ENSURE(extend == true, $"Next datablock always be an extend. Invalid data block {nextBlock}");
+                                ENSURE(extend == true, "Next datablock always be an extend. Invalid data block {0}", nextBlock);
 
                                 // write data on memorystream
 
@@ -219,8 +219,8 @@ namespace LiteDB.Engine
                                 var docResult = r.ReadDocument();
                                 var id = docResult.Value["_id"];
 
-                                ENSURE(!(id == BsonValue.Null || id == BsonValue.MinValue || id == BsonValue.MaxValue), $"Invalid _id value: {id}");
-                                ENSURE(uniqueIDs.Contains(id) == false, $"Duplicated _id value: {id}");
+                                ENSURE(!(id == BsonValue.Null || id == BsonValue.MinValue || id == BsonValue.MaxValue), "Invalid _id value: {0}", id);
+                                ENSURE(uniqueIDs.Contains(id) == false, "Duplicated _id value: {0}", id);
 
                                 uniqueIDs.Add(id);
 
@@ -279,7 +279,7 @@ namespace LiteDB.Engine
             var header = this.ReadPage(0, out var pageInfo).GetValue();
             var lastPageID = header.Buffer.ReadUInt32(HeaderPage.P_LAST_PAGE_ID); //TOFO: tentar não usar esse valor como referencia (varrer tudo)
 
-            ENSURE(lastPageID <= _maxPageID, $"LastPageID {lastPageID} should be less or equals to maxPageID {_maxPageID}");
+            ENSURE(lastPageID <= _maxPageID, "LastPageID {0} should be less or equals to maxPageID {1}", lastPageID, _maxPageID);
 
             for (uint i = 0; i <= lastPageID; i++)
             {
@@ -398,8 +398,8 @@ namespace LiteDB.Engine
 
                         position += 15; // head 5 bytes, tail 5 bytes, reserved 1 byte, freeIndexPageList 4 bytes
 
-                        ENSURE(!string.IsNullOrEmpty(name), $"Index name can't be empty (collection {collection.Key} - index: {i})");
-                        ENSURE(!string.IsNullOrEmpty(expr), $"Index expression can't be empty (collection {collection.Key} - index: {i})");
+                        ENSURE(!string.IsNullOrEmpty(name), "Index name can't be empty (collection {0} - index: {1})", collection.Key, i);
+                        ENSURE(!string.IsNullOrEmpty(expr), "Index expression can't be empty (collection {0} - index: {1})", collection.Key, i);
 
                         var indexInfo = new IndexInfo
                         {
@@ -481,7 +481,7 @@ namespace LiteDB.Engine
                     pageInfo.PageID = pageID;
                     pageInfo.ColID = buffer.ReadUInt32(BasePage.P_COL_ID);
 
-                    ENSURE(read == PAGE_SIZE, $"Page position {_logStream} read only than {read} bytes (instead {PAGE_SIZE})");
+                    ENSURE(read == PAGE_SIZE, "Page position {0} read only than {1} bytes (instead {2})", _logStream, read, PAGE_SIZE);
 
                     var position = new PagePosition(pageID, currentPosition);
 
@@ -515,7 +515,7 @@ namespace LiteDB.Engine
             {
                 var mapIndexPages = transactions[transactionID];
 
-                // update 
+                // update
                 foreach (var page in mapIndexPages)
                 {
                     _logIndexMap[page.PageID] = page.Position;
@@ -532,7 +532,7 @@ namespace LiteDB.Engine
 
             try
             {
-                ENSURE(pageID <= _maxPageID, $"PageID: {pageID} should be less then or equals to maxPageID: {_maxPageID}");
+                ENSURE(pageID <= _maxPageID, "PageID: {0} should be less then or equals to maxPageID: {1}", pageID, _maxPageID);
 
                 var pageBuffer = new PageBuffer(new byte[PAGE_SIZE], 0, PAGE_SIZE);
                 Stream stream;
@@ -556,13 +556,13 @@ namespace LiteDB.Engine
 
                 read = stream.Read(pageBuffer.Array, pageBuffer.Offset, pageBuffer.Count);
 
-                ENSURE(read == PAGE_SIZE, $"Page position {stream.Position} read only than {read} bytes (instead {PAGE_SIZE})");
+                ENSURE(read == PAGE_SIZE, "Page position {0} read only than {1} bytes (instead {2})", stream.Position, read, PAGE_SIZE);
 
                 var page = new BasePage(pageBuffer);
 
                 pageInfo.ColID = page.ColID;
 
-                ENSURE(page.PageID == pageID, $"Expect read pageID: {pageID} but header contains pageID: {page.PageID}");
+                ENSURE(page.PageID == pageID, "Expect read pageID: {0} but header contains pageID: {1}", pageID, page.PageID);
 
                 return page;
             }

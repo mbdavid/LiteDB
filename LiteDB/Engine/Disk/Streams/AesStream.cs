@@ -22,7 +22,7 @@ namespace LiteDB.Engine
 
         private readonly byte[] _decryptedZeroes = new byte[16];
 
-        private static readonly byte[] _emptyContent = new byte[PAGE_SIZE - 1 - 16]; // 1 for aes indicator + 16 for salt 
+        private static readonly byte[] _emptyContent = new byte[PAGE_SIZE - 1 - 16]; // 1 for aes indicator + 16 for salt
 
         public byte[] Salt { get; }
 
@@ -111,7 +111,7 @@ namespace LiteDB.Engine
                     // check whether bytes 32 to 64 is empty. This indicates LiteDb was unable to write encrypted 1s during last attempt.
                     _stream.Read(checkBuffer, 0, checkBuffer.Length);
                     isNew = checkBuffer.All(x => x == 0);
-                    
+
                     // reset checkBuffer and stream position
                     Array.Clear(checkBuffer, 0, checkBuffer.Length);
                     _stream.Position = 32;
@@ -160,7 +160,7 @@ namespace LiteDB.Engine
         /// </summary>
         public override int Read(byte[] array, int offset, int count)
         {
-            ENSURE(this.Position % PAGE_SIZE == 0, $"AesRead: position must be in PAGE_SIZE module. Position={this.Position}, File={_name}");
+            ENSURE(this.Position % PAGE_SIZE == 0, "AesRead: position must be in PAGE_SIZE module. Position={0}, File={1}", this.Position, _name);
 
             var r = _reader.Read(array, offset, count);
 
@@ -181,7 +181,7 @@ namespace LiteDB.Engine
         public override void Write(byte[] array, int offset, int count)
         {
             ENSURE(count == PAGE_SIZE || count == 1, "buffer size must be PAGE_SIZE");
-            ENSURE(this.Position == HeaderPage.P_INVALID_DATAFILE_STATE || this.Position % PAGE_SIZE == 0, $"AesWrite: position must be in PAGE_SIZE module. Position={this.Position}, File={_name}");
+            ENSURE(this.Position == HeaderPage.P_INVALID_DATAFILE_STATE || this.Position % PAGE_SIZE == 0, "AesWrite: position must be in PAGE_SIZE module. Position={0}, File={1}", this.Position, _name);
 
             _writer.Write(array, offset, count);
         }
