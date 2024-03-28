@@ -284,6 +284,11 @@ namespace LiteDB
         private static readonly IMemoryCache _cacheScalar = new MemoryCache(new MemoryCacheOptions());
 
         /// <summary>
+        /// Gets or sets how long a cache entry can be inactive (e.g. not accessed) before it will be removed.
+        /// </summary>
+        public static TimeSpan? CacheSlidingExpiration { get; set; }
+
+        /// <summary>
         /// Parse string and create new instance of BsonExpression - can be cached
         /// </summary>
         public static BsonExpression Create(string expression)
@@ -361,7 +366,7 @@ namespace LiteDB
             {
                 var cached = _cacheScalar.GetOrCreate(expr.Source, cacheEntry =>
                 {
-                    cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
+                    cacheEntry.SlidingExpiration = CacheSlidingExpiration;
 
                     var lambda = Expression.Lambda<BsonExpressionScalarDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
 
@@ -374,7 +379,7 @@ namespace LiteDB
             {
                 var cached = _cacheEnumerable.GetOrCreate(expr.Source, cacheEntry =>
                 {
-                    cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
+                    cacheEntry.SlidingExpiration = CacheSlidingExpiration;
 
                     var lambda = Expression.Lambda<BsonExpressionEnumerableDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
 
