@@ -22,7 +22,9 @@ namespace LiteDB
                 case "TrimStart": return "LTRIM(#)";
                 case "TrimEnd": return "RTRIM(#)";
                 case "ToUpper": return "UPPER(#)";
+                case "ToUpperInvariant": return "UPPER(#)";
                 case "ToLower": return "LOWER(#)";
+                case "ToLowerInvariant": return "LOWER(#)";
                 case "Replace": return "REPLACE(#, @0, @1)";
                 case "PadLeft": return "LPAD(#, @0, @1)";
                 case "RightLeft": return "RPAD(#, @0, @1)";
