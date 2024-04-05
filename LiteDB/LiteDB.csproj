@@ -1,18 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-    <TargetFrameworks>netstandard1.3;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <TargetFrameworks>net35;net40;netstandard1.3;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
     <PackageId>LiteDB</PackageId>
-    <Version>4.1.5</Version>
-    <AssemblyVersion>4.1.5.0</AssemblyVersion>
-    <FileVersion>4.1.5</FileVersion>
-    <VersionPrefix>4.1.5</VersionPrefix>
+    <Version>2024.0.1-uipath</Version>
+    <AssemblyVersion>2024.0.1</AssemblyVersion>
+    <FileVersion>2024.0.1</FileVersion>
+    <VersionPrefix>2024.0.1</VersionPrefix>
     <Authors>Maurício David</Authors>
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
