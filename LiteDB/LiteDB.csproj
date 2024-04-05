@@ -9,10 +9,10 @@
 
   <PropertyGroup>
     <PackageId>LiteDB</PackageId>
-    <Version>4.1.6</Version>
-    <AssemblyVersion>4.1.6.0</AssemblyVersion>
-    <FileVersion>4.1.6</FileVersion>
-    <VersionPrefix>4.1.6</VersionPrefix>
+    <Version>2024.0.1-uipath</Version>
+    <AssemblyVersion>2024.0.1</AssemblyVersion>
+    <FileVersion>2024.0.1</FileVersion>
+    <VersionPrefix>2024.0.1</VersionPrefix>
     <Authors>Maurício David</Authors>
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
