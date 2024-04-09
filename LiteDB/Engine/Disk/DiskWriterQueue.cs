@@ -60,7 +60,7 @@ namespace LiteDB.Engine
 
                 if (_task == null)
                 {
-                    _task = Task.Factory.StartNew(ExecuteQueue, TaskCreationOptions.LongRunning);
+                    _task = Task.Factory.StartNew(ExecuteQueue, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
                 }
             }
         }

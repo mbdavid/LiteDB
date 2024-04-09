@@ -79,10 +79,10 @@ namespace LiteDB.Engine
         /// Insert a new node index inside an collection index.
         /// </summary>
         private IndexNode AddNode(
-            CollectionIndex index, 
-            BsonValue key, 
-            PageAddress dataBlock, 
-            byte insertLevels, 
+            CollectionIndex index,
+            BsonValue key,
+            PageAddress dataBlock,
+            byte insertLevels,
             IndexNode last)
         {
             // get a free index page for head note
@@ -108,7 +108,7 @@ namespace LiteDB.Engine
                 // while: scan from left to right
                 while (right.IsEmpty == false && right != index.Tail)
                 {
-                    ENSURE(counter++ < _maxItemsCount, $"Detected loop in AddNode({node.Position})");
+                    ENSURE(counter++ < _maxItemsCount, "Detected loop in AddNode({0})", node.Position);
 
                     var rightNode = this.GetNode(right);
 
@@ -206,7 +206,7 @@ namespace LiteDB.Engine
 
             while (node != null)
             {
-                ENSURE(counter++ < _maxItemsCount, $"Detected loop in GetNodeList({nodeAddress})");
+                ENSURE(counter++ < _maxItemsCount, "Detected loop in GetNodeList({0})", nodeAddress);
 
                 yield return node;
 
@@ -225,7 +225,7 @@ namespace LiteDB.Engine
 
             while (node != null)
             {
-                ENSURE(counter++ < _maxItemsCount, $"Detected loop in DeleteAll({pkAddress})");
+                ENSURE(counter++ < _maxItemsCount, "Detected loop in DeleteAll({0})", pkAddress);
 
                 this.DeleteSingleNode(node, indexes[node.Slot]);
 
@@ -246,7 +246,7 @@ namespace LiteDB.Engine
 
             while (node != null)
             {
-                ENSURE(counter++ < _maxItemsCount, $"Detected loop in DeleteList({pkAddress})");
+                ENSURE(counter++ < _maxItemsCount, "Detected loop in DeleteList({0})", pkAddress);
 
                 if (toDelete.Contains(node.Position))
                 {
@@ -333,7 +333,7 @@ namespace LiteDB.Engine
         }
 
         #region Find
-        
+
         /// <summary>
         /// Return all index nodes from an index
         /// </summary>
@@ -344,7 +344,7 @@ namespace LiteDB.Engine
 
             while (!cur.GetNextPrev(0, order).IsEmpty)
             {
-                ENSURE(counter++ < _maxItemsCount, $"Detected loop in FindAll({index.Name})");
+                ENSURE(counter++ < _maxItemsCount, "Detected loop in FindAll({0})", index.Name);
 
                 cur = this.GetNode(cur.GetNextPrev(0, order));
 
@@ -356,7 +356,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Find first node that index match with value . 
+        /// Find first node that index match with value .
         /// If index are unique, return unique value - if index are not unique, return first found (can start, middle or end)
         /// If not found but sibling = true and key are not found, returns next value index node (if order = Asc) or prev node (if order = Desc)
         /// </summary>
@@ -371,7 +371,7 @@ namespace LiteDB.Engine
 
                 while (right.IsEmpty == false)
                 {
-                    ENSURE(counter++ < _maxItemsCount, $"Detected loop in Find({index.Name}, {value})");
+                    ENSURE(counter++ < _maxItemsCount, "Detected loop in Find({0}, {1})", index.Name, value);
 
                     var rightNode = this.GetNode(right);
 
