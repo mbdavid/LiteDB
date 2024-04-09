@@ -179,7 +179,7 @@ namespace LiteDB
 
             var expr = visitor.Resolve(typeof(K) == typeof(bool));
 
-            LOG($"`{predicate.ToString()}` -> `{expr.Source}`", "LINQ");
+            Logging.LOG($"`{predicate.ToString()}` -> `{expr.Source}`", "LINQ");
 
             return expr;
         }
@@ -193,7 +193,7 @@ namespace LiteDB
 
             var expr = visitor.Resolve(false);
 
-            LOG($"`{predicate.ToString()}` -> `{expr.Source}`", "LINQ");
+            Logging.LOG($"`{predicate.ToString()}` -> `{expr.Source}`", "LINQ");
 
             return expr;
         }

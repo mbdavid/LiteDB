@@ -50,7 +50,7 @@ namespace LiteDB.Engine
             ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
 
             // throw last exception that stop running queue
-            if (_exception != null) throw _exception;
+            if (_exception != null) throw new LiteException(0, _exception, "DiskWriterQueue error");
 
             lock (_queueSync)
             {
@@ -134,7 +134,7 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
+            Logging.LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
 
             _shouldClose = true;
             _queueHasItems.Set(); // unblock the running loop in case there are no items

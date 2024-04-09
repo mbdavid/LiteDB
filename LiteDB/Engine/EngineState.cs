@@ -37,7 +37,7 @@ namespace LiteDB.Engine
 
         public bool Handle(Exception ex)
         {
-            LOG(ex.Message, "ERROR");
+            Logging.LOG(ex.Message, "ERROR");
 
             if (ex is IOException || 
                 (ex is LiteException lex && lex.ErrorCode == LiteException.INVALID_DATAFILE_STATE))

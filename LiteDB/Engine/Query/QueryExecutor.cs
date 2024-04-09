@@ -43,7 +43,7 @@ namespace LiteDB.Engine
 
             _cursor = new CursorInfo(collection, query);
 
-            LOG(_query.ToSQL(_collection).Replace(Environment.NewLine, " "), "QUERY");
+            Logging.LOG(_query.ToSQL(_collection).Replace(Environment.NewLine, " "), "QUERY");
 
             // source will be != null when query will run over external data source, like system collections or files (not user collection)
             _source = source;

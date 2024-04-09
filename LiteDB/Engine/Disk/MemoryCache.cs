@@ -343,7 +343,7 @@ namespace LiteDB.Engine
                     }
                 }
 
-                LOG($"re-using cache pages (flushing {_free.Count} pages)", "CACHE");
+                Logging.LOG($"re-using cache pages (flushing {_free.Count} pages)", "CACHE");
             }
             else
             {
@@ -359,7 +359,7 @@ namespace LiteDB.Engine
 
                 _extends++;
 
-                LOG($"extending memory usage: (segments: {_extends})", "CACHE");
+                Logging.LOG($"extending memory usage: (segments: {_extends})", "CACHE");
             }
         }
 
