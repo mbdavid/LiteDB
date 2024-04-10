@@ -1,12 +1,10 @@
 ﻿using LiteDB.Utils;
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -80,6 +78,11 @@ namespace LiteDB.Engine
         #endregion
 
         #region Open & Close
+
+        public bool IsDisposed => _state.Disposed;
+
+        private readonly TaskCompletionSource<bool> _closedTask = new TaskCompletionSource<bool>();
+        public Task<bool> Closed => _closedTask.Task; 
 
         internal bool Open()
         {
@@ -207,6 +210,8 @@ namespace LiteDB.Engine
             // dispose lockers
             tc.Catch(() => _locker?.Dispose());
 
+            _closedTask.TrySetResult(true);
+
             return tc.Exceptions;
         }
 
@@ -248,6 +253,8 @@ namespace LiteDB.Engine
                 // this method will throw no errors
                 tc.Catch(() => _disk.MarkAsInvalidState());
             }
+
+            _closedTask.TrySetResult(true);
 
             return tc.Exceptions;
         }
