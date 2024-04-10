@@ -110,6 +110,15 @@ namespace LiteDB.Engine
             {
                 _state.Handle(LiteException.InvalidDatafileState(ex, "DiskWriterQueue failed"));
                 _exception = ex;
+                ExhaustQueue();
+            }
+        }
+
+        private void ExhaustQueue()
+        {
+            while (_queue.TryDequeue(out var page))
+            {
+                page.Release();
             }
         }
 
@@ -119,17 +128,23 @@ namespace LiteDB.Engine
 
             ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
 
-            // set stream position according to page
-            _stream.Position = page.Position;
+            try
+            {
+                // set stream position according to page
+                _stream.Position = page.Position;
 
 #if DEBUG
-            _state.SimulateDiskWriteFail?.Invoke(page);
+                _state.SimulateDiskWriteFail?.Invoke(page);
 #endif
 
-            _stream.Write(page.Array, page.Offset, PAGE_SIZE);
+                _stream.Write(page.Array, page.Offset, PAGE_SIZE);
 
-            // release page here (no page use after this)
-            page.Release();
+            }
+            finally
+            {
+                // release page here (no page use after this)
+                page.Release();
+            }
         }
 
         public void Dispose()
