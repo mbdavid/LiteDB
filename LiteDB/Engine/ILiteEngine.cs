@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace LiteDB.Engine
 {
@@ -29,5 +30,8 @@ namespace LiteDB.Engine
 
         BsonValue Pragma(string name);
         bool Pragma(string name, BsonValue value);
+        
+        bool IsDisposed { get; }
+        Task<bool> Closed { get; }
     }
 }
