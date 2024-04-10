@@ -108,7 +108,7 @@ namespace LiteDB.Engine
             }
             catch (Exception ex)
             {
-                _state.Handle(ex);
+                _state.Handle(LiteException.InvalidDatafileState(ex, "DiskWriterQueue failed"));
                 _exception = ex;
             }
         }
