@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -24,19 +24,28 @@ namespace LiteDB.Shell
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("> ");
 
-            var cmd = this.ReadLine().Trim();
+            var cmd = this.ReadLine();
+
+            if (cmd == null)
+            {
+              this.AutoExit = true ;
+              this.Running  = false;
+              return "";
+            }
+
+            cmd = cmd.Trim();
 
             // single line only for shell commands
             if (ShellProgram.GetCommand(cmd) == null)
             {
                 while (!cmd.EndsWith(";"))
                 {
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write("| ");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("| ");
 
-                    var line = this.ReadLine();
-                    cmd += Environment.NewLine + line;
-                }
+                var line = this.ReadLine();
+                cmd += Environment.NewLine + line;
+              }
             }
 
             cmd = cmd.Trim();
