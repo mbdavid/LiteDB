@@ -8,7 +8,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Caching.Memory;
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -280,8 +279,8 @@ namespace LiteDB
 
         #region Static method
 
-        private static readonly IMemoryCache _cacheEnumerable = new MemoryCache(new MemoryCacheOptions());
-        private static readonly IMemoryCache _cacheScalar = new MemoryCache(new MemoryCacheOptions());
+        private static readonly ConcurrentDictionary<string, BsonExpressionEnumerableDelegate> _cacheEnumerable = new ConcurrentDictionary<string, BsonExpressionEnumerableDelegate>();
+        private static readonly ConcurrentDictionary<string, BsonExpressionScalarDelegate> _cacheScalar = new ConcurrentDictionary<string, BsonExpressionScalarDelegate>();
 
         /// <summary>
         /// Gets or sets how long a cache entry can be inactive (e.g. not accessed) before it will be removed.
@@ -364,11 +363,9 @@ namespace LiteDB
             // in both case, try use cached compiled version
             if (expr.IsScalar)
             {
-                var cached = _cacheScalar.GetOrCreate(expr.Source, cacheEntry =>
+                var cached = _cacheScalar.GetOrAdd(expr.Source, s =>
                 {
-                    cacheEntry.SlidingExpiration = CacheSlidingExpiration;
-
-                    var lambda = Expression.Lambda<BsonExpressionScalarDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
+                    var lambda = System.Linq.Expressions.Expression.Lambda<BsonExpressionScalarDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
 
                     return lambda.Compile();
                 });
@@ -377,11 +374,9 @@ namespace LiteDB
             }
             else
             {
-                var cached = _cacheEnumerable.GetOrCreate(expr.Source, cacheEntry =>
+                var cached = _cacheEnumerable.GetOrAdd(expr.Source, s =>
                 {
-                    cacheEntry.SlidingExpiration = CacheSlidingExpiration;
-
-                    var lambda = Expression.Lambda<BsonExpressionEnumerableDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
+                    var lambda = System.Linq.Expressions.Expression.Lambda<BsonExpressionEnumerableDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
 
                     return lambda.Compile();
                 });
