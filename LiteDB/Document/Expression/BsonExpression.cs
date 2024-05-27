@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using LiteDB.Utils;
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -279,8 +280,8 @@ namespace LiteDB
 
         #region Static method
 
-        private static readonly ConcurrentDictionary<string, BsonExpressionEnumerableDelegate> _cacheEnumerable = new ConcurrentDictionary<string, BsonExpressionEnumerableDelegate>();
-        private static readonly ConcurrentDictionary<string, BsonExpressionScalarDelegate> _cacheScalar = new ConcurrentDictionary<string, BsonExpressionScalarDelegate>();
+        private static readonly SlidingCache<string, BsonExpressionEnumerableDelegate> _cacheEnumerable = new SlidingCache<string, BsonExpressionEnumerableDelegate>(TimeSpan.FromMinutes(1));
+        private static readonly SlidingCache<string, BsonExpressionScalarDelegate> _cacheScalar = new SlidingCache<string, BsonExpressionScalarDelegate>(TimeSpan.FromMinutes(1));
 
         /// <summary>
         /// Gets or sets how long a cache entry can be inactive (e.g. not accessed) before it will be removed.
@@ -368,7 +369,7 @@ namespace LiteDB
                     var lambda = System.Linq.Expressions.Expression.Lambda<BsonExpressionScalarDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
 
                     return lambda.Compile();
-                });
+                }, CacheSlidingExpiration);
 
                 expr._funcScalar = cached;
             }
@@ -379,7 +380,7 @@ namespace LiteDB
                     var lambda = System.Linq.Expressions.Expression.Lambda<BsonExpressionEnumerableDelegate>(expr.Expression, context.Source, context.Root, context.Current, context.Collation, context.Parameters);
 
                     return lambda.Compile();
-                });
+                }, CacheSlidingExpiration);
 
                 expr._funcEnumerable = cached;
             }
