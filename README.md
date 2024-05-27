@@ -3,6 +3,8 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/sfe8he0vik18m033?svg=true)](https://ci.appveyor.com/project/mbdavid/litedb) 
 
 ---
+#### Read about LiteDB Project News: https://github.com/mbdavid/LiteDB/issues/2486
+---
 
 LiteDB is a small, fast and lightweight .NET NoSQL embedded database. 
 
