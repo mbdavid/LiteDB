@@ -1,6 +1,9 @@
-﻿using System;
+using LiteDB.Utils.Extensions;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -71,8 +74,14 @@ namespace LiteDB.Engine
 
             transaction.OpenCursors.Add(_cursor);
 
+            var enumerable = RunQuery();
+            if (isNew)
+            {
+                enumerable = enumerable.OnDispose(() => _monitor.ReleaseTransaction(transaction));
+            }
+
             // return new BsonDataReader with IEnumerable source
-            return new BsonDataReader(RunQuery(), _collection, _state);
+            return new BsonDataReader(enumerable, _collection, _state);
 
             IEnumerable<BsonDocument> RunQuery()
             {
@@ -88,11 +97,6 @@ namespace LiteDB.Engine
                     }
 
                     transaction.OpenCursors.Remove(_cursor);
-
-                    if (isNew)
-                    {
-                        _monitor.ReleaseTransaction(transaction);
-                    }
 
                     yield break;
                 }
@@ -110,11 +114,6 @@ namespace LiteDB.Engine
                     yield return queryPlan.GetExecutionPlan();
 
                     transaction.OpenCursors.Remove(_cursor);
-
-                    if (isNew)
-                    {
-                        _monitor.ReleaseTransaction(transaction);
-                    }
 
                     yield break;
                 }
@@ -169,11 +168,6 @@ namespace LiteDB.Engine
                 _cursor.Elapsed.Stop();
 
                 transaction.OpenCursors.Remove(_cursor);
-
-                if (isNew)
-                {
-                    _monitor.ReleaseTransaction(transaction);
-                }
             };
         }
 
