@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFrameworks>net4.5;netstandard1.3;netstandard2.0</TargetFrameworks>
-    <AssemblyVersion>5.0.19</AssemblyVersion>
-    <FileVersion>5.0.19</FileVersion>
-    <VersionPrefix>5.0.19</VersionPrefix>
-    <PackageVersion>5.0.19</PackageVersion>
+    <AssemblyVersion>5.0.20</AssemblyVersion>
+    <FileVersion>5.0.20</FileVersion>
+    <VersionPrefix>5.0.20</VersionPrefix>
+    <PackageVersion>5.0.20</PackageVersion>
     <Authors>Maurício David</Authors>
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
@@ -28,6 +28,7 @@
     <SignAssembly Condition="'$(OS)'=='Windows_NT'">true</SignAssembly>
     <AssemblyOriginatorKeyFile Condition="'$(Configuration)' == 'Release'">LiteDB.snk</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   
   <!--

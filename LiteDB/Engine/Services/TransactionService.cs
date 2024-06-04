@@ -113,7 +113,7 @@ namespace LiteDB.Engine
                 _snapshots[collection] = snapshot = create();
             }
 
-            // update transaction mode to write in first write snaphost request 
+            // update transaction mode to write in first write snaphost request
             if (mode == LockMode.Write) _mode = LockMode.Write;
 
             return snapshot;
@@ -250,7 +250,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Commit()
         {
-            ENSURE(_state == TransactionState.Active, $"transaction must be active to commit (current state: {_state})");
+            ENSURE(_state == TransactionState.Active, "transaction must be active to commit (current state: {0})", _state);
 
             LOG($"commit transaction ({_transPages.TransactionSize} pages)", "TRANSACTION");
 
@@ -281,7 +281,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Rollback()
         {
-            ENSURE(_state == TransactionState.Active, $"transaction must be active to rollback (current state: {_state})");
+            ENSURE(_state == TransactionState.Active, "transaction must be active to rollback (current state: {0})", _state);
 
             LOG($"rollback transaction ({_transPages.TransactionSize} pages with {_transPages.NewPages.Count} returns)", "TRANSACTION");
 
