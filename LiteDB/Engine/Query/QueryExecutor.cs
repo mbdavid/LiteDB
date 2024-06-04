@@ -25,14 +25,14 @@ namespace LiteDB.Engine
         private readonly IEnumerable<BsonDocument> _source;
 
         public QueryExecutor(
-            LiteEngine engine, 
+            LiteEngine engine,
             EngineState state,
-            TransactionMonitor monitor, 
-            SortDisk sortDisk, 
+            TransactionMonitor monitor,
+            SortDisk sortDisk,
             DiskService disk,
-            EnginePragmas pragmas, 
-            string collection, 
-            Query query, 
+            EnginePragmas pragmas,
+            string collection,
+            Query query,
             IEnumerable<BsonDocument> source)
         {
             _engine = engine;
@@ -75,6 +75,9 @@ namespace LiteDB.Engine
             transaction.OpenCursors.Add(_cursor);
 
             var enumerable = RunQuery();
+
+            enumerable = enumerable.OnDispose(() => transaction.OpenCursors.Remove(_cursor));
+
             if (isNew)
             {
                 enumerable = enumerable.OnDispose(() => _monitor.ReleaseTransaction(transaction));
@@ -96,8 +99,6 @@ namespace LiteDB.Engine
                         yield return _query.Select.ExecuteScalar(_pragmas.Collation).AsDocument;
                     }
 
-                    transaction.OpenCursors.Remove(_cursor);
-
                     yield break;
                 }
 
@@ -112,9 +113,6 @@ namespace LiteDB.Engine
                 if (executionPlan)
                 {
                     yield return queryPlan.GetExecutionPlan();
-
-                    transaction.OpenCursors.Remove(_cursor);
-
                     yield break;
                 }
 
@@ -124,8 +122,8 @@ namespace LiteDB.Engine
                 // get current query pipe: normal or groupby pipe
                 var pipe = queryPlan.GetPipe(transaction, snapshot, _sortDisk, _pragmas, _disk.MAX_ITEMS_COUNT);
 
-                // start cursor elapsed timer
-                _cursor.Elapsed.Start();
+                // start cursor elapsed timer which stops on dispose
+                using var _ = _cursor.Elapsed.StartDisposable();
 
                 using (var enumerator = pipe.Pipe(nodes, queryPlan).GetEnumerator())
                 {
@@ -163,11 +161,6 @@ namespace LiteDB.Engine
                         }
                     }
                 }
-
-                // stop cursor elapsed
-                _cursor.Elapsed.Stop();
-
-                transaction.OpenCursors.Remove(_cursor);
             };
         }
 
