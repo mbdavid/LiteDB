@@ -62,11 +62,14 @@ namespace LiteDB
             int loadedChunk = _currentChunkIndex;
             int newChunkIndex = 0;
             while (seekStreamPosition <= _streamPosition) {
-                if (!_chunkLengths.ContainsKey(newChunkIndex)) {
+                if (_chunkLengths.TryGetValue(newChunkIndex, out long length)) {
+                    seekStreamPosition += length;
+                }
+                else {
                     loadedChunk = newChunkIndex;
                     _currentChunkData = GetChunkData(newChunkIndex);
+                    seekStreamPosition += _currentChunkData.Length;
                 }
-                seekStreamPosition += _chunkLengths[newChunkIndex];
                 newChunkIndex++;
             }
             newChunkIndex--;
