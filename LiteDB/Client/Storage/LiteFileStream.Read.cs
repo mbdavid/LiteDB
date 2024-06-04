@@ -10,6 +10,9 @@ namespace LiteDB
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (_mode != FileAccess.Read) throw new NotSupportedException();
+            if (_streamPosition == Length) {
+                return 0;
+            }
 
             var bytesLeft = count;
 
@@ -51,9 +54,13 @@ namespace LiteDB
 
         private void SetReadStreamPosition(long newPosition)
         {
-            if (newPosition < 0 || newPosition > Length)
+            if (newPosition < 0)
             {
                 throw new ArgumentOutOfRangeException();
+            }
+            if (newPosition >= Length) {
+                _streamPosition = Length;
+                return;
             }
             _streamPosition = newPosition;
 
