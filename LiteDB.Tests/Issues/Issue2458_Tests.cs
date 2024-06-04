@@ -4,7 +4,7 @@ using Xunit;
 
 namespace LiteDB.Tests.Issues;
 
-public class Issue_2458_Tests
+public class Issue2458_Tests
 {
     [Fact]
     public void NegativeSeekFails()
