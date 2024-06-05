@@ -11,29 +11,13 @@ namespace LiteDB.Benchmarks.Benchmarks.GeneralMethods
 	[SimpleJob(RuntimeMoniker.Net60)]
 	public class StopwatchExtensionsBenchmark
 	{
-
 		Stopwatch stopwatch = new Stopwatch();
 		Action a = () => { };
+
 		[Benchmark]
 		public StopWatchExtensions.DisposableAction ReturningNewDisposableAction()
 		{
 			return stopwatch.StartDisposable();
 		}
-
-
-		//[Benchmark]
-		//public IDisposable ReturningasIDisposableAction()
-		//{
-		//	return stopwatch.StartDisposable();
-		//}
-
-		//[Benchmark]
-		//public async Task<int> ConsumingTheDisposable()
-		//{
-		//	using var test = stopwatch.StartDisposable();
-		//	await Task.Yield();
-
-		//	return 42;
-		//}
 	}
 }
