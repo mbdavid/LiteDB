@@ -1,7 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -13,6 +15,10 @@ namespace LiteDB
         {
             return string.IsNullOrWhiteSpace(str);
         }
+
+        public static bool IsNullOrEmpty(this string str)
+        {
+            return string.IsNullOrEmpty(str);
         }
 
         /// <summary>
