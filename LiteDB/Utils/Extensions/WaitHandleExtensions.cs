@@ -30,7 +30,7 @@
                     Timeout.InfiniteTimeSpan, executeOnlyOnce: true);
             }
 
-            void IDisposable.Dispose() => _registeredWaitHandle.Unregister(null);
+            public void Dispose() => _registeredWaitHandle.Unregister(null);
         }
     }
 }
