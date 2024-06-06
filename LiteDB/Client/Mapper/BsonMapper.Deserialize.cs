@@ -9,6 +9,24 @@ namespace LiteDB
 {
     public partial class BsonMapper
     {
+        #region Deserialization Hooks
+
+        /// <summary>
+        /// Delegate for deserialization callback.
+        /// </summary>
+        /// <param name="sender">The BsonMapper instance that triggered the deserialization.</param>
+        /// <param name="target">The target type for deserialization.</param>
+        /// <param name="value">The BsonValue to be deserialized.</param>
+        /// <returns>The deserialized BsonValue.</returns>
+        public delegate BsonValue DeserializationCallback(BsonMapper sender, Type target, BsonValue value);
+
+        /// <summary>
+        /// Gets called before deserialization of a value
+        /// </summary>
+        public DeserializationCallback? OnDeserialization { get; set; }
+
+        #endregion Deserialization Hooks
+
         #region Basic direct .NET convert types
 
         // direct bson types
@@ -78,6 +96,15 @@ namespace LiteDB
         /// </summary>
         public object Deserialize(Type type, BsonValue value)
         {
+            if (OnDeserialization is not null)
+            {
+                var result = OnDeserialization(this, type, value);
+                if (result is not null)
+                {
+                    value = result;
+                }
+            }
+
             // null value - null returns
             if (value.IsNull) return null;
 
