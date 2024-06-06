@@ -8,15 +8,18 @@
     {
         public static async Task<bool> WaitAsync(this WaitHandle handle)
         {
+#if NETFRAMEWORK
             var tcs = new TaskCompletionSource<bool>();
-
+#else
+            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+#endif
             using (new ThreadPoolRegistration(handle, tcs))
             {
                 return await tcs.Task.ConfigureAwait(false);
             }
         }
 
-        private sealed class ThreadPoolRegistration : IDisposable
+        private readonly struct ThreadPoolRegistration : IDisposable
         {
             private readonly RegisteredWaitHandle _registeredWaitHandle;
 
