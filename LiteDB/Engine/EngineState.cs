@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using static LiteDB.Constants;
-
 
 namespace LiteDB.Engine
 {
@@ -25,7 +24,7 @@ namespace LiteDB.Engine
 #endif
 
         public EngineState(LiteEngine engine, EngineSettings settings)
-        { 
+        {
             _engine = engine;
             _settings = settings;
         }
@@ -39,7 +38,7 @@ namespace LiteDB.Engine
         {
             LOG(ex.Message, "ERROR");
 
-            if (ex is IOException || 
+            if (ex is IOException ||
                 (ex is LiteException lex && lex.ErrorCode == LiteException.INVALID_DATAFILE_STATE))
             {
                 _exception = ex;
@@ -50,6 +49,13 @@ namespace LiteDB.Engine
             }
 
             return true;
+        }
+
+        public BsonValue ReadTransform(string collection, BsonValue value)
+        {
+            if (_settings?.ReadTransform is null) return value;
+
+            return _settings.ReadTransform(collection, value);
         }
     }
 }
