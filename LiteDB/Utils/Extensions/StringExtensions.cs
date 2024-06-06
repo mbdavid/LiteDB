@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,9 +8,11 @@ namespace LiteDB
 {
     internal static class StringExtensions
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNullOrWhiteSpace(this string str)
         {
-            return str == null || str.Trim().Length == 0;
+            return string.IsNullOrWhiteSpace(str);
+        }
         }
 
         /// <summary>
