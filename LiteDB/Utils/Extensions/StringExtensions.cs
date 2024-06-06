@@ -16,6 +16,7 @@ namespace LiteDB
             return string.IsNullOrWhiteSpace(str);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNullOrEmpty(this string str)
         {
             return string.IsNullOrEmpty(str);
