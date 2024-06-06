@@ -3,13 +3,12 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using LiteDB.Utils.Extensions;
 
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
-    using LiteDB.Utils.Extensions;
-
     /// <summary>
     /// Implement disk write queue and async writer thread - used only for write on LOG file
     /// [ThreadSafe]
@@ -29,6 +28,7 @@ namespace LiteDB.Engine
         private readonly ManualResetEventSlim _queueIsEmpty = new ManualResetEventSlim(true);
 
         private Exception _exception = null; // store last exception in async running task
+        private int _enqueuePageThreadId;
 
         public DiskWriterQueue(Stream stream, EngineState state)
         {
@@ -60,6 +60,7 @@ namespace LiteDB.Engine
 
                 if (_task == null)
                 {
+                    _enqueuePageThreadId = Environment.CurrentManagedThreadId;
                     _task = Task.Factory.StartNew(ExecuteQueue, TaskCreationOptions.LongRunning);
                 }
             }
@@ -80,6 +81,8 @@ namespace LiteDB.Engine
         /// </summary>
         private async Task ExecuteQueue()
         {
+            ENSURE(Environment.CurrentManagedThreadId != _enqueuePageThreadId, "ExecuteQueue should run on a separate thread.");
+
             try
             {
                 while (true)
