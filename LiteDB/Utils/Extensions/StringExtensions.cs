@@ -30,13 +30,6 @@ namespace LiteDB
             return true;
         }
 
-        public static string TrimToNull(this string str)
-        {
-            var v = str.Trim();
-
-            return v.Length == 0 ? null : v;
-        }
-
         public static string Sha1(this string value)
         {
             var data = Encoding.UTF8.GetBytes(value);
