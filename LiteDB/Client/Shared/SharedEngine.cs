@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+using LiteDB.Client.Shared;
+
 #if NETFRAMEWORK || NETSTANDARD2_0_OR_GREATER || NET6_0_OR_GREATER
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -27,34 +29,7 @@ namespace LiteDB
 
             try
             {
-#if NETFRAMEWORK || NETSTANDARD2_0_OR_GREATER || NET6_0_OR_GREATER
-#if NET6_0_OR_GREATER
-                if (!OperatingSystem.IsWindows())
-                    _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
-                else
-                {
-#endif
-                    var allowEveryoneRule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null),
-                           MutexRights.FullControl, AccessControlType.Allow);
-
-                    var securitySettings = new MutexSecurity();
-                    securitySettings.AddAccessRule(allowEveryoneRule);
-#if NET6_0_OR_GREATER
-                    _mutex = MutexAcl.Create(false, "Global\\" + name + ".Mutex", out _, securitySettings);
-#endif
-#if NETFRAMEWORK
-                _mutex = new Mutex(false, "Global\\" + name + ".Mutex", out _, securitySettings);
-#endif
-#if NETSTANDARD2_0_OR_GREATER
-                _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
-                ThreadingAclExtensions.SetAccessControl(_mutex, securitySettings);
-#endif
-#else
-                _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
-#endif
-#if NET6_0_OR_GREATER
-                }
-#endif
+                _mutex = MutexGenerator.CreateMutex(name);
             }
             catch (NotSupportedException ex)
             {

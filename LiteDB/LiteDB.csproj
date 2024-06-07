@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;netstandard2.0;net6.0</TargetFrameworks>
+	<TargetFrameworks>net45;netstandard1.3;netstandard2.0</TargetFrameworks>
     <AssemblyVersion>5.0.14</AssemblyVersion>
     <FileVersion>5.0.14</FileVersion>
     <VersionPrefix>5.0.14</VersionPrefix>
@@ -27,6 +27,7 @@
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LiteDB.xml</DocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>True</SignAssembly>
+	<LangVersion>latest</LangVersion>
   </PropertyGroup>
   
   <!--
