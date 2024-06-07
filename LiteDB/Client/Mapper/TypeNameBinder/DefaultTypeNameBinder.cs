@@ -9,7 +9,7 @@ namespace LiteDB
         public static DefaultTypeNameBinder Instance { get; } = new DefaultTypeNameBinder();
 
         /// <summary>
-        /// Contains all well known vulnuable types according to ysoserial.net
+        /// Contains all well known vulnerable types according to ysoserial.net
         /// </summary>
         private static readonly HashSet<string> _disallowedTypeNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
