@@ -8,13 +8,14 @@ using BenchmarkDotNet.Toolchains.CsProj;
 
 namespace LiteDB.Benchmarks
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             BenchmarkRunner.Run(typeof(Program).Assembly, DefaultConfig.Instance
-                
-                //.With(new BenchmarkDotNet.Filters.AnyCategoriesFilter(new[] {Benchmarks.Constants.Categories.DATA_GEN}))
+
+                //.With(new BenchmarkDotNet.Filters.AnyCategoriesFilter(new[] { Benchmarks.Constants.Categories.GENERAL }))
+                //.AddFilter(new BenchmarkDotNet.Filters.AnyCategoriesFilter([Benchmarks.Constants.Categories.GENERAL]))
                 .AddJob(Job.Default.WithRuntime(CoreRuntime.Core60)
                     .WithJit(Jit.RyuJit)
                     .WithToolchain(CsProjCoreToolchain.NetCoreApp60)
