@@ -56,6 +56,7 @@ namespace LiteDB
         public const int AVOID_USE_OF_PROCESS = 215;
         public const int NOT_ENCRYPTED = 216;
         public const int INVALID_PASSWORD = 217;
+        public const int ILLEGAL_DESERIALIZATION_TYPE = 218;
 
         public const int INVALID_DATAFILE_STATE = 999;
 
@@ -341,6 +342,11 @@ namespace LiteDB
         internal static LiteException AvoidUseOfProcess()
         {
             return new LiteException(AVOID_USE_OF_PROCESS, $"LiteDB do not accept System.Diagnostics.Process class in deserialize mapper");
+        }
+
+        internal static LiteException IllegalDeserializationType(string typeName)
+        {
+            return new LiteException(ILLEGAL_DESERIALIZATION_TYPE, $"Illegal deserialization type: {typeName}");
         }
 
         internal static LiteException InvalidDatafileState(string message)
