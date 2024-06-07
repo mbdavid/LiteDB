@@ -11,6 +11,8 @@ using System.Threading;
 
 namespace LiteDB
 {
+    using System.Globalization;
+
     /// <summary>
     /// Class with all constants used in LiteDB + Debbuger HELPER
     /// </summary>
@@ -141,6 +143,22 @@ namespace LiteDB
                 }
 
                 throw LiteException.InvalidDatafileState(message);
+            }
+        }
+
+        [DebuggerHidden]
+        public static void ENSURE(bool conditional, string format, params object[] args)
+        {
+            if (conditional == false)
+            {
+                if (Debugger.IsAttached)
+                {
+                    Debugger.Break();
+                }
+
+                var message = string.Format(CultureInfo.InvariantCulture, format, args);
+
+                throw LiteException.InvalidDatafileState(format);
             }
         }
 
