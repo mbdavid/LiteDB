@@ -87,7 +87,7 @@ namespace LiteDB
             }
         }
 
-#region Transaction Operations
+        #region Transaction Operations
 
         public bool BeginTrans()
         {
@@ -139,9 +139,9 @@ namespace LiteDB
             }
         }
 
-#endregion
+        #endregion Transaction Operations
 
-#region Read Operation
+        #region Read Operation
 
         public IBsonDataReader Query(string collection, Query query)
         {
@@ -180,9 +180,9 @@ namespace LiteDB
             }
         }
 
-#endregion
+        #endregion Read Operation
 
-#region Write Operations
+        #region Write Operations
 
         public int Checkpoint()
         {
@@ -352,7 +352,7 @@ namespace LiteDB
             }
         }
 
-#endregion
+        #endregion Write Operations
 
         public void Dispose()
         {
