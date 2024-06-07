@@ -42,7 +42,7 @@ namespace LiteDB.Engine
 
         public void Open()
         {
-            var streamFactory = _settings.CreateDataFactory();
+            var streamFactory = _settings.CreateDataFactory(false);
 
             // open datafile from stream factory
             _stream = streamFactory.GetStream(true, true);
@@ -437,7 +437,7 @@ namespace LiteDB.Engine
             {
                 if (disposing)
                 {
-                    _stream.Dispose();
+                    _stream?.Dispose();
                     _aes?.Dispose();
                 }
 
