@@ -339,11 +339,6 @@ namespace LiteDB
             return new LiteException(INVALID_PASSWORD, "Invalid password.");
         }
 
-        internal static LiteException AvoidUseOfProcess()
-        {
-            return new LiteException(AVOID_USE_OF_PROCESS, $"LiteDB do not accept System.Diagnostics.Process class in deserialize mapper");
-        }
-
         internal static LiteException IllegalDeserializationType(string typeName)
         {
             return new LiteException(ILLEGAL_DESERIALIZATION_TYPE, $"Illegal deserialization type: {typeName}");
