@@ -86,6 +86,15 @@ namespace LiteDB.Engine
 					var thread = Thread.CurrentThread;
 					System.Diagnostics.Debug.WriteLine("########################");
 					System.Diagnostics.Debug.WriteLine($"thread Name: {thread.Name} ID: {thread.ManagedThreadId}");
+
+					var prop = typeof(Task).GetProperty("InternalCurrent", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+					var v = prop.GetValue(null);
+
+					var p = Task.Factory.GetType().GetMethod("GetDefaultScheduler", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+					var value = p.Invoke(Task.Factory, new object[] { v });
+
+					System.Diagnostics.Debug.Assert(value == TaskScheduler.Default, "It should be the default one");
+
 #endif
 					if (_queue.TryDequeue(out var page))
 					{
