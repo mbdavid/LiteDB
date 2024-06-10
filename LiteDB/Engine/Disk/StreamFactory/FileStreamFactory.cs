@@ -17,9 +17,9 @@ namespace LiteDB.Engine
         private readonly string _password;
         private readonly bool _readonly;
         private readonly bool _hidden;
-		private readonly bool _useAesStream;
+        private readonly bool _useAesStream;
 
-		public FileStreamFactory(string filename, string password, bool readOnly, bool hidden, bool useAesStream = true)
+        public FileStreamFactory(string filename, string password, bool readOnly, bool hidden, bool useAesStream = true)
         {
             _filename = filename;
             _password = password;

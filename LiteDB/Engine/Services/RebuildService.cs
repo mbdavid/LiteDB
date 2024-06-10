@@ -22,19 +22,19 @@ namespace LiteDB.Engine
         {
             _settings = settings;
 
-			// test for prior version
-			var bufferV7 = this.ReadFirstBytes(false);
-			if (FileReaderV7.IsVersion(bufferV7))
+            // test for prior version
+            var bufferV7 = this.ReadFirstBytes(false);
+            if (FileReaderV7.IsVersion(bufferV7))
             {
                 _fileVersion = 7;
                 return;
             }
 
-			// open, read first 16kb, and close data file
-			var buffer = this.ReadFirstBytes();
+            // open, read first 16kb, and close data file
+            var buffer = this.ReadFirstBytes();
 
-			// test for valid reader to use
-			_fileVersion = FileReaderV8.IsVersion(buffer) ? 8 : throw LiteException.InvalidDatabase();
+            // test for valid reader to use
+            _fileVersion = FileReaderV8.IsVersion(buffer) ? 8 : throw LiteException.InvalidDatabase();
         }
 
         public long Rebuild(RebuildOptions options)
