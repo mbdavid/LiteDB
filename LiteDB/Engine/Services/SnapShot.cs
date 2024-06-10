@@ -375,11 +375,21 @@ namespace LiteDB.Engine
 
                     if (newLength > _header.Pragmas.LimitSize) throw new LiteException(0, $"Maximum data file size has been reached: {FileHelper.FormatFileSize(_header.Pragmas.LimitSize)}");
 
-                    // increase LastPageID from shared page
-                    pageID = ++_header.LastPageID;
+                    var savepoint = _header.Savepoint();
+                    try
+                    {
+                        // increase LastPageID from shared page
+                        pageID = ++_header.LastPageID;
 
-                    // request for a new buffer
-                    buffer = _reader.NewPage();
+                        // request for a new buffer
+                        buffer = _reader.NewPage();
+                    }
+                    catch
+                    {
+                        // must revert all header content if any error occurs during header change
+                        _header.Restore(savepoint);
+                        throw;
+                    }
                 }
 
                 // retain a list of created pages to, in a rollback situation, back pages to empty list
