@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Benchmarks", "LiteDB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Stress", "LiteDB.Stress\LiteDB.Stress.csproj", "{FFBC5669-DA32-4907-8793-7B414279DA3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{E8763934-E46A-4AAF-A2B5-E812016DAF84}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{E8763934-E46A-4AAF-A2B5-E812016DAF84}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MauiApp1", "MauiApp1\MauiApp1.csproj", "{64ACC57E-887D-4678-ACEA-DBAC9CD2D5EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,12 @@ Global
 		{E8763934-E46A-4AAF-A2B5-E812016DAF84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E8763934-E46A-4AAF-A2B5-E812016DAF84}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E8763934-E46A-4AAF-A2B5-E812016DAF84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64ACC57E-887D-4678-ACEA-DBAC9CD2D5EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64ACC57E-887D-4678-ACEA-DBAC9CD2D5EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64ACC57E-887D-4678-ACEA-DBAC9CD2D5EC}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{64ACC57E-887D-4678-ACEA-DBAC9CD2D5EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64ACC57E-887D-4678-ACEA-DBAC9CD2D5EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64ACC57E-887D-4678-ACEA-DBAC9CD2D5EC}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
