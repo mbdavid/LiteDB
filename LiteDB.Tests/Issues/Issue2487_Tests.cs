@@ -1,5 +1,7 @@
 ﻿using FluentAssertions;
 
+using System.Diagnostics;
+
 using Xunit;
 
 namespace LiteDB.Tests.Issues;
@@ -27,6 +29,8 @@ public class Issue2487_tests
         collection.Insert(new DataClass { Foo = "bar", Bar = "abc" });
         collection.Insert(new DataClass { Foo = " ", Bar = "def" });
         collection.Insert(new DataClass { Foo = "fo bar", Bar = "def" });
+        collection.Insert(new DataClass { Foo = "", Bar = "def" });
+        collection.Insert(new DataClass { Foo = null, Bar = "def" });
 
         var containsAction = () => collection.FindOne(x => x.Foo.Contains(" "));
         containsAction.Should().NotThrow();
