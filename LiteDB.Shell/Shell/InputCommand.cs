@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace LiteDB.Shell
 {
@@ -28,9 +27,9 @@ namespace LiteDB.Shell
 
             if (cmd == null)
             {
-              this.AutoExit = true ;
-              this.Running  = false;
-              return "";
+                this.AutoExit = true;
+                this.Running = false;
+                return "";
             }
 
             cmd = cmd.Trim();
@@ -40,12 +39,12 @@ namespace LiteDB.Shell
             {
                 while (!cmd.EndsWith(";"))
                 {
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write("| ");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.Write("| ");
 
-                var line = this.ReadLine();
-                cmd += Environment.NewLine + line;
-              }
+                    var line = this.ReadLine();
+                    cmd += Environment.NewLine + line;
+                }
             }
 
             cmd = cmd.Trim();
