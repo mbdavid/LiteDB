@@ -10,7 +10,8 @@ namespace LiteDB
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (_mode != FileAccess.Read) throw new NotSupportedException();
-            if (_streamPosition == Length) {
+            if (_streamPosition == Length)
+            {
                 return 0;
             }
 
@@ -46,7 +47,8 @@ namespace LiteDB
 
             // if chunk is null there is no more chunks
             byte[] result = chunk?["data"].AsBinary;
-            if (result != null) {
+            if (result != null)
+            {
                 _chunkLengths[index] = result.Length;
             }
             return result;
@@ -58,7 +60,8 @@ namespace LiteDB
             {
                 throw new ArgumentOutOfRangeException();
             }
-            if (newPosition >= Length) {
+            if (newPosition >= Length)
+            {
                 _streamPosition = Length;
                 return;
             }
@@ -68,11 +71,14 @@ namespace LiteDB
             long seekStreamPosition = 0;
             int loadedChunk = _currentChunkIndex;
             int newChunkIndex = 0;
-            while (seekStreamPosition <= _streamPosition) {
-                if (_chunkLengths.TryGetValue(newChunkIndex, out long length)) {
+            while (seekStreamPosition <= _streamPosition)
+            {
+                if (_chunkLengths.TryGetValue(newChunkIndex, out long length))
+                {
                     seekStreamPosition += length;
                 }
-                else {
+                else
+                {
                     loadedChunk = newChunkIndex;
                     _currentChunkData = GetChunkData(newChunkIndex);
                     seekStreamPosition += _currentChunkData.Length;
@@ -83,7 +89,8 @@ namespace LiteDB
             seekStreamPosition -= _chunkLengths[newChunkIndex];
             _positionInChunk = (int)(_streamPosition - seekStreamPosition);
             _currentChunkIndex = newChunkIndex;
-            if (loadedChunk != _currentChunkIndex) {
+            if (loadedChunk != _currentChunkIndex)
+            {
                 _currentChunkData = GetChunkData(_currentChunkIndex);
             }
         }
