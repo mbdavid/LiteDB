@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using static LiteDB.Constants;
@@ -7,6 +8,7 @@ namespace LiteDB
 {
     public partial class LiteFileStream<TFileId> : Stream
     {
+        private Dictionary<int, long> _chunkLengths = new Dictionary<int, long>();
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (_mode != FileAccess.Read) throw new NotSupportedException();
@@ -85,6 +87,7 @@ namespace LiteDB
                 }
                 newChunkIndex++;
             }
+            
             newChunkIndex--;
             seekStreamPosition -= _chunkLengths[newChunkIndex];
             _positionInChunk = (int)(_streamPosition - seekStreamPosition);
