@@ -11,7 +11,7 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
 
-        static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// If Upgrade=true, run this before open Disk service

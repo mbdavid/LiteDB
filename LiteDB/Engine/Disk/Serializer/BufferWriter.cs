@@ -19,7 +19,7 @@ namespace LiteDB.Engine
 
         private bool _isEOF = false;
 
-        static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Current global cursor position

@@ -25,7 +25,7 @@ namespace LiteDB.Engine
 
         private static readonly byte[] _emptyContent = new byte[PAGE_SIZE - 1 - 16]; // 1 for aes indicator + 16 for salt
 
-        static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
 
         public byte[] Salt { get; }
 

@@ -30,8 +30,8 @@ namespace LiteDB.Engine
         private readonly EnginePragmas _pragmas;
         private readonly BufferSlice _buffer;
         private readonly Lazy<Stream> _reader;
-        
-        static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+
+        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Get how many documents was inserted by Insert method

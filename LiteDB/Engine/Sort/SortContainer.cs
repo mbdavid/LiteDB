@@ -26,8 +26,8 @@ namespace LiteDB.Engine
         private int _readPosition = 0;
 
         private BufferReader _reader = null;
-        
-        static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+
+        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Returns if current container has no more items to read

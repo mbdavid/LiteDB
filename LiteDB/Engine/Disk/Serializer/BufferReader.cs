@@ -2,7 +2,6 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -21,7 +20,7 @@ namespace LiteDB.Engine
 
         private bool _isEOF = false;
 
-        static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Current global cursor position
@@ -105,10 +104,10 @@ namespace LiteDB.Engine
                 // fill buffer
                 if (buffer != null)
                 {
-                    Buffer.BlockCopy(_current.Array, 
-                        _current.Offset + _currentPosition, 
-                        buffer, 
-                        offset + bufferPosition, 
+                    Buffer.BlockCopy(_current.Array,
+                        _current.Offset + _currentPosition,
+                        buffer,
+                        offset + bufferPosition,
                         bytesToCopy);
                 }
 
@@ -254,7 +253,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer =  bufferPool.Rent(size);
+                var buffer = bufferPool.Rent(size);
 
                 this.Read(buffer, 0, size);
 
@@ -396,7 +395,7 @@ namespace LiteDB.Engine
                 case BsonType.Int64: return this.ReadInt64();
                 case BsonType.Double: return this.ReadDouble();
                 case BsonType.Decimal: return this.ReadDecimal();
-                
+
                 // Use +1 byte only for length
                 case BsonType.String: return this.ReadString(this.ReadByte());
 
