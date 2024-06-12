@@ -17,13 +17,15 @@ namespace LiteDB.Engine
         private readonly string _password;
         private readonly bool _readonly;
         private readonly bool _hidden;
+        private readonly bool _useAesStream;
 
-        public FileStreamFactory(string filename, string password, bool readOnly, bool hidden)
+        public FileStreamFactory(string filename, string password, bool readOnly, bool hidden, bool useAesStream = true)
         {
             _filename = filename;
             _password = password;
             _readonly = readOnly;
             _hidden = hidden;
+            _useAesStream = useAesStream;
         }
 
         /// <summary>
@@ -57,7 +59,7 @@ namespace LiteDB.Engine
                 File.SetAttributes(_filename, FileAttributes.Hidden);
             }
 
-            return _password == null ? (Stream)stream : new AesStream(_password, stream);
+            return _password == null || !_useAesStream ? (Stream)stream : new AesStream(_password, stream);
         }
 
         /// <summary>
