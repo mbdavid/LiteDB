@@ -50,12 +50,12 @@ namespace LiteDB.Engine
             // throw last exception that stop running queue
             if (_exception != null) throw _exception;
 
+            _queueIsEmpty.Reset();
+            _queue.Enqueue(page);
+            _queueHasItems.Set();
+
             lock (_queueSync)
             {
-                _queueIsEmpty.Reset();
-                _queue.Enqueue(page);
-                _queueHasItems.Set();
-
                 if (_task == null)
                 {
                     _task = Task.Factory.StartNew(ExecuteQueue, TaskCreationOptions.LongRunning);
@@ -76,7 +76,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Execute all items in queue sync
         /// </summary>
-        private async Task ExecuteQueue()
+        private void ExecuteQueue()
         {
             try
             {
@@ -88,19 +88,17 @@ namespace LiteDB.Engine
                     }
                     else
                     {
-                        lock (_queueSync)
-                        {
-                            if (_queue.Count > 0) continue;
 
-                            _queueIsEmpty.Set();
-                            _queueHasItems.Reset();
+                        if (_queue.Count > 0) continue;
 
-                            if (_shouldClose) return;
-                        }
+                        _queueIsEmpty.Set();
+                        _queueHasItems.Reset();
+
+                        if (_shouldClose) return;
 
                         _stream.FlushToDisk();
 
-                        await _queueHasItems.WaitAsync();
+                        _queueHasItems.WaitAsync().GetAwaiter().GetResult();
                     }
                 }
             }
@@ -137,7 +135,7 @@ namespace LiteDB.Engine
             _shouldClose = true;
             _queueHasItems.Set(); // unblock the running loop in case there are no items
 
-            _task?.Wait();
+            _task?.GetAwaiter().GetResult();
             _task = null;
         }
     }
