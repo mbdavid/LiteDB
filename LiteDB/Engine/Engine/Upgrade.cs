@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,9 @@ namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
+
+        static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+
         /// <summary>
         /// If Upgrade=true, run this before open Disk service
         /// </summary>
@@ -19,20 +23,21 @@ namespace LiteDB.Engine
             // if file not exists, just exit
             if (!File.Exists(filename)) return;
 
+            var buffer = bufferPool.Rent(1024);
             using (var stream = new FileStream(
                 _settings.Filename,
                 FileMode.Open,
                 FileAccess.Read,
                 FileShare.Read, 1024))
             {
-                var buffer = new byte[1024];
+
 
                 stream.Position = 0;
                 stream.Read(buffer, 0, buffer.Length);
 
                 if (FileReaderV7.IsVersion(buffer) == false) return;
             }
-
+            bufferPool.Return(buffer);
             // run rebuild process
             this.Recovery(_settings.Collation);
         }

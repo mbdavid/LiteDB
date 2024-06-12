@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -23,6 +24,8 @@ namespace LiteDB.Engine
         private readonly byte[] _decryptedZeroes = new byte[16];
 
         private static readonly byte[] _emptyContent = new byte[PAGE_SIZE - 1 - 16]; // 1 for aes indicator + 16 for salt
+
+        static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
 
         public byte[] Salt { get; }
 
@@ -51,6 +54,9 @@ namespace LiteDB.Engine
 
             // start stream from zero position
             _stream.Position = 0;
+
+            var checkBuffer = bufferPool.Rent(32);
+            var msBuffer = bufferPool.Rent(16);
 
             try
             {
@@ -104,7 +110,6 @@ namespace LiteDB.Engine
                 // set stream to password checking
                 _stream.Position = 32;
 
-                var checkBuffer = new byte[32];
 
                 if (!isNew)
                 {
@@ -140,8 +145,7 @@ namespace LiteDB.Engine
 
                 _stream.Position = PAGE_SIZE;
                 _stream.FlushToDisk();
-
-                using (var ms = new MemoryStream(new byte[16]))
+                using (var ms = new MemoryStream(msBuffer))
                 using (var tempStream = new CryptoStream(ms, _decryptor, CryptoStreamMode.Read))
                 {
                     tempStream.Read(_decryptedZeroes, 0, _decryptedZeroes.Length);
@@ -152,6 +156,11 @@ namespace LiteDB.Engine
                 _stream.Dispose();
 
                 throw;
+            }
+            finally
+            {
+                bufferPool.Return(msBuffer);
+                bufferPool.Return(checkBuffer);
             }
         }
 
