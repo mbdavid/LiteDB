@@ -128,7 +128,7 @@ namespace LiteDB.Engine
 
             if (_monitor.CheckSafepoint(this))
             {
-                LOG($"safepoint flushing transaction pages: {_transPages.TransactionSize}", "TRANSACTION");
+                Logging.LOG($"safepoint flushing transaction pages: {_transPages.TransactionSize}", "TRANSACTION");
 
                 // if any snapshot are writable, persist pages
                 if (_mode == LockMode.Write)
@@ -252,7 +252,7 @@ namespace LiteDB.Engine
         {
             ENSURE(_state == TransactionState.Active, "transaction must be active to commit (current state: {0})", _state);
 
-            LOG($"commit transaction ({_transPages.TransactionSize} pages)", "TRANSACTION");
+            Logging.LOG($"commit transaction ({_transPages.TransactionSize} pages)", "TRANSACTION");
 
             if (_mode == LockMode.Write || _transPages.HeaderChanged)
             {
@@ -283,7 +283,7 @@ namespace LiteDB.Engine
         {
             ENSURE(_state == TransactionState.Active, "transaction must be active to rollback (current state: {0})", _state);
 
-            LOG($"rollback transaction ({_transPages.TransactionSize} pages with {_transPages.NewPages.Count} returns)", "TRANSACTION");
+            Logging.LOG($"rollback transaction ({_transPages.TransactionSize} pages with {_transPages.NewPages.Count} returns)", "TRANSACTION");
 
             // if transaction contains new pages, must return to database in another transaction
             if (_transPages.NewPages.Count > 0)

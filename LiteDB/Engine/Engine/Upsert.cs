@@ -24,7 +24,7 @@ namespace LiteDB.Engine
                 var data = new DataService(snapshot, _disk.MAX_ITEMS_COUNT);
                 var count = 0;
 
-                LOG($"upsert `{collection}`", "COMMAND");
+                Logging.LOG($"upsert `{collection}`", "COMMAND");
 
                 foreach (var doc in docs)
                 {

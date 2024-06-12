@@ -347,6 +347,11 @@ namespace LiteDB
         {
             return new LiteException(INVALID_DATAFILE_STATE, message);
         }
+        
+        internal static LiteException InvalidDatafileState(Exception innerException, string message)
+        {
+            return new LiteException(INVALID_DATAFILE_STATE, innerException, message);
+        }
 
         #endregion
     }

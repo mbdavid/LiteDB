@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 #if NETFRAMEWORK
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -86,6 +87,10 @@ namespace LiteDB
             // Release Mutex on every call to close DB.
             _mutex.ReleaseMutex();
         }
+        
+        public bool IsDisposed => _engine.IsDisposed;
+
+        public Task<bool> Closed => _engine.Closed;
 
         #region Transaction Operations
 

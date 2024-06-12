@@ -25,6 +25,11 @@ namespace LiteDB
         /// </summary>
         public BsonMapper Mapper => _mapper;
 
+        /// <summary>
+        /// Get current instance of ILiteEngine used in this database instance
+        /// </summary>
+        public ILiteEngine Engine => _engine;
+
         #endregion
 
         #region Ctor

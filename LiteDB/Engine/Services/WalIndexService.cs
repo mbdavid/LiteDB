@@ -293,7 +293,7 @@ namespace LiteDB.Engine
         /// </summary>
         private int CheckpointInternal()
         {
-            LOG($"checkpoint", "WAL");
+            Logging.LOG($"checkpoint", "WAL");
 
             // wait all pages write on disk
             _disk.Queue.Value.Wait();

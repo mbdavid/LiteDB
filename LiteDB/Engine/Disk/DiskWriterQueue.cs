@@ -8,6 +8,8 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
+    using LiteDB.Utils.Extensions;
+
     /// <summary>
     /// Implement disk write queue and async writer thread - used only for write on LOG file
     /// [ThreadSafe]
@@ -23,7 +25,7 @@ namespace LiteDB.Engine
 
         private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
         private readonly object _queueSync = new object();
-        private readonly AsyncManualResetEvent _queueHasItems = new AsyncManualResetEvent();
+        private readonly ManualResetEventSlim _queueHasItems = new ManualResetEventSlim();
         private readonly ManualResetEventSlim _queueIsEmpty = new ManualResetEventSlim(true);
 
         private Exception _exception = null; // store last exception in async running task
@@ -48,7 +50,7 @@ namespace LiteDB.Engine
             ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
 
             // throw last exception that stop running queue
-            if (_exception != null) throw _exception;
+            if (_exception != null) throw new LiteException(0, _exception, "DiskWriterQueue error");
 
             lock (_queueSync)
             {
@@ -58,7 +60,7 @@ namespace LiteDB.Engine
 
                 if (_task == null)
                 {
-                    _task = Task.Factory.StartNew(ExecuteQueue, TaskCreationOptions.LongRunning);
+                    _task = Task.Factory.StartNew(ExecuteQueue, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
                 }
             }
         }
@@ -100,14 +102,23 @@ namespace LiteDB.Engine
 
                         _stream.FlushToDisk();
 
-                        await _queueHasItems.WaitAsync();
+                        await _queueHasItems.WaitHandle.WaitAsync().ConfigureAwait(false);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _state.Handle(ex);
+                _state.Handle(LiteException.InvalidDatafileState(ex, "DiskWriterQueue failed"));
                 _exception = ex;
+                ExhaustQueue();
+            }
+        }
+
+        private void ExhaustQueue()
+        {
+            while (_queue.TryDequeue(out var page))
+            {
+                page.Release();
             }
         }
 
@@ -117,22 +128,28 @@ namespace LiteDB.Engine
 
             ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
 
-            // set stream position according to page
-            _stream.Position = page.Position;
+            try
+            {
+                // set stream position according to page
+                _stream.Position = page.Position;
 
 #if DEBUG
-            _state.SimulateDiskWriteFail?.Invoke(page);
+                _state.SimulateDiskWriteFail?.Invoke(page);
 #endif
 
-            _stream.Write(page.Array, page.Offset, PAGE_SIZE);
+                _stream.Write(page.Array, page.Offset, PAGE_SIZE);
 
-            // release page here (no page use after this)
-            page.Release();
+            }
+            finally
+            {
+                // release page here (no page use after this)
+                page.Release();
+            }
         }
 
         public void Dispose()
         {
-            LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
+            Logging.LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
 
             _shouldClose = true;
             _queueHasItems.Set(); // unblock the running loop in case there are no items
