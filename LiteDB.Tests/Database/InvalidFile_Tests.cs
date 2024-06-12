@@ -73,5 +73,54 @@ namespace LiteDB.Tests.Database
                 File.Delete(fileName);
             }
         }
+
+        [Fact]
+        public void Test_AddDatabase_InvalidDatabase_MemoryStream()
+        {
+            // Create an invalid LiteDB database content
+            byte[] invalidContent = System.Text.Encoding.UTF8.GetBytes("Invalid content");
+
+            using (var stream = new MemoryStream(invalidContent))
+            {
+                // Act & Assert: Try to open the invalid database and expect an exception
+                Exception ex = Record.Exception(() =>
+                {
+                    using (var db = new LiteDatabase(stream))
+                    {
+                        // Attempt to perform an operation to ensure the database file is read
+                        var col = db.GetCollection("test");
+                        col.Insert(new BsonDocument { ["name"] = "test" });
+                    }
+                });
+
+                Assert.NotNull(ex);
+                Assert.IsType<LiteException>(ex);
+            }
+        }
+
+        [Fact]
+        public void Test_AddDatabase_InvalidDatabase_LargeFile_MemoryStream()
+        {
+            // Create an invalid LiteDB database content larger than 16KB
+            byte[] invalidContent = new byte[16 * 1024 + 1];
+            for (int i = 0; i < invalidContent.Length; i++) invalidContent[i] = (byte)'a';
+
+            using (var stream = new MemoryStream(invalidContent))
+            {
+                // Act & Assert: Try to open the invalid database and expect an exception
+                Exception ex = Record.Exception(() =>
+                {
+                    using (var db = new LiteDatabase(stream))
+                    {
+                        // Attempt to perform an operation to ensure the database file is read
+                        var col = db.GetCollection("test");
+                        col.Insert(new BsonDocument { ["name"] = "test" });
+                    }
+                });
+
+                Assert.NotNull(ex);
+                Assert.IsType<LiteException>(ex);
+            }
+        }
     }
 }
