@@ -56,10 +56,7 @@ namespace LiteDB.Engine
 
             lock (_queueSync)
             {
-                if (_task == null)
-                {
-                    _task = Task.Factory.StartNew(ExecuteQueue, TaskCreationOptions.LongRunning);
-                }
+                _task ??= Task.Run(ExecuteQueue);
             }
         }
 
@@ -76,7 +73,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Execute all items in queue sync
         /// </summary>
-        private void ExecuteQueue()
+        private async Task ExecuteQueue()
         {
             try
             {
@@ -84,7 +81,7 @@ namespace LiteDB.Engine
                 {
                     if (_queue.TryDequeue(out var page))
                     {
-                        WritePageToStream(page);
+                        await WritePageToStream(page).ConfigureAwait(false);
                     }
                     else
                     {
@@ -96,9 +93,8 @@ namespace LiteDB.Engine
 
                         if (_shouldClose) return;
 
-                        _stream.FlushToDisk();
-
-                        _queueHasItems.WaitAsync().GetAwaiter().GetResult();
+                        await _stream.FlushToDiskAsync().ConfigureAwait(false);
+                        await _queueHasItems.WaitAsync().ConfigureAwait(false);
                     }
                 }
             }
@@ -109,7 +105,7 @@ namespace LiteDB.Engine
             }
         }
 
-        private void WritePageToStream(PageBuffer page)
+        private async Task WritePageToStream(PageBuffer page)
         {
             if (page == null) return;
 
@@ -122,7 +118,8 @@ namespace LiteDB.Engine
             _state.SimulateDiskWriteFail?.Invoke(page);
 #endif
 
-            _stream.Write(page.Array, page.Offset, PAGE_SIZE);
+            // We don't want to cancel this write.
+            await _stream.WriteAsync(page.Array, page.Offset, PAGE_SIZE).ConfigureAwait(false);
 
             // release page here (no page use after this)
             page.Release();
