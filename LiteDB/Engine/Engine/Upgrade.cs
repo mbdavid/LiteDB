@@ -23,17 +23,19 @@ namespace LiteDB.Engine
             // if file not exists, just exit
             if (!File.Exists(filename)) return;
 
-            var buffer = _bufferPool.Rent(1024);
+            const int bufferSize = 1024;
+            var buffer = _bufferPool.Rent(bufferSize);
+
             using (var stream = new FileStream(
                 _settings.Filename,
                 FileMode.Open,
                 FileAccess.Read,
-                FileShare.Read, 1024))
+                FileShare.Read, bufferSize))
             {
 
 
                 stream.Position = 0;
-                stream.Read(buffer, 0, buffer.Length);
+                stream.Read(buffer, 0, bufferSize);
 
                 if (FileReaderV7.IsVersion(buffer) == false) return;
             }
