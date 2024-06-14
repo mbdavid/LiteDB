@@ -52,7 +52,7 @@ namespace LiteDB.Engine
 
             _reader = new Lazy<Stream>(() => _disk.GetReader());
 
-            var bytes = _bufferPool.Rent(disk.ContainerSize);
+            var bytes = new byte [disk.ContainerSize];
 
             _buffer = new BufferSlice(bytes, 0, _containerSize);
         }
