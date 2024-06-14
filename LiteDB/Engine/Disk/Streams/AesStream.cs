@@ -55,7 +55,9 @@ namespace LiteDB.Engine
             // start stream from zero position
             _stream.Position = 0;
 
-            var checkBuffer = _bufferPool.Rent(32);
+            const int checkBufferSize = 32;
+
+            var checkBuffer = _bufferPool.Rent(checkBufferSize);
             var msBuffer = _bufferPool.Rent(16);
 
             try
@@ -114,20 +116,20 @@ namespace LiteDB.Engine
                 if (!isNew)
                 {
                     // check whether bytes 32 to 64 is empty. This indicates LiteDb was unable to write encrypted 1s during last attempt.
-                    _stream.Read(checkBuffer, 0, checkBuffer.Length);
+                    _stream.Read(checkBuffer, 0, checkBufferSize);
                     isNew = checkBuffer.All(x => x == 0);
 
                     // reset checkBuffer and stream position
-                    Array.Clear(checkBuffer, 0, checkBuffer.Length);
+                    Array.Clear(checkBuffer, 0, checkBufferSize);
                     _stream.Position = 32;
                 }
 
                 // fill checkBuffer with encrypted 1 to check when open
                 if (isNew)
                 {
-                    checkBuffer.Fill(1, 0, checkBuffer.Length);
+                    checkBuffer.Fill(1, 0, checkBufferSize);
 
-                    _writer.Write(checkBuffer, 0, checkBuffer.Length);
+                    _writer.Write(checkBuffer, 0, checkBufferSize);
 
                     //ensure that the "hidden" page in encrypted files is created correctly
                     _stream.Position = PAGE_SIZE - 1;
@@ -135,7 +137,7 @@ namespace LiteDB.Engine
                 }
                 else
                 {
-                    _reader.Read(checkBuffer, 0, checkBuffer.Length);
+                    _reader.Read(checkBuffer, 0, checkBufferSize);
 
                     if (!checkBuffer.All(x => x == 1))
                     {
