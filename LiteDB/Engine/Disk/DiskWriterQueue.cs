@@ -81,7 +81,7 @@ namespace LiteDB.Engine
                 {
                     if (_queue.TryDequeue(out var page))
                     {
-                        await WritePageToStream(page).ConfigureAwait(false);
+                        await WritePageToStream(page);
                     }
                     else
                     {
@@ -93,8 +93,9 @@ namespace LiteDB.Engine
 
                         if (_shouldClose) return;
 
-                        await _stream.FlushToDiskAsync().ConfigureAwait(false);
-                        await _queueHasItems.WaitAsync().ConfigureAwait(false);
+                        // We don't want to cancel this flush.
+                        await _stream.FlushAsync();
+                        await _queueHasItems.WaitAsync();
                     }
                 }
             }
@@ -119,7 +120,7 @@ namespace LiteDB.Engine
 #endif
 
             // We don't want to cancel this write.
-            await _stream.WriteAsync(page.Array, page.Offset, PAGE_SIZE).ConfigureAwait(false);
+            await _stream.WriteAsync(page.Array, page.Offset, PAGE_SIZE);
 
             // release page here (no page use after this)
             page.Release();
