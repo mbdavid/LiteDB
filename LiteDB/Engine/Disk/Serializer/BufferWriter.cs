@@ -179,7 +179,7 @@ namespace LiteDB.Engine
 
                 this.MoveForward(1);
 
-                _bufferPool.Return(buffer);
+                _bufferPool.Return(buffer, true);
             }
         }
 
@@ -211,7 +211,7 @@ namespace LiteDB.Engine
 
                 this.Write(buffer, 0, count);
 
-                _bufferPool.Return(buffer);
+                _bufferPool.Return(buffer, true);
             }
 
             if (specs)
@@ -240,7 +240,7 @@ namespace LiteDB.Engine
 
                 this.Write(buffer, 0, size);
 
-                _bufferPool.Return(buffer);
+                _bufferPool.Return(buffer, true);
             }
         }
 
@@ -302,7 +302,7 @@ namespace LiteDB.Engine
 
                 this.Write(buffer, 0, 12);
 
-                _bufferPool.Return(buffer);
+                _bufferPool.Return(buffer, true);
             }
         }
 

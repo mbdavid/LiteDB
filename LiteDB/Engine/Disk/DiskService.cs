@@ -230,7 +230,7 @@ namespace LiteDB.Engine
                     buffer[HeaderPage.P_INVALID_DATAFILE_STATE] = 1;
                     stream.Position = 0;
                     stream.Write(buffer, 0, PAGE_SIZE);
-                    _bufferPool.Return(buffer);
+                    _bufferPool.Return(buffer, true);
                 }
             });
         }

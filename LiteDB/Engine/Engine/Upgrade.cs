@@ -37,7 +37,7 @@ namespace LiteDB.Engine
 
                 if (FileReaderV7.IsVersion(buffer) == false) return;
             }
-            _bufferPool.Return(buffer);
+            _bufferPool.Return(buffer, true);
             // run rebuild process
             this.Recovery(_settings.Collation);
         }

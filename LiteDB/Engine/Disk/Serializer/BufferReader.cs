@@ -169,7 +169,7 @@ namespace LiteDB.Engine
 
                 value = StringEncoding.UTF8.GetString(buffer, 0, count);
 
-                _bufferPool.Return(buffer);
+                _bufferPool.Return(buffer, true);
             }
 
             return value;
@@ -259,7 +259,7 @@ namespace LiteDB.Engine
 
                 value = convert(buffer, 0);
 
-                _bufferPool.Return(buffer);
+                _bufferPool.Return(buffer, true);
             }
 
             return value;
@@ -336,7 +336,7 @@ namespace LiteDB.Engine
 
                 value = new ObjectId(buffer, 0);
 
-                _bufferPool.Return(buffer);
+                _bufferPool.Return(buffer, true);
             }
 
             return value;
