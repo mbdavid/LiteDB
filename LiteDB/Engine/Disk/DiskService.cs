@@ -26,7 +26,7 @@ namespace LiteDB.Engine
         private long _dataLength;
         private long _logLength;
 
-        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+        private static readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Shared;
 
         public DiskService(
             EngineSettings settings,
@@ -225,12 +225,12 @@ namespace LiteDB.Engine
             {
                 using (var stream = _dataFactory.GetStream(true, true))
                 {
-                    var buffer = bufferPool.Rent(PAGE_SIZE);
+                    var buffer = _bufferPool.Rent(PAGE_SIZE);
                     stream.Read(buffer, 0, PAGE_SIZE);
                     buffer[HeaderPage.P_INVALID_DATAFILE_STATE] = 1;
                     stream.Position = 0;
                     stream.Write(buffer, 0, PAGE_SIZE);
-                    bufferPool.Return(buffer);
+                    _bufferPool.Return(buffer);
                 }
             });
         }

@@ -25,7 +25,7 @@ namespace LiteDB.Engine
 
         private static readonly byte[] _emptyContent = new byte[PAGE_SIZE - 1 - 16]; // 1 for aes indicator + 16 for salt
 
-        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+        private static readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Shared;
 
         public byte[] Salt { get; }
 
@@ -55,8 +55,8 @@ namespace LiteDB.Engine
             // start stream from zero position
             _stream.Position = 0;
 
-            var checkBuffer = bufferPool.Rent(32);
-            var msBuffer = bufferPool.Rent(16);
+            var checkBuffer = _bufferPool.Rent(32);
+            var msBuffer = _bufferPool.Rent(16);
 
             try
             {
@@ -159,8 +159,8 @@ namespace LiteDB.Engine
             }
             finally
             {
-                bufferPool.Return(msBuffer);
-                bufferPool.Return(checkBuffer);
+                _bufferPool.Return(msBuffer);
+                _bufferPool.Return(checkBuffer);
             }
         }
 

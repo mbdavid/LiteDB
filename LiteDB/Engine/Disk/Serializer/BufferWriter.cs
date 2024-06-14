@@ -19,7 +19,7 @@ namespace LiteDB.Engine
 
         private bool _isEOF = false;
 
-        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+        private static readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Current global cursor position
@@ -169,7 +169,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = bufferPool.Rent(bytesCount);
+                var buffer = _bufferPool.Rent(bytesCount);
 
                 StringEncoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
 
@@ -179,7 +179,7 @@ namespace LiteDB.Engine
 
                 this.MoveForward(1);
 
-                bufferPool.Return(buffer);
+                _bufferPool.Return(buffer);
             }
         }
 
@@ -205,13 +205,13 @@ namespace LiteDB.Engine
             else
             {
                 // rent a buffer to be re-usable
-                var buffer = bufferPool.Rent(count);
+                var buffer = _bufferPool.Rent(count);
 
                 StringEncoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
 
                 this.Write(buffer, 0, count);
 
-                bufferPool.Return(buffer);
+                _bufferPool.Return(buffer);
             }
 
             if (specs)
@@ -234,13 +234,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = bufferPool.Rent(size);
+                var buffer = _bufferPool.Rent(size);
 
                 toBytes(value, buffer, 0);
 
                 this.Write(buffer, 0, size);
 
-                bufferPool.Return(buffer);
+                _bufferPool.Return(buffer);
             }
         }
 
@@ -296,13 +296,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = bufferPool.Rent(12);
+                var buffer = _bufferPool.Rent(12);
 
                 value.ToByteArray(buffer, 0);
 
                 this.Write(buffer, 0, 12);
 
-                bufferPool.Return(buffer);
+                _bufferPool.Return(buffer);
             }
         }
 

@@ -11,7 +11,7 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
 
-        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+        private static readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// If Upgrade=true, run this before open Disk service
@@ -23,7 +23,7 @@ namespace LiteDB.Engine
             // if file not exists, just exit
             if (!File.Exists(filename)) return;
 
-            var buffer = bufferPool.Rent(1024);
+            var buffer = _bufferPool.Rent(1024);
             using (var stream = new FileStream(
                 _settings.Filename,
                 FileMode.Open,
@@ -37,7 +37,7 @@ namespace LiteDB.Engine
 
                 if (FileReaderV7.IsVersion(buffer) == false) return;
             }
-            bufferPool.Return(buffer);
+            _bufferPool.Return(buffer);
             // run rebuild process
             this.Recovery(_settings.Collation);
         }

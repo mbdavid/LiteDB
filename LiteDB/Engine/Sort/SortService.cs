@@ -31,7 +31,7 @@ namespace LiteDB.Engine
         private readonly BufferSlice _buffer;
         private readonly Lazy<Stream> _reader;
 
-        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+        private static readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Get how many documents was inserted by Insert method
@@ -52,7 +52,7 @@ namespace LiteDB.Engine
 
             _reader = new Lazy<Stream>(() => _disk.GetReader());
 
-            var bytes = bufferPool.Rent(disk.ContainerSize);
+            var bytes = _bufferPool.Rent(disk.ContainerSize);
 
             _buffer = new BufferSlice(bytes, 0, _containerSize);
         }
@@ -72,7 +72,7 @@ namespace LiteDB.Engine
             }
 
             // return array buffer into pool
-            bufferPool.Return(_buffer.Array);
+            _bufferPool.Return(_buffer.Array);
 
             // return open strem into disk
             if (_reader.IsValueCreated)

@@ -27,7 +27,7 @@ namespace LiteDB.Engine
 
         private BufferReader _reader = null;
 
-        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+        private static readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Returns if current container has no more items to read
@@ -122,7 +122,7 @@ namespace LiteDB.Engine
         /// </summary>
         private IEnumerable<BufferSlice> GetSourceFromStream(Stream stream)
         {
-            var bytes = bufferPool.Rent(PAGE_SIZE);
+            var bytes = _bufferPool.Rent(PAGE_SIZE);
             var buffer = new BufferSlice(bytes, 0, PAGE_SIZE);
 
             while (_readPosition < _size)
@@ -136,7 +136,7 @@ namespace LiteDB.Engine
                 yield return buffer;
             }
 
-            bufferPool.Return(bytes);
+            _bufferPool.Return(bytes);
         }
 
         public void Dispose()

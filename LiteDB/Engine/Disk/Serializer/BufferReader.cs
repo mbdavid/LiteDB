@@ -20,7 +20,7 @@ namespace LiteDB.Engine
 
         private bool _isEOF = false;
 
-        private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
+        private static readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Current global cursor position
@@ -163,13 +163,13 @@ namespace LiteDB.Engine
             else
             {
                 // rent a buffer to be re-usable
-                var buffer = bufferPool.Rent(count);
+                var buffer = _bufferPool.Rent(count);
 
                 this.Read(buffer, 0, count);
 
                 value = StringEncoding.UTF8.GetString(buffer, 0, count);
 
-                bufferPool.Return(buffer);
+                _bufferPool.Return(buffer);
             }
 
             return value;
@@ -253,13 +253,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = bufferPool.Rent(size);
+                var buffer = _bufferPool.Rent(size);
 
                 this.Read(buffer, 0, size);
 
                 value = convert(buffer, 0);
 
-                bufferPool.Return(buffer);
+                _bufferPool.Return(buffer);
             }
 
             return value;
@@ -330,13 +330,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = bufferPool.Rent(12);
+                var buffer = _bufferPool.Rent(12);
 
                 this.Read(buffer, 0, 12);
 
                 value = new ObjectId(buffer, 0);
 
-                bufferPool.Return(buffer);
+                _bufferPool.Return(buffer);
             }
 
             return value;
