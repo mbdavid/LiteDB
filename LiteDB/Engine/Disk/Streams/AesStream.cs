@@ -161,8 +161,8 @@ namespace LiteDB.Engine
             }
             finally
             {
-                _bufferPool.Return(msBuffer);
-                _bufferPool.Return(checkBuffer);
+                _bufferPool.Return(msBuffer, true);
+                _bufferPool.Return(checkBuffer, true);
             }
         }
 

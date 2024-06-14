@@ -71,9 +71,6 @@ namespace LiteDB.Engine
                 }
             }
 
-            // return array buffer into pool
-            _bufferPool.Return(_buffer.Array);
-
             // return open strem into disk
             if (_reader.IsValueCreated)
             {

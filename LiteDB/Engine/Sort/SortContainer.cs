@@ -136,7 +136,7 @@ namespace LiteDB.Engine
                 yield return buffer;
             }
 
-            _bufferPool.Return(bytes);
+            _bufferPool.Return(bytes, true);
         }
 
         public void Dispose()
