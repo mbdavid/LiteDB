@@ -1,212 +1,228 @@
-﻿using System;
+﻿namespace LiteDB;
+
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using static LiteDB.Constants;
 
-namespace LiteDB
+public partial class BsonMapper
 {
-    public partial class BsonMapper
+    /// <summary>
+    ///     Serialize a entity class to BsonDocument
+    /// </summary>
+    public virtual BsonDocument ToDocument(Type type, object entity)
     {
-        /// <summary>
-        /// Serialize a entity class to BsonDocument
-        /// </summary>
-        public virtual BsonDocument ToDocument(Type type, object entity)
+        if (entity == null)
+            throw new ArgumentNullException(nameof(entity));
+
+        // if object is BsonDocument, just return them
+        if (entity is BsonDocument)
+            return (BsonDocument) entity;
+
+        return Serialize(type, entity, 0).AsDocument;
+    }
+
+    /// <summary>
+    ///     Serialize a entity class to BsonDocument
+    /// </summary>
+    public virtual BsonDocument ToDocument<T>(T entity)
+    {
+        return ToDocument(typeof(T), entity)?.AsDocument;
+    }
+
+    /// <summary>
+    ///     Serialize to BsonValue any .NET object based on T type (using mapping rules)
+    /// </summary>
+    public BsonValue Serialize<T>(T obj)
+    {
+        return Serialize(typeof(T), obj, 0);
+    }
+
+    /// <summary>
+    ///     Serialize to BsonValue any .NET object based on type parameter (using mapping rules)
+    /// </summary>
+    public BsonValue Serialize(Type type, object obj)
+    {
+        return Serialize(type, obj, 0);
+    }
+
+    internal BsonValue Serialize(Type type, object obj, int depth)
+    {
+        if (++depth > MaxDepth)
+            throw LiteException.DocumentMaxDepth(MaxDepth, type);
+
+        if (obj == null)
+            return BsonValue.Null;
+
+        // if is already a bson value
+        if (obj is BsonValue bsonValue)
+            return bsonValue;
+
+        // check if is a custom type
+        if (_customSerializer.TryGetValue(type, out var custom) ||
+            _customSerializer.TryGetValue(obj.GetType(), out custom))
         {
-            if (entity == null) throw new ArgumentNullException(nameof(entity));
+            return custom(obj);
+        }
+        // test string - mapper has some special options
 
-            // if object is BsonDocument, just return them
-            if (entity is BsonDocument) return (BsonDocument)(object)entity;
+        if (obj is String)
+        {
+            var str = TrimWhitespace ? (obj as String).Trim() : (String) obj;
 
-            return this.Serialize(type, entity, 0).AsDocument;
+            if (EmptyStringToNull && str.Length == 0)
+            {
+                return BsonValue.Null;
+            }
+
+            return new BsonValue(str);
+        }
+        // basic Bson data types (cast datatype for better performance optimization)
+
+        if (obj is Int32)
+            return new BsonValue((Int32) obj);
+        if (obj is Int64)
+            return new BsonValue((Int64) obj);
+        if (obj is Double)
+            return new BsonValue((Double) obj);
+        if (obj is Decimal)
+            return new BsonValue((Decimal) obj);
+        if (obj is Byte[])
+            return new BsonValue((Byte[]) obj);
+        if (obj is ObjectId)
+            return new BsonValue((ObjectId) obj);
+        if (obj is Guid)
+            return new BsonValue((Guid) obj);
+        if (obj is Boolean)
+            return new BsonValue((Boolean) obj);
+        if (obj is DateTime)
+            return new BsonValue((DateTime) obj);
+        // basic .net type to convert to bson
+        if (obj is Int16 || obj is UInt16 || obj is Byte || obj is SByte)
+        {
+            return new BsonValue(Convert.ToInt32(obj));
         }
 
-        /// <summary>
-        /// Serialize a entity class to BsonDocument
-        /// </summary>
-        public virtual BsonDocument ToDocument<T>(T entity)
+        if (obj is UInt32)
         {
-            return this.ToDocument(typeof(T), entity)?.AsDocument;
+            return new BsonValue(Convert.ToInt64(obj));
         }
 
-        /// <summary>
-        /// Serialize to BsonValue any .NET object based on T type (using mapping rules)
-        /// </summary>
-        public BsonValue Serialize<T>(T obj)
+        if (obj is UInt64)
         {
-            return this.Serialize(typeof(T), obj, 0);
+            var ulng = ((UInt64) obj);
+            var lng = unchecked((Int64) ulng);
+
+            return new BsonValue(lng);
         }
 
-        /// <summary>
-        /// Serialize to BsonValue any .NET object based on type parameter (using mapping rules)
-        /// </summary>
-        public BsonValue Serialize(Type type, object obj)
+        if (obj is Single)
         {
-            return this.Serialize(type, obj, 0);
+            return new BsonValue(Convert.ToDouble(obj));
         }
 
-        internal BsonValue Serialize(Type type, object obj, int depth)
+        if (obj is Char)
         {
-            if (++depth > MaxDepth) throw LiteException.DocumentMaxDepth(MaxDepth, type);
+            return new BsonValue(obj.ToString());
+        }
 
-            if (obj == null) return BsonValue.Null;
+        if (obj is Enum)
+        {
+            if (EnumAsInteger)
+            {
+                return new BsonValue((int) obj);
+            }
 
-            // if is already a bson value
-            if (obj is BsonValue bsonValue) return bsonValue;
+            return new BsonValue(obj.ToString());
+        }
+        // for dictionary
 
-            // check if is a custom type
-            else if (_customSerializer.TryGetValue(type, out var custom) || _customSerializer.TryGetValue(obj.GetType(), out custom))
+        if (obj is IDictionary dict)
+        {
+            // when you are converting Dictionary<string, object>
+            if (type == typeof(object))
             {
-                return custom(obj);
+                type = obj.GetType();
             }
-            // test string - mapper has some special options
-            else if (obj is String)
-            {
-                var str = this.TrimWhitespace ? (obj as String).Trim() : (String)obj;
 
-                if (this.EmptyStringToNull && str.Length == 0)
-                {
-                    return BsonValue.Null;
-                }
-                else
-                {
-                    return new BsonValue(str);
-                }
-            }
-            // basic Bson data types (cast datatype for better performance optimization)
-            else if (obj is Int32) return new BsonValue((Int32)obj);
-            else if (obj is Int64) return new BsonValue((Int64)obj);
-            else if (obj is Double) return new BsonValue((Double)obj);
-            else if (obj is Decimal) return new BsonValue((Decimal)obj);
-            else if (obj is Byte[]) return new BsonValue((Byte[])obj);
-            else if (obj is ObjectId) return new BsonValue((ObjectId)obj);
-            else if (obj is Guid) return new BsonValue((Guid)obj);
-            else if (obj is Boolean) return new BsonValue((Boolean)obj);
-            else if (obj is DateTime) return new BsonValue((DateTime)obj);
-            // basic .net type to convert to bson
-            else if (obj is Int16 || obj is UInt16 || obj is Byte || obj is SByte)
-            {
-                return new BsonValue(Convert.ToInt32(obj));
-            }
-            else if (obj is UInt32)
-            {
-                return new BsonValue(Convert.ToInt64(obj));
-            }
-            else if (obj is UInt64)
-            {
-                var ulng = ((UInt64)obj);
-                var lng = unchecked((Int64)ulng);
+            var itemType = type.GetTypeInfo().IsGenericType ? type.GetGenericArguments()[1] : typeof(object);
 
-                return new BsonValue(lng);
-            }
-            else if (obj is Single)
-            {
-                return new BsonValue(Convert.ToDouble(obj));
-            }
-            else if (obj is Char)
-            {
-                return new BsonValue(obj.ToString());
-            }
-            else if (obj is Enum)
-            {
-                if (this.EnumAsInteger)
-                {
-                    return new BsonValue((int)obj);
-                }
-                else
-                {
-                    return new BsonValue(obj.ToString());
-                }
-            }
-            // for dictionary
-            else if (obj is IDictionary dict)
-            {
-                // when you are converting Dictionary<string, object>
-                if (type == typeof(object))
-                {
-                    type = obj.GetType();
-                }
+            return SerializeDictionary(itemType, dict, depth);
+        }
+        // check if is a list or array
 
-                var itemType = type.GetTypeInfo().IsGenericType ? type.GetGenericArguments()[1] : typeof(object);
+        if (obj is IEnumerable)
+        {
+            return SerializeArray(Reflection.GetListItemType(type), obj as IEnumerable, depth);
+        }
+        // otherwise serialize as a plain object
 
-                return this.SerializeDictionary(itemType, dict, depth);
-            }
-            // check if is a list or array
-            else if (obj is IEnumerable)
+        return SerializeObject(type, obj, depth);
+    }
+
+    private BsonArray SerializeArray(Type type, IEnumerable array, int depth)
+    {
+        var arr = new BsonArray();
+
+        foreach (var item in array)
+        {
+            arr.Add(Serialize(type, item, depth));
+        }
+
+        return arr;
+    }
+
+    private BsonDocument SerializeDictionary(Type type, IDictionary dict, int depth)
+    {
+        var o = new BsonDocument();
+
+        foreach (var key in dict.Keys)
+        {
+            var value = dict[key];
+            var skey = key.ToString();
+
+            if (key is DateTime dateKey)
             {
-                return this.SerializeArray(Reflection.GetListItemType(type), obj as IEnumerable, depth);
+                skey = dateKey.ToString("o");
             }
-            // otherwise serialize as a plain object
+
+            o[skey] = Serialize(type, value, depth);
+        }
+
+        return o;
+    }
+
+    private BsonDocument SerializeObject(Type type, object obj, int depth)
+    {
+        var t = obj.GetType();
+        var doc = new BsonDocument();
+        var entity = GetEntityMapper(t);
+
+        // adding _type only where property Type is not same as object instance type
+        if (type != t)
+        {
+            doc["_type"] = new BsonValue(_typeNameBinder.GetName(t));
+        }
+
+        foreach (var member in entity.Members.Where(x => x.Getter != null))
+        {
+            // get member value
+            var value = member.Getter(obj);
+
+            if (value == null && SerializeNullValues == false && member.FieldName != "_id")
+                continue;
+
+            // if member has a custom serialization, use it
+            if (member.Serialize != null)
+            {
+                doc[member.FieldName] = member.Serialize(value, this);
+            }
             else
             {
-                return this.SerializeObject(type, obj, depth);
+                doc[member.FieldName] = Serialize(member.DataType, value, depth);
             }
         }
 
-        private BsonArray SerializeArray(Type type, IEnumerable array, int depth)
-        {
-            var arr = new BsonArray();
-
-            foreach (var item in array)
-            {
-                arr.Add(this.Serialize(type, item, depth));
-            }
-
-            return arr;
-        }
-
-        private BsonDocument SerializeDictionary(Type type, IDictionary dict, int depth)
-        {
-            var o = new BsonDocument();
-
-            foreach (var key in dict.Keys)
-            {
-                var value = dict[key];
-                var skey = key.ToString();
-
-                if (key is DateTime dateKey)
-                {
-                    skey = dateKey.ToString("o");
-                }
-
-                o[skey] = this.Serialize(type, value, depth);
-            }
-
-            return o;
-        }
-
-        private BsonDocument SerializeObject(Type type, object obj, int depth)
-        {
-            var t = obj.GetType();
-            var doc = new BsonDocument();
-            var entity = this.GetEntityMapper(t);
-
-            // adding _type only where property Type is not same as object instance type
-            if (type != t)
-            {
-                doc["_type"] = new BsonValue(_typeNameBinder.GetName(t));
-            }
-
-            foreach (var member in entity.Members.Where(x => x.Getter != null))
-            {
-                // get member value
-                var value = member.Getter(obj);
-
-                if (value == null && this.SerializeNullValues == false && member.FieldName != "_id") continue;
-
-                // if member has a custom serialization, use it
-                if (member.Serialize != null)
-                {
-                    doc[member.FieldName] = member.Serialize(value, this);
-                }
-                else
-                {
-                    doc[member.FieldName] = this.Serialize(member.DataType, value, depth);
-                }
-            }
-
-            return doc;
-        }
+        return doc;
     }
 }

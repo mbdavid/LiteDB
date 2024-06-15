@@ -1,17 +1,11 @@
-﻿using LiteDB.Engine;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using static LiteDB.Constants;
+﻿namespace LiteDB;
 
-namespace LiteDB
+public enum ConnectionType
 {
-    public enum ConnectionType
-    {
-        Direct,
-        Shared
-        // MimePipes
-        // Tcp
-        // Rest
-    }
+    Direct,
+
+    Shared
+    // MimePipes
+    // Tcp
+    // Rest
 }

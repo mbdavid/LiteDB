@@ -1,86 +1,83 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace LiteDB.Tests.Mapper;
+
 using FluentAssertions;
 using Xunit;
 
-namespace LiteDB.Tests.Mapper
+public class Enum_Tests
 {
-    public class Enum_Tests
+    public enum CustomerType
     {
-        public enum CustomerType
-        {
-            Potential,
-            New,
-            Loyal
-        }
-        public class Customer
-        {
-            public int Id { get; set; }
-            public CustomerType Type { get; set; }
-            public CustomerType? NullableType { get; set; }
-        }
+        Potential,
+        New,
+        Loyal
+    }
 
-        [Fact]
-        public void Enum_Convert_Into_Document()
-        {
-            var mapper = new BsonMapper();
+    public class Customer
+    {
+        public int Id { get; set; }
+        public CustomerType Type { get; set; }
+        public CustomerType? NullableType { get; set; }
+    }
 
-            var c = new Customer { Id = 1, Type = CustomerType.Loyal };
+    [Fact]
+    public void Enum_Convert_Into_Document()
+    {
+        var mapper = new BsonMapper();
 
-            var doc = mapper.ToDocument(c);
+        var c = new Customer { Id = 1, Type = CustomerType.Loyal };
 
-            doc["Type"].AsString.Should().Be("Loyal");
-            doc["NullableType"].IsNull.Should().BeTrue();
+        var doc = mapper.ToDocument(c);
 
-            var fromDoc = mapper.ToObject<Customer>(doc);
+        doc["Type"].AsString.Should().Be("Loyal");
+        doc["NullableType"].IsNull.Should().BeTrue();
 
-            fromDoc.Type.Should().Be(CustomerType.Loyal);
-            fromDoc.NullableType.Should().BeNull();
-        }
+        var fromDoc = mapper.ToObject<Customer>(doc);
 
-        [Fact]
-        public void Enum_Convert_Into_Linq_Query()
-        {
-            var mapper = new BsonMapper();
+        fromDoc.Type.Should().Be(CustomerType.Loyal);
+        fromDoc.NullableType.Should().BeNull();
+    }
 
-            var c = new Customer { Id = 1, Type = CustomerType.Loyal };
+    [Fact]
+    public void Enum_Convert_Into_Linq_Query()
+    {
+        var mapper = new BsonMapper();
 
-            mapper.EnumAsInteger = true;
+        var c = new Customer { Id = 1, Type = CustomerType.Loyal };
 
-            var doc = mapper.ToDocument(c);
+        mapper.EnumAsInteger = true;
 
-            doc["Type"].AsInt32.Should().Be(2);
-            doc["Nullable"].IsNull.Should().BeTrue();
+        var doc = mapper.ToDocument(c);
 
-            // To use Eum in LINQ expressions, Enum must be integer value (should be EnumAsInteger = true)
-            var expr1 = mapper.GetExpression<Customer, bool>(x => x.Type == CustomerType.Loyal);
+        doc["Type"].AsInt32.Should().Be(2);
+        doc["Nullable"].IsNull.Should().BeTrue();
 
-            expr1.Parameters["p0"].AsInt32.Should().Be(2);
+        // To use Eum in LINQ expressions, Enum must be integer value (should be EnumAsInteger = true)
+        var expr1 = mapper.GetExpression<Customer, bool>(x => x.Type == CustomerType.Loyal);
 
-            var expr2 = mapper.GetExpression<Customer, bool>(x => x.NullableType.Value == CustomerType.Loyal);
+        expr1.Parameters["p0"].AsInt32.Should().Be(2);
 
-            expr2.Parameters["p0"].AsInt32.Should().Be(2);
+        var expr2 = mapper.GetExpression<Customer, bool>(x => x.NullableType.Value == CustomerType.Loyal);
 
-        }
+        expr2.Parameters["p0"].AsInt32.Should().Be(2);
+    }
 
-        [Fact]
-        public void Enum_Array_Test()
-        {
-            var mapper = new BsonMapper();
+    [Fact]
+    public void Enum_Array_Test()
+    {
+        var mapper = new BsonMapper();
 
-            mapper.EnumAsInteger = false;
+        mapper.EnumAsInteger = false;
 
-            var array = new CustomerType[] { CustomerType.Potential, CustomerType.Loyal };
+        var array = new[] { CustomerType.Potential, CustomerType.Loyal };
 
-            var serialized1 = mapper.Serialize(array);
-            var deserialized1 = mapper.Deserialize<CustomerType[]>(serialized1);
-            deserialized1.Should().Equal(array);
+        var serialized1 = mapper.Serialize(array);
+        var deserialized1 = mapper.Deserialize<CustomerType[]>(serialized1);
+        deserialized1.Should().Equal(array);
 
-            mapper.EnumAsInteger = true;
+        mapper.EnumAsInteger = true;
 
-            var serialized2 = mapper.Serialize(array);
-            var deserialized2 = mapper.Deserialize<CustomerType[]>(serialized1);
-            deserialized2.Should().Equal(array);
-        }
+        var serialized2 = mapper.Serialize(array);
+        var deserialized2 = mapper.Deserialize<CustomerType[]>(serialized1);
+        deserialized2.Should().Equal(array);
     }
 }

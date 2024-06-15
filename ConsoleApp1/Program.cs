@@ -1,9 +1,6 @@
 ﻿using LiteDB;
 using LiteDB.Engine;
 
-using System.Reflection.Emit;
-using System.Reflection.PortableExecutable;
-
 var password = "46jLz5QWd5fI3m4LiL2r";
 var path = $"C:\\LiteDB\\Examples\\CrashDB_{DateTime.Now.Ticks}.db";
 
@@ -14,27 +11,30 @@ var settings = new EngineSettings
     Password = password
 };
 
-var data = Enumerable.Range(1, 10_000).Select(i => new BsonDocument
-{
-    ["_id"] = i,
-    ["name"] = Faker.Fullname(),
-    ["age"] = Faker.Age(),
-    ["created"] = Faker.Birthday(),
-    ["lorem"] = Faker.Lorem(5, 25)
-}).ToArray();
+var data = Enumerable.Range(1, 10_000)
+    .Select(
+        i => new BsonDocument
+        {
+            ["_id"] = i,
+            ["name"] = Faker.Fullname(),
+            ["age"] = Faker.Age(),
+            ["created"] = Faker.Birthday(),
+            ["lorem"] = Faker.Lorem(5, 25)
+        })
+    .ToArray();
 
 try
 {
     using (var db = new LiteEngine(settings))
     {
 #if DEBUG
-        db.SimulateDiskWriteFail = (page) =>
+        db.SimulateDiskWriteFail = page =>
         {
             var p = new BasePage(page);
 
             if (p.PageID == 248)
             {
-                page.Write((uint)123123123, 8192-4);
+                page.Write((uint) 123123123, 8192 - 4);
             }
         };
 #endif
@@ -71,7 +71,6 @@ using (var db = new LiteEngine(settings))
     var errors = new BsonArray(db.Query("_rebuild_errors", Query.All()).ToList()).ToString();
 
     Console.WriteLine("Errors: " + errors);
-
 }
 
 /*

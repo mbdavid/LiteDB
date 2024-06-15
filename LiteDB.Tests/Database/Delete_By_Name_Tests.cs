@@ -1,27 +1,24 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿namespace LiteDB.Tests.Database;
+
 using FluentAssertions;
 using Xunit;
 
-namespace LiteDB.Tests.Database
+public class Delete_By_Name_Tests
 {
-    public class Delete_By_Name_Tests
+    #region Model
+
+    public class Person
     {
-        #region Model
+        public int Id { get; set; }
+        public string Fullname { get; set; }
+    }
 
-        public class Person
-        {
-            public int Id { get; set; }
-            public string Fullname { get; set; }
-        }
+    #endregion
 
-        #endregion
-
-        [Fact]
-        public void Delete_By_Name()
-        {
-            using (var f = new TempFile())
+    [Fact]
+    public void Delete_By_Name()
+    {
+        using (var f = new TempFile())
             using (var db = new LiteDatabase(f.Filename))
             {
                 var col = db.GetCollection<Person>("Person");
@@ -36,6 +33,5 @@ namespace LiteDB.Tests.Database
 
                 del.Should().Be(2);
             }
-        }
     }
 }

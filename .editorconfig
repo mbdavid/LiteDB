@@ -1,0 +1,12 @@
+# Remove the line below if you want to inherit .editorconfig settings from higher directories
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+indent_size = 4
+indent_style = space
+trim_trailing_whitespace = true
+
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:warning

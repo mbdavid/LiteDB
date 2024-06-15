@@ -1,234 +1,235 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using static LiteDB.Constants;
+﻿namespace LiteDB.Engine;
 
-namespace LiteDB.Engine
+/// <summary>
+///     Represent a index node inside a Index Page
+/// </summary>
+internal class IndexNode
 {
     /// <summary>
-    /// Represent a index node inside a Index Page
+    ///     Fixed length of IndexNode (12 bytes)
     /// </summary>
-    internal class IndexNode
+    private const int INDEX_NODE_FIXED_SIZE = 1 + // Slot [1 byte]
+        1 + // Levels [1 byte]
+        PageAddress.SIZE + // DataBlock (5 bytes)
+        PageAddress.SIZE; // NextNode (5 bytes)
+
+    private const int P_SLOT = 0; // 00-00 [byte]
+    private const int P_LEVELS = 1; // 01-01 [byte]
+    private const int P_DATA_BLOCK = 2; // 02-06 [PageAddress]
+    private const int P_NEXT_NODE = 7; // 07-11 [PageAddress]
+    private const int P_PREV_NEXT = 12; // 12-(_level * 5 [PageAddress] * 2 [prev-next])
+    private int P_KEY => P_PREV_NEXT + (Levels * PageAddress.SIZE * 2); // just after NEXT
+
+    private readonly IndexPage _page;
+    private readonly BufferSlice _segment;
+
+    /// <summary>
+    ///     Position of this node inside a IndexPage (not persist)
+    /// </summary>
+    public PageAddress Position { get; }
+
+    /// <summary>
+    ///     Index slot reference in CollectionIndex [1 byte]
+    /// </summary>
+    public byte Slot { get; }
+
+    /// <summary>
+    ///     Skip-list levels (array-size) (1-32) - [1 byte]
+    /// </summary>
+    public byte Levels { get; }
+
+    /// <summary>
+    ///     The object value that was indexed (max 255 bytes value)
+    /// </summary>
+    public BsonValue Key { get; }
+
+    /// <summary>
+    ///     Reference for a datablock address
+    /// </summary>
+    public PageAddress DataBlock { get; }
+
+    /// <summary>
+    ///     Single linked-list for all nodes from a single document [5 bytes]
+    /// </summary>
+    public PageAddress NextNode { get; private set; }
+
+    /// <summary>
+    ///     Link to prev value (used in skip lists - Prev.Length = Next.Length) [5 bytes]
+    /// </summary>
+    public PageAddress[] Prev { get; private set; }
+
+    /// <summary>
+    ///     Link to next value (used in skip lists - Prev.Length = Next.Length)
+    /// </summary>
+    public PageAddress[] Next { get; private set; }
+
+    /// <summary>
+    ///     Get index page reference
+    /// </summary>
+    public IndexPage Page => _page;
+
+    /// <summary>
+    ///     Calculate how many bytes this node will need on page segment
+    /// </summary>
+    public static int GetNodeLength(byte level, BsonValue key, out int keyLength)
     {
-        /// <summary>
-        /// Fixed length of IndexNode (12 bytes)
-        /// </summary>
-        private const int INDEX_NODE_FIXED_SIZE = 1 + // Slot [1 byte]
-                                                  1 + // Levels [1 byte]
-                                                  PageAddress.SIZE + // DataBlock (5 bytes)
-                                                  PageAddress.SIZE; // NextNode (5 bytes)
+        keyLength = GetKeyLength(key, true);
 
-        private const int P_SLOT = 0; // 00-00 [byte]
-        private const int P_LEVELS = 1; // 01-01 [byte]
-        private const int P_DATA_BLOCK = 2; // 02-06 [PageAddress]
-        private const int P_NEXT_NODE = 7; // 07-11 [PageAddress]
-        private const int P_PREV_NEXT = 12; // 12-(_level * 5 [PageAddress] * 2 [prev-next])
-        private int P_KEY => P_PREV_NEXT + (this.Levels * PageAddress.SIZE * 2); // just after NEXT
+        return INDEX_NODE_FIXED_SIZE +
+            (level * 2 * PageAddress.SIZE) + // prev/next
+            keyLength; // key
+    }
 
-        private readonly IndexPage _page;
-        private readonly BufferSlice _segment;
+    /// <summary>
+    ///     Get how many bytes will be used to store this value. Must consider:
+    ///     [1 byte] - BsonType
+    ///     [1 byte] - KeyLength (used only in String|Byte[])
+    ///     [N bytes] - BsonValue in bytes (0-254)
+    /// </summary>
+    public static int GetKeyLength(BsonValue key, bool recalc)
+    {
+        return 1 +
+            ((key.IsString || key.IsBinary) ? 1 : 0) +
+            key.GetBytesCount(recalc);
+    }
 
-        /// <summary>
-        /// Position of this node inside a IndexPage (not persist)
-        /// </summary>
-        public PageAddress Position { get; }
+    /// <summary>
+    ///     Read index node from page segment (lazy-load)
+    /// </summary>
+    public IndexNode(IndexPage page, byte index, BufferSlice segment)
+    {
+        _page = page;
+        _segment = segment;
 
-        /// <summary>
-        /// Index slot reference in CollectionIndex [1 byte]
-        /// </summary>
-        public byte Slot { get; }
+        Position = new PageAddress(page.PageID, index);
+        Slot = segment.ReadByte(P_SLOT);
+        Levels = segment.ReadByte(P_LEVELS);
+        DataBlock = segment.ReadPageAddress(P_DATA_BLOCK);
+        NextNode = segment.ReadPageAddress(P_NEXT_NODE);
 
-        /// <summary>
-        /// Skip-list levels (array-size) (1-32) - [1 byte]
-        /// </summary>
-        public byte Levels { get; }
+        Next = new PageAddress[Levels];
+        Prev = new PageAddress[Levels];
 
-        /// <summary>
-        /// The object value that was indexed (max 255 bytes value)
-        /// </summary>
-        public BsonValue Key { get; }
-
-        /// <summary>
-        /// Reference for a datablock address
-        /// </summary>
-        public PageAddress DataBlock { get; }
-
-        /// <summary>
-        /// Single linked-list for all nodes from a single document [5 bytes]
-        /// </summary>
-        public PageAddress NextNode { get; private set; }
-
-        /// <summary>
-        /// Link to prev value (used in skip lists - Prev.Length = Next.Length) [5 bytes]
-        /// </summary>
-        public PageAddress[] Prev { get; private set; }
-
-        /// <summary>
-        /// Link to next value (used in skip lists - Prev.Length = Next.Length)
-        /// </summary>
-        public PageAddress[] Next { get; private set; }
-
-        /// <summary>
-        /// Get index page reference
-        /// </summary>
-        public IndexPage Page => _page;
-
-        /// <summary>
-        /// Calculate how many bytes this node will need on page segment
-        /// </summary>
-        public static int GetNodeLength(byte level, BsonValue key, out int keyLength)
+        for (var i = 0; i < Levels; i++)
         {
-            keyLength = GetKeyLength(key, true);
-
-            return INDEX_NODE_FIXED_SIZE +
-                (level * 2 * PageAddress.SIZE) + // prev/next
-                keyLength; // key
+            Prev[i] = segment.ReadPageAddress(P_PREV_NEXT + (i * PageAddress.SIZE * 2));
+            Next[i] = segment.ReadPageAddress(P_PREV_NEXT + (i * PageAddress.SIZE * 2) + PageAddress.SIZE);
         }
 
-        /// <summary>
-        /// Get how many bytes will be used to store this value. Must consider:
-        /// [1 byte] - BsonType
-        /// [1 byte] - KeyLength (used only in String|Byte[])
-        /// [N bytes] - BsonValue in bytes (0-254)
-        /// </summary>
-        public static int GetKeyLength(BsonValue key, bool recalc)
+        Key = segment.ReadIndexKey(P_KEY);
+    }
+
+    /// <summary>
+    ///     Create new index node and persist into page segment
+    /// </summary>
+    public IndexNode(
+        IndexPage page,
+        byte index,
+        BufferSlice segment,
+        byte slot,
+        byte levels,
+        BsonValue key,
+        PageAddress dataBlock)
+    {
+        _page = page;
+        _segment = segment;
+
+        Position = new PageAddress(page.PageID, index);
+        Slot = slot;
+        Levels = levels;
+        DataBlock = dataBlock;
+        NextNode = PageAddress.Empty;
+        Next = new PageAddress[levels];
+        Prev = new PageAddress[levels];
+        Key = key;
+
+        // persist in buffer read only data
+        segment.Write(slot, P_SLOT);
+        segment.Write(levels, P_LEVELS);
+        segment.Write(dataBlock, P_DATA_BLOCK);
+        segment.Write(NextNode, P_NEXT_NODE);
+
+        for (var i = 0; i < levels; i++)
         {
-            return 1 +
-                ((key.IsString || key.IsBinary) ? 1 : 0) +
-                key.GetBytesCount(recalc);
+            SetPrev((byte) i, PageAddress.Empty);
+            SetNext((byte) i, PageAddress.Empty);
         }
 
-        /// <summary>
-        /// Read index node from page segment (lazy-load)
-        /// </summary>
-        public IndexNode(IndexPage page, byte index, BufferSlice segment)
-        {
-            _page = page;
-            _segment = segment;
+        segment.WriteIndexKey(key, P_KEY);
 
-            this.Position = new PageAddress(page.PageID, index);
-            this.Slot = segment.ReadByte(P_SLOT);
-            this.Levels = segment.ReadByte(P_LEVELS);
-            this.DataBlock = segment.ReadPageAddress(P_DATA_BLOCK);
-            this.NextNode = segment.ReadPageAddress(P_NEXT_NODE);
+        page.IsDirty = true;
+    }
 
-            this.Next = new PageAddress[this.Levels];
-            this.Prev = new PageAddress[this.Levels];
+    /// <summary>
+    ///     Create a fake index node used only in Virtual Index runner
+    /// </summary>
+    public IndexNode(BsonDocument doc)
+    {
+        _page = null;
+        _segment = new BufferSlice(new byte[0], 0, 0);
 
-            for (var i = 0; i < this.Levels; i++)
-            {
-                this.Prev[i] = segment.ReadPageAddress(P_PREV_NEXT + (i * PageAddress.SIZE * 2));
-                this.Next[i] = segment.ReadPageAddress(P_PREV_NEXT + (i * PageAddress.SIZE * 2) + PageAddress.SIZE);
-            }
+        Position = new PageAddress(0, 0);
+        Slot = 0;
+        Levels = 0;
+        DataBlock = PageAddress.Empty;
+        NextNode = PageAddress.Empty;
+        Next = new PageAddress[0];
+        Prev = new PageAddress[0];
 
-            this.Key = segment.ReadIndexKey(P_KEY);
-        }
+        // index node key IS document
+        Key = doc;
+    }
 
-        /// <summary>
-        /// Create new index node and persist into page segment
-        /// </summary>
-        public IndexNode(IndexPage page, byte index, BufferSlice segment, byte slot, byte levels, BsonValue key, PageAddress dataBlock)
-        {
-            _page = page;
-            _segment = segment;
+    /// <summary>
+    ///     Update NextNode pointer (update in buffer too). Also, set page as dirty
+    /// </summary>
+    public void SetNextNode(PageAddress value)
+    {
+        NextNode = value;
 
-            this.Position = new PageAddress(page.PageID, index);
-            this.Slot = slot;
-            this.Levels = levels;
-            this.DataBlock = dataBlock;
-            this.NextNode = PageAddress.Empty;
-            this.Next = new PageAddress[levels];
-            this.Prev = new PageAddress[levels];
-            this.Key = key;
+        _segment.Write(value, P_NEXT_NODE);
 
-            // persist in buffer read only data
-            segment.Write(slot, P_SLOT);
-            segment.Write(levels, P_LEVELS);
-            segment.Write(dataBlock, P_DATA_BLOCK);
-            segment.Write(this.NextNode, P_NEXT_NODE);
+        _page.IsDirty = true;
+    }
 
-            for (var i = 0; i < levels; i++)
-            {
-                this.SetPrev((byte)i, PageAddress.Empty);
-                this.SetNext((byte)i, PageAddress.Empty);
-            }
+    /// <summary>
+    ///     Update Prev[index] pointer (update in buffer too). Also, set page as dirty
+    /// </summary>
+    public void SetPrev(byte level, PageAddress value)
+    {
+        ENSURE(level <= Levels, "out of index in level");
 
-            segment.WriteIndexKey(key, P_KEY);
+        Prev[level] = value;
 
-            page.IsDirty = true;
-        }
+        _segment.Write(value, P_PREV_NEXT + (level * PageAddress.SIZE * 2));
 
-        /// <summary>
-        /// Create a fake index node used only in Virtual Index runner
-        /// </summary>
-        public IndexNode(BsonDocument doc)
-        {
-            _page = null;
-            _segment = new BufferSlice(new byte[0], 0, 0);
+        _page.IsDirty = true;
+    }
 
-            this.Position = new PageAddress(0, 0);
-            this.Slot = 0;
-            this.Levels = 0;
-            this.DataBlock = PageAddress.Empty;
-            this.NextNode = PageAddress.Empty;
-            this.Next = new PageAddress[0];
-            this.Prev = new PageAddress[0];
+    /// <summary>
+    ///     Update Next[index] pointer (update in buffer too). Also, set page as dirty
+    /// </summary>
+    public void SetNext(byte level, PageAddress value)
+    {
+        ENSURE(level <= Levels, "out of index in level");
 
-            // index node key IS document
-            this.Key = doc;
-        }
+        Next[level] = value;
 
-        /// <summary>
-        /// Update NextNode pointer (update in buffer too). Also, set page as dirty
-        /// </summary>
-        public void SetNextNode(PageAddress value)
-        {
-            this.NextNode = value;
+        _segment.Write(value, P_PREV_NEXT + (level * PageAddress.SIZE * 2) + PageAddress.SIZE);
 
-            _segment.Write(value, P_NEXT_NODE);
+        _page.IsDirty = true;
+    }
 
-            _page.IsDirty = true;
-        }
+    /// <summary>
+    ///     Returns Next (order == 1) OR Prev (order == -1)
+    /// </summary>
+    public PageAddress GetNextPrev(byte level, int order)
+    {
+        return order == Query.Ascending ? Next[level] : Prev[level];
+    }
 
-        /// <summary>
-        /// Update Prev[index] pointer (update in buffer too). Also, set page as dirty
-        /// </summary>
-        public void SetPrev(byte level, PageAddress value)
-        {
-            ENSURE(level <= this.Levels, "out of index in level");
-
-            this.Prev[level] = value;
-
-            _segment.Write(value, P_PREV_NEXT + (level * PageAddress.SIZE * 2));
-
-            _page.IsDirty = true;
-        }
-
-        /// <summary>
-        /// Update Next[index] pointer (update in buffer too). Also, set page as dirty
-        /// </summary>
-        public void SetNext(byte level, PageAddress value)
-        {
-            ENSURE(level <= this.Levels, "out of index in level");
-
-            this.Next[level] = value;
-
-            _segment.Write(value, P_PREV_NEXT + (level * PageAddress.SIZE * 2) + PageAddress.SIZE);
-
-            _page.IsDirty = true;
-        }
-
-        /// <summary>
-        /// Returns Next (order == 1) OR Prev (order == -1)
-        /// </summary>
-        public PageAddress GetNextPrev(byte level, int order)
-        {
-            return order == Query.Ascending ? this.Next[level] : this.Prev[level];
-        }
-
-        public override string ToString()
-        {
-            return $"Pos: [{this.Position}] - Key: {this.Key}";
-        }
+    public override string ToString()
+    {
+        return $"Pos: [{Position}] - Key: {Key}";
     }
 }

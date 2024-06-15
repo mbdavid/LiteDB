@@ -1,23 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace LiteDB.Tests.Issues;
+
+using System;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-
 using Xunit;
-
-namespace LiteDB.Tests.Issues;
 
 public class Issue2298_Tests
 {
     public struct Mass
     {
         public enum Units
-        { Pound, Kilogram }
+        {
+            Pound,
+            Kilogram
+        }
 
         public Mass(double value, Units unit)
-        { Value = value; Unit = unit; }
+        {
+            Value = value;
+            Unit = unit;
+        }
 
         public double Value { get; init; }
         public Units Unit { get; init; }
@@ -26,7 +28,11 @@ public class Issue2298_Tests
     public class QuantityRange<T>
     {
         public QuantityRange(double min, double max, Enum unit)
-        { Min = min; Max = max; Unit = unit; }
+        {
+            Min = min;
+            Max = max;
+            Unit = unit;
+        }
 
         public double Min { get; init; }
         public double Max { get; init; }
@@ -47,14 +53,14 @@ public class Issue2298_Tests
     [Fact]
     public void We_Dont_Need_Ctor()
     {
-        BsonMapper.Global.RegisterType<QuantityRange<Mass>>(
-            serialize: (range) => new BsonDocument
+        BsonMapper.Global.RegisterType(
+            serialize: range => new BsonDocument
             {
                 { nameof(QuantityRange<Mass>.Min), range.Min },
                 { nameof(QuantityRange<Mass>.Max), range.Max },
                 { nameof(QuantityRange<Mass>.Unit), range.Unit.ToString() }
             },
-            deserialize: (document) => MassRangeBuilder(document as BsonDocument)
+            deserialize: document => MassRangeBuilder(document as BsonDocument)
         );
 
         var range = new QuantityRange<Mass>(100, 500, Mass.Units.Pound);

@@ -1,27 +1,24 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿namespace LiteDB.Tests.Database;
+
 using FluentAssertions;
 using Xunit;
 
-namespace LiteDB.Tests.Database
+public class MissingIdDocTest
 {
-    public class MissingIdDocTest
+    #region Model
+
+    public class MissingIdDoc
     {
-        #region Model
+        public string Name { get; set; }
+        public int Age { get; set; }
+    }
 
-        public class MissingIdDoc
-        {
-            public string Name { get; set; }
-            public int Age { get; set; }
-        }
+    #endregion
 
-        #endregion
-
-        [Fact]
-        public void MissingIdDoc_Test()
-        {
-            using (var file = new TempFile())
+    [Fact]
+    public void MissingIdDoc_Test()
+    {
+        using (var file = new TempFile())
             using (var db = new LiteDatabase(file.Filename))
             {
                 var col = db.GetCollection<MissingIdDoc>("col");
@@ -39,6 +36,5 @@ namespace LiteDB.Tests.Database
 
                 r.Name.Should().Be(p.Name);
             }
-        }
     }
 }

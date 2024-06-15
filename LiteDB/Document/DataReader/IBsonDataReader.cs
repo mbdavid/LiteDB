@@ -1,15 +1,14 @@
-﻿using System;
+﻿namespace LiteDB;
 
-namespace LiteDB
+using System;
+
+public interface IBsonDataReader : IDisposable
 {
-    public interface IBsonDataReader : IDisposable
-    {
-        BsonValue this[string field] { get; }
+    BsonValue this[string field] { get; }
 
-        string Collection { get; }
-        BsonValue Current { get; }
-        bool HasValues { get; }
+    string Collection { get; }
+    BsonValue Current { get; }
+    bool HasValues { get; }
 
-        bool Read();
-    }
+    bool Read();
 }

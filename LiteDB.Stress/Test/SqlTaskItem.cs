@@ -1,32 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace LiteDB.Stress;
+
+using System;
 using System.Linq;
-using System.Text;
 using System.Xml;
 
-namespace LiteDB.Stress
+public class SqlTaskItem : ITestItem
 {
-    public class SqlTaskItem : ITestItem
+    public string Name { get; }
+    public int TaskCount { get; }
+    public TimeSpan Sleep { get; }
+    public string Sql { get; }
+
+    public SqlTaskItem(XmlElement el)
     {
-        public string Name { get; }
-        public int TaskCount { get; }
-        public TimeSpan Sleep { get; }
-        public string Sql { get; }
+        Name = string.IsNullOrEmpty(el.GetAttribute("name"))
+            ? el.InnerText.Split(' ').First()
+            : el.GetAttribute("name");
+        TaskCount = string.IsNullOrEmpty(el.GetAttribute("tasks")) ? 1 : int.Parse(el.GetAttribute("tasks"));
+        Sleep = TimeSpanEx.Parse(el.GetAttribute("sleep"));
+        Sql = el.InnerText;
+    }
 
-        public SqlTaskItem(XmlElement el)
+    public BsonValue Execute(LiteDatabase db)
+    {
+        using (var reader = db.Execute(Sql))
         {
-            this.Name = string.IsNullOrEmpty(el.GetAttribute("name")) ? el.InnerText.Split(' ').First() : el.GetAttribute("name");
-            this.TaskCount = string.IsNullOrEmpty(el.GetAttribute("tasks")) ? 1 : int.Parse(el.GetAttribute("tasks"));
-            this.Sleep = TimeSpanEx.Parse(el.GetAttribute("sleep"));
-            this.Sql = el.InnerText;
-        }
-
-        public BsonValue Execute(LiteDatabase db)
-        {
-            using (var reader = db.Execute(this.Sql))
-            {
-                return reader.FirstOrDefault();
-            }
+            return reader.FirstOrDefault();
         }
     }
 }

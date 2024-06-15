@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net4.5;netstandard1.3;netstandard2.0</TargetFrameworks>
@@ -28,9 +28,8 @@
     <SignAssembly Condition="'$(OS)'=='Windows_NT'">true</SignAssembly>
     <AssemblyOriginatorKeyFile Condition="'$(Configuration)' == 'Release'">LiteDB.snk</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
-  
+
   <!--
   == All variables ==
   HAVE_APP_DOMAIN
@@ -66,7 +65,12 @@
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.1" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
   </ItemGroup>
-  
   <!-- End References -->
+
+  <!-- Begin Global Usings -->
+  <ItemGroup>
+    <Using Include="LiteDB.Constants" Static="true" />
+  </ItemGroup>
+  <!-- End Global Usings -->
 
 </Project>

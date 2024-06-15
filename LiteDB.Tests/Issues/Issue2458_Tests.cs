@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace LiteDB.Tests.Issues;
+
+using System;
 using System.IO;
 using Xunit;
-
-namespace LiteDB.Tests.Issues;
 
 public class Issue2458_Tests
 {
@@ -33,7 +33,7 @@ public class Issue2458_Tests
     {
         using var db = new LiteDatabase(":memory:");
         var fs = db.FileStorage;
-        using(Stream writeStream = fs.OpenWrite("test", "test"))
+        using (Stream writeStream = fs.OpenWrite("test", "test"))
         {
             writeStream.WriteByte(0);
             writeStream.Flush(); //Create single-byte chunk just containing a 0
@@ -41,6 +41,7 @@ public class Issue2458_Tests
             writeStream.Flush();
             writeStream.WriteByte(2);
         }
+
         using Stream readStream = fs.OpenRead("test");
         readStream.Position = 2;
         Assert.Equal(2, readStream.ReadByte());

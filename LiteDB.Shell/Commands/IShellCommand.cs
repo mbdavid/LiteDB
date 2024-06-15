@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿namespace LiteDB.Shell;
 
-namespace LiteDB.Shell
+internal interface IShellCommand
 {
-    internal interface IShellCommand
-    {
-        bool IsCommand(StringScanner s);
+    bool IsCommand(StringScanner s);
 
-        void Execute(StringScanner s, Env env);
-    }
+    void Execute(StringScanner s, Env env);
 }

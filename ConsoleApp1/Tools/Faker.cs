@@ -20,7 +20,7 @@ internal static partial class Faker
     {
         var oldest = DateTime.Today.AddYears(-110).Ticks;
         var now = DateTime.Now.Ticks;
-        var range =  now - oldest;
+        var range = now - oldest;
 
         var date = new DateTime(oldest + _random.NextLong(0, range));
 
@@ -29,8 +29,10 @@ internal static partial class Faker
 
     public static string Lorem(int size, int end = -1)
     {
-        return string.Join(" ", Enumerable.Range(1, end == -1 ? size : _random.Next(size, end))
-            .Select(x => _lorem[_random.Next(_lorem.Length - 1)]));
+        return string.Join(
+            " ",
+            Enumerable.Range(1, end == -1 ? size : _random.Next(size, end))
+                .Select(x => _lorem[_random.Next(_lorem.Length - 1)]));
     }
 
     public static int Next(int start, int end)
@@ -50,7 +52,7 @@ internal static partial class Faker
             throw new ArgumentOutOfRangeException("max", "max must be > min!");
 
         //Working with ulong so that modulo works correctly with values > long.MaxValue
-        ulong uRange = (ulong)(max - min);
+        ulong uRange = (ulong) (max - min);
 
         //Prevent a modolo bias; see https://stackoverflow.com/a/10984975/238419
         //for more information.
@@ -61,10 +63,10 @@ internal static partial class Faker
         {
             byte[] buf = new byte[8];
             random.NextBytes(buf);
-            ulongRand = (ulong)BitConverter.ToInt64(buf, 0);
+            ulongRand = (ulong) BitConverter.ToInt64(buf, 0);
         } while (ulongRand > ulong.MaxValue - ((ulong.MaxValue % uRange) + 1) % uRange);
 
-        return (long)(ulongRand % uRange) + min;
+        return (long) (ulongRand % uRange) + min;
     }
 
     public static bool NextBool(this Random random)
@@ -95,5 +97,4 @@ internal static partial class Faker
 
     internal static string SkuNumber() =>
         string.Join("", Enumerable.Range(1, 8).Select(x => _skuDigits[_random.Next(0, _skuDigits.Length - 1)]));
-
 }

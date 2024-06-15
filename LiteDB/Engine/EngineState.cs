@@ -1,55 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿namespace LiteDB.Engine;
+
+using System;
 using System.IO;
-using System.Linq;
-using System.Runtime;
-using System.Text;
-using System.Threading.Tasks;
 
-using static LiteDB.Constants;
-
-
-namespace LiteDB.Engine
+internal class EngineState
 {
-    internal class EngineState
-    {
-        public bool Disposed = false;
-        private Exception _exception;
-        private readonly LiteEngine _engine; // can be null for unit tests
-        private readonly EngineSettings _settings;
+    public bool Disposed = false;
+    private Exception _exception;
+    private readonly LiteEngine _engine; // can be null for unit tests
+    private readonly EngineSettings _settings;
 
 #if DEBUG
-        public Action<PageBuffer> SimulateDiskReadFail = null;
-        public Action<PageBuffer> SimulateDiskWriteFail = null;
+    public Action<PageBuffer> SimulateDiskReadFail = null;
+    public Action<PageBuffer> SimulateDiskWriteFail = null;
 #endif
 
-        public EngineState(LiteEngine engine, EngineSettings settings)
-        { 
-            _engine = engine;
-            _settings = settings;
-        }
+    public EngineState(LiteEngine engine, EngineSettings settings)
+    {
+        _engine = engine;
+        _settings = settings;
+    }
 
-        public void Validate()
+    public void Validate()
+    {
+        if (Disposed)
+            throw _exception ?? LiteException.EngineDisposed();
+    }
+
+    public bool Handle(Exception ex)
+    {
+        LOG(ex.Message, "ERROR");
+
+        if (ex is IOException ||
+            (ex is LiteException lex && lex.ErrorCode == LiteException.INVALID_DATAFILE_STATE))
         {
-            if (this.Disposed) throw _exception ?? LiteException.EngineDisposed();
+            _exception = ex;
+
+            _engine?.Close(ex);
+
+            return false;
         }
 
-        public bool Handle(Exception ex)
-        {
-            LOG(ex.Message, "ERROR");
-
-            if (ex is IOException || 
-                (ex is LiteException lex && lex.ErrorCode == LiteException.INVALID_DATAFILE_STATE))
-            {
-                _exception = ex;
-
-                _engine?.Close(ex);
-
-                return false;
-            }
-
-            return true;
-        }
+        return true;
     }
 }

@@ -1,39 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using static LiteDB.Constants;
+﻿namespace LiteDB.Engine;
 
-namespace LiteDB.Engine
+/// <summary>
+///     Implement similar as ArrayPool for byte array
+/// </summary>
+internal class BufferPool
 {
-    /// <summary>
-    /// Implement similar as ArrayPool for byte array
-    /// </summary>
-    internal class BufferPool
+    private static readonly object _lock;
+    private static readonly ArrayPool<byte> _bytePool;
+
+    static BufferPool()
     {
-        private static readonly object _lock;
-        private static readonly ArrayPool<byte> _bytePool;
+        _lock = new object();
+        _bytePool = new ArrayPool<byte>();
+    }
 
-        static BufferPool()
+    public static byte[] Rent(int count)
+    {
+        lock (_lock)
         {
-            _lock = new object();
-            _bytePool = new ArrayPool<byte>();
+            return _bytePool.Rent(count);
         }
-        
-        public static byte[] Rent(int count)
-        {
-            lock (_lock)
-            {
-                return _bytePool.Rent(count);
-            }
-        }
+    }
 
-        public static void Return(byte[] buffer)
+    public static void Return(byte[] buffer)
+    {
+        lock (_lock)
         {
-            lock (_lock)
-            {
-                _bytePool.Return(buffer);
-            }
+            _bytePool.Return(buffer);
         }
     }
 }

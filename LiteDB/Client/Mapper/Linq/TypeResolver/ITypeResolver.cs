@@ -1,21 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿namespace LiteDB;
+
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using static LiteDB.Constants;
 
-namespace LiteDB
+internal interface ITypeResolver
 {
-    internal interface ITypeResolver
-    {
-        string ResolveMethod(MethodInfo method);
+    string ResolveMethod(MethodInfo method);
 
-        string ResolveMember(MemberInfo member);
+    string ResolveMember(MemberInfo member);
 
-        string ResolveCtor(ConstructorInfo ctor);
-    }
+    string ResolveCtor(ConstructorInfo ctor);
 }
