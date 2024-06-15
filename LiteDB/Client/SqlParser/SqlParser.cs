@@ -1,59 +1,69 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using static LiteDB.Constants;
+
+namespace LiteDB;
+
+using System;
 using LiteDB.Engine;
-using static LiteDB.Constants;
 
-namespace LiteDB
+/// <summary>
+///     Internal class to parse and execute sql-like commands
+/// </summary>
+internal partial class SqlParser
 {
-    /// <summary>
-    /// Internal class to parse and execute sql-like commands
-    /// </summary>
-    internal partial class SqlParser
+    private readonly ILiteEngine _engine;
+    private readonly Tokenizer _tokenizer;
+    private readonly BsonDocument _parameters;
+    private readonly Lazy<Collation> _collation;
+
+    public SqlParser(ILiteEngine engine, Tokenizer tokenizer, BsonDocument parameters)
     {
-        private readonly ILiteEngine _engine;
-        private readonly Tokenizer _tokenizer;
-        private readonly BsonDocument _parameters;
-        private readonly Lazy<Collation> _collation;
+        _engine = engine;
+        _tokenizer = tokenizer;
+        _parameters = parameters ?? new BsonDocument();
+        _collation = new Lazy<Collation>(() => new Collation(_engine.Pragma(Pragmas.COLLATION)));
+    }
 
-        public SqlParser(ILiteEngine engine, Tokenizer tokenizer, BsonDocument parameters)
+    public IBsonDataReader Execute()
+    {
+        var ahead = _tokenizer.LookAhead().Expect(TokenType.Word);
+
+        LOG($"executing `{ahead.Value.ToUpper()}`", "SQL");
+
+        switch (ahead.Value.ToUpper())
         {
-            _engine = engine;
-            _tokenizer = tokenizer;
-            _parameters = parameters ?? new BsonDocument();
-            _collation = new Lazy<Collation>(() => new Collation(_engine.Pragma(Pragmas.COLLATION)));
-        }
+            case "SELECT":
+            case "EXPLAIN":
+                return ParseSelect();
+            case "INSERT":
+                return ParseInsert();
+            case "DELETE":
+                return ParseDelete();
+            case "UPDATE":
+                return ParseUpdate();
+            case "DROP":
+                return ParseDrop();
+            case "RENAME":
+                return ParseRename();
+            case "CREATE":
+                return ParseCreate();
 
-        public IBsonDataReader Execute()
-        {
-            var ahead = _tokenizer.LookAhead().Expect(TokenType.Word);
+            case "CHECKPOINT":
+                return ParseCheckpoint();
+            case "REBUILD":
+                return ParseRebuild();
 
-            LOG($"executing `{ahead.Value.ToUpper()}`", "SQL");
+            case "BEGIN":
+                return ParseBegin();
+            case "ROLLBACK":
+                return ParseRollback();
+            case "COMMIT":
+                return ParseCommit();
 
-            switch (ahead.Value.ToUpper())
-            {
-                case "SELECT": 
-                case "EXPLAIN":
-                    return this.ParseSelect();
-                case "INSERT": return this.ParseInsert();
-                case "DELETE": return this.ParseDelete();
-                case "UPDATE": return this.ParseUpdate();
-                case "DROP": return this.ParseDrop();
-                case "RENAME": return this.ParseRename();
-                case "CREATE": return this.ParseCreate();
+            case "PRAGMA":
+                return ParsePragma();
 
-                case "CHECKPOINT": return this.ParseCheckpoint();
-                case "REBUILD": return this.ParseRebuild();
-
-                case "BEGIN": return this.ParseBegin();
-                case "ROLLBACK": return this.ParseRollback();
-                case "COMMIT": return this.ParseCommit();
-
-                case "PRAGMA": return this.ParsePragma();
-
-                default:  throw LiteException.UnexpectedToken(ahead);
-            }
+            default:
+                throw LiteException.UnexpectedToken(ahead);
         }
     }
 }

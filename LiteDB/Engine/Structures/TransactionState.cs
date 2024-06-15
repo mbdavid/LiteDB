@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using static LiteDB.Constants;
+﻿namespace LiteDB.Engine;
 
-namespace LiteDB.Engine
+internal enum TransactionState
 {
-    internal enum TransactionState
-    {
-        Active,
-        Committed,
-        Aborted,
-        Disposed
-    }
+    Active,
+    Committed,
+    Aborted,
+    Disposed
 }

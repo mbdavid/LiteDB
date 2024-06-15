@@ -1,27 +1,18 @@
-﻿using LiteDB;
-using LiteDB.Engine;
+﻿namespace LiteDB.Stress;
+
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace LiteDB.Stress
+public class Program
 {
-    public class Program
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
-        {
-            var filename = args.Length >= 1 ? args[0] : "";
-            var duration = TimeSpanEx.Parse(args.Length >= 2 ? args[1] : "60s");
+        var filename = args.Length >= 1 ? args[0] : "";
+        var duration = TimeSpanEx.Parse(args.Length >= 2 ? args[1] : "60s");
 
-            var e = new TestExecution(filename, duration);
+        var e = new TestExecution(filename, duration);
 
-            e.Execute();
+        e.Execute();
 
-            Console.ReadKey();
-        }
+        Console.ReadKey();
     }
 }

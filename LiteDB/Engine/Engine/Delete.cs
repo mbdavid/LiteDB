@@ -1,28 +1,33 @@
-﻿using System;
+﻿using static LiteDB.Constants;
+
+namespace LiteDB.Engine;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using static LiteDB.Constants;
 
-namespace LiteDB.Engine
+public partial class LiteEngine
 {
-    public partial class LiteEngine
+    /// <summary>
+    ///     Implements delete based on IDs enumerable
+    /// </summary>
+    public int Delete(string collection, IEnumerable<BsonValue> ids)
     {
-        /// <summary>
-        /// Implements delete based on IDs enumerable
-        /// </summary>
-        public int Delete(string collection, IEnumerable<BsonValue> ids)
-        {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
-            if (ids == null) throw new ArgumentNullException(nameof(ids));
+        if (collection.IsNullOrWhiteSpace())
+            throw new ArgumentNullException(nameof(collection));
+        if (ids == null)
+            throw new ArgumentNullException(nameof(ids));
 
-            return this.AutoTransaction(transaction =>
+        return AutoTransaction(
+            transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var collectionPage = snapshot.CollectionPage;
                 var data = new DataService(snapshot, _disk.MAX_ITEMS_COUNT);
                 var indexer = new IndexService(snapshot, _header.Pragmas.Collation, _disk.MAX_ITEMS_COUNT);
 
-                if (collectionPage == null) return 0;
+                if (collectionPage == null)
+                    return 0;
 
                 LOG($"delete `{collection}`", "COMMAND");
 
@@ -34,7 +39,8 @@ namespace LiteDB.Engine
                     var pkNode = indexer.Find(pk, id, false, LiteDB.Query.Ascending);
 
                     // if pk not found, continue
-                    if (pkNode == null) continue;
+                    if (pkNode == null)
+                        continue;
 
                     _state.Validate();
 
@@ -51,56 +57,54 @@ namespace LiteDB.Engine
 
                 return count;
             });
+    }
+
+    /// <summary>
+    ///     Implements delete based on filter expression
+    /// </summary>
+    public int DeleteMany(string collection, BsonExpression predicate)
+    {
+        if (collection.IsNullOrWhiteSpace())
+            throw new ArgumentNullException(nameof(collection));
+
+        // do optimization for when using "_id = value" key
+        if (predicate != null &&
+            predicate.Type == BsonExpressionType.Equal &&
+            predicate.Left.Type == BsonExpressionType.Path &&
+            predicate.Left.Source == "$._id" &&
+            predicate.Right.IsValue)
+        {
+            var id = predicate.Right.Execute(_header.Pragmas.Collation).First();
+
+            return Delete(collection, new[] { id });
         }
 
-        /// <summary>
-        /// Implements delete based on filter expression
-        /// </summary>
-        public int DeleteMany(string collection, BsonExpression predicate)
+        IEnumerable<BsonValue> getIds()
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            // this is intresting: if _id returns an document (like in FileStorage) you can't run direct _id
+            // field because "reader.Current" will return _id document - but not - { _id: [document] }
+            // create inner document to ensure _id will be a document
+            var query = new Query { Select = "{ i: _id }", ForUpdate = true };
 
-            // do optimization for when using "_id = value" key
-            if (predicate != null &&
-                predicate.Type == BsonExpressionType.Equal && 
-                predicate.Left.Type == BsonExpressionType.Path && 
-                predicate.Left.Source == "$._id" && 
-                predicate.Right.IsValue)
+            if (predicate != null)
             {
-                var id = predicate.Right.Execute(_header.Pragmas.Collation).First();
-
-                return this.Delete(collection, new BsonValue[] { id });
+                query.Where.Add(predicate);
             }
-            else
+
+            using (var reader = Query(collection, query))
             {
-                IEnumerable<BsonValue> getIds()
+                while (reader.Read())
                 {
-                    // this is intresting: if _id returns an document (like in FileStorage) you can't run direct _id
-                    // field because "reader.Current" will return _id document - but not - { _id: [document] }
-                    // create inner document to ensure _id will be a document
-                    var query = new Query { Select = "{ i: _id }", ForUpdate = true };
+                    var value = reader.Current["i"];
 
-                    if(predicate != null)
+                    if (value != BsonValue.Null)
                     {
-                        query.Where.Add(predicate);
-                    }
-
-                    using (var reader = this.Query(collection, query))
-                    {
-                        while (reader.Read())
-                        {
-                            var value = reader.Current["i"];
-
-                            if (value != BsonValue.Null)
-                            {
-                                yield return value;
-                            }
-                        }
+                        yield return value;
                     }
                 }
-
-                return this.Delete(collection, getIds());
             }
         }
+
+        return Delete(collection, getIds());
     }
 }

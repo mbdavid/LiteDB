@@ -1,18 +1,17 @@
-﻿namespace LiteDB.Engine
+﻿namespace LiteDB.Engine;
+
+/// <summary>
+///     Represents a snapshot lock mode
+/// </summary>
+internal enum LockMode
 {
     /// <summary>
-    /// Represents a snapshot lock mode
+    ///     Read only snap with read lock
     /// </summary>
-    internal enum LockMode
-    {
-        /// <summary>
-        /// Read only snap with read lock
-        /// </summary>
-        Read,
+    Read,
 
-        /// <summary>
-        /// Read/Write snapshot with reserved lock
-        /// </summary>
-        Write
-    }
+    /// <summary>
+    ///     Read/Write snapshot with reserved lock
+    /// </summary>
+    Write
 }

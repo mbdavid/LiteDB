@@ -1,14 +1,8 @@
-﻿using LiteDB.Utils.Extensions;
+﻿namespace LiteDB.Tests.Internals;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-
+using LiteDB.Utils.Extensions;
 using Xunit;
-
-namespace LiteDB.Tests.Internals;
 
 public class Extensions_Test
 {

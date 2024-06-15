@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace LiteDB.Tests.Issues;
 
+using System;
 using Xunit;
-
-namespace LiteDB.Tests.Issues;
 
 public class Issue2494_Tests
 {

@@ -1,30 +1,29 @@
-﻿using System;
-using static LiteDB.Constants;
+﻿using static LiteDB.Constants;
 
-namespace LiteDB
+namespace LiteDB;
+
+using System;
+
+/// <summary>
+///     A singleton shared randomizer class
+/// </summary>
+internal static class Randomizer
 {
+    private static readonly Random _random = new Random(RANDOMIZER_SEED);
 
-    /// <summary>
-    /// A singleton shared randomizer class
-    /// </summary>
-    internal static class Randomizer
+    public static int Next()
     {
-        private static readonly Random _random = new Random(RANDOMIZER_SEED);
-
-        public static int Next()
+        lock (_random)
         {
-            lock (_random)
-            {
-                return _random.Next();
-            }
+            return _random.Next();
         }
+    }
 
-        public static int Next(int minValue, int maxValue)
+    public static int Next(int minValue, int maxValue)
+    {
+        lock (_random)
         {
-            lock (_random)
-            {
-                return _random.Next(minValue, maxValue);
-            }
+            return _random.Next(minValue, maxValue);
         }
     }
 }

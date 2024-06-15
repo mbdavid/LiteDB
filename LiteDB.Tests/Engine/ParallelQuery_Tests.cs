@@ -1,30 +1,31 @@
-﻿using System.Collections.Concurrent;
+﻿namespace LiteDB.Tests.Engine;
+
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
 
-namespace LiteDB.Tests.Engine
+public class ParallelQuery_Tests
 {
-    public class ParallelQuery_Tests
+    [Fact(Skip = "Must fix parallel query fetch")]
+    public void Query_Parallel()
     {
-        [Fact(Skip = "Must fix parallel query fetch")]
-        public void Query_Parallel()
+        using (var db = new LiteDatabase(new MemoryStream()))
         {
-            using(var db = new LiteDatabase(new MemoryStream()))
-            {
-                var col = db.GetCollection<Person>("person");
-                var all = DataGen.Person().ToArray();
+            var col = db.GetCollection<Person>("person");
+            var all = DataGen.Person().ToArray();
 
-                col.Insert(all);
+            col.Insert(all);
 
-                var bag = new ConcurrentBag<Person>();
-                var people = col.FindAll();
+            var bag = new ConcurrentBag<Person>();
+            var people = col.FindAll();
 
-                Parallel.ForEach(people, person =>
-                //foreach(var person in people)
+            Parallel.ForEach(
+                people,
+                person =>
+                    //foreach(var person in people)
                 {
                     var col2 = db.GetCollection<Person>("person");
                     var exists = col2.Exists(x => x.Id == person.Id);
@@ -39,9 +40,7 @@ namespace LiteDB.Tests.Engine
                     }
                 });
 
-                all.Length.Should().Be(bag.Count);
-
-            }
+            all.Length.Should().Be(bag.Count);
         }
     }
 }

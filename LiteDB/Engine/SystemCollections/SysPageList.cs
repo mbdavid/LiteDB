@@ -1,110 +1,112 @@
-﻿using System;
+﻿using static LiteDB.Constants;
+
+namespace LiteDB.Engine;
+
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text;
-using static LiteDB.Constants;
 
-namespace LiteDB.Engine
+internal class SysPageList : SystemCollection
 {
-    internal class SysPageList : SystemCollection
+    private readonly HeaderPage _header;
+    private readonly TransactionMonitor _monitor;
+    private Dictionary<uint, string> _collections;
+
+    public SysPageList(HeaderPage header, TransactionMonitor monitor)
+        : base("$page_list")
     {
-        private readonly HeaderPage _header;
-        private readonly TransactionMonitor _monitor;
-        private Dictionary<uint, string> _collections;
+        _header = header;
+        _monitor = monitor;
+    }
 
-        public SysPageList(HeaderPage header, TransactionMonitor monitor) : base("$page_list")
+    public override IEnumerable<BsonDocument> Input(BsonValue options)
+    {
+        var pageID = GetOption(options, "pageID");
+
+        // get any transaction from current thread ID
+        var transaction = _monitor.GetThreadTransaction();
+        var snapshot = transaction.CreateSnapshot(LockMode.Read, "$", false);
+
+        _collections = _header.GetCollections().ToDictionary(x => x.Value, x => x.Key);
+
+        var result = pageID != null
+            ? GetList((uint) pageID.AsInt32, null, transaction, snapshot)
+            : GetAllList(transaction, snapshot);
+
+        foreach (var page in result)
         {
-            _header = header;
-            _monitor = monitor;
+            yield return page;
+        }
+    }
+
+    private IEnumerable<BsonDocument> GetAllList(TransactionService transaction, Snapshot snapshot)
+    {
+        // get empty page list, from header
+        foreach (var page in GetList(_header.FreeEmptyPageList, null, transaction, snapshot))
+        {
+            yield return page;
         }
 
-        public override IEnumerable<BsonDocument> Input(BsonValue options)
+        // get lists from data pages/index list
+        foreach (var collection in _collections)
         {
-            var pageID = GetOption(options, "pageID");
+            var snap = transaction.CreateSnapshot(LockMode.Read, collection.Value, false);
 
-            // get any transaction from current thread ID
-            var transaction = _monitor.GetThreadTransaction();
-            var snapshot = transaction.CreateSnapshot(LockMode.Read, "$", false);
-
-            _collections = _header.GetCollections().ToDictionary(x => x.Value, x => x.Key);
-
-            var result = pageID != null ?
-                this.GetList((uint)pageID.AsInt32, null, transaction, snapshot) :
-                this.GetAllList(transaction, snapshot);
-
-            foreach (var page in result)
+            for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
             {
-                yield return page;
-            }
-        }
+                var result = GetList(snap.CollectionPage.FreeDataPageList[slot], null, transaction, snap);
 
-        private IEnumerable<BsonDocument> GetAllList(TransactionService transaction, Snapshot snapshot)
-        {
-            // get empty page list, from header
-            foreach (var page in this.GetList(_header.FreeEmptyPageList, null, transaction, snapshot))
-            {
-                yield return page;
-            }
-
-            // get lists from data pages/index list
-            foreach (var collection in _collections)
-            {
-                var snap = transaction.CreateSnapshot(LockMode.Read, collection.Value, false);
-
-                for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
+                foreach (var page in result)
                 {
-                    var result = this.GetList(snap.CollectionPage.FreeDataPageList[slot], null, transaction, snap);
-
-                    foreach (var page in result)
-                    {
-                        yield return page;
-                    }
+                    yield return page;
                 }
+            }
 
-                var indexes = snap.CollectionPage.GetCollectionIndexes().ToArray();
+            var indexes = snap.CollectionPage.GetCollectionIndexes().ToArray();
 
-                foreach (var index in indexes)
+            foreach (var index in indexes)
+            {
+                var result = GetList(index.FreeIndexPageList, index.Name, transaction, snap);
+
+                foreach (var page in result)
                 {
-                    var result = this.GetList(index.FreeIndexPageList, index.Name, transaction, snap);
-
-                    foreach (var page in result)
-                    {
-                        yield return page;
-                    }
-
+                    yield return page;
                 }
             }
         }
+    }
 
-        private IEnumerable<BsonDocument> GetList(uint pageID, string indexName, TransactionService transaction, Snapshot snapshot)
+    private IEnumerable<BsonDocument> GetList(
+        uint pageID,
+        string indexName,
+        TransactionService transaction,
+        Snapshot snapshot)
+    {
+        if (pageID == uint.MaxValue)
+            yield break;
+
+        var page = snapshot.GetPage<BasePage>(pageID);
+
+        while (page != null)
         {
-            if (pageID == uint.MaxValue) yield break;
+            _collections.TryGetValue(page.ColID, out var collection);
 
-            var page = snapshot.GetPage<BasePage>(pageID);
-
-            while (page != null)
+            yield return new BsonDocument
             {
-                _collections.TryGetValue(page.ColID, out var collection);
+                ["pageID"] = (int) page.PageID,
+                ["pageType"] = page.PageType.ToString(),
+                ["slot"] = (int) page.PageListSlot,
+                ["collection"] = collection,
+                ["index"] = indexName,
+                ["freeBytes"] = page.FreeBytes,
+                ["itemsCount"] = (int) page.ItemsCount
+            };
 
-                yield return new BsonDocument
-                {
-                    ["pageID"] = (int)page.PageID,
-                    ["pageType"] = page.PageType.ToString(),
-                    ["slot"] = (int)page.PageListSlot,
-                    ["collection"] = collection,
-                    ["index"] = indexName,
-                    ["freeBytes"] = page.FreeBytes,
-                    ["itemsCount"] = (int)page.ItemsCount
-                };
+            if (page.NextPageID == uint.MaxValue)
+                break;
 
-                if (page.NextPageID == uint.MaxValue) break;
+            transaction.Safepoint();
 
-                transaction.Safepoint();
-
-                page = snapshot.GetPage<BasePage>(page.NextPageID);
-            }
+            page = snapshot.GetPage<BasePage>(page.NextPageID);
         }
     }
 }

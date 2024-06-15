@@ -1,32 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LiteDB.Engine;
-using static LiteDB.Constants;
+﻿namespace LiteDB;
 
-namespace LiteDB
+internal partial class SqlParser
 {
-    internal partial class SqlParser
+    /// <summary>
+    ///     RENAME COLLECTION {collection} TO {newName}
+    /// </summary>
+    private BsonDataReader ParseRename()
     {
-        /// <summary>
-        /// RENAME COLLECTION {collection} TO {newName}
-        /// </summary>
-        private BsonDataReader ParseRename()
-        {
-            _tokenizer.ReadToken().Expect("RENAME");
-            _tokenizer.ReadToken().Expect("COLLECTION");
+        _tokenizer.ReadToken().Expect("RENAME");
+        _tokenizer.ReadToken().Expect("COLLECTION");
 
-            var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
+        var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
 
-            _tokenizer.ReadToken().Expect("TO");
+        _tokenizer.ReadToken().Expect("TO");
 
-            var newName = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
+        var newName = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
 
-            _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+        _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            var result = _engine.RenameCollection(collection, newName);
+        var result = _engine.RenameCollection(collection, newName);
 
-            return new BsonDataReader(result);
-        }
+        return new BsonDataReader(result);
     }
 }

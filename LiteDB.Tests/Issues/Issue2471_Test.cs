@@ -1,16 +1,11 @@
-﻿using FluentAssertions;
+﻿namespace LiteDB.Tests.Issues;
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
+using FluentAssertions;
 using Xunit;
-
-namespace LiteDB.Tests.Issues;
 
 public class Issue2471_Test
 {
@@ -20,7 +15,7 @@ public class Issue2471_Test
         using var db = new LiteDatabase(":memory:");
         var collection = db.GetCollection<object>("fragtest");
 
-        var fragment = new object { };
+        var fragment = new object();
         var id = collection.Insert(fragment);
 
         id.Should().BeGreaterThan(0);
@@ -71,8 +66,18 @@ public class Issue2471_Test
         using var db = new LiteDatabase(new MemoryStream());
         var col = db.GetCollection<User>();
 
-        col.Insert(new User { Name = "John Doe", Phones = new int[] { 1, 3, 5 }, Addresses = new List<Address> { new Address { Street = "Av.1" }, new Address { Street = "Av.3" } } });
-        col.Insert(new User { Name = "Joana Mark", Phones = new int[] { 1, 4 }, Addresses = new List<Address> { new Address { Street = "Av.3" } } });
+        col.Insert(
+            new User
+            {
+                Name = "John Doe", Phones = new[] { 1, 3, 5 },
+                Addresses = new List<Address> { new Address { Street = "Av.1" }, new Address { Street = "Av.3" } }
+            });
+        col.Insert(
+            new User
+            {
+                Name = "Joana Mark", Phones = new[] { 1, 4 },
+                Addresses = new List<Address> { new Address { Street = "Av.3" } }
+            });
 
         // create indexes
         col.EnsureIndex(x => x.Phones);

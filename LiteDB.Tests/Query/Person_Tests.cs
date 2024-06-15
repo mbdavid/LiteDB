@@ -1,27 +1,26 @@
-﻿using System;
+﻿namespace LiteDB.Tests.QueryTest;
+
+using System;
 using System.Linq;
 
-namespace LiteDB.Tests.QueryTest
+public class Person_Tests : IDisposable
 {
-    public class Person_Tests : IDisposable
+    protected readonly Person[] local;
+
+    protected ILiteDatabase db;
+    protected ILiteCollection<Person> collection;
+
+    public Person_Tests()
     {
-        protected readonly Person[] local;
+        local = DataGen.Person().ToArray();
 
-        protected ILiteDatabase db;
-        protected ILiteCollection<Person> collection;
+        db = new LiteDatabase(":memory:");
+        collection = db.GetCollection<Person>("person");
+        collection.Insert(local);
+    }
 
-        public Person_Tests()
-        {
-            this.local = DataGen.Person().ToArray();
-
-            db = new LiteDatabase(":memory:");
-            collection = db.GetCollection<Person>("person");
-            collection.Insert(this.local);
-        }
-
-        public void Dispose()
-        {
-            db?.Dispose();
-        }
+    public void Dispose()
+    {
+        db?.Dispose();
     }
 }

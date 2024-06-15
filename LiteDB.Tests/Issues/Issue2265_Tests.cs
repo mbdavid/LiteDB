@@ -1,15 +1,14 @@
-﻿using System;
+﻿namespace LiteDB.Tests.Issues;
 
+using System;
 using Xunit;
-
-namespace LiteDB.Tests.Issues;
 
 // issue 2265
 public class Issue2265_Tests
 {
     public class Weights
     {
-        public int Id { get; set; } = 0;
+        public int Id { get; set; }
 
         // comment out [BsonRef] and the the test works
         [BsonRef("weights")]

@@ -1,96 +1,94 @@
-﻿using System.Linq;
+﻿namespace LiteDB.Tests.QueryTest;
+
+using System.Linq;
 using FluentAssertions;
 using Xunit;
 
-namespace LiteDB.Tests.QueryTest
+public class OrderBy_Tests : Person_Tests
 {
-    public class OrderBy_Tests : Person_Tests
+    [Fact]
+    public void Query_OrderBy_Using_Index()
     {
-        [Fact]
-        public void Query_OrderBy_Using_Index()
-        {
-            collection.EnsureIndex(x => x.Name);
+        collection.EnsureIndex(x => x.Name);
 
-            var r0 = local
-                .OrderBy(x => x.Name)
-                .Select(x => new {x.Name})
-                .ToArray();
+        var r0 = local
+            .OrderBy(x => x.Name)
+            .Select(x => new { x.Name })
+            .ToArray();
 
-            var r1 = collection.Query()
-                .OrderBy(x => x.Name)
-                .Select(x => new {x.Name})
-                .ToArray();
+        var r1 = collection.Query()
+            .OrderBy(x => x.Name)
+            .Select(x => new { x.Name })
+            .ToArray();
 
-            r0.Should().Equal(r1);
-        }
+        r0.Should().Equal(r1);
+    }
 
-        [Fact]
-        public void Query_OrderBy_Using_Index_Desc()
-        {
-            collection.EnsureIndex(x => x.Name);
+    [Fact]
+    public void Query_OrderBy_Using_Index_Desc()
+    {
+        collection.EnsureIndex(x => x.Name);
 
-            var r0 = local
-                .OrderByDescending(x => x.Name)
-                .Select(x => new {x.Name})
-                .ToArray();
+        var r0 = local
+            .OrderByDescending(x => x.Name)
+            .Select(x => new { x.Name })
+            .ToArray();
 
-            var r1 = collection.Query()
-                .OrderByDescending(x => x.Name)
-                .Select(x => new {x.Name})
-                .ToArray();
+        var r1 = collection.Query()
+            .OrderByDescending(x => x.Name)
+            .Select(x => new { x.Name })
+            .ToArray();
 
-            r0.Should().Equal(r1);
-        }
+        r0.Should().Equal(r1);
+    }
 
-        [Fact]
-        public void Query_OrderBy_With_Func()
-        {
-            collection.EnsureIndex(x => x.Date.Day);
+    [Fact]
+    public void Query_OrderBy_With_Func()
+    {
+        collection.EnsureIndex(x => x.Date.Day);
 
-            var r0 = local
-                .OrderBy(x => x.Date.Day)
-                .Select(x => new {d = x.Date.Day})
-                .ToArray();
+        var r0 = local
+            .OrderBy(x => x.Date.Day)
+            .Select(x => new { d = x.Date.Day })
+            .ToArray();
 
-            var r1 = collection.Query()
-                .OrderBy(x => x.Date.Day)
-                .Select(x => new {d = x.Date.Day})
-                .ToArray();
+        var r1 = collection.Query()
+            .OrderBy(x => x.Date.Day)
+            .Select(x => new { d = x.Date.Day })
+            .ToArray();
 
-            r0.Should().Equal(r1);
-        }
+        r0.Should().Equal(r1);
+    }
 
-        [Fact]
-        public void Query_OrderBy_With_Offset_Limit()
-        {
-            // no index
+    [Fact]
+    public void Query_OrderBy_With_Offset_Limit()
+    {
+        // no index
 
-            var r0 = local
-                .OrderBy(x => x.Date.Day)
-                .Select(x => new { d = x.Date.Day })
-                .Skip(5)
-                .Take(10)
-                .ToArray();
+        var r0 = local
+            .OrderBy(x => x.Date.Day)
+            .Select(x => new { d = x.Date.Day })
+            .Skip(5)
+            .Take(10)
+            .ToArray();
 
-            var r1 = collection.Query()
-                .OrderBy(x => x.Date.Day)
-                .Select(x => new { d = x.Date.Day })
-                .Offset(5)
-                .Limit(10)
-                .ToArray();
+        var r1 = collection.Query()
+            .OrderBy(x => x.Date.Day)
+            .Select(x => new { d = x.Date.Day })
+            .Offset(5)
+            .Limit(10)
+            .ToArray();
 
-            r0.Should().Equal(r1);
-        }
+        r0.Should().Equal(r1);
+    }
 
-        [Fact]
-        public void Query_Asc_Desc()
-        {
-            var asc = collection.Find(Query.All(Query.Ascending)).ToArray();
-            var desc = collection.Find(Query.All(Query.Descending)).ToArray();
+    [Fact]
+    public void Query_Asc_Desc()
+    {
+        var asc = collection.Find(Query.All(Query.Ascending)).ToArray();
+        var desc = collection.Find(Query.All(Query.Descending)).ToArray();
 
-            asc[0].Id.Should().Be(1);
-            desc[0].Id.Should().Be(1000);
-
-        }
+        asc[0].Id.Should().Be(1);
+        desc[0].Id.Should().Be(1000);
     }
 }

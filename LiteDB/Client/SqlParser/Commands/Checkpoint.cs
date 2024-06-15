@@ -1,26 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿namespace LiteDB;
+
 using LiteDB.Engine;
-using static LiteDB.Constants;
 
-namespace LiteDB
+internal partial class SqlParser
 {
-    internal partial class SqlParser
+    /// <summary>
+    ///     CHECKPOINT
+    /// </summary>
+    private BsonDataReader ParseCheckpoint()
     {
-        /// <summary>
-        /// CHECKPOINT
-        /// </summary>
-        private BsonDataReader ParseCheckpoint()
-        {
-            _tokenizer.ReadToken().Expect(Pragmas.CHECKPOINT);
+        _tokenizer.ReadToken().Expect(Pragmas.CHECKPOINT);
 
-            // read <eol> or ;
-            _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+        // read <eol> or ;
+        _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            var result = _engine.Checkpoint();
+        var result = _engine.Checkpoint();
 
-            return new BsonDataReader(result);
-        }
+        return new BsonDataReader(result);
     }
 }

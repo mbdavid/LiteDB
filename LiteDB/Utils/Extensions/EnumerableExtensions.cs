@@ -1,24 +1,23 @@
-﻿using System;
+﻿namespace LiteDB.Utils.Extensions;
+
+using System;
 using System.Collections.Generic;
 
-namespace LiteDB.Utils.Extensions
+internal static class EnumerableExtensions
 {
-    internal static class EnumerableExtensions
+    // calls method on dispose
+    public static IEnumerable<T> OnDispose<T>(this IEnumerable<T> source, Action onDispose)
     {
-        // calls method on dispose
-        public static IEnumerable<T> OnDispose<T>(this IEnumerable<T> source, Action onDispose)
+        try
         {
-            try
+            foreach (var item in source)
             {
-                foreach (var item in source)
-                {
-                    yield return item;
-                }
+                yield return item;
             }
-            finally
-            {
-                onDispose();
-            }
+        }
+        finally
+        {
+            onDispose();
         }
     }
 }

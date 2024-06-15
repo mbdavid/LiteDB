@@ -1,55 +1,53 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text;
-using static LiteDB.Constants;
+﻿namespace LiteDB.Engine;
 
-namespace LiteDB.Engine
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+internal class SysFile : SystemCollection
 {
-    internal class SysFile : SystemCollection
-    {
-        private readonly Dictionary<string, SystemCollection> _formats = new Dictionary<string, SystemCollection>(StringComparer.OrdinalIgnoreCase)
+    private readonly Dictionary<string, SystemCollection> _formats =
+        new Dictionary<string, SystemCollection>(StringComparer.OrdinalIgnoreCase)
         {
             ["json"] = new SysFileJson(),
             ["csv"] = new SysFileCsv()
         };
 
-        public SysFile() : base("$file")
+    public SysFile()
+        : base("$file")
+    {
+    }
+
+    public override IEnumerable<BsonDocument> Input(BsonValue options)
+    {
+        var format = GetFormat(options);
+
+        if (_formats.TryGetValue(format, out var factory))
         {
+            return factory.Input(options);
         }
 
-        public override IEnumerable<BsonDocument> Input(BsonValue options)
+        throw new LiteException(0, $"Unknow file format in $file: `{format}`");
+    }
+
+    public override int Output(IEnumerable<BsonDocument> source, BsonValue options)
+    {
+        var format = GetFormat(options);
+
+        if (_formats.TryGetValue(format, out var factory))
         {
-            var format = this.GetFormat(options);
-
-            if (_formats.TryGetValue(format, out var factory))
-            {
-                return factory.Input(options);
-            }
-
-            throw new LiteException(0, $"Unknow file format in $file: `{format}`");
+            return factory.Output(source, options);
         }
 
-        public override int Output(IEnumerable<BsonDocument> source, BsonValue options)
-        {
-            var format = this.GetFormat(options);
+        throw new LiteException(0, $"Unknow file format in $file: `{format}`");
+    }
 
-            if (_formats.TryGetValue(format, out var factory))
-            {
-                return factory.Output(source, options);
-            }
+    private string GetFormat(BsonValue options)
+    {
+        var filename = GetOption(options, "filename")?.AsString ??
+            throw new LiteException(0, "Collection $file requires string as 'filename' or a document field 'filename'");
+        var format = GetOption(options, "format", Path.GetExtension(filename)).AsString;
 
-            throw new LiteException(0, $"Unknow file format in $file: `{format}`");
-        }
-
-        private string GetFormat(BsonValue options)
-        {
-            var filename = GetOption(options, "filename")?.AsString ?? throw new LiteException(0, $"Collection $file requires string as 'filename' or a document field 'filename'");
-            var format = GetOption(options, "format", Path.GetExtension(filename)).AsString;
-
-            return format.StartsWith(".") ? format.Substring(1) : format;
-        }
+        return format.StartsWith(".") ? format.Substring(1) : format;
     }
 }

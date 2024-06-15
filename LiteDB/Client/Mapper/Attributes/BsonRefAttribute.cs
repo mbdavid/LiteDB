@@ -1,23 +1,21 @@
-﻿using System;
-using static LiteDB.Constants;
+﻿namespace LiteDB;
 
-namespace LiteDB
+using System;
+
+/// <summary>
+///     Indicate that field are not persisted inside this document but it's a reference for another document (DbRef)
+/// </summary>
+public class BsonRefAttribute : Attribute
 {
-    /// <summary>
-    /// Indicate that field are not persisted inside this document but it's a reference for another document (DbRef)
-    /// </summary>
-    public class BsonRefAttribute : Attribute
+    public string Collection { get; set; }
+
+    public BsonRefAttribute(string collection)
     {
-        public string Collection { get; set; }
+        Collection = collection;
+    }
 
-        public BsonRefAttribute(string collection)
-        {
-            this.Collection = collection;
-        }
-
-        public BsonRefAttribute()
-        {
-            this.Collection = null;
-        }
+    public BsonRefAttribute()
+    {
+        Collection = null;
     }
 }

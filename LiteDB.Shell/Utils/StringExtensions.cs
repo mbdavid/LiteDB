@@ -1,31 +1,28 @@
-﻿using System;
+﻿namespace LiteDB.Shell;
 
-namespace LiteDB.Shell
+using System;
+
+internal static class StringExtensions
 {
-    internal static class StringExtensions
+    public static string ThrowIfEmpty(this string str, string message)
     {
-        public static string ThrowIfEmpty(this string str, string message)
+        if (string.IsNullOrEmpty(str) || str.Trim().Length == 0)
         {
-            if (string.IsNullOrEmpty(str) || str.Trim().Length == 0)
-            {
-                throw new ArgumentException(message);
-            }
-
-            return str;
+            throw new ArgumentException(message);
         }
 
-        public static string TrimToNull(this string str)
-        {
-            var v = str.Trim();
+        return str;
+    }
 
-            return v.Length == 0 ? null : v;
-        }
+    public static string TrimToNull(this string str)
+    {
+        var v = str.Trim();
 
-        public static string MaxLength(this string str, int len)
-        {
-            return len == 0 || str.Length < len ?
-                str :
-                str.Substring(0, len - 3) + "...";
-        }
+        return v.Length == 0 ? null : v;
+    }
+
+    public static string MaxLength(this string str, int len)
+    {
+        return len == 0 || str.Length < len ? str : str.Substring(0, len - 3) + "...";
     }
 }
