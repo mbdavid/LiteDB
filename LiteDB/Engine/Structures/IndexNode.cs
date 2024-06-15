@@ -1,6 +1,4 @@
-﻿using static LiteDB.Constants;
-
-namespace LiteDB.Engine;
+﻿namespace LiteDB.Engine;
 
 /// <summary>
 ///     Represent a index node inside a Index Page

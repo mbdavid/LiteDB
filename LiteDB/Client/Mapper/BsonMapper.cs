@@ -1,5 +1,3 @@
-using static LiteDB.Constants;
-
 namespace LiteDB;
 
 using System;

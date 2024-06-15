@@ -65,7 +65,12 @@
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.1" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
   </ItemGroup>
-
   <!-- End References -->
+
+  <!-- Begin Global Usings -->
+  <ItemGroup>
+    <Using Include="LiteDB.Constants" Static="true" />
+  </ItemGroup>
+  <!-- End Global Usings -->
 
 </Project>

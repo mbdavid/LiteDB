@@ -1,6 +1,4 @@
-﻿using static LiteDB.Constants;
-
-namespace LiteDB.Engine;
+﻿namespace LiteDB.Engine;
 
 /// <summary>
 ///     Implement lookup based only in index Key

@@ -1,6 +1,4 @@
-﻿using static LiteDB.Constants;
-
-namespace LiteDB.Engine;
+﻿namespace LiteDB.Engine;
 
 using System;
 using System.Collections.Generic;
