@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -19,6 +19,8 @@ namespace LiteDB.Engine
         private int _position = 0; // global position
 
         private bool _isEOF = false;
+
+        private static readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Current global cursor position
@@ -102,10 +104,10 @@ namespace LiteDB.Engine
                 // fill buffer
                 if (buffer != null)
                 {
-                    Buffer.BlockCopy(_current.Array, 
-                        _current.Offset + _currentPosition, 
-                        buffer, 
-                        offset + bufferPosition, 
+                    Buffer.BlockCopy(_current.Array,
+                        _current.Offset + _currentPosition,
+                        buffer,
+                        offset + bufferPosition,
                         bytesToCopy);
                 }
 
@@ -161,13 +163,13 @@ namespace LiteDB.Engine
             else
             {
                 // rent a buffer to be re-usable
-                var buffer = BufferPool.Rent(count);
+                var buffer = _bufferPool.Rent(count);
 
                 this.Read(buffer, 0, count);
 
                 value = StringEncoding.UTF8.GetString(buffer, 0, count);
 
-                BufferPool.Return(buffer);
+                _bufferPool.Return(buffer, true);
             }
 
             return value;
@@ -251,13 +253,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = BufferPool.Rent(size);
+                var buffer = _bufferPool.Rent(size);
 
                 this.Read(buffer, 0, size);
 
                 value = convert(buffer, 0);
 
-                BufferPool.Return(buffer);
+                _bufferPool.Return(buffer, true);
             }
 
             return value;
@@ -328,13 +330,13 @@ namespace LiteDB.Engine
             }
             else
             {
-                var buffer = BufferPool.Rent(12);
+                var buffer = _bufferPool.Rent(12);
 
                 this.Read(buffer, 0, 12);
 
                 value = new ObjectId(buffer, 0);
 
-                BufferPool.Return(buffer);
+                _bufferPool.Return(buffer, true);
             }
 
             return value;
@@ -393,7 +395,7 @@ namespace LiteDB.Engine
                 case BsonType.Int64: return this.ReadInt64();
                 case BsonType.Double: return this.ReadDouble();
                 case BsonType.Decimal: return this.ReadDecimal();
-                
+
                 // Use +1 byte only for length
                 case BsonType.String: return this.ReadString(this.ReadByte());
 

@@ -25,6 +25,7 @@ namespace LiteDB.Engine
 
         private byte[] _buffer = new byte[V7_PAGE_SIZE];
         private bool _disposedValue;
+        private static readonly byte[] arrayByteEmpty = new byte[0];
 
         public IDictionary<string, BsonValue> GetPragmas() => new Dictionary<string, BsonValue>()
         {
@@ -387,7 +388,7 @@ namespace LiteDB.Engine
                 {
                     var page = this.ReadPage(extendPageID);
 
-                    if (page["pageType"].AsInt32 != 5) return new byte[0];
+                    if (page["pageType"].AsInt32 != 5) return arrayByteEmpty;
 
                     buffer.Write(page["data"].AsBinary, 0, page["itemCount"].AsInt32);
 
@@ -403,10 +404,14 @@ namespace LiteDB.Engine
         /// </summary>
         private HashSet<uint> VisitIndexPages(uint startPageID)
         {
-            var toVisit = new HashSet<uint>(new uint[] { startPageID });
+            var toVisit = new HashSet<uint>
+            {
+                startPageID
+            };
+
             var visited = new HashSet<uint>();
 
-            while(toVisit.Count > 0)
+            while (toVisit.Count > 0)
             {
                 var indexPageID = toVisit.First();
 
