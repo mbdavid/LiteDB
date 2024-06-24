@@ -16,7 +16,8 @@ public partial class MainPage : ContentPage
 
 	private void OnCounterClicked(object sender, EventArgs e)
 	{
-		test.Execute();
+		for (var i = 0; i < 100; i++)
+			test.Execute();
 	}
 }
 
@@ -24,7 +25,7 @@ class DBTest
 {
 	private const string DbName = "test.db";
 	private const string LogName = "test-log.db";
-	private const int Records = 100_0000;
+	private const int Records = 1_000;
 	private const int Chunk = 1000;
 	static string path = Path.Combine(FileSystem.Current.AppDataDirectory, $"{DbName}.db");
 
