@@ -8,151 +8,135 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
-	/// <summary>
-	/// Implement disk write queue and async writer thread - used only for write on LOG file
-	/// [ThreadSafe]
-	/// </summary>
-	internal class DiskWriterQueue : IDisposable
-	{
-		private readonly Stream _stream;
-		private readonly EngineState _state;
+    /// <summary>
+    /// Implement disk write queue and async writer thread - used only for write on LOG file
+    /// [ThreadSafe]
+    /// </summary>
+    internal class DiskWriterQueue : IDisposable
+    {
+        private readonly Stream _stream;
+        private readonly EngineState _state;
 
-		// async thread controls
-		private Task _task;
-		private bool _shouldClose = false;
+        // async thread controls
+        private Task _task;
+        private bool _shouldClose = false;
 
-		private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
-		private readonly object _queueSync = new object();
-		private readonly AsyncManualResetEvent _queueHasItems = new AsyncManualResetEvent();
-		private readonly ManualResetEventSlim _queueIsEmpty = new ManualResetEventSlim(true);
+        private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
+        private readonly object _queueSync = new object();
+        private readonly AsyncManualResetEvent _queueHasItems = new AsyncManualResetEvent();
+        private readonly ManualResetEventSlim _queueIsEmpty = new ManualResetEventSlim(true);
 
-		private Exception _exception = null; // store last exception in async running task
+        private Exception _exception = null; // store last exception in async running task
 
-		public DiskWriterQueue(Stream stream, EngineState state)
-		{
-			_stream = stream;
-			_state = state;
-		}
+        public DiskWriterQueue(Stream stream, EngineState state)
+        {
+            _stream = stream;
+            _state = state;
+        }
 
-		/// <summary>
-		/// Get how many pages are waiting for store
-		/// </summary>
-		public int Length => _queue.Count;
+        /// <summary>
+        /// Get how many pages are waiting for store
+        /// </summary>
+        public int Length => _queue.Count;
 
-		/// <summary>
-		/// Add page into writer queue and will be saved in disk by another thread. If page.Position = MaxValue, store at end of file (will get final Position)
-		/// After this method, this page will be available into reader as a clean page
-		/// </summary>
-		public void EnqueuePage(PageBuffer page)
-		{
-			ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
+        /// <summary>
+        /// Add page into writer queue and will be saved in disk by another thread. If page.Position = MaxValue, store at end of file (will get final Position)
+        /// After this method, this page will be available into reader as a clean page
+        /// </summary>
+        public void EnqueuePage(PageBuffer page)
+        {
+            ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
 
-			// throw last exception that stop running queue
-			if (_exception != null) throw _exception;
+            // throw last exception that stop running queue
+            if (_exception != null) throw _exception;
 
-			lock (_queueSync)
-			{
-				_queueIsEmpty.Reset();
-				_queue.Enqueue(page);
-				_queueHasItems.Set();
+            _queueIsEmpty.Reset();
+            _queue.Enqueue(page);
+            _queueHasItems.Set();
 
-				if (_task == null)
-				{
-					_task = Task.Factory.StartNew(ExecuteQueue, TaskCreationOptions.LongRunning);
-				}
-			}
-		}
+            lock (_queueSync)
+            {
+                if (_task == null)
+                {
+                    _task = Task.Factory.StartNew(ExecuteQueue, TaskCreationOptions.LongRunning);
+                }
+            }
+        }
 
-		/// <summary>
-		/// Wait until all queue be executed and no more pending pages are waiting for write - be sure you do a full lock database before call this
-		/// </summary>
-		public void Wait()
-		{
-			_queueIsEmpty.Wait();
+        /// <summary>
+        /// Wait until all queue be executed and no more pending pages are waiting for write - be sure you do a full lock database before call this
+        /// </summary>
+        public void Wait()
+        {
+            _queueIsEmpty.Wait();
 
-			ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
-		}
+            ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
+        }
 
-		/// <summary>
-		/// Execute all items in queue sync
-		/// </summary>
-		private async Task ExecuteQueue()
-		{
-			try
-			{
-				while (true)
-				{
-#if !NETSTANDARD1_3
-					var thread = Thread.CurrentThread;
-					System.Diagnostics.Debug.WriteLine("########################");
-					System.Diagnostics.Debug.WriteLine($"thread Name: {thread.Name} ID: {thread.ManagedThreadId}");
+        /// <summary>
+        /// Execute all items in queue sync
+        /// </summary>
+        private void ExecuteQueue()
+        {
+            try
+            {
+                while (true)
+                {
+                    if (_queue.TryDequeue(out var page))
+                    {
+                        WritePageToStream(page);
+                    }
+                    else
+                    {
 
-					var prop = typeof(Task).GetProperty("InternalCurrent", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-					var v = prop.GetValue(null);
+                        if (_queue.Count > 0) continue;
 
-					var p = Task.Factory.GetType().GetMethod("GetDefaultScheduler", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-					var value = p.Invoke(Task.Factory, new object[] { v });
+                        _queueIsEmpty.Set();
+                        _queueHasItems.Reset();
 
-					System.Diagnostics.Debug.Assert(value == TaskScheduler.Default, "It should be the default one");
+                        if (_shouldClose) return;
 
-#endif
-					if (_queue.TryDequeue(out var page))
-					{
-						WritePageToStream(page);
-					}
-					else
-					{
-						lock (_queueSync)
-						{
-							if (_queue.Count > 0) continue;
+                        _stream.FlushToDisk();
 
-							_queueIsEmpty.Set();
-							_queueHasItems.Reset();
+                        _queueHasItems.WaitAsync().GetAwaiter().GetResult();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _state.Handle(ex);
+                _exception = ex;
+            }
+        }
 
-							if (_shouldClose) return;
-						}
+        private void WritePageToStream(PageBuffer page)
+        {
+            if (page == null) return;
 
-						_stream.FlushToDisk();
+            ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
 
-						await _queueHasItems.WaitAsync();
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				_state.Handle(ex);
-				_exception = ex;
-			}
-		}
-
-		private void WritePageToStream(PageBuffer page)
-		{
-			if (page == null) return;
-
-			ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
-
-			// set stream position according to page
-			_stream.Position = page.Position;
+            // set stream position according to page
+            _stream.Position = page.Position;
 
 #if DEBUG
-			_state.SimulateDiskWriteFail?.Invoke(page);
+            _state.SimulateDiskWriteFail?.Invoke(page);
 #endif
 
-			_stream.Write(page.Array, page.Offset, PAGE_SIZE);
+            _stream.Write(page.Array, page.Offset, PAGE_SIZE);
 
-			// release page here (no page use after this)
-			page.Release();
-		}
+            // release page here (no page use after this)
+            page.Release();
+        }
 
-		public void Dispose()
-		{
-			LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
+        public void Dispose()
+        {
+            LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
 
-			_shouldClose = true;
-			_queueHasItems.Set(); // unblock the running loop in case there are no items
+            _shouldClose = true;
+            _queueHasItems.Set(); // unblock the running loop in case there are no items
 
-			_task?.Wait();
-			_task = null;
-		}
-	}
+            _task?.GetAwaiter().GetResult();
+            _task = null;
+        }
+    }
 }

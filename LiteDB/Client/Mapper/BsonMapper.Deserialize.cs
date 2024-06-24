@@ -177,13 +177,6 @@ namespace LiteDB
                         throw LiteException.DataTypeNotAssignable(type.FullName, actualType.FullName);
                     }
 
-                    // avoid use of "System.Diagnostics.Process" in object type definition
-                    // using String test to work in .netstandard 1.3
-                    if (actualType.FullName.Equals("System.Diagnostics.Process", StringComparison.OrdinalIgnoreCase))
-                    {
-                        throw LiteException.AvoidUseOfProcess();
-                    }
-
                     type = actualType;
                 }
                 // when complex type has no definition (== typeof(object)) use Dictionary<string, object> to better set values

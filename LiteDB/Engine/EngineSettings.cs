@@ -69,7 +69,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new IStreamFactory for datafile
         /// </summary>
-        internal IStreamFactory CreateDataFactory()
+        internal IStreamFactory CreateDataFactory(bool useAesStream = true)
         {
             if (this.DataStream != null)
             {
@@ -85,7 +85,7 @@ namespace LiteDB.Engine
             }
             else if (!string.IsNullOrEmpty(this.Filename))
             {
-                return new FileStreamFactory(this.Filename, this.Password, this.ReadOnly, false);
+                return new FileStreamFactory(this.Filename, this.Password, this.ReadOnly, false, useAesStream);
             }
 
             throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");
