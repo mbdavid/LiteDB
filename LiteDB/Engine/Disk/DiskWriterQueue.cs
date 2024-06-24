@@ -128,14 +128,14 @@ namespace LiteDB.Engine
             page.Release();
         }
 
-        public void Dispose()
+        public async void Dispose()
         {
             LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
 
             _shouldClose = true;
             _queueHasItems.Set(); // unblock the running loop in case there are no items
-
-            _task?.GetAwaiter().GetResult();
+            if (_task is { IsCompleted: false})
+                await _task;
             _task = null;
         }
     }
