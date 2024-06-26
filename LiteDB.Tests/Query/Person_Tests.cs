@@ -5,23 +5,26 @@ namespace LiteDB.Tests.QueryTest
 {
     public class Person_Tests : IDisposable
     {
-        protected readonly Person[] local;
-
-        protected ILiteDatabase db;
-        protected ILiteCollection<Person> collection;
+        private readonly Person[] _local;
+        private readonly ILiteDatabase _db;
+        private readonly ILiteCollection<Person> _collection;
 
         public Person_Tests()
         {
-            this.local = DataGen.Person().ToArray();
+            this._local = DataGen.Person().ToArray();
 
-            db = new LiteDatabase(":memory:");
-            collection = db.GetCollection<Person>("person");
-            collection.Insert(this.local);
+            _db = new LiteDatabase(":memory:");
+            _collection = _db.GetCollection<Person>("person");
+            _collection.Insert(this._local);
         }
+
+        public ILiteCollection<Person> GetCollection() => _collection;
+
+        public Person[] GetLocal() => _local;
 
         public void Dispose()
         {
-            db?.Dispose();
+            _db?.Dispose();
         }
     }
 }

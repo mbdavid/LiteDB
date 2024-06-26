@@ -4,11 +4,15 @@ using Xunit;
 
 namespace LiteDB.Tests.QueryTest
 {
-    public class OrderBy_Tests : Person_Tests
+    public class OrderBy_Tests
     {
         [Fact]
         public void Query_OrderBy_Using_Index()
         {
+            using var db = new Person_Tests();
+            var collection = db.GetCollection();
+            var local = db.GetLocal();
+
             collection.EnsureIndex(x => x.Name);
 
             var r0 = local
@@ -27,6 +31,10 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_OrderBy_Using_Index_Desc()
         {
+            using var db = new Person_Tests();
+            var collection = db.GetCollection();
+            var local = db.GetLocal();
+
             collection.EnsureIndex(x => x.Name);
 
             var r0 = local
@@ -45,6 +53,10 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_OrderBy_With_Func()
         {
+            using var db = new Person_Tests();
+            var collection = db.GetCollection();
+            var local = db.GetLocal();
+
             collection.EnsureIndex(x => x.Date.Day);
 
             var r0 = local
@@ -63,6 +75,10 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_OrderBy_With_Offset_Limit()
         {
+            using var db = new Person_Tests();
+            var collection = db.GetCollection();
+            var local = db.GetLocal();
+
             // no index
 
             var r0 = local
@@ -85,6 +101,9 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_Asc_Desc()
         {
+            using var db = new Person_Tests();
+            var collection = db.GetCollection();
+
             var asc = collection.Find(Query.All(Query.Ascending)).ToArray();
             var desc = collection.Find(Query.All(Query.Descending)).ToArray();
 

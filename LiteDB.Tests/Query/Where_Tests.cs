@@ -15,6 +15,10 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_Where_With_Parameter()
         {
+            using var db = new Person_Tests();
+            var collection = db.GetCollection();
+            var local = db.GetLocal();
+
             var r0 = local
                 .Where(x => x.Address.State == "FL")
                 .ToArray();
@@ -29,6 +33,10 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_Multi_Where_With_Like()
         {
+            using var db = new Person_Tests();
+            var collection = db.GetCollection();
+            var local = db.GetLocal();
+
             var r0 = local
                 .Where(x => x.Age >= 10 && x.Age <= 40)
                 .Where(x => x.Name.StartsWith("Ge"))
@@ -45,6 +53,10 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_Single_Where_With_And()
         {
+            using var db = new Person_Tests();
+            var collection = db.GetCollection();
+            var local = db.GetLocal();
+
             var r0 = local
                 .Where(x => x.Age == 25 && x.Active)
                 .ToArray();
@@ -59,6 +71,10 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_Single_Where_With_Or_And_In()
         {
+            using var db = new Person_Tests();
+            var collection = db.GetCollection();
+            var local = db.GetLocal();
+
             var r0 = local
                 .Where(x => x.Age == 25 || x.Age == 26 || x.Age == 27)
                 .ToArray();
@@ -78,6 +94,10 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_With_Array_Ids()
         {
+            using var db = new Person_Tests();
+            var collection = db.GetCollection();
+            var local = db.GetLocal();
+
             var ids = new int[] { 1, 2, 3 };
 
             var r0 = local
