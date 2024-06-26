@@ -232,7 +232,7 @@ namespace LiteDB.Engine
 
             // write all dirty pages, in sequence on log-file and store references into log pages on transPages
             // (works only for Write snapshots)
-            var count = _disk.WriteAsync(source());
+            var count = _disk.WriteLogDisk(source());
 
             // now, discard all clean pages (because those pages are writable and must be readable)
             // from write snapshots
@@ -368,7 +368,7 @@ namespace LiteDB.Engine
                 try
                 {
                     // write all pages (including new header)
-                    _disk.WriteAsync(source());
+                    _disk.WriteLogDisk(source());
                 }
                 catch
                 {

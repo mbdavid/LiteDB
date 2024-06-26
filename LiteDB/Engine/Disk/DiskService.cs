@@ -14,7 +14,6 @@ namespace LiteDB.Engine
     internal class DiskService : IDisposable
     {
         private readonly MemoryCache _cache;
-        private readonly Lazy<DiskWriterQueue> _queue;
         private readonly EngineState _state;
 
         private IStreamFactory _dataFactory;
@@ -22,6 +21,7 @@ namespace LiteDB.Engine
 
         private StreamPool _dataPool;
         private readonly StreamPool _logPool;
+        private readonly Lazy<Stream> _writer;
 
         private long _dataLength;
         private long _logLength;
@@ -36,6 +36,7 @@ namespace LiteDB.Engine
             _cache = new MemoryCache(memorySegmentSizes);
             _state = state;
 
+
             // get new stream factory based on settings
             _dataFactory = settings.CreateDataFactory();
             _logFactory = settings.CreateLogFactory();
@@ -44,23 +45,23 @@ namespace LiteDB.Engine
             _dataPool = new StreamPool(_dataFactory, false);
             _logPool = new StreamPool(_logFactory, true);
 
-            var isNew = _dataFactory.GetLength() == 0L;
+            // get lazy disk writer (log file) - created only when used
+            _writer = _logPool.Writer;
 
-            // create lazy async writer queue for log file
-            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer, state));
+            var isNew = _dataFactory.GetLength() == 0L;
 
             // create new database if not exist yet
             if (isNew)
             {
                 LOG($"creating new database: '{Path.GetFileName(_dataFactory.Name)}'", "DISK");
 
-                this.Initialize(_dataPool.Writer, settings.Collation, settings.InitialSize);
+                this.Initialize(_dataPool.Writer.Value, settings.Collation, settings.InitialSize);
             }
 
             // if not readonly, force open writable datafile
             if (settings.ReadOnly == false)
             {
-                _ = _dataPool.Writer.CanRead;
+                _ = _dataPool.Writer.Value.CanRead;
             }
 
             // get initial data file length
@@ -78,19 +79,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get async queue writer
-        /// </summary>
-        public Lazy<DiskWriterQueue> Queue => _queue;
-
-        /// <summary>
         /// Get memory cache instance
         /// </summary>
         public MemoryCache Cache => _cache;
-
-        /// <summary>
-        /// Get Stream pool used inside disk service
-        /// </summary>
-        public StreamPool GetPool(FileOrigin origin) => origin == FileOrigin.Data ? _dataPool : _logPool;
 
         /// <summary>
         /// Create a new empty database (use synced mode)
@@ -171,40 +162,55 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write pages inside file origin using async queue - WORKS ONLY FOR LOG FILE - returns how many pages are inside "pages"
+        /// Write all pages inside log file in a thread safe operation
         /// </summary>
-        public int WriteAsync(IEnumerable<PageBuffer> pages)
+        public int WriteLogDisk(IEnumerable<PageBuffer> pages)
         {
             var count = 0;
+            var stream = _writer.Value;
 
-            foreach (var page in pages)
+            // do a global write lock - only 1 thread can write on disk at time
+            lock(stream)
             {
-                ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to enqueue page, page must be writable");
+                foreach (var page in pages)
+                {
+                    ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to enqueue page, page must be writable");
 
-                // adding this page into file AS new page (at end of file)
-                // must add into cache to be sure that new readers can see this page
-                page.Position = Interlocked.Add(ref _logLength, PAGE_SIZE);
+                    // adding this page into file AS new page (at end of file)
+                    // must add into cache to be sure that new readers can see this page
+                    page.Position = Interlocked.Add(ref _logLength, PAGE_SIZE);
 
-                // should mark page origin to log because async queue works only for log file
-                // if this page came from data file, must be changed before MoveToReadable
-                page.Origin = FileOrigin.Log;
+                    // should mark page origin to log because async queue works only for log file
+                    // if this page came from data file, must be changed before MoveToReadable
+                    page.Origin = FileOrigin.Log;
 
-                // mark this page as readable and get cached paged to enqueue
-                var readable = _cache.MoveToReadable(page);
+                    // mark this page as readable and get cached paged to enqueue
+                    var readable = _cache.MoveToReadable(page);
 
-                _queue.Value.EnqueuePage(readable);
+                    // set log stream position to page
+                    stream.Position = page.Position;
 
-                count++;
+#if DEBUG
+                    _state.SimulateDiskWriteFail?.Invoke(page);
+#endif
+
+                    // and write to disk in a sync mode
+                    stream.Write(page.Array, page.Offset, PAGE_SIZE);
+
+                    // release page here (no page use after this)
+                    page.Release();
+
+                    count++;
+                }
             }
 
             return count;
         }
 
         /// <summary>
-        /// Get virtual file length: real file can be small because async thread can still writing on disk
-        /// and incrementing file size (Log file)
+        /// Get file length based on data/log length variables (no direct on disk)
         /// </summary>
-        public long GetVirtualLength(FileOrigin origin)
+        public long GetFileLength(FileOrigin origin)
         {
             if (origin == FileOrigin.Log)
             {
@@ -252,7 +258,7 @@ namespace LiteDB.Engine
             try
             {
                 // get length before starts (avoid grow during loop)
-                var length = this.GetVirtualLength(origin);
+                var length = this.GetFileLength(origin);
 
                 stream.Position = 0;
 
@@ -279,13 +285,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write pages DIRECT in disk with NO queue. This pages are not cached and are not shared - WORKS FOR DATA FILE ONLY
+        /// Write pages DIRECT in disk. This pages are not cached and are not shared - WORKS FOR DATA FILE ONLY
         /// </summary>
-        public void Write(IEnumerable<PageBuffer> pages, FileOrigin origin)
+        public void WriteDataDisk(IEnumerable<PageBuffer> pages)
         {
-            ENSURE(origin == FileOrigin.Data);
-
-            var stream = origin == FileOrigin.Data ? _dataPool.Writer : _logPool.Writer;
+            var stream = _dataPool.Writer.Value;
 
             foreach (var page in pages)
             {
@@ -310,8 +314,6 @@ namespace LiteDB.Engine
 
             if (origin == FileOrigin.Log)
             {
-                ENSURE(_queue.Value.Length == 0, "queue must be empty before set new length");
-
                 Interlocked.Exchange(ref _logLength, length - PAGE_SIZE);
             }
             else
@@ -319,7 +321,7 @@ namespace LiteDB.Engine
                 Interlocked.Exchange(ref _dataLength, length - PAGE_SIZE);
             }
 
-            stream.SetLength(length);
+            stream.Value.SetLength(length);
         }
 
         /// <summary>
@@ -334,12 +336,9 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            // dispose queue (wait finish)
-            if (_queue.IsValueCreated) _queue.Value.Dispose();
-
             // get stream length from writer - is safe because only this instance
             // can change file size
-            var delete = _logFactory.Exists() && _logPool.Writer.Length == 0;
+            var delete = _logFactory.Exists() && _logPool.Writer.Value.Length == 0;
 
             // dispose Stream pools
             _dataPool.Dispose();

@@ -140,7 +140,7 @@ namespace LiteDB.Engine
                 _walIndex = new WalIndexService(_disk, _locker);
 
                 // if exists log file, restore wal index references (can update full _header instance)
-                if (_disk.GetVirtualLength(FileOrigin.Log) > 0)
+                if (_disk.GetFileLength(FileOrigin.Log) > 0)
                 {
                     _walIndex.RestoreIndex(ref _header);
                 }
@@ -186,12 +186,6 @@ namespace LiteDB.Engine
             // stop running all transactions
             tc.Catch(() => _monitor?.Dispose());
 
-            // wait for writer queue
-            if (_disk != null && _disk.Queue.IsValueCreated)
-            {
-                tc.Catch(() => _disk.Queue.Value.Wait());
-            }
-
             if (_header?.Pragmas.Checkpoint > 0)
             {
                 // do a soft checkpoint (only if exclusive lock is possible)
@@ -227,11 +221,6 @@ namespace LiteDB.Engine
             var tc = new TryCatch(ex);
 
             tc.Catch(() => _monitor?.Dispose());
-
-            if (_disk != null && _disk.Queue.IsValueCreated)
-            {
-                tc.Catch(() => _disk.Queue.Value.Dispose());
-            }
 
             // close disks streams
             tc.Catch(() => _disk?.Dispose());
