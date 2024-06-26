@@ -9,9 +9,8 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_OrderBy_Using_Index()
         {
-            using var db = new Person_Tests();
-            var collection = db.GetCollection();
-            var local = db.GetLocal();
+            using var db = new PersonQueryData();
+            var (collection, local) = db.GetData();
 
             collection.EnsureIndex(x => x.Name);
 
@@ -31,9 +30,8 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_OrderBy_Using_Index_Desc()
         {
-            using var db = new Person_Tests();
-            var collection = db.GetCollection();
-            var local = db.GetLocal();
+            using var db = new PersonQueryData();
+            var (collection, local) = db.GetData();
 
             collection.EnsureIndex(x => x.Name);
 
@@ -53,9 +51,8 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_OrderBy_With_Func()
         {
-            using var db = new Person_Tests();
-            var collection = db.GetCollection();
-            var local = db.GetLocal();
+            using var db = new PersonQueryData();
+            var (collection, local) = db.GetData();
 
             collection.EnsureIndex(x => x.Date.Day);
 
@@ -75,9 +72,8 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_OrderBy_With_Offset_Limit()
         {
-            using var db = new Person_Tests();
-            var collection = db.GetCollection();
-            var local = db.GetLocal();
+            using var db = new PersonQueryData();
+            var (collection, local) = db.GetData();
 
             // no index
 
@@ -101,15 +97,14 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_Asc_Desc()
         {
-            using var db = new Person_Tests();
-            var collection = db.GetCollection();
+            using var db = new PersonQueryData();
+            var (collection, _) = db.GetData();
 
             var asc = collection.Find(Query.All(Query.Ascending)).ToArray();
             var desc = collection.Find(Query.All(Query.Descending)).ToArray();
 
             asc[0].Id.Should().Be(1);
             desc[0].Id.Should().Be(1000);
-
         }
     }
 }

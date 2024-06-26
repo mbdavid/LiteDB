@@ -3,28 +3,26 @@ using System.Linq;
 
 namespace LiteDB.Tests.QueryTest
 {
-    public class Person_Tests : IDisposable
+    public class PersonQueryData : IDisposable
     {
         private readonly Person[] _local;
         private readonly ILiteDatabase _db;
         private readonly ILiteCollection<Person> _collection;
 
-        public Person_Tests()
+        public PersonQueryData()
         {
-            this._local = DataGen.Person().ToArray();
+            _local = DataGen.Person().ToArray();
 
             _db = new LiteDatabase(":memory:");
             _collection = _db.GetCollection<Person>("person");
             _collection.Insert(this._local);
         }
 
-        public ILiteCollection<Person> GetCollection() => _collection;
-
-        public Person[] GetLocal() => _local;
+        public (ILiteCollection<Person>, Person[]) GetData() => (_collection, _local);
 
         public void Dispose()
         {
-            _db?.Dispose();
+            _db.Dispose();
         }
     }
 }

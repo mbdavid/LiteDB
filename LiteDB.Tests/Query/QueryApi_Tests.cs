@@ -5,14 +5,13 @@ using Xunit;
 
 namespace LiteDB.Tests.QueryTest
 {
-    public class QueryApi_Tests : Person_Tests
+    public class QueryApi_Tests : PersonQueryData
     {
         [Fact]
         public void Query_And()
         {
-            using var db = new Person_Tests();
-            var collection = db.GetCollection();
-            var local = db.GetLocal();
+            using var db = new PersonQueryData();
+            var (collection, local) = db.GetData();
 
             var r0 = local.Where(x => x.Age == 22 && x.Active == true).ToArray();
 
@@ -24,9 +23,8 @@ namespace LiteDB.Tests.QueryTest
         [Fact]
         public void Query_And_Same_Field()
         {
-            using var db = new Person_Tests();
-            var collection = db.GetCollection();
-            var local = db.GetLocal();
+            using var db = new PersonQueryData();
+            var (collection, local) = db.GetData();
 
             var r0 = local.Where(x => x.Age > 22 && x.Age < 25).ToArray();
 

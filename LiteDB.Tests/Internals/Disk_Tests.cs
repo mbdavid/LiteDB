@@ -35,10 +35,7 @@ namespace LiteDB.Internals
             }
 
             // page will be saved in LOG file in PagePosition order (0-99)
-            disk.WriteAsync(pages);
-
-            // wait for async queue writes
-            disk.Queue.Value.Wait();
+            disk.WriteLogDisk(pages);
 
             // after release, no page can be read/write
             pages.Clear();
