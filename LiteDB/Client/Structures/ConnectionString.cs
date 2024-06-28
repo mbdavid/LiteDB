@@ -1,4 +1,4 @@
-﻿using LiteDB.Engine;
+using LiteDB.Engine;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -107,7 +107,7 @@ namespace LiteDB
         /// <summary>
         /// Create ILiteEngine instance according string connection parameters. For now, only Local/Shared are supported
         /// </summary>
-        internal ILiteEngine CreateEngine()
+        internal ILiteEngine CreateEngine(Action<EngineSettings> engineSettingsAction = null)
         {
             var settings = new EngineSettings
             {
@@ -119,6 +119,8 @@ namespace LiteDB
                 Upgrade = this.Upgrade,
                 AutoRebuild = this.AutoRebuild,
             };
+
+            engineSettingsAction?.Invoke(settings);
 
             // create engine implementation as Connection Type
             if (this.Connection == ConnectionType.Direct)
