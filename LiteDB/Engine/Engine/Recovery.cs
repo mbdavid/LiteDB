@@ -13,7 +13,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Recovery datafile using a rebuild process. Run only on "Open" database
         /// </summary>
-        private void Recovery(Collation collation)
+        private void Recovery(Collation collation, bool createBackup = true)
         {
             // run build service
             var rebuilder = new RebuildService(_settings);
@@ -21,7 +21,8 @@ namespace LiteDB.Engine
             {
                 Collation = collation,
                 Password = _settings.Password,
-                IncludeErrorReport = true
+                IncludeErrorReport = true,
+                CreateBackup = createBackup
             };
 
             // run rebuild process
