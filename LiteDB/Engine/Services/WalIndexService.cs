@@ -38,7 +38,22 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get current read version for all new transactions
         /// </summary>
-        public int CurrentReadVersion => _currentReadVersion;
+        public int CurrentReadVersion
+        {
+            get
+            {
+                _indexLock.TryEnterReadLock(-1);
+
+                try
+                {
+                    return _currentReadVersion;
+                }
+                finally
+                {
+                    _indexLock.ExitReadLock();
+                }
+            }
+        }
 
         /// <summary>
         /// Get current counter for transaction ID

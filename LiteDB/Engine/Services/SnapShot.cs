@@ -159,18 +159,18 @@ namespace LiteDB.Engine
         #region Page Version functions
 
         /// <summary>
-        /// Get a a valid page for this snapshot (must consider local-index and wal-index)
+        /// Get a valid page for this snapshot (must consider local-index and wal-index)
         /// </summary>
-        public T GetPage<T>(uint pageID)
+        public T GetPage<T>(uint pageID, bool useLatestVersion = false)
             where T : BasePage
         {
-            return this.GetPage<T>(pageID, out var origin, out var position, out var walVersion);
+            return this.GetPage<T>(pageID, out var origin, out var position, out var walVersion, useLatestVersion);
         }
 
         /// <summary>
-        /// Get a a valid page for this snapshot (must consider local-index and wal-index)
+        /// Get a valid page for this snapshot (must consider local-index and wal-index)
         /// </summary>
-        public T GetPage<T>(uint pageID, out FileOrigin origin, out long position, out int walVersion)
+        public T GetPage<T>(uint pageID, out FileOrigin origin, out long position, out int walVersion, bool useLatestVersion = false)
             where T : BasePage
         {
             ENSURE(!_disposed, "the snapshot is disposed");
@@ -198,7 +198,7 @@ namespace LiteDB.Engine
             }
 
             // if page is not in local cache, get from disk (log/wal/data)
-            page = this.ReadPage<T>(pageID, out origin, out position, out walVersion);
+            page = this.ReadPage<T>(pageID, out origin, out position, out walVersion, useLatestVersion);
 
             // add into local pages
             _localPages[pageID] = page;
@@ -212,7 +212,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read page from disk (dirty, wal or data)
         /// </summary>
-        private T ReadPage<T>(uint pageID, out FileOrigin origin, out long position, out int walVersion)
+        private T ReadPage<T>(uint pageID, out FileOrigin origin, out long position, out int walVersion, bool useLatestVersion = false)
             where T : BasePage
         {
             // if not inside local pages can be a dirty page saved in log file
@@ -232,7 +232,7 @@ namespace LiteDB.Engine
             }
 
             // now, look inside wal-index
-            var pos = _walIndex.GetPageIndex(pageID, _readVersion, out walVersion);
+            var pos = _walIndex.GetPageIndex(pageID, useLatestVersion ? int.MaxValue : _readVersion, out walVersion);
 
             if (pos != long.MaxValue)
             {
@@ -352,7 +352,7 @@ namespace LiteDB.Engine
                 // try get page from Empty free list
                 if (_header.FreeEmptyPageList != uint.MaxValue)
                 {
-                    var free = this.GetPage<BasePage>(_header.FreeEmptyPageList);
+                    var free = this.GetPage<BasePage>(_header.FreeEmptyPageList, useLatestVersion: true);
 
                     ENSURE(free.PageType == PageType.Empty, "empty page must be defined as empty type");
 
@@ -375,11 +375,21 @@ namespace LiteDB.Engine
 
                     if (newLength > _header.Pragmas.LimitSize) throw new LiteException(0, $"Maximum data file size has been reached: {FileHelper.FormatFileSize(_header.Pragmas.LimitSize)}");
 
-                    // increase LastPageID from shared page
-                    pageID = ++_header.LastPageID;
+                    var savepoint = _header.Savepoint();
+                    try
+                    {
+                        // increase LastPageID from shared page
+                        pageID = ++_header.LastPageID;
 
-                    // request for a new buffer
-                    buffer = _reader.NewPage();
+                        // request for a new buffer
+                        buffer = _reader.NewPage();
+                    }
+                    catch
+                    {
+                        // must revert all header content if any error occurs during header change
+                        _header.Restore(savepoint);
+                        throw;
+                    }
                 }
 
                 // retain a list of created pages to, in a rollback situation, back pages to empty list
