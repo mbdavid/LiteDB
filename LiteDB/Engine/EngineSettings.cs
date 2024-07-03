@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -65,6 +66,11 @@ namespace LiteDB.Engine
         /// If detect it's a older version (v4) do upgrade in datafile to new v5. A backup file will be keeped in same directory
         /// </summary>
         public bool Upgrade { get; set; } = false;
+
+        /// <summary>
+        /// Is used to transform a <see cref="BsonValue"/> from the database on read. This can be used to upgrade data from older versions.
+        /// </summary>
+        public Func<string, BsonValue, BsonValue> ReadTransform { get; set; }
 
         /// <summary>
         /// Create new IStreamFactory for datafile
