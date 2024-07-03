@@ -15,9 +15,9 @@ namespace LiteDB.Benchmarks
             BenchmarkRunner.Run(typeof(Program).Assembly, DefaultConfig.Instance
                 //.With(new BenchmarkDotNet.Filters.AnyCategoriesFilter(new[] { Benchmarks.Constants.Categories.GENERAL }))
                 //.AddFilter(new BenchmarkDotNet.Filters.AnyCategoriesFilter([Benchmarks.Constants.Categories.GENERAL]))
-                .AddJob(Job.Default.WithRuntime(CoreRuntime.Core60)
+                .AddJob(Job.Default.WithRuntime(CoreRuntime.Core80)
                     .WithJit(Jit.RyuJit)
-                    .WithToolchain(CsProjCoreToolchain.NetCoreApp60)
+                    .WithToolchain(CsProjCoreToolchain.NetCoreApp80)
                     .WithGcForce(true))
                 /*.With(Job.Default.With(MonoRuntime.Default)
                     .With(Jit.Llvm)
