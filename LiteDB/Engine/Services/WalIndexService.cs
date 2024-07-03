@@ -261,7 +261,7 @@ namespace LiteDB.Engine
         public int Checkpoint()
         {
             // no log file or no confirmed transaction, just exit
-            if (_disk.GetVirtualLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
+            if (_disk.GetFileLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
 
             var mustExit = _locker.EnterExclusive();
 
@@ -284,7 +284,7 @@ namespace LiteDB.Engine
         public int TryCheckpoint()
         {
             // no log file or no confirmed transaction, just exit
-            if (_disk.GetVirtualLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
+            if (_disk.GetFileLength(FileOrigin.Log) == 0 || _confirmTransactions.Count == 0) return 0;
 
             if (_locker.TryEnterExclusive(out var mustExit) == false) return 0;
 
@@ -310,12 +310,7 @@ namespace LiteDB.Engine
         {
             LOG($"checkpoint", "WAL");
 
-            // wait all pages write on disk
-            _disk.Queue.Value.Wait();
-
             var counter = 0;
-
-            ENSURE(_disk.Queue.Value.Length == 0, "no pages on queue when checkpoint");
 
             // getting all "good" pages from log file to be copied into data file
             IEnumerable<PageBuffer> source()
@@ -351,7 +346,7 @@ namespace LiteDB.Engine
             }
 
             // write all log pages into data file (sync)
-            _disk.Write(source(), FileOrigin.Data);
+            _disk.WriteDataDisk(source());
 
             // clear log file, clear wal index, memory cache,
             this.Clear();
