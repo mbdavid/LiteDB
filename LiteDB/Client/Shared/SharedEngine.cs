@@ -82,7 +82,7 @@ namespace LiteDB
         private void CloseDatabase()
         {
             // Don't dispose the engine while a transaction is running.
-            if (!this._transactionRunning && _engine != null)
+            if (!_transactionRunning && _engine != null)
             {
                 // If no transaction pending, dispose the engine.
                 _engine.Dispose();
@@ -97,17 +97,17 @@ namespace LiteDB
 
         public bool BeginTrans()
         {
-            this.OpenDatabase();
+            OpenDatabase();
 
             try
             {
-                this._transactionRunning = _engine.BeginTrans();
+                _transactionRunning = _engine.BeginTrans();
 
-                return this._transactionRunning;
+                return _transactionRunning;
             }
             catch
             {
-                this.CloseDatabase();
+                CloseDatabase();
                 throw;
             }
         }
@@ -122,8 +122,8 @@ namespace LiteDB
             }
             finally
             {
-                this._transactionRunning = false;
-                this.CloseDatabase();
+                _transactionRunning = false;
+                CloseDatabase();
             }
         }
 
@@ -137,8 +137,8 @@ namespace LiteDB
             }
             finally
             {
-                this._transactionRunning = false;
-                this.CloseDatabase();
+                _transactionRunning = false;
+                CloseDatabase();
             }
         }
 
@@ -148,7 +148,7 @@ namespace LiteDB
 
         public IBsonDataReader Query(string collection, Query query)
         {
-            bool opened = this.OpenDatabase();
+            bool opened = OpenDatabase();
 
             var reader = _engine.Query(collection, query);
 
@@ -156,7 +156,7 @@ namespace LiteDB
             {
                 if (opened)
                 {
-                    this.CloseDatabase();
+                    CloseDatabase();
                 }
             });
         }
@@ -239,13 +239,13 @@ namespace LiteDB
 
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         ~SharedEngine()
         {
-            this.Dispose(false);
+            Dispose(false);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -261,8 +261,9 @@ namespace LiteDB
             }
         }
 
-        private T QueryDatabase<T>(Func<T> Query) {
-            bool opened = this.OpenDatabase();
+        private T QueryDatabase<T>(Func<T> Query)
+        {
+            bool opened = OpenDatabase();
             try
             {
                 return Query();
@@ -271,7 +272,7 @@ namespace LiteDB
             {
                 if (opened)
                 {
-                    this.CloseDatabase();
+                    CloseDatabase();
                 }
             }
         }

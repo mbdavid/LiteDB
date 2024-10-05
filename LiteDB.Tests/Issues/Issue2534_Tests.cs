@@ -10,7 +10,7 @@ public class Issue2534_Tests {
             Filename = "Demo.db",
             Connection = ConnectionType.Shared,
         });
-        ILiteCollection<BsonDocument> accounts = database.GetCollection("Accounts");
+        ILiteCollection<BsonDocument> accounts = database.GetCollection("Issue2534");
         if (accounts.Count() < 3)
         {
             accounts.Insert(new BsonDocument());
