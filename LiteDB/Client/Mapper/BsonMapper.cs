@@ -30,7 +30,12 @@ namespace LiteDB
         /// Mapping cache between Class/BsonDocument
         /// </summary>
         private readonly Dictionary<Type, EntityMapper> _entities = new Dictionary<Type, EntityMapper>();
-
+        
+        /// <summary>
+        /// Unfinished mapping cache between Class/BsonDocument
+        /// </summary>
+        private readonly Dictionary<Type, EntityMapper> _buildEntities = new Dictionary<Type, EntityMapper>();
+        
         /// <summary>
         /// Map serializer/deserialize for custom types
         /// </summary>
@@ -227,6 +232,8 @@ namespace LiteDB
         #endregion
 
         #region GetEntityMapper
+        
+        
 
         /// <summary>
         /// Get property mapper between typed .NET class and BsonDocument - Cache results
@@ -235,13 +242,30 @@ namespace LiteDB
         {
             //TODO: needs check if Type if BsonDocument? Returns empty EntityMapper?
 
-            if (!_entities.TryGetValue(type, out EntityMapper mapper))
+            if (_entities.TryGetValue(type, out EntityMapper mapper))
             {
-                lock (_entities)
+                return mapper;
+            }
+
+            lock (_entities)
+            {
+                if (_entities.TryGetValue(type, out mapper))
                 {
-                    if (!_entities.TryGetValue(type, out mapper))
-                        return this.BuildAddEntityMapper(type);
+                    return mapper;
                 }
+
+                if(_buildEntities.TryGetValue(type, out EntityMapper buildMapper))
+                {
+                    return buildMapper;
+                }
+                        
+                var newMapper = new EntityMapper(type);
+                _buildEntities[type] = newMapper;
+                this.BuildEntityMapper(newMapper);
+                _entities[type] = newMapper;
+                        
+                _buildEntities.Remove(type);
+                return newMapper;
             }
 
             return mapper;
@@ -251,17 +275,17 @@ namespace LiteDB
         /// Use this method to override how your class can be, by default, mapped from entity to Bson document.
         /// Returns an EntityMapper from each requested Type
         /// </summary>
-        protected virtual EntityMapper BuildAddEntityMapper(Type type)
+        protected void BuildEntityMapper(EntityMapper mapper)
         {
-            var mapper = new EntityMapper(type);
-            _entities[type] = mapper;//direct add into entities, to solove the DBRef [ GetEntityMapper > BuildAddEntityMapper > RegisterDbRef > RegisterDbRefItem > GetEntityMapper ] Loop call recursion,we stoped at here and GetEntityMapper's _entities.TryGetValue
+            // var mapper = new EntityMapper(type);
+            // _entities[type] = mapper;//direct add into entities, to solove the DBRef [ GetEntityMapper > BuildAddEntityMapper > RegisterDbRef > RegisterDbRefItem > GetEntityMapper ] Loop call recursion,we stoped at here and GetEntityMapper's _entities.TryGetValue
 
             var idAttr = typeof(BsonIdAttribute);
             var ignoreAttr = typeof(BsonIgnoreAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var dbrefAttr = typeof(BsonRefAttribute);
 
-            var members = this.GetTypeMembers(type);
+            var members = this.GetTypeMembers(mapper.ForType);
             var id = this.GetIdMember(members);
 
             foreach (var memberInfo in members)
@@ -288,8 +312,8 @@ namespace LiteDB
                 }
 
                 // create getter/setter function
-                var getter = Reflection.CreateGenericGetter(type, memberInfo);
-                var setter = Reflection.CreateGenericSetter(type, memberInfo);
+                var getter = Reflection.CreateGenericGetter(mapper.ForType, memberInfo);
+                var setter = Reflection.CreateGenericSetter(mapper.ForType, memberInfo);
 
                 // check if property has [BsonId] to get with was setted AutoId = true
                 var autoId = (BsonIdAttribute)CustomAttributeExtensions.GetCustomAttributes(memberInfo, idAttr, true).FirstOrDefault();
@@ -324,7 +348,7 @@ namespace LiteDB
                 }
 
                 // support callback to user modify member mapper
-                this.ResolveMember?.Invoke(type, memberInfo, member);
+                this.ResolveMember?.Invoke(mapper.ForType, memberInfo, member);
 
                 // test if has name and there is no duplicate field
                 // when member is not ignore
@@ -333,8 +357,6 @@ namespace LiteDB
                     mapper.Members.Add(member);
                 }
             }
-
-            return mapper;
         }
 
         /// <summary>
