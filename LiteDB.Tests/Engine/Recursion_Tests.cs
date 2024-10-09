@@ -3,7 +3,8 @@ using Xunit;
 
 namespace LiteDB.Tests.Engine;
 
-public class Recursion_Tests {
+public class Recursion_Tests
+{
     [Fact]
     public void UpdateInFindAll()
     {
@@ -46,7 +47,9 @@ public class Recursion_Tests {
             Filename = "Demo.db",
             Connection = ConnectionType.Shared,
         });
+
         ILiteCollection<BsonDocument> accounts = database.GetCollection("Recursion");
+
         if (accounts.Count() < 3)
         {
             accounts.Insert(new BsonDocument());
