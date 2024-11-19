@@ -181,6 +181,7 @@ namespace LiteDB
             var t = obj.GetType();
             var doc = new BsonDocument();
             var entity = this.GetEntityMapper(t);
+            entity.WaitForInitialization();
 
             // adding _type only where property Type is not same as object instance type
             if (type != t)
