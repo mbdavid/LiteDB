@@ -275,13 +275,7 @@ namespace LiteDB
         // static constructor
         static ObjectId()
         {
-            _machine = (GetMachineHash() +
-#if HAVE_APP_DOMAIN
-                AppDomain.CurrentDomain.Id
-#else
-                10000 // Magic number
-#endif   
-                ) & 0x00ffffff;
+            _machine = (GetMachineHash() + AppDomain.CurrentDomain.Id) & 0x00ffffff;
             _increment = (new Random()).Next();
 
             try
@@ -294,24 +288,14 @@ namespace LiteDB
             }
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
         private static int GetCurrentProcessId()
         {
-#if HAVE_PROCESS
             return Process.GetCurrentProcess().Id;
-#else
-            return (new Random()).Next(0, 5000); // Any same number for this process
-#endif
         }
 
         private static int GetMachineHash()
         {
-            var hostName =
-#if HAVE_ENVIRONMENT
-                Environment.MachineName; // use instead of Dns.HostName so it will work offline
-#else
-                "SOMENAME";
-#endif
+            var hostName = Environment.MachineName; // use instead of Dns.HostName so it will work offline
             return 0x00ffffff & hostName.GetHashCode(); // use first 3 bytes of hash
         }
 

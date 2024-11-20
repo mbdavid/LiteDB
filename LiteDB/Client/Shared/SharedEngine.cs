@@ -3,10 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-#if NETFRAMEWORK
-using System.Security.AccessControl;
-using System.Security.Principal;
-#endif
 
 namespace LiteDB
 {
@@ -25,17 +21,7 @@ namespace LiteDB
 
             try
             {
-#if NETFRAMEWORK
-                var allowEveryoneRule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null),
-                           MutexRights.FullControl, AccessControlType.Allow);
-
-                var securitySettings = new MutexSecurity();
-                securitySettings.AddAccessRule(allowEveryoneRule);
-
-                _mutex = new Mutex(false, "Global\\" + name + ".Mutex", out _, securitySettings);
-#else
                 _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
-#endif
             }
             catch (NotSupportedException ex)
             {
