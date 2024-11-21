@@ -1,4 +1,4 @@
-﻿namespace LiteDB.Shell;
+namespace LiteDB.Shell;
 
 using System;
 
@@ -33,11 +33,9 @@ internal class Display
     {
         WriteLine(ConsoleColor.Red, ex.Message);
 
-        if (ex is LiteException && (ex as LiteException).ErrorCode == LiteException.UNEXPECTED_TOKEN)
+        if (ex is LiteException liteEx && liteEx.ErrorCode == LiteException.UNEXPECTED_TOKEN)
         {
-            var err = ex as LiteException;
-
-            WriteLine(ConsoleColor.DarkYellow, "> " + "^".PadLeft((int) err.Position + 1, ' '));
+            WriteLine(ConsoleColor.DarkYellow, "> " + "^".PadLeft((int)liteEx.Position + 1, ' '));
         }
     }
 

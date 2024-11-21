@@ -1,4 +1,4 @@
-﻿namespace LiteDB.Benchmarks;
+namespace LiteDB.Benchmarks;
 
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
