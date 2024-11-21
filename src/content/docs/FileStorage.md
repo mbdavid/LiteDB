@@ -4,11 +4,11 @@ draft: false
 weight: 8
 ---
 
-To keep its memory profile slim, LiteDB limits the size of a documents to 1MB. For most documents, this is plenty. However, 1MB is too small for a useful file storage. For this reason, LiteDB implements `FileStorage`, a custom collection to store files and streams.
+To keep its memory profile slim, LiteDB limits the size of documents to 1MB. For most documents, this is plenty. However, this is too small for useful file storage, so LiteDB provides `FileStorage`, a custom collection to store files and streams.
 
 `FileStorage` uses two special collections:
 
-- The first collection stores file references and metadata only (by default it is called `_files`)
+- The `_files` collection stores file references and metadata:
 
 ```JS
 {
@@ -22,64 +22,54 @@ To keep its memory profile slim, LiteDB limits the size of a documents to 1MB. F
 }
 ```
 
-- The second collection stores binary data in 255kB chunks (by default it is called `_chunks`)
+- The `_chunks` collection stores binary data in 255kB chunks:
 
 ```JS
 {
     _id: { "f": "my-photo", "n": 0 },
     data: { $binary: "VHlwZSAob3Igc ... GUpIGhlcmUuLi4" }
-}
+},
 {
     _id: { "f": "my-photo", "n": 1 },
     data: { $binary: "pGaGhlcmUuLi4 ... VHlwZSAob3Igc" }
-}
+},
 {
    ...
 }
 ```
 
-Files are identified by an `_id` string value, with following rules:
+`LiteStorage` contains the following methods:
 
-- Starts with a letter, number, `_`, `-`, `$`, `@`, `!`, `+`, `%`, `;` or `.`
-- If contains a `/`, must be sequence with chars above 
-
-To better organize many files, you can use `_id` as a `directory/file_id`. This will be a great solution to quickly find all files in a directory using the `Find` method.
-
-Example: `$/photos/2014/picture-01.jpg`
-
-The `FileStorage` collection contains simple methods like:
-
-- **`Upload`**: Send file or stream to database. Can be used with file or `Stream`. If file already exists, file content is overwritten.
-- **`Download`**: Get your file from database and copy to `Stream` parameter
-- **`Delete`**: Delete a file reference and all data chunks
-- **`Find`**: Find one or many files in `_files` collection. Returns `LiteFileInfo` class, that can be download data after.
-- **`SetMetadata`**: Update stored file metadata. This method doesn't change the value of the stored file.  It updates the value of `_files.metadata`.
-- **`OpenRead`**: Find file by `_id` and returns a `LiteFileStream` to read file content as stream
+- **`Upload`**: Sends a file from the hard drive or a Stream to the database, overwriting it if already exists.
+- **`Download`**: Loads a file from the database and copies it to the given Stream.
+- **`Delete`**: Deletes a file reference and all related data chunks.
+- **`Find`**: Returns all file references matching a query. By default, searches the `_files` collection.
+- **`SetMetadata`**: Updates the metadata of a file without affecting the file data. By default, updates the `_files.metadata` document.
+- **`OpenRead`**: Finds a file by its ID and returns a `LiteFileStream` to read the file content.
 
 ```C#
-// Gets a FileStorage with the default collections
-var fs = db.FileStorage;
+// Get the default FileStorage
+ILiteStorage<string> fileStorage = db.FileStorage;
+// Get FileStorage with custom collections
+ILiteStorage<string> fileStorage = db.GetStorage<string>("myFiles", "myChunks");
 
-// Gets a FileStorage with custom collection name
-var fs = db.GetStorage<string>("myFiles", "myChunks");
+// Upload file from hard drive
+fileStorage.Upload("photos/2014/picture-01.jpg", "C://Temp/picture-01.jpg"); // (FileID, SourcePath)
+// Upload file from Stream
+fileStorage.Upload("photos/2014/picture-01.jpg", "picture-01.jpg", inputStream); // (FileID, FileName, SourceStream, Metadata = null)
 
-// Upload a file from file system
-fs.Upload("$/photos/2014/picture-01.jpg", @"C:\Temp\picture-01.jpg");
+// Find file reference by its ID (returns null if not found)
+LiteFileInfo<string> file = fileStorage.FindById("photos/2014/picture-01.jpg");
 
-// Upload a file from a Stream
-fs.Upload("$/photos/2014/picture-01.jpg", "picture-01.jpg", stream);
+// Load and save file bytes to hard drive
+file.SaveAs("C://Temp/new-picture.jpg");
+// Load and copy file bytes to Stream
+file.CopyTo(outputStream);
 
-// Find file reference only - returns null if not found
-LiteFileInfo file = fs.FindById("$/photos/2014/picture-01.jpg");
-
-// Now, load binary data and save to file system
-file.SaveAs(@"C:\Temp\new-picture.jpg");
-
-// Or get binary data as Stream and copy to another Stream
-file.CopyTo(Response.OutputStream);
-
-// Find all files references in a "directory"
-var files = fs.Find("$/photos/2014/");
+// Find all files matching pattern
+IEnumerable<LiteFileInfo<string>> files = fileStorage.Find("_id LIKE 'photos/2014/%'");
+// Find all files matching pattern using parameters
+IEnumerable<LiteFileInfo<string>> files = fileStorage.Find("_id LIKE @0", "photos/2014/%");
 ```
 
-`FileStorage` does not support transactions to avoid putting all of the file in memory before storing it on disk. Transactions *are* used per chunk. Each uploaded chunk is committed in a single transaction.
+**NOTE**: `FileStorage` does not support transactions, to avoid loading all of the file in memory before saving it to the hard drive. However, transactions are used to upload each chunk.
