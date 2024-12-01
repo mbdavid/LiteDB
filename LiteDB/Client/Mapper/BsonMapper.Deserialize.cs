@@ -292,12 +292,17 @@ namespace LiteDB
             {
                 object dictKey = element.Key;
 
-                if (keyType != typeof(string)) {
-                    try {
-                        // Try to deserialize key as JSON to support any key type.
+                if (keyType != typeof(string))
+                {
+                    try
+                    {
+                        // Deserialize key as JSON to support any key type
                         dictKey = Deserialize(keyType, JsonSerializer.Deserialize(element.Key));
                     }
-                    catch (LiteException) { }
+                    catch (LiteException)
+                    {
+                        // Failed to deserialize key as JSON. Pass for compatibility
+                    }
                 }
 
                 object dictValue = Deserialize(valueType, element.Value);

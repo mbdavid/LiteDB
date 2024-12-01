@@ -165,7 +165,9 @@ namespace LiteDB
 
             foreach (DictionaryEntry entry in dict)
             {
-                string stringKey = entry.Key as string ?? JsonSerializer.Serialize(Serialize(entry.Key));
+                string stringKey = entry.Key as string
+                    // Serialize key as JSON to support any key type
+                    ?? JsonSerializer.Serialize(Serialize(entry.Key));
 
                 BsonValue bsonValue = Serialize(valueType, entry.Value, depth);
 
