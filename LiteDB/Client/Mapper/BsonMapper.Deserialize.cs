@@ -290,21 +290,12 @@ namespace LiteDB
         {
             foreach (KeyValuePair<string, BsonValue> element in value.GetElements())
             {
-                object dictKey;
-                TypeConverter keyConverter = TypeDescriptor.GetConverter(keyType);
-                if (keyConverter.CanConvertFrom(typeof(string)))
-                {
-                    // Here, we deserialize the key based on its type, even though it's a string. This is because
-                    // BsonDocuments only support string keys (not BsonValue).
-                    // However, if we deserialize the string representation, we can have pseudo-support for key types like GUID.
-                    // See https://github.com/litedb-org/LiteDB/issues/546
-                    dictKey = keyConverter.ConvertFromInvariantString(element.Key);
+                object dictKey = element.Key;
+                try {
+                    // Try to deserialize key as JSON to support any key type.
+                    dictKey = Deserialize(keyType, JsonSerializer.Deserialize(element.Key));
                 }
-                else
-                {
-                    // Some types (e.g. System.Collections.Hashtable) can't be converted using TypeDescriptor
-                    dictKey = Convert.ChangeType(element.Key, keyType);
-                }
+                catch (Exception) { }
 
                 object dictValue = Deserialize(valueType, element.Value);
 

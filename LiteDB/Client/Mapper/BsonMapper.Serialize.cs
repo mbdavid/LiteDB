@@ -163,17 +163,12 @@ namespace LiteDB
         {
             BsonDocument bsonDocument = [];
 
-            foreach (object key in dict.Keys)
+            foreach (DictionaryEntry entry in dict)
             {
-                object value = dict[key];
+                string stringKey = JsonSerializer.Serialize(Serialize(entry.Key));
 
-                string stringKey = key.ToString();
-                if (key is DateTime dateKey)
-                {
-                    stringKey = dateKey.ToString("o");
-                }
+                BsonValue bsonValue = Serialize(valueType, entry.Value, depth);
 
-                BsonValue bsonValue = Serialize(valueType, value, depth);
                 bsonDocument[stringKey] = bsonValue;
             }
 

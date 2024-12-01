@@ -10,15 +10,15 @@ public class Issue546_Tests
     public void Test()
     {
         using LiteDatabase dataBase = new("demo.db");
-        ILiteCollection<GuidDictContainer> guidDictCollection = dataBase.GetCollection<GuidDictContainer>("Issue546_Guid_Keys");
+        ILiteCollection<DictContainer> dictCollection = dataBase.GetCollection<DictContainer>("Issue546_Guid_Keys");
 
-        guidDictCollection.DeleteAll();
-        guidDictCollection.Insert(new GuidDictContainer());
+        dictCollection.DeleteAll();
+        dictCollection.Insert(new DictContainer());
 
-        Assert.Single(guidDictCollection.FindAll());
+        Assert.Single(dictCollection.FindAll());
     }
 
-    private class GuidDictContainer {
+    private class DictContainer {
         public Dictionary<Guid, string> GuidDict { get; set; } = new()
         {
             [Guid.NewGuid()] = "test",
@@ -26,6 +26,10 @@ public class Issue546_Tests
         public Dictionary<TestEnum, string> EnumDict { get; set; } = new()
         {
             [TestEnum.ThingA] = "test",
+        };
+        public Dictionary<(int A, string B), string> TupleDict { get; set; } = new()
+        {
+            [(2, "xxx")] = "test",
         };
     }
     private enum TestEnum
