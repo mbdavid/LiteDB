@@ -291,11 +291,14 @@ namespace LiteDB
             foreach (KeyValuePair<string, BsonValue> element in value.GetElements())
             {
                 object dictKey = element.Key;
-                try {
-                    // Try to deserialize key as JSON to support any key type.
-                    dictKey = Deserialize(keyType, JsonSerializer.Deserialize(element.Key));
+
+                if (keyType != typeof(string)) {
+                    try {
+                        // Try to deserialize key as JSON to support any key type.
+                        dictKey = Deserialize(keyType, JsonSerializer.Deserialize(element.Key));
+                    }
+                    catch (LiteException) { }
                 }
-                catch (Exception) { }
 
                 object dictValue = Deserialize(valueType, element.Value);
 
