@@ -30,8 +30,13 @@ public partial class BsonMapper
         {
             this.BuildEntityMapper(mapper);
         }
-        cts.Cancel();
-        cts.Dispose();
+        else
+        {
+            if (!_entities.TryGetValue(type, out mapper))
+            {
+                throw new LiteException(LiteException.MAPPER_NOT_FOUND, $"EntityMapper for type {type} was not found.");
+            }
+        }
 
         return mapper;
     }
