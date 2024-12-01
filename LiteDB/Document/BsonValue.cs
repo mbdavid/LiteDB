@@ -110,7 +110,7 @@ namespace LiteDB
         public BsonValue(DateTime value)
         {
             this.Type = BsonType.DateTime;
-            this.RawValue = value;
+            this.RawValue = value.Truncate();
         }
 
         protected BsonValue(BsonType type, object rawValue)
@@ -138,7 +138,7 @@ namespace LiteDB
             else if (value is DateTime)
             {
                 this.Type = BsonType.DateTime;
-                this.RawValue = ((DateTime)value);
+                this.RawValue = ((DateTime)value).Truncate();
             }
             else if (value is BsonValue)
             {
