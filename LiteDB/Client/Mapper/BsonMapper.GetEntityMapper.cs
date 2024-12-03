@@ -25,13 +25,29 @@ public partial class BsonMapper
         }
 
         using var cts = new CancellationTokenSource();
-        mapper = new EntityMapper(type, cts.Token);
-        if (_entities.TryAdd(type, mapper))
+        try
         {
-            this.BuildEntityMapper(mapper);
+            // We need to add the empty shell, because ``BuildEntityMapper`` may use this method recursively
+            mapper = new EntityMapper(type, cts.Token);
+            EntityMapper addedMapper = _entities.GetOrAdd(type, mapper);
+            if (ReferenceEquals(addedMapper, mapper))
+            {
+                try
+                {
+                    this.BuildEntityMapper(mapper);
+                }
+                catch (Exception ex)
+                {
+                    _entities.TryRemove(type, out _);
+                    throw new LiteException(LiteException.MAPPING_ERROR, $"Error in '{type.Name}' mapping: {ex.Message}", ex);
+                }
+            }
         }
-        cts.Cancel();
-        cts.Dispose();
+        finally
+        {
+            // Allow the Mapper to be used for de-/serialization
+            cts.Cancel();
+        }
 
         return mapper;
     }
