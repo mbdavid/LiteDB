@@ -28,9 +28,9 @@ public partial class BsonMapper
         try
         {
             // We need to add the empty shell, because ``BuildEntityMapper`` may use this method recursively
-            mapper = new EntityMapper(type, cts.Token);
-            EntityMapper addedMapper = _entities.GetOrAdd(type, mapper);
-            if (ReferenceEquals(addedMapper, mapper))
+            var newMapper = new EntityMapper(type, cts.Token);
+            mapper = _entities.GetOrAdd(type, newMapper);
+            if (ReferenceEquals(mapper, newMapper))
             {
                 try
                 {
